@@ -593,6 +593,10 @@ export interface AgentFeatures {
     agent_memory?: "none" | "own" | "team";
     agent_history_retention_days?: number | null;
     integrations?: ("web" | "google_calendar" | "github")[];
+    // Present ⇔ the server's HTML_NOTES switch is on (MIP-2215), so its presence is how the client
+    // knows to offer `.html` import. `max_bytes` is the plan's page limit; null = the plan has no
+    // HTML notes (Free).
+    html_notes?: { max_bytes: number | null };
 }
 
 export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeatures | null> {

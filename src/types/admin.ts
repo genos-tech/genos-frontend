@@ -156,6 +156,13 @@ export type SignInUnverifiedResult = {
     email: string;
 };
 
+/** The password was right and this account has two-factor on: no session yet, only a
+ *  five-minute token that the code step trades for one (MIP-2239). */
+export type SignInMfaResult = {
+    kind: "mfa";
+    token: string;
+};
+
 export type MyTeamResponse = {
     team_ids: number[];
 };

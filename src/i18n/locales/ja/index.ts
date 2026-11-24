@@ -188,7 +188,7 @@ export const ja: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "メール受信箱を確認してください",
-                    body: "確認リンクを {email} に送信しました。それをクリックしてサインアップを完了します。",
+                    body: "{email} にメールを送信しました。メールを開いてサインアップを完了するか、すでにアカウントをお持ちの場合はサインインしてください。",
                     checkInboxHint: "メール内のリンクをクリックしてアドレスを確認します。",
                     resend: "メールを再送信する",
                     resending: "送信中…",
@@ -254,6 +254,10 @@ export const ja: DeepPartial<Messages> = {
                 generic: "問題が発生しました。しばらくしてからもう一度お試しください。",
                 unexpected: "予期しないエラーが発生しました。もう一度お試しください。",
                 duplicateEmail: "別のメールアドレスでお試しください。",
+                passwordCommon:
+                    "このパスワードは一般的すぎるか、推測されやすいものです。別のパスワードを選んでください。",
+                passwordBreached:
+                    "このパスワードは過去の情報漏えいで確認されています。別のパスワードを選んでください。",
                 duplicateName: "別の名前でお試しください。",
                 demoRateLimited:
                     "このネットワークからのデモサインインが多すぎます。しばらくしてからお試しください。",
@@ -286,6 +290,8 @@ export const ja: DeepPartial<Messages> = {
                         "サードパーティのアカウントに接続するには、サインインする必要があります。",
                     already_connected_to_other_user:
                         "このアカウントはすでに別のユーザーに接続されています。",
+                    mfa_password_only:
+                        "このアカウントは2段階認証を使っており、メールアドレスとパスワードで利用できます。メールアドレス、パスワード、コードでサインインしてください。",
                     not_a_login_account:
                         "このアカウントはカレンダーへのアクセスのみに接続されていたため、サインインできません。",
                     provider_already_connected:
@@ -1903,6 +1909,17 @@ export const ja: DeepPartial<Messages> = {
             deleteBody: "この操作は取り消せません。",
             unsavedTitle: "未保存の変更を破棄しますか？",
             unsavedBody: "変更内容は失われます。",
+        },
+        recentAuth: {
+            title: "ご本人確認",
+            description:
+                "セキュリティのため、API キー、Webhook、AI アプリを追加する前にパスワードを入力してください。数分間は再入力を求められません。",
+            passwordLabel: "パスワード",
+            confirm: "続ける",
+            cancel: "キャンセル",
+            wrong: "パスワードが正しくありません。",
+            tooMany: "試行回数が多すぎます。1 分ほど待ってからもう一度お試しください。",
+            failed: "パスワードを確認できませんでした。もう一度お試しください。",
         },
         leaveConfirm: {
             leave: "退出",
@@ -3549,6 +3566,7 @@ export const ja: DeepPartial<Messages> = {
             shareEllipsis: "共有…",
             importMarkdown: "Markdownをインポート…",
             exportMarkdown: "Markdownとしてエクスポート",
+            reloadPage: "ページを再読み込み",
             openTask: "タスクを開く",
             taskIdLabel: "{id}",
             openTaskTooltip: "タスク {id} を開く",
@@ -3561,6 +3579,50 @@ export const ja: DeepPartial<Messages> = {
             ownerProjectTooltip: "所属プロジェクト",
             focusNote: "このノートに集中（ほかのペインを隠す）",
             exitFocusNote: "ほかのペインを再び表示",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "HTMLページ · サンドボックス内で表示",
+            navigatedTitle: "このページは別のページを開こうとしました",
+            navigatedBody:
+                "操作は止めたため、ほかのページは開かれていません。再読み込みするとページをもう一度表示します。",
+            reload: "再読み込み",
+            loadError: "このページを読み込めませんでした",
+            retry: "再試行",
+            frameTitle: "HTMLページ: {title}",
+            kindLabel: "HTMLページ",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            heading: "MarkdownまたはHTMLをインポート",
+            chooseFile: ".md または .html ファイルを選択…",
+            notOnPlan:
+                "HTMLページはCoreプラン以上でご利用いただけます。このページをインポートするには、設定 → プランと使用状況でアップグレードしてください。",
+            tooLarge:
+                "このページは {size} で、ご利用のプランのHTMLページの上限 {limit} を超えています。",
+            importedWithWarnings:
+                "HTMLページとしてインポートしました。一部はサンドボックス内で表示されません:",
+            resultNotes: "HTMLページを {count} 件インポートしました。",
+            resultWarnings:
+                "{count} 件のHTMLページに、サンドボックス内で表示されない部分があります。",
+            fallbackWarning: "ページの一部はサンドボックス内で表示されません。",
+            warning: {
+                external_script: "別のアドレスから読み込むスクリプトは実行されません ({count})。",
+                external_css:
+                    "別のアドレスから読み込むスタイルシートはブロックされ、ページのスタイルが当たらないことがあります ({count})。",
+                external_font: "別のアドレスから読み込むWebフォントはブロックされます ({count})。",
+                remote_image:
+                    "別のアドレスから読み込む画像やメディアはブロックされます ({count})。",
+                external_frame: "別のページを指すフレームや埋め込みはブロックされます ({count})。",
+                network_call:
+                    "ページのネットワーク呼び出し (fetch、XHR、WebSocket) は失敗します ({count})。",
+                form: "ここではフォームを送信できません ({count})。",
+                window_open: "ポップアップはブロックされます ({count})。",
+                navigation: "ページから離れるリダイレクトやリンクはブロックされます ({count})。",
+                storage: "ページはCookieやローカルストレージを保持できません ({count})。",
+                no_doctype: "ページに <!doctype html> がないため、互換モードで表示されます。",
+                no_title: "ページに <title> がないため、ファイル名をノートのタイトルにしました。",
+            },
         },
         importMd: {
             heading: "Markdownをインポート",
@@ -3961,6 +4023,90 @@ export const ja: DeepPartial<Messages> = {
             },
         },
     },
+    security: {
+        tab: "セキュリティ",
+        twoFactor: {
+            title: "2段階認証",
+            description:
+                "パスワードの後に、認証アプリの6桁のコードを求めます。パスワードが盗まれたり推測されたりしても、アカウントは開かれません。",
+            statusOn: "オン",
+            statusOff: "オフ",
+            onSince: "{date} からオン",
+            recoveryLeft: "残りのリカバリーコード: {count}",
+            recoveryLow:
+                "リカバリーコードが残りわずかです。なくなる前に新しいセットを取得してください。",
+            turnOn: "オンにする",
+            turnOff: "オフにする",
+            newCodes: "新しいリカバリーコードを取得",
+            providerNote:
+                "Google または GitHub でサインインしています。2段階認証はそのアカウント側で設定してください。ここで設定するものはありません。",
+            loadFailed: "セキュリティ設定を読み込めませんでした。",
+            retry: "もう一度試す",
+            scopeNote: "メールアドレスとパスワードでサインインするときに適用されます。",
+        },
+        setup: {
+            title: "2段階認証をオンにする",
+            passwordIntro:
+                "パスワードを入力して開始します。開いているセッションを使っている別の人が設定を変えるのを防ぎます。",
+            passwordLabel: "パスワード",
+            continue: "続ける",
+            cancel: "キャンセル",
+            scanTitle: "認証アプリでスキャン",
+            scanBody:
+                "Google Authenticator、1Password、Authy など6桁のコードを作るアプリで読み取り、表示されたコードを入力してください。",
+            qrAlt: "認証アプリに Genos を追加する QR コード",
+            manualTitle: "スキャンできない場合は、このキーをアプリに入力してください。",
+            keyLabel: "セットアップキー",
+            copyKey: "キーをコピー",
+            copied: "コピーしました",
+            openInApp: "認証アプリで開く",
+            codeLabel: "6桁のコード",
+            codeHelp: "コードは30秒ごとに変わります。",
+            verify: "オンにする",
+            recoveryTitle: "リカバリーコードを保存",
+            recoveryBody:
+                "スマートフォンをなくしたとき、各コードで1回ずつサインインできます。表示されるのは今だけです。パスワードとは別の安全な場所に保管してください。",
+            copyAll: "すべてコピー",
+            download: "ダウンロード",
+            downloadHeader: "Genos リカバリーコード。各コードは1回だけ使えます。",
+            savedConfirm: "コードを保存しました",
+            done: "完了",
+        },
+        confirm: {
+            passwordLabel: "パスワード",
+            disableTitle: "2段階認証をオフにしますか？",
+            disableBody:
+                "パスワードを知っている人は誰でもサインインできるようになります。確認のためパスワードを入力してください。",
+            disableAction: "オフにする",
+            newCodesTitle: "新しいリカバリーコードを取得しますか？",
+            newCodesBody:
+                "古いリカバリーコードは使えなくなります。新しいセットを取得するにはパスワードを入力してください。",
+            newCodesAction: "新しいコードを取得",
+            cancel: "キャンセル",
+        },
+        errors: {
+            badPassword: "パスワードが正しくありません。",
+            invalidCode: "コードが正しくありません。アプリを確認してもう一度お試しください。",
+            locked: "誤ったコードが多すぎます。{minutes}分後にもう一度お試しください。",
+            throttled: "試行回数が多すぎます。しばらくしてからもう一度お試しください。",
+            alreadyEnabled: "2段階認証はすでにオンです。",
+            noSetup: "セットアップの有効期限が切れました。最初からやり直してください。",
+            network: "ネットワークエラーです。接続を確認してもう一度お試しください。",
+            generic: "問題が発生しました。何も変更されていません。",
+        },
+        signIn: {
+            title: "2段階認証",
+            appBody: "認証アプリの6桁のコードを入力してください。",
+            recoveryBody: "リカバリーコードを1つ入力してください。各コードは1回だけ使えます。",
+            codeLabel: "認証コード",
+            recoveryLabel: "リカバリーコード",
+            submit: "確認",
+            useRecovery: "リカバリーコードを使う",
+            useApp: "認証アプリを使う",
+            back: "サインインに戻る",
+            expired: "サインインの有効期限が切れました。もう一度パスワードを入力してください。",
+        },
+    },
     settings: {
         title: "設定",
         tabs: {
@@ -4237,6 +4383,12 @@ export const ja: DeepPartial<Messages> = {
                     anonymous: "未サインイン",
                 },
                 actions: {
+                    "mfa.enabled": "2段階認証をオンにしました",
+                    "mfa.disabled": "2段階認証をオフにしました",
+                    "mfa.failed": "2段階目が拒否されました",
+                    "mfa.recovery_used": "リカバリーコードを使用",
+                    "mfa.recovery_regenerated": "リカバリーコードを再発行",
+                    "operator.mfa_reset": "サポートが2段階認証をリセット",
                     "signin.succeeded": "サインイン",
                     "signin.failed": "サインイン失敗",
                     signout: "サインアウト",
@@ -4804,6 +4956,8 @@ export const ja: DeepPartial<Messages> = {
             deliverProjectChat: "{name}（プロジェクトのチャット）",
             deliverChatHint:
                 "レポートはメッセージとしてこのチャットに投稿されます。AI は使わず、通知も送りません。チャットの全員が読めるため、プロジェクトのレポートはそのプロジェクトのメンバーだけのチャットにしか送れません。",
+            deliverChatHintAi:
+                "レポートはメッセージとしてこのチャットに投稿されます。AI クレジットを使い、メッセージにその費用が表示されます。あなただけのチャットにしか送れません。通知は送りません。",
             rowDeliver: "投稿先: {name}",
             reportPosted: "{chat} にレポートを投稿しました",
             rowProject: "プロジェクト: {name}",
@@ -4855,7 +5009,13 @@ export const ja: DeepPartial<Messages> = {
             intro: "スキルは、名前の付いた手順のノートです。手順を一度書けば、自分だけで使うことも、チームで共有することもできます。",
             newDefaultTitle: "新しいスキル",
             untitled: "無題のスキル",
-            tabs: { label: "スキル", mine: "自分のスキル", team: "チーム", hub: "Genos Hub" },
+            tabs: {
+                label: "スキル",
+                mine: "自分のスキル",
+                team: "チーム",
+                installed: "インストール済み",
+                hub: "Genos Hub",
+            },
             newSkill: "新しいスキル",
             newBlank: "空のスキル",
             newTemplate: "テンプレートから",
@@ -4868,6 +5028,11 @@ export const ja: DeepPartial<Messages> = {
                 emptyTeamTitle: "チームのスキルはまだありません",
                 emptyTeamBody:
                     "チームメンバーが共有したスキルがここに表示されます。自分のスキルは詳細から共有できます。",
+                emptyInstalledTitle: "インストール済みのスキルはまだありません",
+                emptyInstalledBody:
+                    "インストールした公開スキルがここに表示され、作者が更新を公開するとお知らせします。",
+                installedUpToDate: "バージョン {n} · 最新です",
+                installedBehind: "バージョン {from} · 最新 {to}",
                 limitReached:
                     "プランで保存できるスキルは {limit} 件までで、現在 {used} 件あります。削除するか、プランをアップグレードしてください。",
                 usage: "{used} / {limit} 件のスキルを使用中",
@@ -5069,6 +5234,13 @@ export const ja: DeepPartial<Messages> = {
                 starAria: "{name} にスターを付ける",
                 unstarAria: "{name} のスターを外す",
                 starFailed: "スターを変更できませんでした。もう一度お試しください。",
+                install: "インストール",
+                uninstall: "アンインストール",
+                installed: "インストール済み",
+                installedToast: "インストールしました。スキルの「インストール済み」にあります。",
+                uninstalledToast: "アンインストールしました。",
+                installFailed: "インストールできませんでした。もう一度お試しください。",
+                uninstallFailed: "アンインストールできませんでした。もう一度お試しください。",
                 starsOwn: "スター: {n}",
                 unpublished: "公開を停止しました。",
                 unpublishFailed: "非公開にできませんでした。もう一度お試しください。",

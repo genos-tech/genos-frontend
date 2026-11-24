@@ -250,6 +250,17 @@ export const ar: DeepPartial<Messages> = {
             hashChatFallback: "محادثة",
             hashProjectFallback: "مشروع",
         },
+        recentAuth: {
+            title: "تأكيد هويتك",
+            description:
+                "لأمانك، أدخل كلمة المرور قبل إضافة مفتاح API أو خطاف ويب أو تطبيق ذكاء اصطناعي. لن يُطلب منك ذلك مرة أخرى لبضع دقائق.",
+            passwordLabel: "كلمة المرور",
+            confirm: "متابعة",
+            cancel: "إلغاء",
+            wrong: "كلمة المرور غير صحيحة.",
+            tooMany: "محاولات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى.",
+            failed: "تعذّر التحقق من كلمة المرور. حاول مرة أخرى.",
+        },
         leaveConfirm: {
             leave: "يترك",
             cancel: "إلغاء",
@@ -593,6 +604,90 @@ export const ar: DeepPartial<Messages> = {
         mobile: {
             close: "إغلاق",
             openGenos: "فتح Genos",
+        },
+    },
+    security: {
+        tab: "الأمان",
+        twoFactor: {
+            title: "التحقق بخطوتين",
+            description:
+                "بعد كلمة المرور، يطلب Genos رمزًا من 6 أرقام من تطبيق مصادقة. لم تعد كلمة مرور مسروقة أو مُخمَّنة وحدها كافية لفتح حسابك.",
+            statusOn: "مفعّل",
+            statusOff: "معطّل",
+            onSince: "مفعّل منذ {date}",
+            recoveryLeft: "رموز الاسترداد المتبقية: {count}",
+            recoveryLow:
+                "رموز الاسترداد على وشك النفاد. احصل على مجموعة جديدة قبل أن تحتاج إليها.",
+            turnOn: "تفعيل",
+            turnOff: "تعطيل",
+            newCodes: "الحصول على رموز استرداد جديدة",
+            providerNote:
+                "تسجّل الدخول عبر Google أو GitHub، ولكل منهما تحقق بخطوتين خاص به. فعّله في ذلك الحساب؛ لا شيء يحتاج إلى إعداد هنا.",
+            loadFailed: "تعذّر تحميل إعدادات الأمان.",
+            retry: "إعادة المحاولة",
+            scopeNote: "يُطبَّق عند تسجيل الدخول بالبريد الإلكتروني وكلمة المرور.",
+        },
+        setup: {
+            title: "تفعيل التحقق بخطوتين",
+            passwordIntro:
+                "أدخل كلمة المرور للبدء. هذا يمنع شخصًا يستخدم جلستك المفتوحة من تغيير هذا الإعداد.",
+            passwordLabel: "كلمة المرور",
+            continue: "متابعة",
+            cancel: "إلغاء",
+            scanTitle: "امسح الرمز بتطبيق المصادقة",
+            scanBody:
+                "استخدم Google Authenticator أو 1Password أو Authy أو أي تطبيق ينشئ رموزًا من 6 أرقام، ثم أدخل الرمز الذي يعرضه.",
+            qrAlt: "رمز QR لإضافة Genos إلى تطبيق المصادقة",
+            manualTitle: "لا تستطيع المسح؟ اكتب هذا المفتاح في التطبيق.",
+            keyLabel: "مفتاح الإعداد",
+            copyKey: "نسخ المفتاح",
+            copied: "تم النسخ",
+            openInApp: "فتح في تطبيق المصادقة",
+            codeLabel: "رمز من 6 أرقام",
+            codeHelp: "يتغير الرمز كل 30 ثانية.",
+            verify: "تفعيل",
+            recoveryTitle: "احفظ رموز الاسترداد",
+            recoveryBody:
+                "إذا فقدت هاتفك، يتيح لك كل رمز من هذه الرموز تسجيل الدخول مرة واحدة. تُعرض الآن فقط، فاحتفظ بها في مكان آمن بعيدًا عن كلمة المرور.",
+            copyAll: "نسخ الكل",
+            download: "تنزيل",
+            downloadHeader: "رموز استرداد Genos. يعمل كل رمز مرة واحدة فقط.",
+            savedConfirm: "لقد حفظت هذه الرموز",
+            done: "تم",
+        },
+        confirm: {
+            passwordLabel: "كلمة المرور",
+            disableTitle: "تعطيل التحقق بخطوتين؟",
+            disableBody:
+                "سيتمكن أي شخص يعرف كلمة مرورك من تسجيل الدخول. أدخل كلمة المرور للتأكيد.",
+            disableAction: "تعطيل",
+            newCodesTitle: "الحصول على رموز استرداد جديدة؟",
+            newCodesBody:
+                "ستتوقف رموز الاسترداد القديمة عن العمل. أدخل كلمة المرور للحصول على مجموعة جديدة.",
+            newCodesAction: "الحصول على رموز جديدة",
+            cancel: "إلغاء",
+        },
+        errors: {
+            badPassword: "كلمة المرور غير صحيحة.",
+            invalidCode: "الرمز غير صحيح. تحقق من التطبيق وحاول مرة أخرى.",
+            locked: "عدد كبير جدًا من الرموز الخاطئة. حاول مرة أخرى بعد {minutes} دقيقة.",
+            throttled: "محاولات كثيرة جدًا. انتظر قليلًا ثم حاول مرة أخرى.",
+            alreadyEnabled: "التحقق بخطوتين مفعّل بالفعل.",
+            noSetup: "انتهت صلاحية الإعداد. ابدأ من جديد.",
+            network: "خطأ في الشبكة. تحقق من اتصالك وحاول مرة أخرى.",
+            generic: "حدث خطأ ما. لم يتم تغيير أي شيء.",
+        },
+        signIn: {
+            title: "التحقق بخطوتين",
+            appBody: "أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة.",
+            recoveryBody: "أدخل أحد رموز الاسترداد. يعمل كل رمز مرة واحدة فقط.",
+            codeLabel: "رمز المصادقة",
+            recoveryLabel: "رمز الاسترداد",
+            submit: "تحقق",
+            useRecovery: "استخدام رمز استرداد",
+            useApp: "استخدام تطبيق المصادقة",
+            back: "العودة إلى تسجيل الدخول",
+            expired: "انتهت صلاحية عملية تسجيل الدخول هذه. أدخل كلمة المرور مرة أخرى.",
         },
     },
     settings: {
@@ -1065,6 +1160,8 @@ export const ar: DeepPartial<Messages> = {
             deliverProjectChat: "{name} (محادثة المشروع)",
             deliverChatHint:
                 "يُنشر التقرير في هذه المحادثة كرسالة، دون ذكاء اصطناعي ودون إشعار. يمكن لكل من في المحادثة قراءته، لذا لا يمكن إرسال تقرير مشروع إلا إلى محادثة تضم أعضاء ذلك المشروع فقط.",
+            deliverChatHintAi:
+                "يُنشر التقرير في هذه المحادثة كرسالة. يستخدم رصيد الذكاء الاصطناعي ويعرض تكلفته في الرسالة، ولا يمكن إرساله إلا إلى محادثة أنت وحدك فيها. لا يُرسل أي إشعار.",
             rowDeliver: "يُنشر في: {name}",
             reportPosted: "تم نشر التقرير في {chat}",
             rowProject: "المشروع: {name}",
@@ -1116,7 +1213,13 @@ export const ar: DeepPartial<Messages> = {
             intro: "المهارة هي ملاحظة تعليمات لها اسم. اكتب الخطوات مرة واحدة واحتفظ بها لنفسك أو شاركها مع فريقك.",
             newDefaultTitle: "مهارة جديدة",
             untitled: "مهارة بلا عنوان",
-            tabs: { label: "المهارات", mine: "مهاراتي", team: "الفريق", hub: "مركز Genos" },
+            tabs: {
+                label: "المهارات",
+                mine: "مهاراتي",
+                team: "الفريق",
+                installed: "المثبّتة",
+                hub: "مركز Genos",
+            },
             newSkill: "مهارة جديدة",
             newBlank: "مهارة فارغة",
             newTemplate: "من قالب",
@@ -1129,6 +1232,11 @@ export const ar: DeepPartial<Messages> = {
                 emptyTeamTitle: "لا توجد مهارات للفريق بعد",
                 emptyTeamBody:
                     "تظهر هنا المهارات التي يشاركها زملاؤك مع الفريق. شارك إحدى مهاراتك من تفاصيلها.",
+                emptyInstalledTitle: "لا توجد مهارات مثبّتة بعد",
+                emptyInstalledBody:
+                    "تظهر هنا المهارات العامة التي تثبّتها، وسنُعلمك عندما ينشر المؤلف تحديثًا.",
+                installedUpToDate: "الإصدار {n} · محدَّث",
+                installedBehind: "الإصدار {from} · الأحدث {to}",
                 limitReached:
                     "تتيح خطتك حتى {limit} مهارات ولديك {used}. احذف واحدة أو قم بالترقية لإضافة المزيد.",
                 usage: "{used} من {limit} مهارات مستخدمة",
@@ -1327,6 +1435,13 @@ export const ar: DeepPartial<Messages> = {
                 starAria: "ضع نجمة على {name}",
                 unstarAria: "أزل نجمتك عن {name}",
                 starFailed: "تعذّر تغيير النجمة. حاول مرة أخرى.",
+                install: "تثبيت",
+                uninstall: "إلغاء التثبيت",
+                installed: "مثبّتة",
+                installedToast: "تم التثبيت. ستجدها ضمن «المثبّتة» في مهاراتك.",
+                uninstalledToast: "تم إلغاء التثبيت.",
+                installFailed: "تعذّر التثبيت. حاول مرة أخرى.",
+                uninstallFailed: "تعذّر إلغاء التثبيت. حاول مرة أخرى.",
                 starsOwn: "النجوم: {n}",
                 unpublished: "لم تعد عامة.",
                 unpublishFailed: "تعذّر جعلها خاصة. حاول مرة أخرى.",
@@ -2135,6 +2250,12 @@ export const ar: DeepPartial<Messages> = {
                     anonymous: "تم تسجيل الخروج",
                 },
                 actions: {
+                    "mfa.enabled": "تم تفعيل التحقق بخطوتين",
+                    "mfa.disabled": "تم تعطيل التحقق بخطوتين",
+                    "mfa.failed": "تم رفض الخطوة الثانية",
+                    "mfa.recovery_used": "تم استخدام رمز استرداد",
+                    "mfa.recovery_regenerated": "تم استبدال رموز الاسترداد",
+                    "operator.mfa_reset": "أعاد الدعم ضبط التحقق بخطوتين",
                     "signin.succeeded": "تسجيل الدخول",
                     "signin.failed": "فشل تسجيل الدخول",
                     signout: "تسجيل الخروج",
@@ -4777,6 +4898,7 @@ export const ar: DeepPartial<Messages> = {
             showHiddenCrumbs: "إظهار {count} فتات الخبز المخفية",
             importMarkdown: "استيراد تخفيض السعر…",
             exportMarkdown: "تصدير كتخفيض السعر",
+            reloadPage: "إعادة تحميل الصفحة",
         },
         autocomplete: {
             searchAria: "بحث",
@@ -5017,6 +5139,48 @@ export const ar: DeepPartial<Messages> = {
             tagUsage: "يستخدم بواسطة {count} المجلد (المجلدات)",
             tagEditFailed: "تعذر تحديث هذه العلامة. قد يكون موجودًا بالفعل، أو لا يمكنك تعديله.",
             tagDeleteFailed: "تعذر حذف هذه العلامة. لا يستطيع ذلك إلا منشئه أو مالك الفريق.",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "صفحة HTML · تُعرض داخل بيئة معزولة",
+            navigatedTitle: "حاولت هذه الصفحة فتح صفحة أخرى",
+            navigatedBody: "تم إيقافها، فلم تُفتح أي صفحة أخرى. أعد التحميل لرؤية الصفحة من جديد.",
+            reload: "إعادة التحميل",
+            loadError: "تعذّر تحميل هذه الصفحة",
+            retry: "إعادة المحاولة",
+            frameTitle: "صفحة HTML: {title}",
+            kindLabel: "صفحة HTML",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            heading: "استيراد Markdown أو HTML",
+            chooseFile: "اختر ملف .md أو .html…",
+            notOnPlan:
+                "صفحات HTML متاحة في خطة Core وما فوقها. قم بالترقية من الإعدادات ← الخطة والاستخدام لاستيراد هذه الصفحة.",
+            tooLarge: "حجم هذه الصفحة {size}، وهو أكبر من حد خطتك لصفحة HTML ({limit}).",
+            importedWithWarnings:
+                "تم الاستيراد كصفحة HTML. لن تظهر بعض الأجزاء داخل البيئة المعزولة:",
+            resultNotes: "تم استيراد {count} صفحة HTML.",
+            resultWarnings: "في {count} صفحة HTML أجزاء لن تظهر داخل البيئة المعزولة.",
+            fallbackWarning: "لن يظهر جزء من الصفحة داخل البيئة المعزولة.",
+            warning: {
+                external_script: "لن تعمل السكربتات المحمّلة من عنوان آخر ({count}).",
+                external_css:
+                    "تُحظر أوراق الأنماط المحمّلة من عنوان آخر، لذا قد تبدو الصفحة بلا تنسيق ({count}).",
+                external_font: "تُحظر خطوط الويب المحمّلة من عنوان آخر ({count}).",
+                remote_image: "تُحظر الصور والوسائط المحمّلة من عنوان آخر ({count}).",
+                external_frame:
+                    "تُحظر الإطارات والعناصر المضمّنة التي تشير إلى صفحة أخرى ({count}).",
+                network_call:
+                    "ستفشل استدعاءات الشبكة في الصفحة (fetch وXHR وWebSocket) ({count}).",
+                form: "لا يمكن إرسال النماذج من هنا ({count}).",
+                window_open: "تُحظر النوافذ المنبثقة ({count}).",
+                navigation: "تُحظر إعادة التوجيه والروابط التي تغادر الصفحة ({count}).",
+                storage:
+                    "لا يمكن للصفحة الاحتفاظ بملفات تعريف الارتباط أو التخزين المحلي ({count}).",
+                no_doctype: "لا تحتوي الصفحة على <!doctype html>، لذا تُعرض في وضع quirks.",
+                no_title: "لا تحتوي الصفحة على <title>، لذا استُخدم اسم الملف عنوانًا للملاحظة.",
+            },
         },
         importMd: {
             heading: "استيراد تخفيض السعر",
@@ -5851,7 +6015,7 @@ export const ar: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "تحقق من البريد الوارد الخاص بك",
-                    body: "أرسلنا رابط التحقق إلى {email}. انقر عليه لإنهاء التسجيل.",
+                    body: "أرسلنا رسالة إلى {email}. افتحها لإنهاء التسجيل، أو لتسجيل الدخول إذا كان لديك حساب بالفعل.",
                     checkInboxHint:
                         "انقر فوق الرابط الموجود في البريد الإلكتروني للتحقق من عنوانك.",
                     resend: "إعادة إرسال البريد الإلكتروني",
@@ -5887,6 +6051,10 @@ export const ar: DeepPartial<Messages> = {
                 generic: "حدث خطأ ما. يُرجى المحاولة لاحقًا.",
                 unexpected: "حدث خطأ غير متوقع. يُرجى المحاولة مرة أخرى.",
                 duplicateEmail: "يُرجى المحاولة بعنوان بريد إلكتروني مختلف.",
+                passwordCommon:
+                    "كلمة المرور هذه شائعة جدًا أو يسهل تخمينها. يُرجى اختيار كلمة أخرى.",
+                passwordBreached:
+                    "ظهرت كلمة المرور هذه في تسريب بيانات معروف. يُرجى اختيار كلمة أخرى.",
                 duplicateName: "يُرجى المحاولة باسم مختلف.",
                 demoRateLimited:
                     "عدد كبير جدًا من تسجيلات الدخول التجريبية من هذه الشبكة. يُرجى المحاولة لاحقًا.",
@@ -5943,6 +6111,8 @@ export const ar: DeepPartial<Messages> = {
                     provider_error: "أرجع موفر OAuth خطأً. يرجى المحاولة مرة أخرى.",
                     not_authenticated: "يجب عليك تسجيل الدخول لتوصيل حساب جهة خارجية.",
                     already_connected_to_other_user: "هذا الحساب متصل بالفعل بمستخدم آخر.",
+                    mfa_password_only:
+                        "يستخدم هذا الحساب التحقق بخطوتين، وهو يعمل مع البريد الإلكتروني وكلمة المرور. سجّل الدخول بالبريد الإلكتروني وكلمة المرور والرمز.",
                     not_a_login_account:
                         "تم ربط هذا الحساب فقط للوصول إلى التقويم، لذا لا يمكنه تسجيل دخولك.",
                     provider_already_connected: "لديك بالفعل حساب متصل بهذا المزود. افصله أولاً.",

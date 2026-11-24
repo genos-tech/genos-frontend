@@ -143,6 +143,36 @@ describe("note header menu", () => {
         ]);
     });
 
+    it("offers no action that writes the body on an HTML page (MIP-2215)", () => {
+        const htmlNM = {
+            ...(useNM as object),
+            currentMyNote: {
+                body: [],
+                noteId: 1,
+                title: "A page",
+                folderId: null,
+                bodyFormat: "html",
+            },
+        } as never;
+        renderHeader({ noteType: 1, useNM: htmlNM });
+        const labels = menuLabels();
+        expect(labels).not.toContain(header.importMarkdown);
+        expect(labels).not.toContain(history.viewVersions);
+        expect(labels).not.toContain(header.exportMarkdown);
+        expect(labels).toEqual(
+            expect.arrayContaining([
+                header.shareEllipsis,
+                header.copyNoteLink,
+                header.newNote,
+                header.childNote,
+                folders.moveToFolder,
+                header.reloadPage,
+                mute,
+                header.deleteNote,
+            ])
+        );
+    });
+
     it("offers Delete permanently to the note's owner only (MIP-1937)", () => {
         const asEditor = {
             ...(useNM as object),

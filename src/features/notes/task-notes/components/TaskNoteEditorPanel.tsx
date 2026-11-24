@@ -11,10 +11,12 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import type { NoteTab } from "../../../../hooks/notes/useNoteTabs";
 import { UserProps } from "../../../../types/admin";
 import { TaskNoteProps } from "../../../../types/notes";
+import { HtmlNoteView } from "../../common/components/HtmlNoteView";
 import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
 import { NoteLoadState } from "../../common/components/NoteLoadState";
 import { NoteTitleField } from "../../common/components/NoteTitleField";
 import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
+import { isHtmlNote } from "../../common/utils/htmlNote";
 
 interface TaskNoteEditorPanelProps {
     tab: NoteTab & { kind: "task" };
@@ -112,6 +114,20 @@ export const TaskNoteEditorPanel = ({
             <Box sx={{ display: isActive ? "block" : "none", width: "100%", height: "100%" }}>
                 <NoteAccessRequestPanel noteId={tab.noteId} noteType={2} socket={socket} />
             </Box>
+        );
+    }
+
+    if (note && isHtmlNote(note)) {
+        // An HTML page (MIP-2215): read-only in a sandboxed frame, never the editor.
+        return (
+            <HtmlNoteView
+                accessToken={accessToken}
+                fillHeight={fillHeight}
+                isActive={isActive}
+                noteId={tab.noteId}
+                noteType={2}
+                title={note.title}
+            />
         );
     }
 

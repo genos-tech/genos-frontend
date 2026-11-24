@@ -6,6 +6,8 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
+import RemoveCircleOutlineRoundedIcon from "@mui/icons-material/RemoveCircleOutlineRounded";
+import UpgradeRoundedIcon from "@mui/icons-material/UpgradeRounded";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import {
@@ -22,6 +24,7 @@ import {
     Typography,
 } from "@mui/joy";
 
+import { visuallyHidden } from "../../../components/ui/a11y/visuallyHidden";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { ErrorState } from "../../../components/ui/feedback/ErrorState";
@@ -46,12 +49,14 @@ import {
     fetchSkills,
     isModerated,
     setSkillHidden,
+    uninstallSkill,
     type SkillList,
     type SkillRow,
     type SkillTab,
 } from "./skillsApi";
 import type { SkillsHost } from "./skillsHost";
 import { templateBody } from "./skillText";
+import { SkillUpdateDiffDialog } from "./SkillUpdateDiffDialog";
 
 type Props = {
     teamId: string;
@@ -59,7 +64,8 @@ type Props = {
 };
 
 type View = { kind: "list" } | { kind: "edit"; id: string };
-/** The tabs of the page: the member's own and the team's, and the public Hub (MIP-2047). */
+/** The tabs of the page: the member's own and the team's, the public skills they installed
+ *  (MIP-2226), and the public Hub (MIP-2047). */
 type PageTab = SkillTab | "hub";
 type ListState =
     | { status: "loading" }
@@ -88,22 +94,42 @@ export const SkillsPage = ({ teamId, host }: Props) => {
     const [creating, setCreating] = useState(false);
     const [deleting, setDeleting] = useState<SkillRow | null>(null);
     const [reporting, setReporting] = useState<SkillRow | null>(null);
+    // The installed skill whose update diff is open (MIP-2226).
+    const [updating, setUpdating] = useState<SkillRow | null>(null);
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     // Only the newest request may set the list: a slow answer for the tab left behind must not
     // be drawn under the tab now open.
     const latest = useRef(0);
     const load = useCallback(
-        async (which: SkillTab) => {
+        async (which: SkillTab, quiet = false) => {
             const mine = ++latest.current;
-            setList({ status: "loading" });
+            // A quiet refresh keeps the rows on screen (no skeleton), so a focused control inside
+            // a row is not unmounted under a keyboard user.
+            if (!quiet) setList({ status: "loading" });
             const res = await fetchSkills(accessToken, teamId, which);
             if (mine !== latest.current) return;
             if (res.ok) setPublicEnabled(res.data.publicEnabled);
-            setList(res.ok ? { status: "ready", data: res.data } : { status: "failed" });
+            setList((prev) =>
+                res.ok
+                    ? { status: "ready", data: res.data }
+                    : quiet && prev.status === "ready"
+                      ? prev
+                      : { status: "failed" }
+            );
         },
         [accessToken, teamId]
     );
+
+    // After an accepted update the marker is gone, so focus goes to that row's open button
+    // instead of the page top (MIP-2226).
+    const focusAfterUpdate = useRef<string | null>(null);
+    useEffect(() => {
+        const id = focusAfterUpdate.current;
+        if (!id || list.status !== "ready") return;
+        focusAfterUpdate.current = null;
+        document.querySelector<HTMLElement>(`[data-skill-open="${CSS.escape(id)}"]`)?.focus();
+    }, [list]);
 
     // The Hub tab loads its own pages; the list behind it stays the member's own.
     const listTab: SkillTab = tab === "hub" ? "mine" : tab;
@@ -171,6 +197,17 @@ export const SkillsPage = ({ teamId, host }: Props) => {
         void load(listTab);
     };
 
+    // From the Installed tab (MIP-2293): the row leaves the list once the server has removed it.
+    const uninstall = async (skill: SkillRow) => {
+        const res = await uninstallSkill(accessToken, skill.id);
+        if (res.ok) {
+            toast.success(m.hub.uninstalledToast);
+            void load(listTab, true);
+        } else {
+            toast.error(res.message || m.hub.uninstallFailed);
+        }
+    };
+
     const remove = async () => {
         if (!deleting) return false;
         const res = await deleteSkill(accessToken, deleting.id);
@@ -226,17 +263,35 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                 <Tabs
                     aria-label={m.tabs.label}
                     size="sm"
-                    sx={{ bgcolor: "transparent", minWidth: 0 }}
+                    sx={{ bgcolor: "transparent", minWidth: 0, maxWidth: "100%" }}
                     value={tab}
                     onChange={(_e, value) => setTab(value as PageTab)}
                 >
-                    <TabList sx={{ gap: 0.5 }} disableUnderline>
+                    {/* Four tabs stay on one line whatever the language: a label never wraps, and
+                        a strip wider than the screen scrolls sideways (MIP-2226). */}
+                    <TabList
+                        sx={{
+                            gap: 0.5,
+                            flexWrap: "nowrap",
+                            overflowX: "auto",
+                            "& [role=tab]": { flexShrink: 0, whiteSpace: "nowrap", px: 0.875 },
+                        }}
+                        disableUnderline
+                    >
                         <Tab value="mine" variant={tab === "mine" ? "soft" : "plain"}>
                             {m.tabs.mine}
                         </Tab>
                         <Tab value="team" variant={tab === "team" ? "soft" : "plain"}>
                             {m.tabs.team}
                         </Tab>
+                        {(publicEnabled || tab === "installed") && (
+                            <Tab
+                                value="installed"
+                                variant={tab === "installed" ? "soft" : "plain"}
+                            >
+                                {m.tabs.installed}
+                            </Tab>
+                        )}
                         {publicEnabled && (
                             <Tab value="hub" variant={tab === "hub" ? "soft" : "plain"}>
                                 {m.tabs.hub}
@@ -299,10 +354,8 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                 />
             ) : list.data.skills.length === 0 ? (
                 <EmptyState
-                    body={tab === "mine" ? m.list.emptyMineBody : m.list.emptyTeamBody}
                     data-empty="genos-skills"
                     size="sm"
-                    title={tab === "mine" ? m.list.emptyMineTitle : m.list.emptyTeamTitle}
                     action={
                         tab === "mine" && !full
                             ? {
@@ -311,6 +364,20 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                                   icon: <ArticleOutlinedIcon />,
                               }
                             : undefined
+                    }
+                    body={
+                        tab === "mine"
+                            ? m.list.emptyMineBody
+                            : tab === "installed"
+                              ? m.list.emptyInstalledBody
+                              : m.list.emptyTeamBody
+                    }
+                    title={
+                        tab === "mine"
+                            ? m.list.emptyMineTitle
+                            : tab === "installed"
+                              ? m.list.emptyInstalledTitle
+                              : m.list.emptyTeamTitle
                     }
                 />
             ) : (
@@ -329,6 +396,7 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                     {list.data.skills.map((skill) => (
                         <SkillListItem
                             key={skill.id}
+                            installedTab={tab === "installed"}
                             skill={skill}
                             when={
                                 skill.updatedAt
@@ -339,6 +407,8 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                             onOpen={() => setView({ kind: "edit", id: skill.id })}
                             onReport={() => setReporting(skill)}
                             onToggleHidden={() => void toggleHidden(skill)}
+                            onUninstall={() => void uninstall(skill)}
+                            onUpdate={() => setUpdating(skill)}
                             onDelete={() => {
                                 setDeleteError(null);
                                 setDeleting(skill);
@@ -356,6 +426,14 @@ export const SkillsPage = ({ teamId, host }: Props) => {
             <SkillReportDialog
                 skill={reporting ? { id: reporting.id, title: reporting.title } : null}
                 onClose={() => setReporting(null)}
+            />
+            <SkillUpdateDiffDialog
+                skill={updating ? { id: updating.id, title: updating.title } : null}
+                onClose={() => setUpdating(null)}
+                onUpdated={() => {
+                    focusAfterUpdate.current = updating?.id ?? null;
+                    void load(listTab, true);
+                }}
             />
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
@@ -376,27 +454,46 @@ export const SkillsPage = ({ teamId, host }: Props) => {
 
 type ItemProps = {
     skill: SkillRow;
+    /** The Installed tab: the row names the author and gets the version line (MIP-2226). */
+    installedTab: boolean;
     when: string;
     onOpen: () => void;
     onCopy: () => void;
     onToggleHidden: () => void;
     onReport: () => void;
     onDelete: () => void;
+    onUpdate: () => void;
+    onUninstall: () => void;
 };
+
+/** The one-line footer of an installed row. Both states are `FOOTER_HEIGHT` tall, so a row with
+ *  the "Update available" marker and one without have the same geometry. */
+const FOOTER_HEIGHT = 36;
 
 const SkillListItem = ({
     skill,
+    installedTab,
     when,
     onOpen,
     onCopy,
     onToggleHidden,
     onReport,
     onDelete,
+    onUpdate,
+    onUninstall,
 }: ItemProps) => {
     const { t } = useTranslation();
     const l = t.settings.genosSkills.list;
     const tm = t.settings.genosSkills.team;
+    const h = t.settings.genosSkills.hub;
     const name = skill.title || t.settings.genosSkills.untitled;
+    // An outside author is named by the public handle only, never the account (MIP-2047).
+    const byline = skill.isOfficial
+        ? h.official
+        : skill.author
+          ? fmt(h.byHandle, { handle: skill.author.handle })
+          : "";
+    const installed = installedTab ? (skill.installedVersionNo ?? null) : null;
     const items = [
         {
             id: "open",
@@ -417,6 +514,13 @@ const SkillListItem = ({
                 skill.visibility !== "private" &&
                 skill.visibility !== "specific" &&
                 !skill.hiddenByTeam,
+        },
+        {
+            id: "uninstall",
+            label: h.uninstall,
+            icon: <RemoveCircleOutlineRoundedIcon />,
+            onClick: onUninstall,
+            visible: installed !== null,
         },
         {
             id: "hide",
@@ -455,106 +559,173 @@ const SkillListItem = ({
                 "&:first-of-type": { borderTop: "none" },
             }}
         >
-            <PlainButton
-                aria-label={name}
-                sx={{
-                    flex: 1,
-                    minWidth: 0,
-                    display: "block",
-                    textAlign: "start",
-                    p: 1.5,
-                    borderRadius: "lg",
-                }}
-                onClick={onOpen}
-            >
-                <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}>
-                    {skill.icon && <span aria-hidden>{skill.icon}</span>}
-                    <Typography level="title-sm" sx={{ overflowWrap: "anywhere" }}>
-                        {name}
-                    </Typography>
-                    <Typography
-                        level="body-xs"
-                        sx={{ color: "text.tertiary", fontFamily: "monospace" }}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+                <PlainButton
+                    aria-label={name}
+                    data-skill-open={skill.id}
+                    sx={{
+                        width: "100%",
+                        minWidth: 0,
+                        display: "block",
+                        textAlign: "start",
+                        p: 1.5,
+                        borderRadius: "lg",
+                        // A row with a footer under it keeps its text clear of the footer.
+                        ...(installed !== null && { pb: 0.5 }),
+                    }}
+                    onClick={onOpen}
+                >
+                    <Box
+                        sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 0.75 }}
                     >
-                        /{skill.slug}
-                    </Typography>
-                    <Chip size="sm" variant="soft">
-                        {skill.visibility === "team"
-                            ? l.team
-                            : skill.visibility === "specific"
-                              ? l.specific
-                              : l.private}
-                    </Chip>
-                    {skill.role === "editor" && (
-                        <Chip size="sm" variant="outlined">
-                            {tm.roleEditor}
+                        {skill.icon && <span aria-hidden>{skill.icon}</span>}
+                        <Typography level="title-sm" sx={{ overflowWrap: "anywhere" }}>
+                            {name}
+                        </Typography>
+                        <Typography
+                            level="body-xs"
+                            sx={{ color: "text.tertiary", fontFamily: "monospace" }}
+                        >
+                            /{skill.slug}
+                        </Typography>
+                        <Chip size="sm" variant="soft">
+                            {skill.visibility === "team"
+                                ? l.team
+                                : skill.visibility === "specific"
+                                  ? l.specific
+                                  : skill.visibility === "public"
+                                    ? h.field.public
+                                    : l.private}
                         </Chip>
-                    )}
-                    {skill.hiddenByTeam && (
-                        <Chip color="warning" size="sm" variant="soft">
-                            {tm.hiddenChip}
-                        </Chip>
-                    )}
-                    {skill.sourceHarmful && (
-                        <AppTooltip title={t.settings.genosSkills.sourceHarmful.warning}>
-                            <Chip color="warning" size="sm" variant="soft">
-                                {t.settings.genosSkills.sourceHarmful.chip}
-                            </Chip>
-                        </AppTooltip>
-                    )}
-                    {skill.mine && isModerated(skill.status) && (
-                        <Chip color="warning" size="sm" variant="soft">
-                            {l.moderated[skill.status as keyof typeof l.moderated]}
-                        </Chip>
-                    )}
-                    {skill.mine &&
-                        (skill.visibility === "team" || skill.visibility === "specific") && (
-                            <Chip
-                                color={skill.publishedVersionNo > 0 ? "neutral" : "warning"}
-                                size="sm"
-                                variant="outlined"
-                            >
-                                {skill.publishedVersionNo > 0
-                                    ? fmt(l.version, { n: skill.publishedVersionNo })
-                                    : l.notPublished}
+                        {skill.role === "editor" && (
+                            <Chip size="sm" variant="outlined">
+                                {tm.roleEditor}
                             </Chip>
                         )}
-                </Box>
-                {skill.description && (
-                    <Typography
-                        level="body-sm"
+                        {skill.hiddenByTeam && (
+                            <Chip color="warning" size="sm" variant="soft">
+                                {tm.hiddenChip}
+                            </Chip>
+                        )}
+                        {skill.sourceHarmful && (
+                            <AppTooltip title={t.settings.genosSkills.sourceHarmful.warning}>
+                                <Chip color="warning" size="sm" variant="soft">
+                                    {t.settings.genosSkills.sourceHarmful.chip}
+                                </Chip>
+                            </AppTooltip>
+                        )}
+                        {skill.mine && isModerated(skill.status) && (
+                            <Chip color="warning" size="sm" variant="soft">
+                                {l.moderated[skill.status as keyof typeof l.moderated]}
+                            </Chip>
+                        )}
+                        {skill.mine &&
+                            (skill.visibility === "team" || skill.visibility === "specific") && (
+                                <Chip
+                                    color={skill.publishedVersionNo > 0 ? "neutral" : "warning"}
+                                    size="sm"
+                                    variant="outlined"
+                                >
+                                    {skill.publishedVersionNo > 0
+                                        ? fmt(l.version, { n: skill.publishedVersionNo })
+                                        : l.notPublished}
+                                </Chip>
+                            )}
+                    </Box>
+                    {skill.description && (
+                        <Typography
+                            level="body-sm"
+                            sx={{
+                                mt: 0.5,
+                                overflowWrap: "anywhere",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                            }}
+                        >
+                            {skill.description}
+                        </Typography>
+                    )}
+                    {skill.tags.length > 0 && (
+                        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.75 }}>
+                            {chipsOf(skill).map((chip) => (
+                                <ProjectTagChip
+                                    key={chip.name}
+                                    label={chip.name}
+                                    tagColor={chip.color}
+                                />
+                            ))}
+                        </Box>
+                    )}
+                    <Typography level="body-xs" sx={{ mt: 0.75, color: "text.tertiary" }}>
+                        {[
+                            !skill.mine && skill.ownerName
+                                ? fmt(l.by, { name: skill.ownerName })
+                                : "",
+                            installedTab ? byline : "",
+                            when ? fmt(l.updated, { when }) : "",
+                        ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                    </Typography>
+                </PlainButton>
+                {installed !== null && (
+                    <Box
                         sx={{
-                            mt: 0.5,
-                            overflowWrap: "anywhere",
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            minWidth: 0,
+                            height: FOOTER_HEIGHT,
+                            px: 1.5,
                         }}
                     >
-                        {skill.description}
-                    </Typography>
-                )}
-                {skill.tags.length > 0 && (
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mt: 0.75 }}>
-                        {chipsOf(skill).map((chip) => (
-                            <ProjectTagChip
-                                key={chip.name}
-                                label={chip.name}
-                                tagColor={chip.color}
-                            />
-                        ))}
+                        {skill.updateAvailable && (
+                            <Button
+                                color="primary"
+                                size="sm"
+                                startDecorator={<UpgradeRoundedIcon />}
+                                variant="soft"
+                                sx={{
+                                    flexShrink: 0,
+                                    minHeight: 0,
+                                    height: FOOTER_HEIGHT - 8,
+                                    // A finger gets the whole footer height; the row does not grow.
+                                    "@media (pointer: coarse)": { height: FOOTER_HEIGHT },
+                                }}
+                                onClick={onUpdate}
+                            >
+                                {t.settings.genosSkills.updateDiff.title}
+                                <Box component="span" sx={visuallyHidden}>
+                                    {` · ${name}`}
+                                </Box>
+                            </Button>
+                        )}
+                        <Typography
+                            level="body-xs"
+                            sx={{
+                                color: "text.tertiary",
+                                minWidth: 0,
+                                // At most two short lines inside the fixed footer: a long locale
+                                // wraps next to the marker instead of cutting the versions off.
+                                lineHeight: 1.3,
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                            }}
+                        >
+                            {skill.updateAvailable
+                                ? fmt(l.installedBehind, {
+                                      from: installed,
+                                      to: skill.publishedVersionNo,
+                                  })
+                                : fmt(l.installedUpToDate, { n: installed })}
+                        </Typography>
                     </Box>
                 )}
-                <Typography level="body-xs" sx={{ mt: 0.75, color: "text.tertiary" }}>
-                    {[
-                        !skill.mine && skill.ownerName ? fmt(l.by, { name: skill.ownerName }) : "",
-                        when ? fmt(l.updated, { when }) : "",
-                    ]
-                        .filter(Boolean)
-                        .join(" · ")}
-                </Typography>
-            </PlainButton>
+            </Box>
             <Box sx={{ p: 1, flexShrink: 0 }}>
                 <MoreMenu
                     ariaLabel={fmt(l.actionsAria, { name })}

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
 import EditIcon from "@mui/icons-material/Edit";
 import NotificationsPausedRoundedIcon from "@mui/icons-material/NotificationsPausedRounded";
@@ -25,6 +25,7 @@ import { MenuDivider, MenuRow, MenuSurface } from "../../../../../components/ui/
 import { useAuth } from "../../../../../context/authState";
 import { UserRepository } from "../../../../../db/repositories/user";
 import { announcePresenceChange } from "../../../../../hooks/common/presenceEvents";
+import { useSelfDisplayZone } from "../../../../../hooks/common/useSelfDisplayZone";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { formatPauseStatusText } from "../../../../../services/notifications/notificationPauseHelpers";
 import { NotificationPausePresetItems } from "../../../../../services/notifications/NotificationPausePicker";
@@ -43,7 +44,6 @@ import {
 } from "../../../../../services/notifications/statusExpiry";
 import { g } from "../../../../../theme/tokens";
 import { UserProps } from "../../../../../types/admin";
-import { resolveDisplayZone } from "../../../../../utils/userTimezone";
 import { updateUserProfile } from "../../../services/updateUserProfile";
 
 const PRESET_STATUSES = [
@@ -139,10 +139,7 @@ export const UserProfileStatus = ({
 
     // The user's resolved zone, for the LOCAL wall-clock presets (Today / This
     // week). Self only ever sets an expiry, so resolve as self.
-    const zone = useMemo(
-        () => resolveDisplayZone(myself, true) ?? "UTC",
-        [myself.currentLocation, myself.timezone]
-    );
+    const zone = useSelfDisplayZone(myself);
 
     const [openEditor, setOpenEditor] = useState(false);
     const [newStatus, setNewStatus] = useState("");

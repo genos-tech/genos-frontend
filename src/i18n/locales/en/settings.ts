@@ -249,6 +249,8 @@ export const settings = {
         deliverProjectChat: "{name} (project chat)",
         deliverChatHint:
             "The report is posted in this chat as a message, with no AI and no notification. Everyone in the chat can read it, so a project report can only go to a chat of that project's members.",
+        deliverChatHintAi:
+            "The report is posted in this chat as a message. It uses AI credits and shows its cost in the message, and it can only go to a chat that only you are in. No notification is sent.",
         rowDeliver: "Posts in: {name}",
         reportPosted: "Report posted in {chat}",
         rowProject: "Project: {name}",
@@ -393,6 +395,12 @@ export const settings = {
             },
             actions: {
                 "signin.succeeded": "Signed in",
+                "mfa.enabled": "Two-step verification turned on",
+                "mfa.disabled": "Two-step verification turned off",
+                "mfa.failed": "Second step refused",
+                "mfa.recovery_used": "Recovery code used",
+                "mfa.recovery_regenerated": "Recovery codes replaced",
+                "operator.mfa_reset": "Two-step verification reset by support",
                 "signin.failed": "Sign-in failed",
                 signout: "Signed out",
                 "password.reset_requested": "Password reset requested",
@@ -1140,7 +1148,13 @@ export const settings = {
         intro: "A skill is a note of instructions with a name. Write the steps once and keep them for yourself or share them with your team.",
         newDefaultTitle: "New skill",
         untitled: "Untitled skill",
-        tabs: { label: "Skills", mine: "My skills", team: "Team", hub: "Genos Hub" },
+        tabs: {
+            label: "Skills",
+            mine: "My skills",
+            team: "Team",
+            installed: "Installed",
+            hub: "Genos Hub",
+        },
         newSkill: "New skill",
         newBlank: "Blank skill",
         newTemplate: "From template",
@@ -1153,6 +1167,11 @@ export const settings = {
             emptyTeamTitle: "No team skills yet",
             emptyTeamBody:
                 "Skills that teammates share with the team appear here. Share one of yours from its details.",
+            emptyInstalledTitle: "No installed skills yet",
+            emptyInstalledBody:
+                "Public skills you install appear here, and you are told when the author publishes an update.",
+            installedUpToDate: "Version {n} · up to date",
+            installedBehind: "Version {from} · latest {to}",
             limitReached:
                 "Your plan keeps up to {limit} skills and you have {used}. Delete one or upgrade to add more.",
             usage: "{used} of {limit} skills used",
@@ -1355,6 +1374,13 @@ export const settings = {
             starAria: "Star {name}",
             unstarAria: "Remove your star from {name}",
             starFailed: "Couldn't change the star. Please try again.",
+            install: "Install",
+            uninstall: "Uninstall",
+            installed: "Installed",
+            installedToast: "Installed. It is under Installed in your skills.",
+            uninstalledToast: "Uninstalled.",
+            installFailed: "Couldn't install. Please try again.",
+            uninstallFailed: "Couldn't uninstall. Please try again.",
             starsOwn: "Stars: {n}",
             unpublished: "No longer public.",
             unpublishFailed: "Couldn't make it private. Please try again.",

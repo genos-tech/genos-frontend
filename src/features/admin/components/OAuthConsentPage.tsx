@@ -4,13 +4,16 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
+import { useRecentAuthPrompt } from "../../../components/ui/modal/RecentAuthDialog";
 import { SignInFormStyles } from "../../../components/ui/styles/commonStyle";
 import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import {
     ConsentContext,
+    ConsentDecision,
     ConsentError,
     getConsentContext,
+    needsRecentAuth,
     submitConsentDecision,
 } from "../../../services/mcpConnections";
 import { rememberReturn, takeReturn } from "../../../utils/pendingReturn";
@@ -50,6 +53,7 @@ export const OAuthConsentPage = () => {
     const { t } = useTranslation();
     const c = t.admin.consent;
     const { accessToken } = useAuth();
+    const { guard, dialog: recentAuthDialog } = useRecentAuthPrompt();
     const navigate = useNavigate();
     const { search } = useLocation();
     const { mode } = useColorScheme();
@@ -146,19 +150,22 @@ export const OAuthConsentPage = () => {
         if (!params || !ready) return;
         setBusy(allow ? "allow" : "deny");
         setProblem(null);
-        const res = await submitConsentDecision(
-            accessToken,
-            params,
-            allow
-                ? {
-                      allow: true,
-                      scopes: scopesFor(choice, requested),
-                      teamIds,
-                      defaultTeamId,
-                  }
-                : { allow: false }
+        const decision: ConsentDecision = allow
+            ? {
+                  allow: true,
+                  scopes: scopesFor(choice, requested),
+                  teamIds,
+                  defaultTeamId,
+              }
+            : { allow: false };
+        // Allowing an app asks for the password again (MIP-2240); declining never does.
+        const res = await guard(
+            (token) => submitConsentDecision(accessToken, params, decision, token),
+            needsRecentAuth
         );
         setBusy(null);
+        // The person cancelled the password prompt: they are back on the consent screen.
+        if (needsRecentAuth(res)) return;
         if (res.ok) {
             if (isSafeRedirect(res.redirectTo)) leave(res.redirectTo);
             else setProblem(c.errors.generic);
@@ -422,6 +429,7 @@ export const OAuthConsentPage = () => {
                     </Stack>
                 )}
             </Box>
+            {recentAuthDialog}
         </Box>
     );
 };
