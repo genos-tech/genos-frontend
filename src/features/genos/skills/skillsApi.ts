@@ -22,6 +22,8 @@
  *   POST   /skills/<id>/confirm/ {teamId,versionNo}   "Run this skill": the person read the card
  *   GET    /skills/<id>/update-diff/            what an installed skill's update changes
  *   PATCH  /skills/<id>/install/ {versionNo}    accept that update
+ *   POST   /skills/<id>/install/                pin the published version of a public skill (MIP-2293);
+ *                                               DELETE removes the install
  *
  * The whole API answers 404 while the server's `GENOS_SKILLS` switch is off: the list call then
  * resolves `{ ok: false, reason: "off" }` and the settings card is not drawn at all.
@@ -1017,6 +1019,38 @@ export const setSkillStar = async (
         const url = `/skills/${encodeURIComponent(skillId)}/star/`;
         if (starred) await api.post(url, {}, OPTIONS);
         else await api.delete(url, OPTIONS);
+        return { ok: true, data: null };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** Install a public skill: the server pins the version published now and answers it. Idempotent. */
+export const installSkill = async (
+    accessToken: string | null,
+    skillId: string
+): Promise<Result<{ installedVersionNo: number }>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        const res = await api.post(`/skills/${encodeURIComponent(skillId)}/install/`, {}, OPTIONS);
+        const r = rec(res.data);
+        if (!r || !isVersionNo(r.installedVersionNo)) return NO_API;
+        return { ok: true, data: { installedVersionNo: r.installedVersionNo } };
+    } catch (error) {
+        return failure(error);
+    }
+};
+
+/** Take an install away. The skill and any copy the member made stay as they are. */
+export const uninstallSkill = async (
+    accessToken: string | null,
+    skillId: string
+): Promise<Result<null>> => {
+    const api = authApi(accessToken);
+    if (!api) return NO_API;
+    try {
+        await api.delete(`/skills/${encodeURIComponent(skillId)}/install/`, OPTIONS);
         return { ok: true, data: null };
     } catch (error) {
         return failure(error);
