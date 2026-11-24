@@ -40,7 +40,7 @@ const withDepth = (n: number): Record<string, unknown> => {
 };
 
 const topFor = (owner: string): unknown | null => {
-    for (let i = depth - 1; i >= 0; i--) {
+    for (let i = Math.min(depth, stack.length) - 1; i >= 0; i--) {
         if (stack[i].owner === owner) return stack[i].value;
     }
     return null;
@@ -106,13 +106,22 @@ export const pushModalPage = (owner: string, value: unknown): void => {
  */
 export const closeModalPages = (owner: string, then?: () => void): void => {
     let first = -1;
-    for (let i = 0; i < depth; i++) {
+    for (let i = 0; i < Math.min(depth, stack.length); i++) {
         if (stack[i].owner === owner) {
             first = i;
             break;
         }
     }
     if (first < 0) {
+        then?.();
+        return;
+    }
+    // The browser has left the modal's entries (a navigation pushed a page after them, as the
+    // Settings "Compare plans" links do): going back would undo that navigation. Forget the
+    // entries instead; they stay behind in the browser history as dead entries at the old address.
+    if (depthOf(window.history.state) !== depth) {
+        stack = stack.slice(0, first);
+        depth = first;
         then?.();
         return;
     }
