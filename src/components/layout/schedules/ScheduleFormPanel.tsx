@@ -423,26 +423,39 @@ export const ScheduleFormPanel = ({
                                     : raw === ""
                                       ? (known?.boolean?.defaultOn ?? false)
                                       : raw === "true";
-                                return (
-                                    <FormControl key={key} sx={{ minWidth: 0 }}>
-                                        <Box
-                                            sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                                if (known?.aiSwitch === true) {
+                                    // Two modes, not a switch: a plain job, or the same job by
+                                    // Genos AI. Plain is the default; the effort control below
+                                    // exists only in AI mode.
+                                    return (
+                                        <FormControl
+                                            key={key}
+                                            data-testid="schedule-mode"
+                                            sx={{ minWidth: 0 }}
                                         >
-                                            <Switch
-                                                checked={on}
-                                                disabled={creditsOut}
-                                                size="sm"
-                                                onChange={(e) =>
-                                                    setParam(e.target.checked ? "true" : "false")
-                                                }
-                                            />
-                                            <FormLabel sx={{ m: 0 }}>{label}</FormLabel>
-                                        </Box>
-                                        {creditsOut ? (
-                                            <>
-                                                <FormHelperText sx={{ color: g.text.secondary }}>
-                                                    {s.aiOutOfCredits}
-                                                </FormHelperText>
+                                            <FormLabel>{label}</FormLabel>
+                                            <Select
+                                                sx={{ minWidth: 0 }}
+                                                value={on ? "ai" : "plain"}
+                                                onChange={(_, v) => {
+                                                    if (v) setParam(v === "ai" ? "true" : "false");
+                                                }}
+                                            >
+                                                <Option value="plain">
+                                                    {s.scheduleModePlain}
+                                                </Option>
+                                                <Option disabled={creditsOut} value="ai">
+                                                    {s.scheduleModeAi}
+                                                </Option>
+                                            </Select>
+                                            <FormHelperText sx={{ color: g.text.secondary }}>
+                                                {creditsOut
+                                                    ? s.scheduleModeOutOfCredits
+                                                    : on
+                                                      ? s.scheduleModeAiHint
+                                                      : s.scheduleModePlainHint}
+                                            </FormHelperText>
+                                            {creditsOut && (
                                                 <Box
                                                     sx={{
                                                         display: "flex",
@@ -470,13 +483,28 @@ export const ScheduleFormPanel = ({
                                                         {s.aiOutOfCreditsUpgrade}
                                                     </Button>
                                                 </Box>
-                                            </>
-                                        ) : (
-                                            hint && (
-                                                <FormHelperText sx={{ color: g.text.secondary }}>
-                                                    {hint}
-                                                </FormHelperText>
-                                            )
+                                            )}
+                                        </FormControl>
+                                    );
+                                }
+                                return (
+                                    <FormControl key={key} sx={{ minWidth: 0 }}>
+                                        <Box
+                                            sx={{ display: "flex", gap: 1, alignItems: "center" }}
+                                        >
+                                            <Switch
+                                                checked={on}
+                                                size="sm"
+                                                onChange={(e) =>
+                                                    setParam(e.target.checked ? "true" : "false")
+                                                }
+                                            />
+                                            <FormLabel sx={{ m: 0 }}>{label}</FormLabel>
+                                        </Box>
+                                        {hint && (
+                                            <FormHelperText sx={{ color: g.text.secondary }}>
+                                                {hint}
+                                            </FormHelperText>
                                         )}
                                     </FormControl>
                                 );

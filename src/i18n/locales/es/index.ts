@@ -1213,11 +1213,15 @@ export const es: DeepPartial<Messages> = {
             errorSkill: "Elige una habilidad.",
             effortHintNoEstimate:
                 "Cuánto trabaja la IA en esta ejecución. Gasta tus créditos de IA como una pregunta en Spotlight; la cifra real aparece en cada informe.",
-            paramAiSentences: "Frases de IA",
-            paramAiSentencesHint:
-                "Añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Usa IA y gasta tus créditos de IA. Viene desactivada: actívala si la quieres.",
-            aiOutOfCredits:
-                "Has usado todos tus créditos de IA, así que las frases de IA no pueden ejecutarse. Compra créditos o mejora tu plan para activarlas.",
+            scheduleModeLabel: "Modo",
+            scheduleModePlain: "Tarea programada",
+            scheduleModeAi: "Tarea programada por Genos AI",
+            scheduleModePlainHint:
+                "Un informe sencillo hecho con tus datos. Sin IA, sin gastar créditos.",
+            scheduleModeAiHint:
+                "Genos AI añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Esto gasta tus créditos de IA.",
+            scheduleModeOutOfCredits:
+                "Has usado todos tus créditos de IA, así que el modo Genos AI no puede ejecutarse. Compra créditos o mejora tu plan para activarlo.",
             aiOutOfCreditsBuy: "Comprar créditos",
             aiOutOfCreditsUpgrade: "Mejorar plan",
             effortLabel: "Esfuerzo de la IA",

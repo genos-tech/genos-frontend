@@ -277,11 +277,14 @@ export const settings = {
         errorSkill: "Choose a skill.",
         effortHintNoEstimate:
             "How hard the AI works on this run. It spends your AI credits like a question in Spotlight; the real figure is shown on each report.",
-        paramAiSentences: "AI sentences",
-        paramAiSentencesHint:
-            "Adds one short sentence under a task when its comments explain where it stands. This uses AI and spends your AI credits. It is off unless you turn it on.",
-        aiOutOfCredits:
-            "You've used all your AI credits, so AI sentences can't run. Buy credits or upgrade to turn them on.",
+        scheduleModeLabel: "Mode",
+        scheduleModePlain: "Scheduled job",
+        scheduleModeAi: "Scheduled job by Genos AI",
+        scheduleModePlainHint: "A plain report built from your data. No AI, no credits spent.",
+        scheduleModeAiHint:
+            "Genos AI adds one short sentence under a task when its comments explain where it stands. This spends your AI credits.",
+        scheduleModeOutOfCredits:
+            "You've used all your AI credits, so the Genos AI mode can't run. Buy credits or upgrade to turn it on.",
         aiOutOfCreditsBuy: "Buy credits",
         aiOutOfCreditsUpgrade: "Upgrade plan",
         effortLabel: "AI effort",
