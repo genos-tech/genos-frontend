@@ -12,7 +12,7 @@ import { g } from "../../../../theme/tokens";
  */
 export const folderFavoriteMenuItem = (
     folderId: number,
-    useNM: NoteManagementState,
+    useNM: Pick<NoteManagementState, "isFolderFavorited" | "toggleFolderFavorite">,
     labels: { add: string; remove: string }
 ): MoreMenuItem => {
     const isFavorited = useNM.isFolderFavorited(folderId);

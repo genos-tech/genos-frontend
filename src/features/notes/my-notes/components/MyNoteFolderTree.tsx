@@ -13,12 +13,12 @@ import { Box, List, ListItem, Typography } from "@mui/joy";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
-import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { MyNoteFolderTreeNode, MyNoteMetaTreeNode } from "../../../../types/notes";
 import { FolderFavoriteStar } from "../../common/components/FolderFavoriteStar";
 import { highlightedFolderSx } from "../../common/components/folderFavoriteStarHelpers";
+import { NoteSidebarRowNM } from "../../common/components/noteSidebarSlices";
 import {
     DraggableNoteRow,
     DroppableHeader,
@@ -43,7 +43,7 @@ export type FolderActionHandlers = {
 
 type MyNoteFolderTreeProps = {
     folder: MyNoteFolderTreeNode;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM;
     actions: FolderActionHandlers;
     // Renders one filed root note (the sidebar's existing
     // NoteTreeRenderer wrapper), so note rows look identical inside and

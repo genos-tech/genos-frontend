@@ -2,9 +2,9 @@ import FolderRoundedIcon from "@mui/icons-material/FolderRounded";
 
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { NAV_KEEP_CLASS } from "../../../../components/ui/nav/navStyles";
-import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { FavoriteFolderMeta } from "../../favorite-notes/services";
 import { FolderFavoriteStar } from "./FolderFavoriteStar";
+import { NoteSidebarRowNM } from "./noteSidebarSlices";
 
 // A starred folder in Favorites (MIP-747). Clicking jumps to it in its
 // own tree: My Notes, or Team Notes for a team folder (a folder shared
@@ -16,7 +16,7 @@ export const FavoriteFolderItem = ({
 }: {
     folder: FavoriteFolderMeta;
     spaceLabel: string;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM;
 }) => (
     <NavItem
         data-testid={`favorite-folder-${folder.folderId}`}

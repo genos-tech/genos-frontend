@@ -1808,7 +1808,12 @@ export const useNoteManagement = (
         () => new Set((favoriteNotes?.folders ?? []).map((f) => f.folderId)),
         [favoriteNotes]
     );
-    const isFolderFavorited = (folderId: number): boolean => favoriteFolderIds.has(folderId);
+    // `useCallback`: the sidebar's stars call it while rendering, so it cannot sit behind a
+    // latest-ref wrapper; it changes only when the favorites do (MIP-2379).
+    const isFolderFavorited = useCallback(
+        (folderId: number): boolean => favoriteFolderIds.has(folderId),
+        [favoriteFolderIds]
+    );
 
     const toggleFolderFavorite = async (folderId: number): Promise<void> => {
         if (!accessToken) return;
@@ -1849,9 +1854,11 @@ export const useNoteManagement = (
     // — otherwise a team note's star writes an unknown `note_type: 8`
     // the server rejects, and the local key never matches the one the
     // favorites list is built from.
-    const isNoteFavorited = (noteId: number, noteType: number): boolean => {
-        return favoriteNoteIds.has(`${toBackendNoteType(noteType)}-${noteId}`);
-    };
+    const isNoteFavorited = useCallback(
+        (noteId: number, noteType: number): boolean =>
+            favoriteNoteIds.has(`${toBackendNoteType(noteType)}-${noteId}`),
+        [favoriteNoteIds]
+    );
 
     const toggleFavorite = async (noteId: number, bucketNoteType: number): Promise<boolean> => {
         if (!accessToken) return false;

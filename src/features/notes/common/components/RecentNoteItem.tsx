@@ -8,18 +8,22 @@ import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { extractYYYYMMDDHHMM } from "../../../../utils/dateUtils";
+import { useActiveNoteTab } from "../context/ActiveNoteTabContext";
 import { useNoteUnread } from "../context/noteUnreadState";
 import { isHtmlNote } from "../utils/htmlNote";
 import { isNoteOpen } from "../utils/openNote";
 import { HtmlNoteChipFor } from "./HtmlNoteChip";
 import { NoteFavoriteStar } from "./NoteFavoriteStar";
 import { NoteKindIcon, NoteOriginIcon } from "./noteOrigin";
+import { NoteSidebarRowNM } from "./noteSidebarSlices";
 import { NoteUnreadDot } from "./NoteUnreadDot";
 
 interface RecentNoteItemProps {
     note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
     noteType: number;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM & Partial<Pick<NoteManagementState, "tabsApi">>;
+    /** The open tab, passed in so a memoized row sees it change (MIP-2379). */
+    activeTab?: Parameters<typeof isNoteOpen>[0];
     /** When the note was opened (the row's own clock, `tsOpenedAt`). */
     openedAt?: string | null;
     /** "Where it lives" for this note (see `noteLocation`); omitted: no second line. */
@@ -40,6 +44,7 @@ function RecentNoteItemComponent({
     note,
     noteType,
     useNM,
+    activeTab,
     openedAt,
     locate,
     onOpened,
@@ -48,7 +53,12 @@ function RecentNoteItemComponent({
     const { isUnread, markRead } = useNoteUnread();
     const hasUnread = isUnread(noteType, note.noteId);
 
-    const isSelected = isNoteOpen(useNM.tabsApi.activeTab, noteType, note.noteId);
+    const contextTab = useActiveNoteTab();
+    const isSelected = isNoteOpen(
+        activeTab ?? contextTab ?? useNM.tabsApi?.activeTab,
+        noteType,
+        note.noteId
+    );
 
     const handleClick = (event: MouseEvent<HTMLElement>) => {
         useNM.setCurrentNoteType(noteType);

@@ -7,17 +7,21 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
+import { useActiveNoteTab } from "../context/ActiveNoteTabContext";
 import { useNoteUnread } from "../context/noteUnreadState";
 import { isHtmlNote } from "../utils/htmlNote";
 import { isNoteOpen } from "../utils/openNote";
 import { HtmlNoteChipFor } from "./HtmlNoteChip";
 import { NoteKindIcon } from "./noteOrigin";
+import { NoteSidebarRowNM } from "./noteSidebarSlices";
 import { NoteUnreadDot } from "./NoteUnreadDot";
 
 interface FavoriteNoteItemProps {
     note: MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
     noteType: number;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM & Partial<Pick<NoteManagementState, "tabsApi">>;
+    /** The open tab, passed in so a memoized row sees it change (MIP-2379). */
+    activeTab?: Parameters<typeof isNoteOpen>[0];
     /** Where the note lives, without its space's own name (the group above already says it). */
     locate?: (noteType: number, note: FavoriteNoteItemProps["note"]) => string | null;
 }
@@ -27,12 +31,23 @@ interface FavoriteNoteItemProps {
  * row wears the same document glyph as a note in the tree, and its second line names the
  * place inside that family (a folder, a task, a chat) (MIP-1429).
  */
-function FavoriteNoteItemComponent({ note, noteType, useNM, locate }: FavoriteNoteItemProps) {
+function FavoriteNoteItemComponent({
+    note,
+    noteType,
+    useNM,
+    activeTab,
+    locate,
+}: FavoriteNoteItemProps) {
     const { t } = useTranslation();
     const { isUnread, markRead } = useNoteUnread();
     const hasUnread = isUnread(noteType, note.noteId);
 
-    const isSelected = isNoteOpen(useNM.tabsApi.activeTab, noteType, note.noteId);
+    const contextTab = useActiveNoteTab();
+    const isSelected = isNoteOpen(
+        activeTab ?? contextTab ?? useNM.tabsApi?.activeTab,
+        noteType,
+        note.noteId
+    );
 
     const handleClick = () => {
         useNM.setCurrentNoteType(noteType);

@@ -5,7 +5,9 @@ import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
+import { isNoteOpen } from "../utils/openNote";
 import { hiddenRecentsCount, visibleRecents } from "../utils/recentNotesLimit";
+import { NoteSidebarRowNM } from "./noteSidebarSlices";
 import { RecentNoteItem } from "./RecentNoteItem";
 
 type Meta = MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
@@ -21,10 +23,12 @@ export type RecentRow = { note: Meta; noteType: number; tsOpenedAt: string };
 export const RecentNotesList = ({
     rows,
     useNM,
+    activeTab,
     locate,
 }: {
     rows: readonly RecentRow[];
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM & Partial<Pick<NoteManagementState, "tabsApi">>;
+    activeTab?: Parameters<typeof isNoteOpen>[0];
     locate: (noteType: number, note: Meta) => string | null;
 }) => {
     const { t } = useTranslation();
@@ -36,6 +40,7 @@ export const RecentNotesList = ({
             {visibleRecents(rows, expanded).map((row) => (
                 <RecentNoteItem
                     key={`recent-${row.noteType}-${row.note.noteId}`}
+                    activeTab={activeTab}
                     locate={locate}
                     note={row.note}
                     noteType={row.noteType}

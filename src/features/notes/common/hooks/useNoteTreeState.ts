@@ -2,21 +2,20 @@ import { useEffect, useState } from "react";
 
 import { BaseNoteTreeNode, NoteTreeState, UseNoteTreeStateProps } from "../types/noteTypes";
 
+const RESOLVED_CHAIN: never[] = [];
+
 export function useNoteTreeState<T extends BaseNoteTreeNode>({
     metaTree,
-    currentChain,
 }: UseNoteTreeStateProps<T>): NoteTreeState<T> {
-    const [tmpCurrentChain, setTmpCurrentChain] = useState<T[]>();
+    // The rows only ask whether the chain has been resolved (`undefined` until the first effect has
+    // run); nothing reads its contents. So it is a flag, held as one stable value, and a switch
+    // no longer commits the sidebar once more just to swap the array (MIP-2379).
+    const [chainReady, setChainReady] = useState(false);
     const [tmpMetaTree, setTmpMetaTree] = useState<T[]>(metaTree);
 
-    // Update current chain when it changes
     useEffect(() => {
-        if (currentChain && currentChain.length > 0) {
-            setTmpCurrentChain(currentChain);
-        } else {
-            setTmpCurrentChain([]);
-        }
-    }, [currentChain]);
+        setChainReady(true);
+    }, []);
 
     // Sync tmpMetaTree → metaTree when the tree changes (`metaTree` is a useMemo-derived
     // reference, so referential equality is enough). It used to also bump a `timestamp` here, on
@@ -29,7 +28,7 @@ export function useNoteTreeState<T extends BaseNoteTreeNode>({
     }, [metaTree, tmpMetaTree]);
 
     return {
-        tmpCurrentChain,
+        tmpCurrentChain: chainReady ? (RESOLVED_CHAIN as T[]) : undefined,
         tmpMetaTree,
     };
 }
