@@ -29,6 +29,7 @@ import { toneCss } from "../../../features/tasks/meta/taskTone";
 import type { Milestone } from "../../../features/tasks/sprint-milestone/types";
 import { isOverdueDate } from "../../../features/tasks/utils/dueWindow";
 import { fmt, useTranslation } from "../../../i18n";
+import { compareText } from "../../../i18n/collate";
 import type { ChatTarget } from "../../../services/schedules";
 import type { ProjectProps } from "../../../types/tasks";
 import { formatMonthDay } from "../../../utils/calendarDate";
@@ -378,7 +379,7 @@ export const ChatTargetSelect = ({
  *  from what the app already holds (no request); the server checks again on save and at every
  *  run. A stored chat that is no longer listed stays selectable as "(unavailable)". */
 export const ChatParamSelect = ({ value, onChange }: Props) => {
-    const { t } = useTranslation();
+    const { t, locale } = useTranslation();
     const s = t.settings.schedules;
     const { allChats } = useHashMentionData();
     const chats = allChats
@@ -391,7 +392,7 @@ export const ChatParamSelect = ({ value, onChange }: Props) => {
                 projectId: null,
             })
         )
-        .sort((a, b) => a.title.localeCompare(b.title));
+        .sort((a, b) => compareText(a.title, b.title, { locale }));
     const stray = value !== "" && !chats.some((c) => c.id === value);
     const options: ChatTarget[] = stray
         ? [{ id: value, title: s.unavailable, kind: "group", projectId: null }, ...chats]
