@@ -86,6 +86,8 @@ export type NoteHistoryEntry = {
     // Team notes only — the containing folder, shown as the row's
     // subtitle the way a task note shows its project.
     folderName?: string | null;
+    // "html" for an HTML page (MIP-2316): its row wears the HTML chip.
+    bodyFormat?: string | null;
     // Coordinates needed to deep-link back to the note. Filled in for
     // task notes (projectId + taskId) and chat notes (chatType + chatId
     // + threadId); empty for personal "My Notes".

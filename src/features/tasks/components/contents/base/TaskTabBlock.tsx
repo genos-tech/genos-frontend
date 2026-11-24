@@ -52,8 +52,10 @@ import {
 } from "../../../../../types/tasks";
 import { downloadFile } from "../../../../../utils/downloadUtils";
 import { AttachmentActionsMenu } from "../../../../notes/common/components/AttachmentActionsMenu";
+import { HtmlNoteChipFor } from "../../../../notes/common/components/HtmlNoteChip";
 import { ModalImportMarkdown } from "../../../../notes/common/components/ModalImportMarkdown";
 import { isImportableTextFile } from "../../../../notes/common/services/importableAttachment";
+import { isHtmlNote } from "../../../../notes/common/utils/htmlNote";
 import { useAttachmentClientIds } from "../../../hooks/useAttachmentClientIds";
 import { useAttachmentPreviews } from "../../../hooks/useAttachmentPreviews";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
@@ -699,6 +701,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                                         taskId: taskNote.taskId,
                                                         id: `task-${taskNote.noteId}`,
                                                         title: taskNote.title,
+                                                        bodyFormat: taskNote.bodyFormat,
                                                         teamId: myself.teamId,
                                                     });
                                                 }
@@ -725,6 +728,11 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                             >
                                                 {taskNote.title}
                                             </Typography>
+                                            {isHtmlNote(taskNote) && (
+                                                <Box sx={{ display: "inline-flex", ml: 1 }}>
+                                                    <HtmlNoteChipFor note={taskNote} />
+                                                </Box>
+                                            )}
                                         </ListItemButton>
                                     </ListItem>
                                 ))}

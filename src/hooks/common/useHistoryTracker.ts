@@ -472,6 +472,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         const entry: HistoryEntry = {
             kind: "note",
             label: currentMyNote.title || `#${currentMyNote.noteId}`,
+            bodyFormat: currentMyNote.bodyFormat ?? null,
             noteId: currentMyNote.noteId,
             noteType: bucketNoteType,
             folderName,
@@ -501,6 +502,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
         const entry: HistoryEntry = {
             kind: "note",
             label: currentTaskNote.title || `#${currentTaskNote.noteId}`,
+            bodyFormat: currentTaskNote.bodyFormat ?? null,
             noteId: currentTaskNote.noteId,
             noteType: currentTaskNote.noteType,
             openedAt: Date.now(),
@@ -540,6 +542,7 @@ export const useHistoryTracker = ({ useCM, useTM, useSM, useNM, usePM }: Props) 
             isThread: currentChatNote.isThread ?? null,
             kind: "note",
             label: currentChatNote.title || `#${currentChatNote.noteId}`,
+            bodyFormat: currentChatNote.bodyFormat ?? null,
             noteId: currentChatNote.noteId,
             noteType: currentChatNote.noteType,
             openedAt: Date.now(),
