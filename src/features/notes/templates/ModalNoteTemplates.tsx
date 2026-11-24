@@ -20,6 +20,7 @@ import { useTheme } from "@mui/joy/styles";
 
 import { useNoteModalHostZIndex } from "../../../components/modals/noteModalHostZIndex";
 import { AppTooltip } from "../../../components/ui/AppTooltip";
+import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
@@ -468,12 +469,10 @@ export const ModalNoteTemplates = ({
                                         {groupLabel[g]}
                                     </Typography>
                                     {rows.length === 0 && (
-                                        <Typography
-                                            level="body-xs"
-                                            sx={{ px: 1, py: 0.5, opacity: 0.6 }}
-                                        >
-                                            {g === "team" ? copy.empty : copy.emptyPersonal}
-                                        </Typography>
+                                        <EmptyState
+                                            body={g === "team" ? copy.empty : copy.emptyPersonal}
+                                            size="xs"
+                                        />
                                     )}
                                     {rows.map((e) => {
                                         const on = e.key === selected?.key;
@@ -481,9 +480,17 @@ export const ModalNoteTemplates = ({
                                             <Box
                                                 key={e.key}
                                                 aria-selected={on}
+                                                component="button"
                                                 id={optionId(e.key)}
                                                 role="option"
+                                                tabIndex={-1}
+                                                type="button"
                                                 sx={{
+                                                    width: "100%",
+                                                    border: 0,
+                                                    font: "inherit",
+                                                    color: "inherit",
+                                                    textAlign: "start",
                                                     px: 1,
                                                     minHeight: 36,
                                                     display: "flex",
