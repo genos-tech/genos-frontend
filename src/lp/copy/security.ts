@@ -183,13 +183,14 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                 body: [
                     // Source: IPA's sample basic policy (appendix 2 of the SME guideline), five articles, adapted to one operator
                     // plus AI agents. Evidence per article: genos-docs compliance/public-statement/02-basic-policy-public.md.
-                    // Wording approved by Ken and counsel on 2026-11-24. The 制定日 (date established) line is still to be added by Ken.
+                    // Wording approved by Ken and counsel on 2026-11-24. The date established (制定日) is the day of approval, same as genos-docs 02-basic-policy-public.md.
                     "The operator of Genos (the company) protects the information assets that customers entrust to it (messages, tasks, notes, files, AI history and personal data) from accidents, disasters and crime, and works under the policy below to keep the trust of its customers and of society.",
                     "1. Responsibility of the owner. The company works on a continual, organised basis to improve information security, led by its operator. The operator approves this policy, decides how to respond to an incident, and gives the final approval for every change to the production environment.",
                     "2. Organisation. The operator is the person responsible, and runs Genos with the help of AI coding and operations agents. Security measures are written down as internal rules. Changes to the service go through review and automated checks before release. Agents are run within the operator's instructions, and writes to production need the operator's approval.",
                     "3. Practice. The operator keeps learning the knowledge and skills that information security requires. The internal rules are reviewed at least once a year, and after a serious incident or a change of supplier.",
                     "4. Legal and contractual requirements. The company complies with the laws, regulations, norms and contractual obligations on information security, and meets its customers' expectations.",
                     "5. Violations and incidents. If a violation of law or contract, or an incident, occurs, the company handles it by procedure, informs the customers affected where appropriate, and works to prevent it from happening again.",
+                    "Established: November 24, 2026",
                 ],
             },
             {
@@ -329,6 +330,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                     "3. 取組み：運営者は、情報セキュリティのために必要とされる知識と技術を習得し続けます。社内の規程は少なくとも年に 1 回、また重大な事故や委託先の変更のあとに見直します。",
                     "4. 法令及び契約上の要求事項の遵守：当社は、情報セキュリティに関わる法令、規制、規範、契約上の義務を遵守するとともに、お客様の期待に応えます。",
                     "5. 違反及び事故への対応：当社は、情報セキュリティに関わる法令違反、契約違反及び事故が発生した場合には、手順に従って適切に対処し、必要に応じて影響を受けるお客様にお知らせし、再発防止に努めます。",
+                    "制定日：2026年11月24日",
                 ],
             },
             {
