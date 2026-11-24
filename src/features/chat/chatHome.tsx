@@ -33,7 +33,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { useDropStaleSurfacePreview } from "../../hooks/tasks/useDropStaleSurfacePreview";
-import { useSoloCreatePane } from "../../hooks/tasks/useSoloCreatePane";
+import { useHoldPreviewAfterSolo, useSoloCreatePane } from "../../hooks/tasks/useSoloCreatePane";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { useSurfaceTaskPreviewVisible } from "../../hooks/tasks/useSurfaceTaskPreviewVisible";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
@@ -47,6 +47,7 @@ import { isNotePaneVisible } from "../notes/common/utils/notePaneVisibility";
 import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { ModalCreateProject } from "../tasks/components/modals/ModalCreateProject";
 import { ModalManageTagsHost } from "../tasks/components/modals/ModalManageTagsHost";
+import { hasTaskPreviewContent } from "../tasks/utils/taskPreviewPaneVisibility";
 import { MobileChatHome } from "./MobileChatHome";
 
 type ChatHomeProps = {
@@ -228,6 +229,12 @@ export const ChatHome = (props: ChatHomeProps) => {
     // form look like "beside a preview".
     const createPaneShown = useTM.isCreatingTask.flag === true && isActiveRoute && !createBlocked;
     const soloCreate = useSoloCreatePane(createPaneShown, isTaskPreviewPaneVisible);
+    const holdPreviewPane = useHoldPreviewAfterSolo(
+        soloCreate,
+        useTM.previewOpenCount ?? 0,
+        useTM.isTaskPreviewVisible === true && hasTaskPreviewContent(useTM),
+        isTaskPreviewPaneVisible
+    );
 
     useEffect(() => {
         localStorage.setItem("isToDoVisible", isToDoVisible.toString());
@@ -522,7 +529,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                         deselects for a whole round trip, and unmounting across
                         that both flashes and drops the outgoing task's unsaved
                         body (`useTaskPreviewPaneVisible`). */}
-                            {(soloCreate || isTaskPreviewPaneVisible) && (
+                            {(soloCreate || isTaskPreviewPaneVisible || holdPreviewPane) && (
                                 <>
                                     <ResizeHandle key="task-preview-resize-handle" />
                                     <TaskPreviewPanel
@@ -585,6 +592,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                 // above stands down, so this fallback has to
                                 // stand up or the page is left blank.
                                 isTaskPreviewPaneVisible === false &&
+                                holdPreviewPane === false &&
                                 isChatNotePaneVisible === false && (
                                     <>
                                         <ResizeHandle key="select-chat-resize-handle" />

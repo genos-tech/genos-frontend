@@ -30,3 +30,30 @@ export const useSoloCreatePane = (creating: boolean, previewShown: boolean): boo
     }
     return creating && (creating !== prevCreating ? !previewShown : solo);
 };
+
+/**
+ * MIP-2373: keep the preview slot mounted between a solo form closing and the new
+ * item's preview opening.
+ *
+ * The milestone submit raises the preview flag and lowers the creating flag in ONE
+ * commit, while the chat surface flag (and, on phone, the loaded task) only follow a
+ * commit later, so for a moment nothing says "show a preview" and the slot would unmount
+ * and come back. The hold is armed when a solo form opens, and applies only if the
+ * preview was REQUESTED since then (`openCount` moved), so cancelling the form with a
+ * preview request left over from before does not open one. It lets go as soon as the
+ * preview is really shown, or the request goes away.
+ *
+ * `requested`: the global flag is up and something is selected. `shown`: the surface
+ * really shows the preview.
+ */
+export const useHoldPreviewAfterSolo = (
+    solo: boolean,
+    openCount: number,
+    requested: boolean,
+    shown: boolean
+): boolean => {
+    const [armedAt, setArmedAt] = useState<number | null>(null);
+    if (solo && armedAt === null) setArmedAt(openCount);
+    if (!solo && armedAt !== null && (shown || !requested)) setArmedAt(null);
+    return !solo && armedAt !== null && requested && !shown && openCount !== armedAt;
+};

@@ -13,7 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskPreviewPanel } from "../features/chat/components/panels/TaskPreviewPanel";
 import { useDropStaleSurfacePreview } from "../hooks/tasks/useDropStaleSurfacePreview";
-import { useSoloCreatePane } from "../hooks/tasks/useSoloCreatePane";
+import { useHoldPreviewAfterSolo, useSoloCreatePane } from "../hooks/tasks/useSoloCreatePane";
 import { useSurfaceTaskPreviewVisible } from "../hooks/tasks/useSurfaceTaskPreviewVisible";
 import type { TaskManagementState } from "../hooks/tasks/useTaskManagement";
 import { useTaskPreviewPaneVisible } from "../hooks/tasks/useTaskPreviewPaneVisible";
@@ -55,6 +55,12 @@ const ChatSlots = ({ tm }: { tm: TaskManagementState }) => {
     const paneVisible = useTaskPreviewPaneVisible(surfaceVisible && tm.isTaskPreviewVisible, tm);
     const createShown = tm.isCreatingTask.flag === true;
     const solo = useSoloCreatePane(createShown, paneVisible);
+    const hold = useHoldPreviewAfterSolo(
+        solo,
+        tm.previewOpenCount ?? 0,
+        tm.isTaskPreviewVisible === true && tm.currentPreviewTaskId > 0,
+        paneVisible
+    );
     useDropStaleSurfacePreview({
         isActiveRoute: true,
         intentPending: false,
@@ -77,7 +83,7 @@ const ChatSlots = ({ tm }: { tm: TaskManagementState }) => {
     return (
         <CssVarsProvider>
             {createShown && !solo && <div data-testid="beside-create">create beside</div>}
-            {(solo || paneVisible) && (
+            {(solo || paneVisible || hold) && (
                 <TaskPreviewPanel
                     {...common}
                     createForm={solo ? <div>create task form</div> : undefined}
@@ -157,6 +163,49 @@ describe("chat page create form -> preview", () => {
         rerender(
             <ChatSlots tm={makeTM({ creating: false, previewVisible: false, taskId: -1 })} />
         );
+        expect(screen.queryByTestId("panel-7")).toBeNull();
+    });
+
+    it("keeps the pane when the preview flag and the form closing land in ONE commit (milestone)", () => {
+        const { rerender } = render(
+            <ChatSlots tm={makeTM({ creating: true, previewVisible: false, taskId: -1 })} />
+        );
+        const pane = screen.getByTestId("panel-7");
+        act(() => {
+            rerender(
+                <ChatSlots
+                    tm={makeTM({
+                        creating: false,
+                        previewVisible: true,
+                        taskId: 42,
+                        previewCount: 1,
+                    })}
+                />
+            );
+        });
+        expect(screen.getByTestId("panel-7")).toBe(pane);
+        expect(pane).toHaveTextContent("task preview");
+    });
+
+    it("cancelling the solo form does not open a preview from a leftover request", () => {
+        // A request was already up (count 3, task selected) but the pane was hidden.
+        const { rerender } = render(
+            <ChatSlots
+                tm={makeTM({ creating: true, previewVisible: true, taskId: -1, previewCount: 3 })}
+            />
+        );
+        act(() => {
+            rerender(
+                <ChatSlots
+                    tm={makeTM({
+                        creating: false,
+                        previewVisible: true,
+                        taskId: 9,
+                        previewCount: 3,
+                    })}
+                />
+            );
+        });
         expect(screen.queryByTestId("panel-7")).toBeNull();
     });
 });

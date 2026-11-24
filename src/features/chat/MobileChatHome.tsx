@@ -1,4 +1,3 @@
-import { useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { Box, IconButton } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -13,7 +12,7 @@ import { ProjectManagementState } from "../../hooks/common/useProjectManagement"
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
-import { useSoloCreatePane } from "../../hooks/tasks/useSoloCreatePane";
+import { useHoldPreviewAfterSolo, useSoloCreatePane } from "../../hooks/tasks/useSoloCreatePane";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
@@ -159,20 +158,15 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
     const createOverlayShown =
         useTM.isCreatingTask.flag === true && isActiveRoute && !createBlocked;
     const soloCreate = useSoloCreatePane(createOverlayShown, previewOverlayShown);
-    // The overlay only opens for a LOADED task, but the new task loads a beat after the form
-    // closes: without a hold the overlay would unmount for those frames and come back. After a
-    // solo create it stays up (TaskPreview shows its loading pane) while the preview has been
-    // requested, until the task has loaded.
-    const previewRequested =
-        isTaskPreviewVisibleHere &&
+    // The overlay only opens for a LOADED task, and the new task loads a beat after the
+    // form closes: hold it up (TaskPreview shows its loading pane) until then.
+    const holdPreviewOverlay = useHoldPreviewAfterSolo(
+        soloCreate,
+        useTM.previewOpenCount ?? 0,
         useTM.isTaskPreviewVisible === true &&
-        (isRealTaskId(useTM.currentPreviewTaskId) || useTM.currentPreviewKind === "milestone");
-    const [afterSolo, setAfterSolo] = useState(false);
-    if (soloCreate && !afterSolo) setAfterSolo(true);
-    if (afterSolo && !soloCreate && (previewOverlayShown || !previewRequested))
-        setAfterSolo(false);
-    const holdPreviewOverlay =
-        afterSolo && !soloCreate && previewRequested && !previewOverlayShown;
+            (isRealTaskId(useTM.currentPreviewTaskId) || useTM.currentPreviewKind === "milestone"),
+        previewOverlayShown
+    );
     const createForm = (
         <CreateTaskForm
             myself={myself}
@@ -322,7 +316,7 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
-                            guardStaleTaskId
+                            holdSwitchWithLoader
                         />
                     )}
                 </SharedMobileOverlay>
