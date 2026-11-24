@@ -411,6 +411,7 @@ export const TwoFactorSection = () => {
                             <Typography
                                 aria-label={m.setup.keyLabel}
                                 data-testid="mfa-key"
+                                dir="ltr"
                                 level="title-sm"
                                 sx={{
                                     fontFamily: "monospace",
@@ -425,7 +426,7 @@ export const TwoFactorSection = () => {
                             <Stack
                                 direction="row"
                                 spacing={0.5}
-                                sx={{ flexWrap: "wrap", mt: 0.5, ml: -1 }}
+                                sx={{ flexWrap: "wrap", mt: 0.5, ms: -1 }}
                             >
                                 <Button
                                     size="sm"
@@ -482,6 +483,7 @@ export const TwoFactorSection = () => {
                     <Stack spacing={2}>
                         <Sheet
                             data-testid="mfa-recovery-codes"
+                            dir="ltr"
                             variant="soft"
                             sx={{
                                 display: "grid",
