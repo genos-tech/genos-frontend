@@ -50,10 +50,10 @@ const makeTM = ({ creating, previewVisible, taskId, previewCount = 0 }: Tm) =>
     }) as unknown as TaskManagementState;
 
 // chatHome.tsx's wiring of the preview slot, minus the unrelated panes.
-const ChatSlots = ({ tm }: { tm: TaskManagementState }) => {
-    const [surfaceVisible, setSurfaceVisible] = useSurfaceTaskPreviewVisible("chat", true, tm);
+const ChatSlots = ({ tm, active = true }: { tm: TaskManagementState; active?: boolean }) => {
+    const [surfaceVisible, setSurfaceVisible] = useSurfaceTaskPreviewVisible("chat", active, tm);
     const paneVisible = useTaskPreviewPaneVisible(surfaceVisible && tm.isTaskPreviewVisible, tm);
-    const createShown = tm.isCreatingTask.flag === true;
+    const createShown = tm.isCreatingTask.flag === true && active;
     const solo = useSoloCreatePane(createShown, paneVisible);
     const hold = useHoldPreviewAfterSolo(
         solo,
@@ -62,7 +62,7 @@ const ChatSlots = ({ tm }: { tm: TaskManagementState }) => {
         paneVisible
     );
     useDropStaleSurfacePreview({
-        isActiveRoute: true,
+        isActiveRoute: active,
         intentPending: false,
         surfaceVisible,
         paneVisible,
@@ -205,6 +205,21 @@ describe("chat page create form -> preview", () => {
                     })}
                 />
             );
+        });
+        expect(screen.queryByTestId("panel-7")).toBeNull();
+        // Review finding: the user leaves chat, opens another task elsewhere (count 3 -> 4),
+        // and comes back. The cancelled form must not be read as a request to show it.
+        const bumped = makeTM({
+            creating: false,
+            previewVisible: true,
+            taskId: 10,
+            previewCount: 4,
+        });
+        act(() => {
+            rerender(<ChatSlots tm={bumped} active={false} />);
+        });
+        act(() => {
+            rerender(<ChatSlots tm={bumped} active />);
         });
         expect(screen.queryByTestId("panel-7")).toBeNull();
     });

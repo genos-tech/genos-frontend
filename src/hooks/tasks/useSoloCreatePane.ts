@@ -54,6 +54,11 @@ export const useHoldPreviewAfterSolo = (
 ): boolean => {
     const [armedAt, setArmedAt] = useState<number | null>(null);
     if (solo && armedAt === null) setArmedAt(openCount);
-    if (!solo && armedAt !== null && (shown || !requested)) setArmedAt(null);
+    // Also disarm when the form closed and the open count never moved since it armed:
+    // nothing was requested during the form (a cancel), so a LATER open elsewhere must
+    // not be read as this form's request.
+    if (!solo && armedAt !== null && (shown || !requested || openCount === armedAt)) {
+        setArmedAt(null);
+    }
     return !solo && armedAt !== null && requested && !shown && openCount !== armedAt;
 };
