@@ -196,16 +196,34 @@ describe("the agent-record top of /home", () => {
                 ["ChatGPT", true],
             ]);
             // The kept line names what is kept and what is not; the FAQ says it again.
+            // MIP-2310: the no-transcript claim is scoped to Claude / outside apps; Genos AI
+            // conversations ARE stored (and deletable), so both lines must say so.
+            const savedGenosAi =
+                lang === "ja"
+                    ? /Genos AIとの会話は.*保存され、削除もできます/
+                    : /Genos AI.* are saved so you can return to them, and you can delete them/;
             expect(copy.works.kept).toMatch(
                 lang === "ja"
-                    ? /会話の全文を保存するものではありません/
-                    : /does not store the full text of your conversations/
+                    ? /Claudeとの会話の記録そのものは保存しません/
+                    : /not a transcript of your Claude conversations/
             );
+            expect(copy.works.kept).toMatch(savedGenosAi);
             expect(copy.questions.items[0].a).toMatch(
                 lang === "ja"
-                    ? /会話の全文を保存するわけではありません/
-                    : /does not store the full text of your conversations/
+                    ? /外部アプリとの会話の記録そのものは保存しません/
+                    : /does not keep a transcript of your conversations with Claude/
             );
+            expect(copy.questions.items[0].a).toMatch(savedGenosAi);
+            // The "only you" answer is scoped to the activity record, names what is shared,
+            // and does not let Genos AI answers read as covered by it.
+            const only = copy.questions.items.find((i) => /^(Who can see|Genosが記録)/.test(i.q))!;
+            expect(only.a).toMatch(
+                lang === "ja"
+                    ? /Genos AIの回答は別に保存され/
+                    : /Genos AI answers are saved separately/
+            );
+            expect(only.a).toMatch(lang === "ja" ? /共有の記録/ : /shared records/);
+            expect(copy.questions.items.map((i) => i.a).join(" ")).not.toMatch(/full text|全文/);
             // Connecting needs Core (connectApp.plan): the steps and the FAQ both say so.
             expect(copy.how.plan).toMatch(/Core/);
             expect(copy.questions.items.some((item) => /Core/.test(item.a))).toBe(true);

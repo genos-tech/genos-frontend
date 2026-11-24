@@ -2525,37 +2525,279 @@ a.lp-row:hover .lp-row__arrow {
     color: var(--lp-accent-text);
 }
 
-/* /docs (MIP-1259): the search box, the guide index and the anchors' scroll offset. */
+/* /docs and /docs/<topic> (MIP-1259, MIP-2331): the search box, the topic cards, the manual page. */
+.lp-container--wide {
+    max-width: 1120px;
+}
 .lp-docs-search {
     display: grid;
     gap: 6px;
     margin-top: 16px;
+    max-width: 560px;
 }
 .lp-docs-search input {
     font: inherit;
-    padding: 10px 12px;
-    border: 1px solid var(--lp-border);
-    border-radius: 8px;
+    /* 16px or larger: iOS zooms the page into any smaller field. */
+    font-size: 1rem;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--lp-border-strong);
+    border-radius: 10px;
     background: var(--lp-surface);
     color: var(--lp-text);
+    width: 100%;
     max-width: 100%;
 }
-.lp-docs-index {
-    margin-bottom: 32px;
+.lp-docs-retry {
+    font: inherit;
+    color: var(--lp-accent-text);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
 }
-.lp-docs-index h2 {
-    font-size: 1rem;
-    margin: 0 0 8px;
+.lp-docs-group {
+    margin-bottom: 40px;
 }
-.lp-docs-index ul {
+.lp-docs-group h2 {
+    font-size: 1.25rem;
+    margin: 0 0 14px;
+}
+.lp-docs-topics {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+}
+.lp-docs-topics li {
+    display: flex;
+}
+.lp-docs-topics a,
+.lp-docs-results a {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 10px;
+    background: var(--lp-surface);
+    color: var(--lp-text);
+    text-decoration: none;
+}
+.lp-docs-topics a:hover,
+.lp-docs-results a:hover {
+    border-color: var(--lp-accent-border);
+}
+.lp-docs-topic-title,
+.lp-docs-hit-title {
+    font-weight: 600;
+    line-height: 1.4;
+}
+.lp-docs-topic-summary,
+.lp-docs-hit-snippet {
+    color: var(--lp-text-secondary);
+    overflow-wrap: anywhere;
+}
+.lp-docs-topic-summary {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+}
+.lp-docs-other {
     list-style: none;
     padding: 0;
     margin: 0;
     display: grid;
     gap: 8px;
 }
-.lp-prose section[id] {
-    scroll-margin-top: 80px;
+.lp-docs-results ul {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0 0;
+    display: grid;
+    gap: 10px;
+}
+.lp-docs-hit-where {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--lp-text-secondary);
+}
+.lp-docs-hit-where:empty {
+    display: none;
+}
+.lp-docs-tag {
+    padding: 1px 8px;
+    border: 1px solid var(--lp-accent-border);
+    border-radius: 999px;
+    color: var(--lp-accent-text);
+    font-size: 0.75rem;
+}
+.lp-docs-results mark {
+    background: var(--lp-accent-subtle);
+    color: inherit;
+    border-radius: 3px;
+}
+.lp-docs-notice {
+    margin: 0 0 20px;
+    padding: 10px 14px;
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 8px;
+    background: var(--lp-bg-subtle);
+    font-size: 0.9375rem;
+}
+
+.lp-docs-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+}
+.lp-docs-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.lp-docs-nav-group {
+    margin: 16px 0 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--lp-text-secondary);
+}
+.lp-docs-nav-groups > div:first-child .lp-docs-nav-group {
+    margin-top: 0;
+}
+.lp-docs-nav a {
+    display: block;
+    padding: 5px 10px;
+    margin-left: -10px;
+    border-radius: 6px;
+    color: var(--lp-text);
+    text-decoration: none;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+}
+.lp-docs-nav a:hover {
+    background: var(--lp-bg-subtle);
+}
+.lp-docs-nav a[aria-current="page"] {
+    background: var(--lp-bg-subtle);
+    color: var(--lp-accent-text);
+    font-weight: 600;
+}
+.lp-docs-nav--side {
+    display: none;
+}
+.lp-docs-nav--fold {
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 10px;
+    padding: 0 14px;
+}
+.lp-docs-nav--fold summary {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-weight: 600;
+}
+.lp-docs-nav--fold .lp-docs-nav-groups {
+    padding-bottom: 14px;
+}
+@media (min-width: 1024px) {
+    .lp-docs-layout {
+        grid-template-columns: 240px minmax(0, 1fr);
+        gap: 56px;
+    }
+    .lp-docs-nav--side {
+        display: block;
+        position: sticky;
+        top: 88px;
+        align-self: start;
+        max-height: calc(100vh - 112px);
+        overflow-y: auto;
+        padding-right: 8px;
+    }
+    .lp-docs-nav--fold {
+        display: none;
+    }
+}
+.lp-docs-article {
+    min-width: 0;
+    max-width: 780px;
+}
+.lp-docs-article :is(h2, h3)[id] {
+    scroll-margin-top: 88px;
+}
+.lp-docs-h1 {
+    font-size: 2rem;
+    line-height: 1.25;
+    margin: 0 0 20px;
+}
+.lp-docs-toc {
+    margin: 0 0 8px;
+    padding: 14px 16px;
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 10px;
+    background: var(--lp-bg-subtle);
+}
+.lp-docs-toc .lp-docs-nav-group {
+    margin-top: 0;
+}
+.lp-docs-toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 4px;
+}
+.lp-docs-toc li {
+    margin: 0;
+    line-height: 1.5;
+}
+.lp-docs-table {
+    overflow-x: auto;
+    margin-bottom: 1.4em;
+}
+.lp-docs-table table {
+    display: table;
+    margin-bottom: 0;
+    min-width: 520px;
+}
+.lp-docs-table th {
+    white-space: nowrap;
+    font-weight: 600;
+}
+.lp-docs-pager {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 48px;
+}
+.lp-docs-pager a {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 16px;
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 10px;
+    text-decoration: none;
+    line-height: 1.4;
+}
+.lp-docs-pager a:hover {
+    border-color: var(--lp-accent-border);
+}
+.lp-docs-pager-next {
+    text-align: right;
+    grid-column: 2;
+}
+.lp-docs-pager .lp-small {
+    color: var(--lp-text-secondary);
 }
 .lp-prose kbd {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -2565,18 +2807,6 @@ a.lp-row:hover .lp-row__arrow {
     border-radius: 4px;
     background: var(--lp-bg-subtle);
     white-space: nowrap;
-}
-.lp-docs-code {
-    overflow-x: auto;
-    max-width: 100%;
-    padding: 12px 14px;
-    border: 1px solid var(--lp-border-subtle);
-    border-radius: 8px;
-    background: var(--lp-bg-subtle);
-    font-size: 0.875rem;
-}
-.lp-docs-code code {
-    white-space: pre;
 }
 
 /* ---------- contact form (MIP-1261) ---------- */

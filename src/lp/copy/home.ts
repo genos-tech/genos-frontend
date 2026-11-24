@@ -162,7 +162,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             primary: "Claudeを接続する",
             secondary: "デモを試す",
             note: "現在はClaudeに対応。ChatGPTも近日公開。一度つなぐだけで使えます。",
-            legend: "タスク・コメント・ノートでは、AIが作成したものに印が付きます。あなたが書いたものと見分けられます。",
+            legend: "タスク・コメント・ノートでは、AIが作成・更新したものに印が付きます。あなたが書いたものと見分けられます。",
             alt: "Genosのタスクのアクティビティ画面。Claudeが作成したコメントにはClaudeのマークが表示され、ユーザーが変更した優先度やコメントにはマークが付いていない。",
             // TODO(copy): draft wording of mine, not Ken's; the callouts drawn over the hero picture.
             callouts: {
@@ -204,7 +204,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     title: "見たいときに、Genosを開く",
-                    body: "AIが何をしたか、Genosで読めます。編集も削除も自由。AIが書いたものには印が付くので、あなたの記録と見分けられます。",
+                    body: "AIが何をしたか、Genosで読めます。編集も削除も自由。AIが作成・更新したものには印が付くので、あなたの記録と見分けられます。",
                 },
             ],
             plan: "エージェントの接続にはCoreプラン以上が必要です。",
@@ -224,7 +224,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     lead: "誰が書いたか分かる。",
-                    text: "タスク・コメント・ノートでは、AIが作成したものに印が付き、あなたの記録と見分けられます。",
+                    text: "タスク・コメント・ノートでは、AIが作成・更新したものに印が付き、あなたの記録と見分けられます。",
                 },
             ],
             tasksCaption: "タスク一覧",
@@ -274,7 +274,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 label: "その他の連携",
                 items: ["Googleカレンダー", "GitHub"],
             },
-            kept: "Genosに残るのは、エージェントが作成・更新したタスク、コメント、ノートです。会話の全文を保存するものではありません。",
+            kept: "Genosに残るのは、Claudeなどのエージェントが作成・更新したタスク、コメント、ノートです。Claudeとの会話の記録そのものは保存しません。Genos AIとの会話は、あとで見返せるよう保存され、削除もできます。",
         },
         // One FAQ (MIP-1611): the four questions Ken wrote, then the two earlier ones that stay true.
         questions: {
@@ -282,7 +282,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
             items: [
                 {
                     q: "Genosは何を記録しますか？",
-                    a: "エージェントがGenosに作成・更新したタスク、コメント、ノートです。会話の全文を保存するわけではありません。",
+                    a: "エージェントがGenosに作成・更新したタスク、コメント、ノートです。Claudeなど外部アプリとの会話の記録そのものは保存しません。Genosに組み込まれたGenos AIとの会話は、あとで見返せるよう保存され、削除もできます。",
                 },
                 {
                     q: "どのAIエージェントで使えますか？",
@@ -298,7 +298,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     q: "Genosが記録する私の活動は、誰が見られますか？",
-                    a: "あなただけです。チームのダッシュボードや他の人への回答には使われません。設定からいつでも止められ、止めると記録は削除されます。",
+                    a: "あなただけです。AIアプリがどの項目に触れたかというGenosの記録は、あなただけが見られ、チームのダッシュボードや他の人への回答には使われません。設定 › Genos › Genosが覚えていること でオフにすると削除されます。タスク・ノート・チャットは共有の記録で、ワークスペースの権限に従います。Genos AIの回答は別に保存され、削除したり、チームへの共有を止めたりできます。",
                 },
                 {
                     q: "登録せずに試せますか？",
@@ -317,8 +317,8 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     title: "そのまま仕事になるチャット",
                     points: [
                         "チャンネル・スレッド・DM。メンション、リアクション、カスタム絵文字やGIFも",
-                        "スレッドからワンステップでタスク化。タスクには元のスレッドへのリンクが残ります",
-                        "ピン留めと検索で、過去の決定をすぐに呼び戻せます",
+                        "スレッドからタスクを作成。タスクには元のスレッドへのリンクが残ります",
+                        "チャットのピン留め、メッセージのフラグ、検索で過去の決定を見つけられます",
                     ],
                     alt: "Genosのチャット画面。チャンネルの会話とスレッドが開いている",
                 },
@@ -329,7 +329,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     points: [
                         "テーブル・ボード・ダッシュボード。スプリントとマイルストーン",
                         "依存関係、プロジェクトごとのカスタム項目、保存できるフィルター",
-                        "変更はすべて履歴に残り、GitHubのPRもタスクに直接ひも付きます",
+                        "変更はタスクの履歴に残り、ブランチ名にタスクIDを含むGitHubのPRは自動でひも付きます",
                     ],
                     alt: "Genosのタスク一覧。ステータス・担当・優先度・スプリントが並ぶテーブル",
                 },
@@ -398,7 +398,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 { text: "チャットの返信下書き。送信するのはあなた", coming: true },
             ],
             privacy:
-                "Genosが記録するあなたの活動は、あなただけが見られます。オフにすれば削除されます。",
+                "AIアプリがどの項目に触れたかというGenosの記録は、あなただけが見られます。オフにすれば削除されます。",
             alt: "Genosの受信箱。今日やることのレポートが、プロジェクトごとにチップつきで並んでいる",
         },
         audiences: {
@@ -616,7 +616,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 items: ["Google Calendar", "GitHub"],
             },
             // TODO(copy: Ken's final English; Ken to review)
-            kept: "Genos stores the tasks, comments, and notes your AI agent creates or updates. It does not store the full text of your conversations.",
+            kept: "Genos keeps the tasks, comments, and notes that Claude or another agent creates or updates, not a transcript of your Claude conversations. Conversations with Genos AI are saved so you can return to them, and you can delete them.",
         },
         // One FAQ (MIP-1611): the four questions Ken wrote, then the two earlier ones that stay true.
         questions: {
@@ -626,7 +626,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 {
                     // TODO(copy: Ken's final English; Ken to review)
                     q: "What does Genos record?",
-                    a: "Genos records the tasks, comments, and notes your AI agent creates or updates in your workspace. It does not store the full text of your conversations.",
+                    a: "Genos records the tasks, comments, and notes your AI agent creates or updates in your workspace. It does not keep a transcript of your conversations with Claude or other outside apps. Conversations with Genos AI, the assistant built into Genos, are saved so you can return to them, and you can delete them.",
                 },
                 {
                     // TODO(copy: Ken's final English; Ken to review)
@@ -645,7 +645,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 },
                 {
                     q: "Who can see what Genos notes about my work?",
-                    a: "Only you. It never appears in team dashboards or in answers to other people. You can turn it off in Settings at any time, and turning it off deletes it.",
+                    a: "Only you. The record Genos keeps of which items your AI apps touched is visible only to you, never in team dashboards or other people's answers. Turn it off in Settings › Genos › What Genos remembers and it is deleted. Your tasks, notes and chat messages are shared records and follow workspace access. Your Genos AI answers are saved separately; you can delete them or stop sharing them with teammates.",
                 },
                 {
                     q: "Can I try it without signing up?",
@@ -664,8 +664,8 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     title: "Chat that turns into work",
                     points: [
                         "Channels, threads and DMs with mentions, reactions, custom emoji and GIFs",
-                        "Turn a thread into a task in one step; the task keeps a link back",
-                        "Pins and search bring old decisions back when you need them",
+                        "Create a task from a thread; the task keeps a link back",
+                        "Pin chats, flag messages and search to find old decisions",
                     ],
                     alt: "The Genos chat screen with a channel conversation and a thread open",
                 },
@@ -676,7 +676,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                     points: [
                         "Table, board and dashboard views, sprints and milestones",
                         "Dependencies, per-project custom fields and saved filters",
-                        "Every change lands in the task's history, and GitHub PRs link straight to it",
+                        "Task changes are kept in its history; a GitHub PR whose branch name includes the task id links to it automatically",
                     ],
                     alt: "The Genos task table with status, assignee, priority and sprint columns",
                 },
@@ -748,7 +748,7 @@ export const HOME_COPY: Record<Lang, HomeCopy> = {
                 { text: "Reply drafts in chat; you press send", coming: true },
             ],
             privacy:
-                "What Genos notes about your work is visible only to you. Turn it off and it's deleted.",
+                "The record of which items your AI apps touched is visible only to you. Turn it off and it's deleted.",
             alt: "The Genos Inbox with a report of today's work, grouped by project with status chips",
         },
         audiences: {

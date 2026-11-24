@@ -75,6 +75,7 @@ export const McpUseSection = ({ onChanged }: Props) => {
                 alignItems="center"
                 direction="row"
                 disabled={!known || pref.saving}
+                guideId="spotlight.noteActivity"
                 justifyContent="space-between"
                 spacing={2}
             >
