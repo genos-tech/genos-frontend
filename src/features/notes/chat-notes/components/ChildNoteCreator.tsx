@@ -8,10 +8,6 @@ import { useTranslation } from "../../../../i18n";
 
 interface ChildNoteCreatorProps {
     node: any;
-    // Not read here: it is part of the props so `memo` re-renders the button
-    // when the sidebar tree changes. It used to be baked into the root `key`,
-    // which remounted the button on every bump; keep it out of keys.
-    timestamp: string;
     useNM: NoteManagementState;
 }
 
