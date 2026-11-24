@@ -30,6 +30,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { getMessages } from "../../i18n";
 import {
     askAgentStream,
     decideAgent,
@@ -39,6 +40,7 @@ import {
     type ToolResultUndoRef,
 } from "../../services/agentApi";
 import { cleanRejectReason } from "../../services/agentRejectReason";
+import { requestSkillRunConfirmation } from "../genos/skills/skillRunCardStore";
 import type { SpotlightResult } from "../spotlight/types";
 import { emitTasksBulkChanged, TASK_WRITE_TOOLS } from "../tasks/services/taskEvents";
 import { emitCalendarEventToolResult } from "./approvedCalendarWrites";
@@ -133,6 +135,22 @@ export const useAgentQA = ({
     // a per-thread (or per-note) session-id lookup on the server would
     // silently inherit the cleared session and re-attach its history.
     const pendingNewConversationRef = useRef(false);
+
+    // The first-run confirmation of a skill (MIP-2192). When the ask answers 409
+    // `skill_needs_confirmation` the card opens, and on "Run this skill" the SAME ask is sent again
+    // through `onAsk`, EXACTLY once: this flag marks that send, so a second 409 for it is an error
+    // like any other instead of another card. The ask to send again waits in `resendJobRef` for the
+    // effect after `onAsk` that sends it with the latest state (the handler that queued it was built
+    // by an older render).
+    const resendAfterConfirmRef = useRef(false);
+    const resendJobRef = useRef<{
+        trimmed: string;
+        mentions: AgentMentionRef[] | undefined;
+        meta: unknown;
+        selection: AskSelection | null | undefined;
+        newConversation: boolean;
+    } | null>(null);
+    const [resendTick, setResendTick] = useState(0);
 
     // ---- Terminal-outcome plumbing for `onRunComplete`. ----
     //
@@ -517,6 +535,10 @@ export const useAgentQA = ({
                 return false;
             }
 
+            // This ask is the re-send after the person confirmed a skill (see `resendAfterConfirmRef`).
+            const isConfirmedResend = resendAfterConfirmRef.current;
+            resendAfterConfirmRef.current = false;
+
             askAbortRef.current?.abort();
             const controller = new AbortController();
             askAbortRef.current = controller;
@@ -585,6 +607,8 @@ export const useAgentQA = ({
 
             const extras = buildAskExtras ? buildAskExtras() : undefined;
 
+            const streamHandlers = buildStreamHandlers(askedTurnId);
+
             void askAgentStream({
                 query: trimmed,
                 teamId,
@@ -613,7 +637,40 @@ export const useAgentQA = ({
                       }
                     : {}),
                 ...extras,
-                ...buildStreamHandlers(askedTurnId),
+                ...streamHandlers,
+                // The skill needs the person's yes first (MIP-2192): nothing ran and nothing was
+                // spent. End this turn quietly (no error, no turn in the history), ask the person,
+                // and send the same ask again once, if they confirm.
+                onSkillNeedsConfirmation: (info) => {
+                    if (isConfirmedResend) {
+                        // Confirmed and still refused (the author published another version, say):
+                        // an ordinary failure, never a second card in a loop.
+                        streamHandlers.onError(
+                            info.message || getMessages().services.agent.unknownError
+                        );
+                        return;
+                    }
+                    promoteCurrentTurn(askedTurnId);
+                    // The draft is the person's again if they cancel.
+                    if (overrideQuery === undefined) setQuery((current) => current || trimmed);
+                    void requestSkillRunConfirmation({
+                        teamId,
+                        skillId: info.skillId,
+                        versionNo: info.versionNo,
+                    }).then((confirmed) => {
+                        if (!confirmed) return;
+                        // Sent from an effect (below), after the state this handler's render saw
+                        // has been replaced by the turn's quiet end.
+                        resendJobRef.current = {
+                            trimmed,
+                            mentions,
+                            meta,
+                            selection,
+                            newConversation,
+                        };
+                        setResendTick((tick) => tick + 1);
+                    });
+                },
             });
 
             // Clear the input so it's ready for the next question.
@@ -626,6 +683,7 @@ export const useAgentQA = ({
             accessToken,
             buildAskExtras,
             buildStreamHandlers,
+            promoteCurrentTurn,
             noTeamError,
             resumeVisibleSession,
             ask.isStreaming,
@@ -635,6 +693,18 @@ export const useAgentQA = ({
             turns.length,
         ]
     );
+    // The re-send after a confirmed skill: once the quietly ended turn is the committed state, the
+    // latest `onAsk` sends the same ask again (a new turn, the same session).
+    useEffect(() => {
+        const job = resendJobRef.current;
+        if (!job || ask.isStreaming || ask.pendingApproval !== null) return;
+        resendJobRef.current = null;
+        if (job.newConversation) pendingNewConversationRef.current = true;
+        resendAfterConfirmRef.current = true;
+        if (!onAsk(job.trimmed, job.mentions, job.meta, job.selection)) {
+            resendAfterConfirmRef.current = false;
+        }
+    }, [resendTick, ask.isStreaming, ask.pendingApproval, onAsk]);
 
     // ---- Approve / Reject handlers for the pending write tool. ----
     //

@@ -53,7 +53,7 @@ export const MORE_MENU_GROUPS = [
             "versionHistory",
         ],
     },
-    { group: "content", kinds: ["unwrapAll", "unwrapCode", "import", "export"] },
+    { group: "content", kinds: ["reload", "unwrapAll", "unwrapCode", "import", "export"] },
     { group: "mute", kinds: ["mute"] },
     { group: "edit", kinds: ["edit"] },
     { group: "delete", kinds: ["delete"] },

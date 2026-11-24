@@ -400,7 +400,8 @@ export const markdownFilename = (title: string): string => {
 
 /** Strip the extension off an imported filename for the default title. */
 export const titleFromFilename = (filename: string): string => {
-    const base = filename.replace(/\.(md|markdown|txt)$/i, "").trim();
+    // `.html` / `.htm` too (MIP-2215): an HTML page takes its title from its file name when it has no <title>.
+    const base = filename.replace(/\.(md|markdown|txt|html?)$/i, "").trim();
     return base || "Imported note";
 };
 

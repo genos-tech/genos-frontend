@@ -24,6 +24,7 @@ import { createMyNoteFolder } from "../../my-notes/services/createMyNoteFolder";
 import { createTeamNoteFolder } from "../../team-notes/services/createTeamNoteFolder";
 import type { FolderImportPlan, PlannedFolder, PlannedNote } from "./folderImportPlan";
 import { externalizeDataUriImages, withoutDataUriImages } from "./importDataUriImages";
+import { importHtmlNote, type HtmlImportWarning } from "./importHtmlNote";
 import { collectRelativeAssetHrefs, resolveAssetPath, rewriteAssetHrefs } from "./noteAssetLinks";
 import { putNoteBody, uploadNoteAsset } from "./noteImportWrites";
 import { markdownToNoteBlocks } from "./noteMarkdown";
@@ -63,6 +64,11 @@ export type FolderImportResult = {
     failures: FolderImportFailure[];
     /** True when the run stopped early because the caller cancelled. */
     cancelled: boolean;
+    /** HTML pages stored as notes (MIP-2215); they are also counted in `notesCreated`. Present
+     *  only when the run met an HTML page. */
+    htmlNotesCreated?: number;
+    /** Pages the scan found parts in that the sandbox will not show: the page and the finding codes. */
+    htmlWarnings?: { path: string; warnings: HtmlImportWarning[] }[];
 };
 
 export type RunFolderImportArgs = {
@@ -118,8 +124,58 @@ export const runFolderImport = async ({
         return created.folderId;
     };
 
+    // Set when the server says the plan has no HTML notes: the rest of the pages are not sent (each
+    // would get the same answer), and every one is reported as a failure with that reason.
+    let htmlNotOnPlan = false;
+
+    // An HTML page is stored as a page through the import endpoint, never parsed into blocks. A
+    // refusal (plan, size, count, rate) is that page's failure and the run goes on with the next.
+    const importHtmlPage = async (note: PlannedNote, folderId: number | null, path: string) => {
+        const messages = getMessages().notes.htmlImport;
+        if (htmlNotOnPlan) {
+            result.failures.push({ path, reason: messages.notOnPlan });
+            return;
+        }
+        const html = await note.file.text();
+        const outcome = await importHtmlNote({
+            accessToken,
+            teamId: myself.teamId,
+            html,
+            title: note.title,
+            target:
+                destination.kind === "team" && folderId != null
+                    ? { kind: "team", folderId }
+                    : { kind: "personal", folderId },
+        });
+        if (outcome.status === "not-on-plan") {
+            htmlNotOnPlan = true;
+            result.failures.push({ path, reason: messages.notOnPlan });
+            return;
+        }
+        if (outcome.status === "refused") {
+            result.failures.push({ path, reason: outcome.reason });
+            return;
+        }
+        result.notesCreated += 1;
+        result.htmlNotesCreated = (result.htmlNotesCreated ?? 0) + 1;
+        if (outcome.warnings.length > 0) {
+            (result.htmlWarnings ??= []).push({ path, warnings: outcome.warnings });
+        }
+    };
+
     const importNote = async (note: PlannedNote, folderId: number | null, path: string) => {
         onProgress?.({ done, total: plan.noteCount, label: path });
+        if (note.format === "html") {
+            try {
+                await importHtmlPage(note, folderId, path);
+            } catch (error) {
+                result.failures.push({ path, reason: errorText(error) });
+            } finally {
+                done += 1;
+                onProgress?.({ done, total: plan.noteCount, label: path });
+            }
+            return;
+        }
         try {
             const markdown = await note.file.text();
             const body = await markdownToNoteBlocks(markdown);

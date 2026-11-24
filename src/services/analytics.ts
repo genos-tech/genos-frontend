@@ -134,21 +134,20 @@ const start = (enabled?: boolean, onMarketingPage = false): void => {
                 // The wrapper uses no feature flag, and the `/flags/` request carries the
                 // browser's timezone and device ID in a body `before_send` never sees.
                 advanced_disable_flags: true,
-                // Started from a marketing page, after "Accept" (MIP-1778): the visitor agreed to
-                // page views, button clicks and sign-ups, so everything else the library can switch
-                // on from its remote config stays off. Each of these only reduces collection.
-                ...(onMarketingPage
-                    ? {
-                          capture_heatmaps: false,
-                          capture_dead_clicks: false,
-                          capture_exceptions: false,
-                          capture_performance: false,
-                          disable_surveys: true,
-                          disable_conversations: true,
-                          disable_product_tours: true,
-                          disable_web_experiments: true,
-                      }
-                    : {}),
+                // Everything the library can switch on from its remote config stays off, in the
+                // app and on a marketing page (MIP-2255): the privacy page lists exactly what is
+                // collected, and a config change on the PostHog side must not widen it. Each of
+                // these only reduces collection.
+                capture_heatmaps: false,
+                capture_dead_clicks: false,
+                capture_exceptions: false,
+                disable_surveys: true,
+                disable_conversations: true,
+                disable_product_tours: true,
+                disable_web_experiments: true,
+                // Started from a marketing page, after "Accept" (MIP-1778): the device fields
+                // are not needed either. The app keeps them.
+                ...(onMarketingPage ? { capture_performance: false } : {}),
             });
             client = posthog;
             const replay = queue;

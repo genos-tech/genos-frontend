@@ -1065,6 +1065,8 @@ export const ar: DeepPartial<Messages> = {
             deliverProjectChat: "{name} (محادثة المشروع)",
             deliverChatHint:
                 "يُنشر التقرير في هذه المحادثة كرسالة، دون ذكاء اصطناعي ودون إشعار. يمكن لكل من في المحادثة قراءته، لذا لا يمكن إرسال تقرير مشروع إلا إلى محادثة تضم أعضاء ذلك المشروع فقط.",
+            deliverChatHintAi:
+                "يُنشر التقرير في هذه المحادثة كرسالة. يستخدم رصيد الذكاء الاصطناعي ويعرض تكلفته في الرسالة، ولا يمكن إرساله إلا إلى محادثة أنت وحدك فيها. لا يُرسل أي إشعار.",
             rowDeliver: "يُنشر في: {name}",
             reportPosted: "تم نشر التقرير في {chat}",
             rowProject: "المشروع: {name}",
@@ -1400,6 +1402,64 @@ export const ar: DeepPartial<Messages> = {
                 sent: "شكرًا لك. سنراجعه.",
                 failed: "تعذّر إرسال البلاغ. حاول مرة أخرى.",
                 limit: "لقد أرسلت أقصى عدد من البلاغات اليوم. حاول مرة أخرى غدًا.",
+            },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "هل تريد تشغيل هذه المهارة؟",
+                intro: "اقرأ ما تقوله هذه المهارة قبل تشغيلها لأول مرة. لن تعمل إلا إذا اخترت «تشغيل هذه المهارة».",
+                loading: "جارٍ تحميل المهارة…",
+                loadFailed: "تعذّر تحميل هذه المهارة. حاول مرة أخرى.",
+                confirmFailed: "تعذّر حفظ اختيارك. حاول مرة أخرى.",
+                harmful: "المهارة التي نُسخت منها هذه المهارة أزالتها Genos لأنها ضارة.",
+                writtenBy: "كتبها",
+                noAuthor: "لا يوجد اسم مؤلف",
+                version: "الإصدار {n}",
+                textLabel: "ما تقوله هذه المهارة",
+                emptyText: "(لا يوجد نص في هذا الإصدار.)",
+                mayLabel: "ما يمكنها فعله",
+                readOnly: "يمكنها القراءة فقط. لا يمكنها إنشاء أو تغيير أي شيء.",
+                propose: {
+                    create_task: "اقتراح إنشاء مهمة",
+                    create_note: "اقتراح إنشاء ملاحظة",
+                    create_todo_item: "اقتراح إضافة عنصر إلى قائمة المهام",
+                },
+                approveFirst: "لا يحدث أي منها إلا بعد موافقتك عليه.",
+                run: "تشغيل هذه المهارة",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "يتوفر تحديث",
+                loading: "جارٍ تحميل التغييرات…",
+                loadFailed: "تعذّر تحميل التغييرات. حاول مرة أخرى.",
+                upToDate: "لديك أحدث إصدار بالفعل.",
+                versions: "من الإصدار {from} إلى الإصدار {to}",
+                versionShort: "الإصدار {n}",
+                changelogsLabel: "ما يقول المؤلف إنه تغيّر",
+                noChangelog: "لا توجد ملاحظة من المؤلف.",
+                changesLabel: "التفاصيل التي تغيّرت",
+                none: "لا شيء",
+                language: "اللغة",
+                becomes: "أصبح",
+                toolRaisedTitle: "يمكن لهذا الإصدار الآن اقتراح تغييرات",
+                toolRaised:
+                    "كانت الإصدارات السابقة تقرأ فقط. قد يقترح هذا الإصدار إنشاء مهام أو ملاحظات أو عناصر مهام لك. يظل كل اقتراح بحاجة إلى موافقتك.",
+                needsConfirmation: "سيُطلب منك التأكيد قبل تشغيل هذا الإصدار.",
+                diffLabel: "التغييرات في النص",
+                diffEmpty: "لم يتغيّر النص.",
+                truncated: "التغييرات أطول من أن تُعرض كاملة. يظهر الجزء الأول فقط.",
+                moved: "نشر المؤلف إصدارًا آخر أثناء قراءتك. التغييرات أدناه هي الأحدث.",
+                updateFailed: "تعذّر تحديث المهارة. حاول مرة أخرى.",
+                update: "التحديث إلى الإصدار {n}",
+                updateGeneric: "تحديث",
+                keep: "الاحتفاظ بالإصدار {n}",
+                close: "إغلاق",
+                updated: "تم التحديث إلى الإصدار {n}.",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "نسخة من مهارة أُزيلت",
+                warning: "المهارة التي نُسخت منها هذه المهارة أزالتها Genos لأنها ضارة.",
             },
             moderation: {
                 title: {
@@ -4719,6 +4779,7 @@ export const ar: DeepPartial<Messages> = {
             showHiddenCrumbs: "إظهار {count} فتات الخبز المخفية",
             importMarkdown: "استيراد تخفيض السعر…",
             exportMarkdown: "تصدير كتخفيض السعر",
+            reloadPage: "إعادة تحميل الصفحة",
         },
         autocomplete: {
             searchAria: "بحث",
@@ -4959,6 +5020,48 @@ export const ar: DeepPartial<Messages> = {
             tagUsage: "يستخدم بواسطة {count} المجلد (المجلدات)",
             tagEditFailed: "تعذر تحديث هذه العلامة. قد يكون موجودًا بالفعل، أو لا يمكنك تعديله.",
             tagDeleteFailed: "تعذر حذف هذه العلامة. لا يستطيع ذلك إلا منشئه أو مالك الفريق.",
+        },
+        // HTML notes (MIP-2215): the page shown in a sandboxed frame.
+        htmlNote: {
+            label: "صفحة HTML · تُعرض داخل بيئة معزولة",
+            navigatedTitle: "حاولت هذه الصفحة فتح صفحة أخرى",
+            navigatedBody: "تم إيقافها، فلم تُفتح أي صفحة أخرى. أعد التحميل لرؤية الصفحة من جديد.",
+            reload: "إعادة التحميل",
+            loadError: "تعذّر تحميل هذه الصفحة",
+            retry: "إعادة المحاولة",
+            frameTitle: "صفحة HTML: {title}",
+            kindLabel: "صفحة HTML",
+        },
+        // Importing a .html file as an HTML note (MIP-2215).
+        htmlImport: {
+            heading: "استيراد Markdown أو HTML",
+            chooseFile: "اختر ملف .md أو .html…",
+            notOnPlan:
+                "صفحات HTML متاحة في خطة Core وما فوقها. قم بالترقية من الإعدادات ← الخطة والاستخدام لاستيراد هذه الصفحة.",
+            tooLarge: "حجم هذه الصفحة {size}، وهو أكبر من حد خطتك لصفحة HTML ({limit}).",
+            importedWithWarnings:
+                "تم الاستيراد كصفحة HTML. لن تظهر بعض الأجزاء داخل البيئة المعزولة:",
+            resultNotes: "تم استيراد {count} صفحة HTML.",
+            resultWarnings: "في {count} صفحة HTML أجزاء لن تظهر داخل البيئة المعزولة.",
+            fallbackWarning: "لن يظهر جزء من الصفحة داخل البيئة المعزولة.",
+            warning: {
+                external_script: "لن تعمل السكربتات المحمّلة من عنوان آخر ({count}).",
+                external_css:
+                    "تُحظر أوراق الأنماط المحمّلة من عنوان آخر، لذا قد تبدو الصفحة بلا تنسيق ({count}).",
+                external_font: "تُحظر خطوط الويب المحمّلة من عنوان آخر ({count}).",
+                remote_image: "تُحظر الصور والوسائط المحمّلة من عنوان آخر ({count}).",
+                external_frame:
+                    "تُحظر الإطارات والعناصر المضمّنة التي تشير إلى صفحة أخرى ({count}).",
+                network_call:
+                    "ستفشل استدعاءات الشبكة في الصفحة (fetch وXHR وWebSocket) ({count}).",
+                form: "لا يمكن إرسال النماذج من هنا ({count}).",
+                window_open: "تُحظر النوافذ المنبثقة ({count}).",
+                navigation: "تُحظر إعادة التوجيه والروابط التي تغادر الصفحة ({count}).",
+                storage:
+                    "لا يمكن للصفحة الاحتفاظ بملفات تعريف الارتباط أو التخزين المحلي ({count}).",
+                no_doctype: "لا تحتوي الصفحة على <!doctype html>، لذا تُعرض في وضع quirks.",
+                no_title: "لا تحتوي الصفحة على <title>، لذا استُخدم اسم الملف عنوانًا للملاحظة.",
+            },
         },
         importMd: {
             heading: "استيراد تخفيض السعر",
@@ -5793,7 +5896,7 @@ export const ar: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "تحقق من البريد الوارد الخاص بك",
-                    body: "أرسلنا رابط التحقق إلى {email}. انقر عليه لإنهاء التسجيل.",
+                    body: "أرسلنا رسالة إلى {email}. افتحها لإنهاء التسجيل، أو لتسجيل الدخول إذا كان لديك حساب بالفعل.",
                     checkInboxHint:
                         "انقر فوق الرابط الموجود في البريد الإلكتروني للتحقق من عنوانك.",
                     resend: "إعادة إرسال البريد الإلكتروني",
@@ -5829,6 +5932,10 @@ export const ar: DeepPartial<Messages> = {
                 generic: "حدث خطأ ما. يُرجى المحاولة لاحقًا.",
                 unexpected: "حدث خطأ غير متوقع. يُرجى المحاولة مرة أخرى.",
                 duplicateEmail: "يُرجى المحاولة بعنوان بريد إلكتروني مختلف.",
+                passwordCommon:
+                    "كلمة المرور هذه شائعة جدًا أو يسهل تخمينها. يُرجى اختيار كلمة أخرى.",
+                passwordBreached:
+                    "ظهرت كلمة المرور هذه في تسريب بيانات معروف. يُرجى اختيار كلمة أخرى.",
                 duplicateName: "يُرجى المحاولة باسم مختلف.",
                 demoRateLimited:
                     "عدد كبير جدًا من تسجيلات الدخول التجريبية من هذه الشبكة. يُرجى المحاولة لاحقًا.",

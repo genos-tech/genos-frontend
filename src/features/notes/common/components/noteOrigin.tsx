@@ -1,9 +1,13 @@
 import type { ComponentProps } from "react";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
+import WebRoundedIcon from "@mui/icons-material/WebRounded";
+
+import { isHtmlNote } from "../utils/htmlNote";
 
 /**
  * Where a note came from, as one icon (MIP-1429).
@@ -34,3 +38,11 @@ export const NoteOriginIcon = ({ noteType, sx }: OriginIconProps) => {
     const Icon = ORIGIN_ICON[noteType as keyof typeof ORIGIN_ICON];
     return Icon ? <Icon sx={sx} /> : null;
 };
+
+/**
+ * The glyph a note wears in a list (MIP-2215): the page icon for an HTML note, the document glyph
+ * for any other (the tree and Favorites rows), in the slot the document glyph always had.
+ * Recents wears it only for an HTML note and keeps its origin icon otherwise.
+ */
+export const NoteKindIcon = ({ note }: { note: { bodyFormat?: string | null } }) =>
+    isHtmlNote(note) ? <WebRoundedIcon /> : <DescriptionOutlinedIcon />;
