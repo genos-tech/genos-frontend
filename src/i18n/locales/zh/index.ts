@@ -1827,6 +1827,17 @@ export const zh: DeepPartial<Messages> = {
             unsavedTitle: "放弃未保存的更改？",
             unsavedBody: "你的更改将会丢失。",
         },
+        recentAuth: {
+            title: "确认是您本人",
+            description:
+                "为了您的安全，添加 API 密钥、webhook 或 AI 应用前请输入密码。几分钟内不会再次询问。",
+            passwordLabel: "您的密码",
+            confirm: "继续",
+            cancel: "取消",
+            wrong: "密码不正确。",
+            tooMany: "尝试次数过多，请等待一分钟后重试。",
+            failed: "无法验证您的密码，请重试。",
+        },
         leaveConfirm: {
             leave: "离开",
             cancel: "取消",

@@ -250,6 +250,17 @@ export const ar: DeepPartial<Messages> = {
             hashChatFallback: "محادثة",
             hashProjectFallback: "مشروع",
         },
+        recentAuth: {
+            title: "تأكيد هويتك",
+            description:
+                "لأمانك، أدخل كلمة المرور قبل إضافة مفتاح API أو خطاف ويب أو تطبيق ذكاء اصطناعي. لن يُطلب منك ذلك مرة أخرى لبضع دقائق.",
+            passwordLabel: "كلمة المرور",
+            confirm: "متابعة",
+            cancel: "إلغاء",
+            wrong: "كلمة المرور غير صحيحة.",
+            tooMany: "محاولات كثيرة جدًا. انتظر دقيقة ثم حاول مرة أخرى.",
+            failed: "تعذّر التحقق من كلمة المرور. حاول مرة أخرى.",
+        },
         leaveConfirm: {
             leave: "يترك",
             cancel: "إلغاء",

@@ -21,6 +21,7 @@ import {
 import { v3ApiBaseURL } from "../../services/v3Api";
 import { mcpCoreUrl } from "../../utils/mcpConnect";
 import { EmptyState } from "../ui/feedback/EmptyState";
+import { useRecentAuthPrompt } from "../ui/modal/RecentAuthDialog";
 import { ConnectAppPanel } from "./ConnectAppPanel";
 import { latestActivity } from "./connectAppPanelHelpers";
 import { useAgentQuiet } from "./useAgentQuiet";
@@ -39,6 +40,7 @@ import { useAgentQuiet } from "./useAgentQuiet";
 export const ConnectedAppsSection = () => {
     const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
+    const { guard, dialog: recentAuthDialog } = useRecentAuthPrompt();
     const a = t.settings.connectedApps;
 
     const [connections, setConnections] = useState<McpConnection[] | null>(null);
@@ -92,9 +94,16 @@ export const ConnectedAppsSection = () => {
     ) => {
         setBusy(conn.id);
         setError(null);
-        const res = await updateMcpConnection(accessToken, conn.id, change);
+        // Widening an app (write, deleting, another team) asks for the password again (MIP-2240).
+        const res = await guard(
+            (recentAuthToken) =>
+                updateMcpConnection(accessToken, conn.id, { ...change, recentAuthToken }),
+            (r) => !r.ok && r.recentAuth === true
+        );
         setBusy(null);
         if (!res.ok) {
+            // The person cancelled the password prompt: the card stays as it was.
+            if (res.recentAuth) return;
             if (res.gone) {
                 // Revoked elsewhere: say so and show the real list.
                 setError(a.gone);
@@ -389,6 +398,7 @@ export const ConnectedAppsSection = () => {
                     quietDays={quiet?.quiet ? quiet.days : null}
                 />
             )}
+            {recentAuthDialog}
         </Stack>
     );
 };
