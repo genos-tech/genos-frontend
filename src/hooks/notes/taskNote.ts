@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { TaskNoteMetaProps, TaskNoteMetaTreeNode, TaskNoteProps } from "../../types/notes";
 
@@ -59,7 +59,21 @@ export const updataTaskNoteChain = (props: updataTaskNoteChainProps) => {
         selectedTabIndex,
     } = props;
 
+    // The effect below must keep running only for the dependencies listed at its end, but it
+    // has to read the latest chain and setters, so they are read through a ref.
+    const latest = useRef({
+        currentTaskNoteChain,
+        setCurrentTaskNoteChain,
+        setAllNoteIdChains,
+    });
+    latest.current = { currentTaskNoteChain, setCurrentTaskNoteChain, setAllNoteIdChains };
+
     useEffect(() => {
+        const {
+            currentTaskNoteChain: currentChain,
+            setCurrentTaskNoteChain: setCurrentChain,
+            setAllNoteIdChains: setAllChains,
+        } = latest.current;
         // Will update the Chain when `currentTaskNote`, `tabItems`, or `selectedTabIndex` is changed.
         // When `tabItems` is changed, `currentTaskNote` is also changed at the same time.
         // But `currentTaskNote` can be changed alone only if `tabItems` includes `currentTaskNote`.
@@ -68,24 +82,24 @@ export const updataTaskNoteChain = (props: updataTaskNoteChainProps) => {
             if (chain) {
                 // Update chain if it's different from current, or if current is undefined
                 const isDifferent =
-                    !currentTaskNoteChain ||
+                    !currentChain ||
                     !areArraysEqualByJSON(
                         chain.map((item) => `${item.noteType}-${item.noteId}`),
-                        currentTaskNoteChain.map((item) => `${item.noteType}-${item.noteId}`)
+                        currentChain.map((item) => `${item.noteType}-${item.noteId}`)
                     );
 
                 if (isDifferent) {
-                    setCurrentTaskNoteChain(chain);
+                    setCurrentChain(chain);
                 }
 
-                setAllNoteIdChains((prev) => ({
+                setAllChains((prev) => ({
                     ...prev,
                     [`${tabItems[selectedTabIndex].noteType}-${tabItems[selectedTabIndex].noteId}`]:
                         chain.map((item) => item.noteId),
                 }));
             }
         } else {
-            setCurrentTaskNoteChain([]);
+            setCurrentChain([]);
         }
     }, [currentTaskNote, tabItems, selectedTabIndex, taskNoteMetaTree]);
 };
@@ -97,9 +111,13 @@ type initCurrentTaskNoteChainProps = {
 };
 export const initCurrentTaskNoteChain = (props: initCurrentTaskNoteChainProps) => {
     const { taskNoteMeta, currentTaskNoteChain, setCurrentTaskNoteChain } = props;
+    const latest = useRef({ currentTaskNoteChain, setCurrentTaskNoteChain });
+    latest.current = { currentTaskNoteChain, setCurrentTaskNoteChain };
     useEffect(() => {
-        if (currentTaskNoteChain === undefined && taskNoteMeta.length === 0) {
-            setCurrentTaskNoteChain([]);
+        const { currentTaskNoteChain: currentChain, setCurrentTaskNoteChain: setCurrentChain } =
+            latest.current;
+        if (currentChain === undefined && taskNoteMeta.length === 0) {
+            setCurrentChain([]);
         }
     }, [taskNoteMeta]);
 };

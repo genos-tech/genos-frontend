@@ -24,6 +24,7 @@ import {
     chosenEffort,
     costText,
     EFFORT_LEVELS,
+    jobUsesAi,
     showsEffort,
 } from "../../../features/schedules/scheduleEffort";
 import {
@@ -618,7 +619,9 @@ export const ScheduleFormPanel = ({
                         </Select>
                         {chosenChat && (
                             <FormHelperText sx={{ color: g.text.secondary }}>
-                                {s.deliverChatHint}
+                                {job?.job === "run_skill" && jobUsesAi(job)
+                                    ? s.deliverChatHintAi
+                                    : s.deliverChatHint}
                             </FormHelperText>
                         )}
                     </FormControl>

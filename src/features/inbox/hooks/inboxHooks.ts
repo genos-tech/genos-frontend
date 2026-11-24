@@ -19,5 +19,5 @@ export const useScrollToBottomOnNewItem = (
                 });
             }, 300); // wait 300ms
         }
-    }, [inbox]);
+    }, [inbox, virtuosoRef]);
 };
