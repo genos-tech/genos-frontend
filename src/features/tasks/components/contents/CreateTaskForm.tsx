@@ -1002,22 +1002,22 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
                     ),
             }
         );
-        setIsCreatingMilestone(false);
-        if (created) {
+        if (!created) {
+            setIsCreatingMilestone(false);
+            return;
+        }
+        // MIP-2370: the form stays up (submit locked by `isCreatingMilestone`) until the
+        // new milestone's preview is ready, then closes in the same batch that opens the
+        // preview, so the pane swaps content instead of closing and re-opening. The
+        // `finally` still closes the form if a refresh below throws.
+        try {
             // Milestone landed — the draft no longer represents in-progress
             // work, so drop it before we close the form.
             useTM.setTaskDraft(null);
-            // Reset creation pane and refresh milestones list. We
+            // Refresh milestones list. We
             // include "Closed" so the dashboard's sprint milestone list
             // can keep showing milestones that flip to Closed without
             // them vanishing on the next refresh.
-            useTM.setIsCreatingTask({
-                flag: false,
-                parentTaskId: null,
-                rootTaskId: null,
-                creationKind: "task",
-                milestoneId: null,
-            });
             await useSM.loadMilestonesForProject(projectId, {
                 statuses: MILESTONE_LIST_STATUSES,
             });
@@ -1091,6 +1091,15 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             if (isNoMainPanelVisible(useTM)) {
                 useTM.setIsTaskTableVisible(true);
             }
+        } finally {
+            setIsCreatingMilestone(false);
+            useTM.setIsCreatingTask({
+                flag: false,
+                parentTaskId: null,
+                rootTaskId: null,
+                creationKind: "task",
+                milestoneId: null,
+            });
         }
     };
 
