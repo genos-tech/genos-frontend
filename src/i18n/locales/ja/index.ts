@@ -290,6 +290,8 @@ export const ja: DeepPartial<Messages> = {
                         "サードパーティのアカウントに接続するには、サインインする必要があります。",
                     already_connected_to_other_user:
                         "このアカウントはすでに別のユーザーに接続されています。",
+                    mfa_password_only:
+                        "このアカウントは2段階認証を使っており、メールアドレスとパスワードで利用できます。メールアドレス、パスワード、コードでサインインしてください。",
                     not_a_login_account:
                         "このアカウントはカレンダーへのアクセスのみに接続されていたため、サインインできません。",
                     provider_already_connected:
@@ -1907,6 +1909,17 @@ export const ja: DeepPartial<Messages> = {
             deleteBody: "この操作は取り消せません。",
             unsavedTitle: "未保存の変更を破棄しますか？",
             unsavedBody: "変更内容は失われます。",
+        },
+        recentAuth: {
+            title: "ご本人確認",
+            description:
+                "セキュリティのため、API キー、Webhook、AI アプリを追加する前にパスワードを入力してください。数分間は再入力を求められません。",
+            passwordLabel: "パスワード",
+            confirm: "続ける",
+            cancel: "キャンセル",
+            wrong: "パスワードが正しくありません。",
+            tooMany: "試行回数が多すぎます。1 分ほど待ってからもう一度お試しください。",
+            failed: "パスワードを確認できませんでした。もう一度お試しください。",
         },
         leaveConfirm: {
             leave: "退出",
@@ -4010,6 +4023,90 @@ export const ja: DeepPartial<Messages> = {
             },
         },
     },
+    security: {
+        tab: "セキュリティ",
+        twoFactor: {
+            title: "2段階認証",
+            description:
+                "パスワードの後に、認証アプリの6桁のコードを求めます。パスワードが盗まれたり推測されたりしても、アカウントは開かれません。",
+            statusOn: "オン",
+            statusOff: "オフ",
+            onSince: "{date} からオン",
+            recoveryLeft: "残りのリカバリーコード: {count}",
+            recoveryLow:
+                "リカバリーコードが残りわずかです。なくなる前に新しいセットを取得してください。",
+            turnOn: "オンにする",
+            turnOff: "オフにする",
+            newCodes: "新しいリカバリーコードを取得",
+            providerNote:
+                "Google または GitHub でサインインしています。2段階認証はそのアカウント側で設定してください。ここで設定するものはありません。",
+            loadFailed: "セキュリティ設定を読み込めませんでした。",
+            retry: "もう一度試す",
+            scopeNote: "メールアドレスとパスワードでサインインするときに適用されます。",
+        },
+        setup: {
+            title: "2段階認証をオンにする",
+            passwordIntro:
+                "パスワードを入力して開始します。開いているセッションを使っている別の人が設定を変えるのを防ぎます。",
+            passwordLabel: "パスワード",
+            continue: "続ける",
+            cancel: "キャンセル",
+            scanTitle: "認証アプリでスキャン",
+            scanBody:
+                "Google Authenticator、1Password、Authy など6桁のコードを作るアプリで読み取り、表示されたコードを入力してください。",
+            qrAlt: "認証アプリに Genos を追加する QR コード",
+            manualTitle: "スキャンできない場合は、このキーをアプリに入力してください。",
+            keyLabel: "セットアップキー",
+            copyKey: "キーをコピー",
+            copied: "コピーしました",
+            openInApp: "認証アプリで開く",
+            codeLabel: "6桁のコード",
+            codeHelp: "コードは30秒ごとに変わります。",
+            verify: "オンにする",
+            recoveryTitle: "リカバリーコードを保存",
+            recoveryBody:
+                "スマートフォンをなくしたとき、各コードで1回ずつサインインできます。表示されるのは今だけです。パスワードとは別の安全な場所に保管してください。",
+            copyAll: "すべてコピー",
+            download: "ダウンロード",
+            downloadHeader: "Genos リカバリーコード。各コードは1回だけ使えます。",
+            savedConfirm: "コードを保存しました",
+            done: "完了",
+        },
+        confirm: {
+            passwordLabel: "パスワード",
+            disableTitle: "2段階認証をオフにしますか？",
+            disableBody:
+                "パスワードを知っている人は誰でもサインインできるようになります。確認のためパスワードを入力してください。",
+            disableAction: "オフにする",
+            newCodesTitle: "新しいリカバリーコードを取得しますか？",
+            newCodesBody:
+                "古いリカバリーコードは使えなくなります。新しいセットを取得するにはパスワードを入力してください。",
+            newCodesAction: "新しいコードを取得",
+            cancel: "キャンセル",
+        },
+        errors: {
+            badPassword: "パスワードが正しくありません。",
+            invalidCode: "コードが正しくありません。アプリを確認してもう一度お試しください。",
+            locked: "誤ったコードが多すぎます。{minutes}分後にもう一度お試しください。",
+            throttled: "試行回数が多すぎます。しばらくしてからもう一度お試しください。",
+            alreadyEnabled: "2段階認証はすでにオンです。",
+            noSetup: "セットアップの有効期限が切れました。最初からやり直してください。",
+            network: "ネットワークエラーです。接続を確認してもう一度お試しください。",
+            generic: "問題が発生しました。何も変更されていません。",
+        },
+        signIn: {
+            title: "2段階認証",
+            appBody: "認証アプリの6桁のコードを入力してください。",
+            recoveryBody: "リカバリーコードを1つ入力してください。各コードは1回だけ使えます。",
+            codeLabel: "認証コード",
+            recoveryLabel: "リカバリーコード",
+            submit: "確認",
+            useRecovery: "リカバリーコードを使う",
+            useApp: "認証アプリを使う",
+            back: "サインインに戻る",
+            expired: "サインインの有効期限が切れました。もう一度パスワードを入力してください。",
+        },
+    },
     settings: {
         title: "設定",
         tabs: {
@@ -4286,6 +4383,12 @@ export const ja: DeepPartial<Messages> = {
                     anonymous: "未サインイン",
                 },
                 actions: {
+                    "mfa.enabled": "2段階認証をオンにしました",
+                    "mfa.disabled": "2段階認証をオフにしました",
+                    "mfa.failed": "2段階目が拒否されました",
+                    "mfa.recovery_used": "リカバリーコードを使用",
+                    "mfa.recovery_regenerated": "リカバリーコードを再発行",
+                    "operator.mfa_reset": "サポートが2段階認証をリセット",
                     "signin.succeeded": "サインイン",
                     "signin.failed": "サインイン失敗",
                     signout: "サインアウト",

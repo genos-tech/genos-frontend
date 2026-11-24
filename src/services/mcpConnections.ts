@@ -7,6 +7,7 @@
 // request again from scratch on every call.
 
 import { authApi } from "./api";
+import { RECENT_AUTH_REQUIRED } from "./recentAuth";
 
 /** The authorization parameters the app was handed, as the API wants them
  *  back. `resource` may repeat (RFC 8707), so it alone can be a list. */
@@ -46,6 +47,8 @@ export interface ConsentError {
     description: string;
     redirectTo: string | null;
     status: number;
+    /** The server's machine code when it sent one (`recent_auth_required`). */
+    code?: string;
 }
 
 export type ConsentContextResult =
@@ -56,7 +59,12 @@ export type ConsentDecisionResult =
     | { ok: true; redirectTo: string }
     | { ok: false; failure: ConsentError };
 
+/** The server's "enter your password again" refusal on allowing an app (MIP-2240). */
+export const needsRecentAuth = (result: ConsentDecisionResult): boolean =>
+    !result.ok && result.failure.status === 403 && result.failure.code === RECENT_AUTH_REQUIRED;
+
 interface ErrorWire {
+    code?: string;
     error?: string;
     error_description?: string;
     redirect_to?: string | null;
@@ -70,6 +78,7 @@ const failureFrom = (error: unknown): ConsentError => {
         description: typeof data.error_description === "string" ? data.error_description : "",
         redirectTo: typeof data.redirect_to === "string" ? data.redirect_to : null,
         status: res?.status ?? 0,
+        ...(typeof data.code === "string" ? { code: data.code } : {}),
     };
 };
 
@@ -100,7 +109,8 @@ export type ConsentDecision =
 export const submitConsentDecision = async (
     accessToken: string | null,
     params: ConsentParams,
-    decision: ConsentDecision
+    decision: ConsentDecision,
+    recentAuthToken?: string
 ): Promise<ConsentDecisionResult> => {
     const api = authApi(accessToken);
     if (!api) return { ok: false, failure: failureFrom(null) };
@@ -111,6 +121,7 @@ export const submitConsentDecision = async (
               scopes: decision.scopes,
               team_ids: decision.teamIds,
               default_team_id: decision.defaultTeamId,
+              ...(recentAuthToken ? { recent_auth_token: recentAuthToken } : {}),
           }
         : { params, allow: false };
     try {
@@ -176,21 +187,33 @@ export interface McpConnectionChange {
     scopes?: McpScopeName[];
     teamIds?: string[];
     defaultTeamId?: string;
+    /** From `useRecentAuthPrompt`; the server asks for it when the change widens the app. */
+    recentAuthToken?: string;
 }
 
 /** `gone`: the connection is not there (revoked elsewhere, or not theirs): a 404.
  *  The list is stale, so the caller refreshes it instead of reporting a failure. */
-export type McpWriteFailure = { gone: boolean; error: string | null };
+export type McpWriteFailure = {
+    gone: boolean;
+    error: string | null;
+    /** The server wants the password typed again first (MIP-2240). */
+    recentAuth?: boolean;
+};
 
 export type UpdateConnectionResult =
     | { ok: true; connection: McpConnection }
     | ({ ok: false } & McpWriteFailure);
 
 const writeFailure = (error: unknown): McpWriteFailure => {
-    const res = (error as { response?: { status?: number; data?: { error?: string } } })?.response;
+    const res = (
+        error as { response?: { status?: number; data?: { error?: string; code?: string } } }
+    )?.response;
     return {
         gone: res?.status === 404,
         error: typeof res?.data?.error === "string" ? res.data.error : null,
+        ...(res?.status === 403 && res.data?.code === RECENT_AUTH_REQUIRED
+            ? { recentAuth: true }
+            : {}),
     };
 };
 
@@ -208,6 +231,7 @@ export const updateMcpConnection = async (
                 ...(change.scopes ? { scopes: change.scopes } : {}),
                 ...(change.teamIds ? { team_ids: change.teamIds } : {}),
                 ...(change.defaultTeamId ? { default_team_id: change.defaultTeamId } : {}),
+                ...(change.recentAuthToken ? { recent_auth_token: change.recentAuthToken } : {}),
             },
             SILENT
         );

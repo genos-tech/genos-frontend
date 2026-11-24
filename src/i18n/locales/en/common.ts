@@ -66,6 +66,17 @@ export const common = {
         unsavedTitle: "Discard unsaved changes?",
         unsavedBody: "Your changes will be lost.",
     },
+    recentAuth: {
+        title: "Confirm it's you",
+        description:
+            "For your security, enter your password before adding an API key, a webhook or an AI app. You won't be asked again for a few minutes.",
+        passwordLabel: "Your password",
+        confirm: "Continue",
+        cancel: "Cancel",
+        wrong: "That password is incorrect.",
+        tooMany: "Too many attempts. Wait a minute and try again.",
+        failed: "Couldn't check your password. Please try again.",
+    },
     leaveConfirm: {
         leave: "Leave",
         cancel: "Cancel",

@@ -1,0 +1,85 @@
+// Two-step verification (MIP-2239): Settings > Security, and the code step of signing in.
+// Wording is a draft for Ken's review; `ja` is the other locale a native reader checks.
+export const security = {
+    tab: "Security",
+    twoFactor: {
+        title: "Two-step verification",
+        description:
+            "After your password, Genos asks for a 6-digit code from an authenticator app. A stolen or guessed password alone can no longer open your account.",
+        statusOn: "On",
+        statusOff: "Off",
+        onSince: "On since {date}",
+        recoveryLeft: "Recovery codes left: {count}",
+        recoveryLow: "Almost out of recovery codes. Get a new set before you need one.",
+        turnOn: "Turn on",
+        turnOff: "Turn off",
+        newCodes: "Get new recovery codes",
+        providerNote:
+            "You sign in with Google or GitHub, which has its own two-step verification. Turn it on in that account; there is nothing to set up here.",
+        loadFailed: "Could not load your security settings.",
+        retry: "Try again",
+        scopeNote: "Applies when you sign in with your email and password.",
+    },
+    setup: {
+        title: "Turn on two-step verification",
+        passwordIntro:
+            "Enter your password to start. This stops someone who is using your open session from changing it.",
+        passwordLabel: "Password",
+        continue: "Continue",
+        cancel: "Cancel",
+        scanTitle: "Scan with your authenticator app",
+        scanBody:
+            "Use Google Authenticator, 1Password, Authy or any app that makes 6-digit codes, then enter the code it shows.",
+        qrAlt: "QR code to add Genos to your authenticator app",
+        manualTitle: "Can't scan it? Type this key into the app.",
+        keyLabel: "Setup key",
+        copyKey: "Copy key",
+        copied: "Copied",
+        openInApp: "Open in authenticator app",
+        codeLabel: "6-digit code",
+        codeHelp: "The code changes every 30 seconds.",
+        verify: "Turn on",
+        recoveryTitle: "Save your recovery codes",
+        recoveryBody:
+            "If you lose your phone, each of these codes lets you sign in once. They are shown only now, so keep them somewhere safe, apart from your password.",
+        copyAll: "Copy all",
+        download: "Download",
+        downloadHeader: "Genos recovery codes. Each works once.",
+        savedConfirm: "I have saved these codes",
+        done: "Done",
+    },
+    confirm: {
+        passwordLabel: "Password",
+        disableTitle: "Turn off two-step verification?",
+        disableBody:
+            "Anyone who has your password will be able to sign in. Enter your password to confirm.",
+        disableAction: "Turn off",
+        newCodesTitle: "Get new recovery codes?",
+        newCodesBody:
+            "Your old recovery codes stop working. Enter your password to get a new set.",
+        newCodesAction: "Get new codes",
+        cancel: "Cancel",
+    },
+    errors: {
+        badPassword: "That password is not right.",
+        invalidCode: "That code is not right. Check the app and try again.",
+        locked: "Too many wrong codes. Try again in {minutes} min.",
+        throttled: "Too many attempts. Wait a while and try again.",
+        alreadyEnabled: "Two-step verification is already on.",
+        noSetup: "The setup expired. Start again.",
+        network: "Network error. Check your connection and try again.",
+        generic: "Something went wrong. Nothing was changed.",
+    },
+    signIn: {
+        title: "Two-step verification",
+        appBody: "Enter the 6-digit code from your authenticator app.",
+        recoveryBody: "Enter one of your recovery codes. Each one works once.",
+        codeLabel: "Authentication code",
+        recoveryLabel: "Recovery code",
+        submit: "Verify",
+        useRecovery: "Use a recovery code",
+        useApp: "Use the authenticator app",
+        back: "Back to sign in",
+        expired: "That sign-in expired. Enter your password again.",
+    },
+};

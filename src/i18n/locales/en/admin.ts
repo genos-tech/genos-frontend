@@ -162,6 +162,9 @@ export const admin = {
                     "This account is already connected to a different user.",
                 not_a_login_account:
                     "That account was only connected for calendar access, so it can't sign you in.",
+                // TODO(copy): draft wording for Ken (MIP-2239).
+                mfa_password_only:
+                    "This account uses two-step verification, which works with your email and password. Sign in with your email, password and code.",
                 provider_already_connected:
                     "You already have an account connected for this provider. Disconnect it first.",
                 unknown_provider: "Unknown OAuth provider.",
