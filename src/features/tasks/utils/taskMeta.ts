@@ -1,18 +1,16 @@
 import { alpha } from "@mui/system";
 
 import { TaskEffortLevelProps, TaskPriorityProps, TaskStatusProps } from "../../../types/tasks";
+import { STATUS_NAMES } from "../meta/taskStatuses";
 import { prioritySolid, statusSolid } from "../meta/taskTone";
 
 // Colors come from the one tone source (MIP-1122): a solid fill and its label
 // color, the same on every surface that shows the status.
-export const statuses: TaskStatusProps[] = [
-    { code: 0, status: "Open", ...statusSolid("Open") },
-    { code: 0, status: "WIP", ...statusSolid("WIP") },
-    { code: 0, status: "Blocked", ...statusSolid("Blocked") },
-    { code: 0, status: "Pending", ...statusSolid("Pending") },
-    { code: 0, status: "Closed", ...statusSolid("Closed") },
-    { code: 0, status: "Deleted", ...statusSolid("Deleted") },
-];
+export const statuses: TaskStatusProps[] = STATUS_NAMES.map((status) => ({
+    code: 0,
+    status,
+    ...statusSolid(status),
+}));
 
 export const priorities: TaskPriorityProps[] = [
     { code: 0, priority: "Minimal", ...prioritySolid("Minimal") },
