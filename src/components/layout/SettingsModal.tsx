@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { ElementType, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
 import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
@@ -94,6 +94,7 @@ import {
     useSidebarVisibility,
 } from "../../hooks/common/useSidebarVisibility";
 import { fmt, Locale, useTranslation } from "../../i18n";
+import type { SettingsTabKey } from "../../manual/settingsMap";
 import { SubscriptionTier } from "../../services/agentApi";
 import { NotificationSettingsPanel } from "../../services/notifications/NotificationSettingsPanel";
 import { useColorTheme } from "../../theme/colorThemeState";
@@ -273,6 +274,7 @@ const AppearanceSection = () => {
             <SettingRow
                 alignItems="center"
                 direction="row"
+                guideId="general.theme"
                 justifyContent="space-between"
                 spacing={2}
             >
@@ -326,6 +328,7 @@ const AppearanceSection = () => {
                 a column would centre the label text and the swatch row. */}
             <SettingRow
                 direction={{ xs: "column", md: "row" }}
+                guideId="general.colorTheme"
                 spacing={{ xs: 1, md: 2 }}
                 sx={{
                     alignItems: { xs: "flex-start", md: "center" },
@@ -364,6 +367,7 @@ const MessageLayoutSection = () => {
             <SettingRow
                 alignItems="center"
                 direction="row"
+                guideId="chat.messageLayout"
                 justifyContent="space-between"
                 spacing={2}
             >
@@ -433,6 +437,7 @@ const SidebarSection = () => {
                         alignItems="center"
                         direction="row"
                         disabled={loading}
+                        guideId="general.sidebar"
                         justifyContent="space-between"
                         spacing={2}
                     >
@@ -514,6 +519,7 @@ const QuickReactionsSection = () => {
                 row for why `alignItems` has to flip with the direction. */}
             <SettingRow
                 direction={{ xs: "column", md: "row" }}
+                guideId="chat.quickReactions"
                 spacing={{ xs: 1, md: 2 }}
                 sx={{
                     alignItems: { xs: "flex-start", md: "center" },
@@ -711,6 +717,7 @@ const DoubleClickTodoSection = () => {
             <SettingRow
                 alignItems="center"
                 direction="row"
+                guideId="chat.doubleClickTodo"
                 justifyContent="space-between"
                 spacing={2}
             >
@@ -908,6 +915,7 @@ export const LlmModelSection = () => {
             <SettingRow
                 alignItems="center"
                 direction="row"
+                guideId="spotlight.provider"
                 justifyContent="space-between"
                 spacing={2}
                 sx={{ mb: 1.5 }}
@@ -971,6 +979,7 @@ export const LlmModelSection = () => {
                 <SettingRow
                     alignItems="center"
                     direction="row"
+                    guideId="spotlight.effort"
                     justifyContent="space-between"
                     spacing={2}
                     sx={{ mb: 1.5 }}
@@ -1016,6 +1025,7 @@ export const LlmModelSection = () => {
                 <SettingRow
                     alignItems="center"
                     direction="row"
+                    guideId="spotlight.model"
                     justifyContent="space-between"
                     spacing={2}
                     sx={{ mb: 1.5 }}
@@ -1171,6 +1181,7 @@ export const SpotlightSection = () => {
             <SettingRow
                 alignItems="center"
                 direction="row"
+                guideId="spotlight.aiAnswers"
                 justifyContent="space-between"
                 spacing={2}
                 sx={{ mb: 1.5 }}
@@ -1192,6 +1203,7 @@ export const SpotlightSection = () => {
                 alignItems="center"
                 direction="row"
                 disabled={!aiAnswers}
+                guideId="spotlight.webSearch"
                 justifyContent="space-between"
                 spacing={2}
                 sx={{ mt: 1.5, opacity: aiAnswers ? 1 : 0.5 }}
@@ -1228,6 +1240,7 @@ export const PrivacySection = () => {
             <SettingRow
                 alignItems="center"
                 direction="row"
+                guideId="general.shareUsage"
                 justifyContent="space-between"
                 spacing={2}
             >
@@ -1260,6 +1273,7 @@ const LanguageSection = () => {
             <SettingRow
                 alignItems="center"
                 direction="row"
+                guideId="general.language"
                 justifyContent="space-between"
                 spacing={2}
             >
@@ -1321,6 +1335,7 @@ const QuickAddRequiredFieldsSection = () => {
             <SettingRow
                 alignItems="center"
                 direction="row"
+                guideId="tasks.quickAddRequiredFields"
                 justifyContent="space-between"
                 spacing={2}
             >
@@ -1361,6 +1376,7 @@ const AutoCloseOnPrMergeSection = () => {
                 alignItems="center"
                 direction="row"
                 disabled={loading}
+                guideId="tasks.autoCloseOnPrMerge"
                 justifyContent="space-between"
                 spacing={2}
             >
@@ -1539,6 +1555,7 @@ const AutoSyncCalendarSection = () => {
                 alignItems="center"
                 direction="row"
                 disabled={togglesDisabled}
+                guideId="tasks.autoSyncCalendar"
                 justifyContent="space-between"
                 spacing={2}
             >
@@ -1651,21 +1668,104 @@ const AutoSyncCalendarSection = () => {
 // Tab keys mirror the i18n keys under `settings.tabs.*` and are kept
 // as a plain string union (rather than numeric indices) so reordering
 // or inserting a new tab doesn't silently shift selection.
-export type SettingsTabKey =
-    | "general"
-    | "planUsage"
-    | "aiCreditUsage"
-    | "chat"
-    | "tasks"
-    | "spotlight"
-    | "notifications"
-    | "mentionGroups"
-    | "customEmoji"
-    | "shortcuts"
-    | "integrations"
-    | "developer"
-    | "security"
-    | "account";
+export type { SettingsTabKey };
+
+type SettingsTabDef = {
+    key: SettingsTabKey;
+    Icon: ElementType;
+    label: (t: ReturnType<typeof useTranslation>["t"]) => string;
+    /** Left out of the rail and the panels when false (build switch). */
+    enabled: boolean;
+};
+
+/**
+ * The tabs, in the order the rail shows them. The rail and the panel ids both come from here,
+ * and `src/manual/settingsMap.ts` keys its guide entries on the same `SettingsTabKey` (MIP-2320).
+ */
+// The registry is data the tests and the manual read; it is not a component.
+// eslint-disable-next-line react-refresh/only-export-components
+export const SETTINGS_TABS: readonly SettingsTabDef[] = [
+    {
+        key: "general",
+        Icon: SettingsRoundedIcon,
+        label: (t) => t.settings.tabs.general,
+        enabled: true,
+    },
+    {
+        key: "planUsage",
+        Icon: WorkspacePremiumRoundedIcon,
+        label: (t) => t.settings.tabs.planUsage,
+        enabled: true,
+    },
+    {
+        key: "aiCreditUsage",
+        Icon: BoltRoundedIcon,
+        label: (t) => t.settings.tabs.aiCreditUsage,
+        enabled: true,
+    },
+    {
+        key: "spotlight",
+        Icon: AutoAwesomeRoundedIcon,
+        label: (t) => t.settings.tabs.spotlight,
+        enabled: true,
+    },
+    {
+        key: "chat",
+        Icon: ChatBubbleOutlineRoundedIcon,
+        label: (t) => t.settings.tabs.chat,
+        enabled: true,
+    },
+    {
+        key: "tasks",
+        Icon: PlaylistAddCheckRoundedIcon,
+        label: (t) => t.settings.tabs.tasks,
+        enabled: true,
+    },
+    {
+        key: "notifications",
+        Icon: NotificationsRoundedIcon,
+        label: (t) => t.settings.tabs.notifications,
+        enabled: true,
+    },
+    {
+        key: "mentionGroups",
+        Icon: GroupRoundedIcon,
+        label: (t) => t.settings.tabs.mentionGroups,
+        enabled: true,
+    },
+    {
+        key: "customEmoji",
+        Icon: EmojiEmotionsRoundedIcon,
+        label: (t) => t.settings.tabs.customEmoji,
+        enabled: true,
+    },
+    {
+        key: "shortcuts",
+        Icon: KeyboardRoundedIcon,
+        label: (t) => t.settings.tabs.shortcuts,
+        enabled: true,
+    },
+    { key: "security", Icon: SecurityRoundedIcon, label: (t) => t.security.tab, enabled: true },
+    {
+        key: "account",
+        Icon: ManageAccountsRoundedIcon,
+        label: (t) => t.settings.tabs.account,
+        enabled: true,
+    },
+    // Feature-flagged so disabled deploys don't show an empty tab.
+    {
+        key: "integrations",
+        Icon: HubRoundedIcon,
+        label: (t) => t.settings.tabs.integrations,
+        enabled: OAUTH_INTEGRATIONS_ENABLED,
+    },
+    {
+        key: "developer",
+        Icon: TerminalRoundedIcon,
+        label: (t) => t.settings.tabs.developer,
+        enabled: true,
+    },
+];
 
 /**
  * Settings → Integrations panel. Renders the same Connections UI
@@ -1814,69 +1914,16 @@ export const SettingsModal = ({
                             // See the note in `SIDEBAR_TAB_SX`.
                         }}
                     >
-                        <Tab sx={SIDEBAR_TAB_SX} value="general">
-                            <SettingsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.general}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="planUsage">
-                            <WorkspacePremiumRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.planUsage}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="aiCreditUsage">
-                            <BoltRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.aiCreditUsage}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="spotlight">
-                            <AutoAwesomeRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.spotlight}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="chat">
-                            <ChatBubbleOutlineRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.chat}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="tasks">
-                            <PlaylistAddCheckRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.tasks}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="notifications">
-                            <NotificationsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.notifications}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="mentionGroups">
-                            <GroupRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.mentionGroups}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="customEmoji">
-                            <EmojiEmotionsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.customEmoji}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="shortcuts">
-                            <KeyboardRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.shortcuts}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="security">
-                            <SecurityRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.security.tab}
-                        </Tab>
-                        <Tab sx={SIDEBAR_TAB_SX} value="account">
-                            <ManageAccountsRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.account}
-                        </Tab>
-                        {/* Feature-flagged so disabled deploys don't
-                            show an empty tab. */}
-                        {OAUTH_INTEGRATIONS_ENABLED && (
-                            <Tab sx={SIDEBAR_TAB_SX} value="integrations">
-                                <HubRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                                {t.settings.tabs.integrations}
+                        {SETTINGS_TABS.filter((def) => def.enabled).map(({ key, Icon, label }) => (
+                            <Tab key={key} sx={SIDEBAR_TAB_SX} value={key}>
+                                <Icon sx={SIDEBAR_TAB_ICON_SX} />
+                                {label(t)}
                             </Tab>
-                        )}
-                        <Tab sx={SIDEBAR_TAB_SX} value="developer">
-                            <TerminalRoundedIcon sx={SIDEBAR_TAB_ICON_SX} />
-                            {t.settings.tabs.developer}
-                        </Tab>
+                        ))}
                     </TabList>
 
                     <TabPanel
+                        data-guide-id="general"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="general"
                     >
@@ -1888,6 +1935,7 @@ export const SettingsModal = ({
                         </Stack>
                     </TabPanel>
                     <TabPanel
+                        data-guide-id="planUsage"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="planUsage"
                     >
@@ -1901,12 +1949,14 @@ export const SettingsModal = ({
                         </Stack>
                     </TabPanel>
                     <TabPanel
+                        data-guide-id="aiCreditUsage"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="aiCreditUsage"
                     >
                         <AiCreditUsageSection onNavigateAway={onClose} />
                     </TabPanel>
                     <TabPanel
+                        data-guide-id="spotlight"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="spotlight"
                     >
@@ -1944,7 +1994,11 @@ export const SettingsModal = ({
                             </Sheet>
                         </GenosSettingsPanel>
                     </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }} value="chat">
+                    <TabPanel
+                        data-guide-id="chat"
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="chat"
+                    >
                         <Stack spacing={2}>
                             <MessageLayoutSection />
                             <QuickReactionsSection />
@@ -1952,7 +2006,11 @@ export const SettingsModal = ({
                             <DoubleClickTodoSection />
                         </Stack>
                     </TabPanel>
-                    <TabPanel sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }} value="tasks">
+                    <TabPanel
+                        data-guide-id="tasks"
+                        sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
+                        value="tasks"
+                    >
                         <Stack spacing={2}>
                             {/* Sort settings now live in
                                 `TaskTableColumnSettings` (task table /
@@ -1967,6 +2025,7 @@ export const SettingsModal = ({
                         </Stack>
                     </TabPanel>
                     <TabPanel
+                        data-guide-id="notifications"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="notifications"
                     >
@@ -1983,6 +2042,7 @@ export const SettingsModal = ({
                         </Stack>
                     </TabPanel>
                     <TabPanel
+                        data-guide-id="mentionGroups"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="mentionGroups"
                     >
@@ -2008,6 +2068,7 @@ export const SettingsModal = ({
                         </Stack>
                     </TabPanel>
                     <TabPanel
+                        data-guide-id="customEmoji"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="customEmoji"
                     >
@@ -2025,6 +2086,7 @@ export const SettingsModal = ({
                         </Stack>
                     </TabPanel>
                     <TabPanel
+                        data-guide-id="shortcuts"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="shortcuts"
                     >
@@ -2033,6 +2095,7 @@ export const SettingsModal = ({
                         </Stack>
                     </TabPanel>
                     <TabPanel
+                        data-guide-id="security"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="security"
                     >
@@ -2041,6 +2104,7 @@ export const SettingsModal = ({
                         </Stack>
                     </TabPanel>
                     <TabPanel
+                        data-guide-id="account"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="account"
                     >
@@ -2050,6 +2114,7 @@ export const SettingsModal = ({
                     </TabPanel>
                     {OAUTH_INTEGRATIONS_ENABLED && (
                         <TabPanel
+                            data-guide-id="integrations"
                             sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                             value="integrations"
                         >
@@ -2059,6 +2124,7 @@ export const SettingsModal = ({
                         </TabPanel>
                     )}
                     <TabPanel
+                        data-guide-id="developer"
                         sx={{ px: 0, py: 2, minWidth: 0, overflowX: "auto" }}
                         value="developer"
                     >
