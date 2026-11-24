@@ -53,11 +53,14 @@ export type GuideItem = {
     serverSwitch: string | null;
 };
 
+/** A row inside a tab. `name` is the manual's name for it (the app's own text is per-component). */
+export type GuideRow = GuideItem & { name: string };
+
 export type GuideTab = GuideItem & {
     /** Dotted path into the i18n strings of the label the tab shows. */
     labelPath: "security.tab" | `settings.tabs.${Exclude<SettingsTabKey, "security">}`;
     /** Rows inside the tab (rendered with `SettingRow`). The full id is `<tab>.<item>`. */
-    items: Record<string, GuideItem>;
+    items: Record<string, GuideRow>;
 };
 
 const SELF = { who: "self", plan: "all", serverSwitch: null } as const;
@@ -68,12 +71,16 @@ export const SETTINGS_MAP = {
         labelPath: "settings.tabs.general",
         default: "Appearance, Language, Sidebar, Privacy & analytics",
         items: {
-            theme: { ...SELF, default: "System" },
-            colorTheme: { ...SELF, default: "Purple" },
-            density: { ...SELF, default: "Default" },
-            language: { ...SELF, default: "Browser language" },
-            sidebar: { ...SELF, default: "Inbox, Chats, Tasks, Notes and To-Do all shown" },
-            shareUsage: { ...SELF, default: "Off until accepted" },
+            theme: { name: "Theme (Light, Dark, System)", ...SELF, default: "System" },
+            colorTheme: { name: "Color theme", ...SELF, default: "Purple" },
+            density: { name: "Density", ...SELF, default: "Default" },
+            language: { name: "Language", ...SELF, default: "Browser language" },
+            sidebar: {
+                name: "Sidebar sections",
+                ...SELF,
+                default: "Inbox, Chats, Tasks, Notes and To-Do all shown",
+            },
+            shareUsage: { name: "Share usage data", ...SELF, default: "Off until accepted" },
         },
     },
     planUsage: {
@@ -95,14 +102,23 @@ export const SETTINGS_MAP = {
         default:
             "AI model, Genos answers, How much Genos writes, Schedules, What Genos remembers, Skills",
         items: {
-            provider: { ...SELF, plan: "perCap", default: "Gemini Flash" },
-            effort: { ...SELF, plan: "perCap", default: "Low" },
-            model: { ...SELF, plan: "perCap", default: "Gemini Flash" },
-            aiAnswers: { ...SELF, default: "On (this device)" },
-            webSearch: { ...SELF, plan: "perCap", default: "Off" },
-            contentLength: { ...SELF, default: "Standard" },
-            sharedAnswers: { ...SELF, default: "On" },
-            noteActivity: { ...SELF, default: "On" },
+            provider: {
+                name: "AI model: Provider",
+                ...SELF,
+                plan: "perCap",
+                default: "Gemini Flash",
+            },
+            effort: { name: "Effort", ...SELF, plan: "perCap", default: "Low" },
+            model: { name: "AI model: Model", ...SELF, plan: "perCap", default: "Gemini Flash" },
+            aiAnswers: {
+                name: "Genos answers (Ask button)",
+                ...SELF,
+                default: "On (this device)",
+            },
+            webSearch: { name: "Web search", ...SELF, plan: "perCap", default: "Off" },
+            contentLength: { name: "How much Genos writes", ...SELF, default: "Standard" },
+            sharedAnswers: { name: "Let my answers help teammates", ...SELF, default: "On" },
+            noteActivity: { name: "Note my activity", ...SELF, default: "On" },
         },
     },
     chat: {
@@ -110,9 +126,13 @@ export const SETTINGS_MAP = {
         labelPath: "settings.tabs.chat",
         default: "Message layout, Quick reactions, Message actions, Double-click",
         items: {
-            messageLayout: { ...SELF, default: "Compact" },
-            quickReactions: { ...SELF, default: "Thumbs up, eyes, check mark" },
-            doubleClickTodo: { ...SELF, default: "On" },
+            messageLayout: { name: "Message layout", ...SELF, default: "Compact" },
+            quickReactions: {
+                name: "Quick reactions",
+                ...SELF,
+                default: "Thumbs up, eyes, check mark",
+            },
+            doubleClickTodo: { name: "Double-click adds to To-Do", ...SELF, default: "On" },
         },
     },
     tasks: {
@@ -120,9 +140,21 @@ export const SETTINGS_MAP = {
         labelPath: "settings.tabs.tasks",
         default: "Quick task creation, Auto-close on PR merge, Google Calendar sync",
         items: {
-            quickAddRequiredFields: { ...SELF, default: "Off" },
-            autoCloseOnPrMerge: { ...SELF, plan: "pro+", default: "Off", serverSwitch: null },
-            autoSyncCalendar: { ...SELF, plan: "core+", default: "Off" },
+            quickAddRequiredFields: {
+                name: "Quick task creation: required fields",
+                ...SELF,
+                default: "Off",
+            },
+            autoCloseOnPrMerge: {
+                name: "Close my tasks when their PR merges",
+                ...SELF,
+                default: "Off",
+            },
+            autoSyncCalendar: {
+                name: "Sync task due dates to Google Calendar",
+                ...SELF,
+                default: "Off",
+            },
         },
     },
     notifications: {
@@ -130,14 +162,24 @@ export const SETTINGS_MAP = {
         labelPath: "settings.tabs.notifications",
         default: "Master, Pause, browser permission, groups, email, mutes",
         items: {
-            master: { ...SELF, default: "On" },
-            quietHours: { ...SELF, default: "Not paused" },
-            group: { ...SELF, default: "On" },
-            category: { ...SELF, default: "On" },
-            email: { ...SELF, default: "On", serverSwitch: "EMAIL_NOTIFICATIONS_ENABLED" },
-            emailCategory: { ...SELF, default: "On" },
-            mutedChat: { ...SELF, default: "Unmute" },
-            mutedItem: { ...SELF, default: "Unmute" },
+            master: { name: "Web notifications (master switch)", ...SELF, default: "On" },
+            quietHours: { name: "Pause and quiet hours", ...SELF, default: "Not paused" },
+            group: { name: "Notification groups", ...SELF, default: "On" },
+            category: { name: "Notification categories", ...SELF, default: "On" },
+            email: {
+                name: "Email notifications",
+                ...SELF,
+                default: "On",
+                serverSwitch: "EMAIL_NOTIFICATIONS_ENABLED",
+            },
+            emailCategory: {
+                name: "Email categories",
+                ...SELF,
+                default:
+                    "On for mentions, assignments, thread replies, task comments and inbox; Off for chats, reactions and finished background answers",
+            },
+            mutedChat: { name: "Muted chats", ...SELF, default: "Nothing muted" },
+            mutedItem: { name: "Muted items", ...SELF, default: "Nothing muted" },
         },
     },
     mentionGroups: {
@@ -178,7 +220,6 @@ export const SETTINGS_MAP = {
     },
     integrations: {
         ...SELF,
-        plan: "pro+",
         labelPath: "settings.tabs.integrations",
         default:
             "Google, GitHub, repository access (hidden when integrations are off in the build)",
@@ -187,10 +228,9 @@ export const SETTINGS_MAP = {
     },
     developer: {
         ...SELF,
-        plan: "core+",
         labelPath: "settings.tabs.developer",
         default:
-            "Connect your AI, Connected apps, API keys, team keys, webhooks; contents are role-gated",
+            "Connect your AI, Connected apps, API keys, team keys, webhooks. Connected apps and webhooks need Core and up; contents are role-gated",
         items: {},
     },
 } as const satisfies Record<SettingsTabKey, GuideTab>;
