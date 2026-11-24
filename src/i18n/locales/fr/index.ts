@@ -5051,6 +5051,8 @@ export const fr: DeepPartial<Messages> = {
             unavailable: "(indisponible)",
             milestonePlaceholder: "Choisir un jalon",
             milestoneLoading: "Chargement des jalons…",
+            milestoneDue: "Échéance {date}",
+            milestoneOverdue: "En retard {date}",
             milestoneNone: "Aucun jalon à choisir.",
             milestoneLoadFailed:
                 "Impossible de charger les jalons. Fermez ce formulaire et réessayez.",

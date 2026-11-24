@@ -511,10 +511,12 @@ describe("milestone picker", () => {
         expect(loadProjectMilestones.mock.calls.map((c) => c[0]).sort()).toEqual([11, 12]);
         await user.click(await screen.findByRole("combobox", { name: /Milestone/ }));
         const options = await screen.findAllByRole("option");
-        expect(options.map((o) => o.textContent)).toEqual(["Launch", "Beta"]);
+        expect(
+            options.map((o) => within(o).getAllByText(/^(Launch|Beta)$/)[0].textContent)
+        ).toEqual(["Launch", "Beta"]);
         expect(screen.getByText("Apollo")).toBeTruthy();
         expect(screen.getByText("Borealis")).toBeTruthy();
-        await user.click(screen.getByRole("option", { name: "Beta" }));
+        await user.click(screen.getByRole("option", { name: /^Beta/ }));
         await user.click(screen.getByRole("button", { name: "Create schedule" }));
         await waitFor(() => expect(createSchedule).toHaveBeenCalledTimes(1));
         expect(createSchedule.mock.calls[0][2]).toMatchObject({

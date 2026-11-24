@@ -1172,6 +1172,8 @@ export const es: DeepPartial<Messages> = {
             unavailable: "(no disponible)",
             milestonePlaceholder: "Elige un hito",
             milestoneLoading: "Cargando hitos…",
+            milestoneDue: "Vence {date}",
+            milestoneOverdue: "Vencido {date}",
             milestoneNone: "No hay hitos entre los que elegir.",
             milestoneLoadFailed:
                 "No se pudieron cargar los hitos. Cierra este formulario e inténtalo de nuevo.",

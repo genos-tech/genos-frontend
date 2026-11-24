@@ -1,6 +1,8 @@
 import {
     Autocomplete,
     AutocompleteOption,
+    Box,
+    createFilterOptions,
     List,
     ListItem,
     ListSubheader,
@@ -17,13 +19,18 @@ import {
     projectOptionLabel,
     renderProjectOption,
 } from "../../../features/tasks/components/autocompletes/ProjectPickerParts";
+import { StatusLabel } from "../../../features/tasks/components/meta/StatusLabel";
 import {
     ProjectIdentityDecorator,
     ProjectIdentityRow,
 } from "../../../features/tasks/components/ProjectIdentityRow";
+import { toneCss } from "../../../features/tasks/meta/taskTone";
+import type { Milestone } from "../../../features/tasks/sprint-milestone/types";
+import { isOverdueDate } from "../../../features/tasks/utils/dueWindow";
 import { fmt, useTranslation } from "../../../i18n";
 import type { ChatTarget } from "../../../services/schedules";
 import type { ProjectProps } from "../../../types/tasks";
+import { formatMonthDay } from "../../../utils/calendarDate";
 import { INBOX_TARGET, type DeliverTarget } from "./chatTarget";
 import { ChatTargetDecorator, ChatTargetOption } from "./ChatTargetOption";
 import { useJoinedProjects, useProjectAvatars, useProjectMilestones } from "./scheduleParamHooks";
@@ -121,11 +128,84 @@ export const ProjectParamSelect = ({
 };
 
 // One row of the milestone dropdown. `group` is the owning project's id as text ("" for
-// the stand-in row of a milestone that can no longer be listed).
-type MilestoneOption = { id: string; title: string; label: string; group: string };
+// the stand-in row of a milestone that can no longer be listed). `milestone` is absent on
+// that stand-in row, which therefore shows no chips.
+type MilestoneOption = {
+    id: string;
+    title: string;
+    label: string;
+    group: string;
+    milestone?: Milestone;
+};
+
+// Type-to-filter matches the title and the display id (as well as the project name).
+const filterMilestones = createFilterOptions<MilestoneOption>({
+    stringify: (o) => `${o.label} ${o.milestone?.displayId ?? ""}`,
+});
+
+/** One milestone row: the title, then ONE meta line that always starts with the status, so
+ *  rows with and without a due date or progress have the same height. The due date turns red
+ *  AND says "Overdue" (colour alone is not an answer); a finished milestone is never overdue. */
+const MilestoneOptionRow = ({ milestone }: { milestone: Milestone }) => {
+    const { t, locale } = useTranslation();
+    const s = t.settings.schedules;
+    const due = formatMonthDay(milestone.dueDate, locale);
+    const overdue = milestone.status !== "Closed" && isOverdueDate(milestone.dueDate);
+    const total = milestone.tasksTotal ?? 0;
+    const closed = milestone.tasksClosed ?? 0;
+    const meta = {
+        flexShrink: 0,
+        whiteSpace: "nowrap",
+        fontSize: "var(--g-type-body-xs-size, 0.75rem)",
+        color: "var(--g-text-tertiary)",
+    } as const;
+    return (
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.25, minWidth: 0, flex: 1 }}>
+            <Typography level="body-sm" sx={{ color: "inherit", minWidth: 0 }} noWrap>
+                {milestone.title}
+            </Typography>
+            <Box
+                data-testid="milestone-option-meta"
+                sx={{ display: "flex", alignItems: "center", gap: 1.25, minWidth: 0 }}
+            >
+                <Box sx={{ flexShrink: 0, display: "inline-flex" }}>
+                    <StatusLabel status={milestone.status} />
+                </Box>
+                {milestone.displayId && (
+                    <Box
+                        component="span"
+                        sx={{
+                            ...meta,
+                            flexShrink: 1,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                        }}
+                    >
+                        {milestone.displayId}
+                    </Box>
+                )}
+                {due && (
+                    <Box
+                        component="span"
+                        sx={{ ...meta, color: overdue ? toneCss("danger").text : meta.color }}
+                    >
+                        {fmt(overdue ? s.milestoneOverdue : s.milestoneDue, { date: due })}
+                    </Box>
+                )}
+                {total > 0 && (
+                    <Box component="span" sx={meta}>
+                        {fmt(t.tasks.dashboard.assignedMilestones.progress, { closed, total })}
+                    </Box>
+                )}
+            </Box>
+        </Box>
+    );
+};
 
 /** The required milestone parameter: a milestone by name, grouped by project. The same
- *  field, dropdown and project rows (avatar, name) as the project picker above. */
+ *  field, dropdown and project rows (avatar, name) as the project picker above; each row
+ *  adds what the milestone is (status, id, due date, progress), and the closed field carries
+ *  the chosen milestone's status icon the way the project picker carries its avatar. */
 export const MilestoneParamSelect = ({ value, onChange }: Props) => {
     const { t } = useTranslation();
     const s = t.settings.schedules;
@@ -143,6 +223,7 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
                 title: m.title,
                 label: `${g.project.projectName} / ${m.title}`,
                 group: String(g.project.projectId),
+                milestone: m,
             }))
     );
     const known = options.some((o) => o.id === value);
@@ -159,9 +240,11 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
             : null;
     const all = stray ? [stray, ...options] : options;
     const projectById = new Map(projects.map((p) => [String(p.projectId), p]));
+    const selected = all.find((o) => o.id === value) ?? null;
 
     return (
         <Autocomplete<MilestoneOption, false, false, false>
+            filterOptions={filterMilestones}
             getOptionLabel={(o) => o.label}
             groupBy={(o) => o.group}
             isOptionEqualToValue={(o, v) => o.id === v.id}
@@ -172,7 +255,7 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
             placeholder={loading ? s.milestoneLoading : s.milestonePlaceholder}
             slotProps={projectListboxSlotProps(popupZIndex)}
             sx={{ minWidth: 0 }}
-            value={all.find((o) => o.id === value) ?? null}
+            value={selected}
             renderGroup={({ key, group, children }) => {
                 const project = projectById.get(group);
                 return (
@@ -203,12 +286,27 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
                 );
             }}
             renderOption={(optionProps, option) => (
-                <AutocompleteOption {...optionProps} key={option.id}>
-                    <Typography level="body-sm" sx={{ color: "inherit", minWidth: 0 }} noWrap>
-                        {option.title}
-                    </Typography>
+                <AutocompleteOption
+                    {...optionProps}
+                    key={option.id}
+                    sx={{ display: "flex", alignItems: "center", minWidth: 0 }}
+                >
+                    {option.milestone ? (
+                        <MilestoneOptionRow milestone={option.milestone} />
+                    ) : (
+                        <Typography level="body-sm" sx={{ color: "inherit", minWidth: 0 }} noWrap>
+                            {option.title}
+                        </Typography>
+                    )}
                 </AutocompleteOption>
             )}
+            startDecorator={
+                // The closed field is a text input, so only the name fits in it: the status
+                // rides beside it as an icon (its name is the accessible label).
+                selected?.milestone ? (
+                    <StatusLabel status={selected.milestone.status} iconOnly />
+                ) : undefined
+            }
             onChange={(_, option) => onChange(option ? option.id : "")}
         />
     );
