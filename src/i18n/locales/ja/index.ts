@@ -7385,6 +7385,34 @@ export const ja: DeepPartial<Messages> = {
                 teamLoadHide: "チームの負荷を隠す",
             },
             tabAgentActivity: "エージェントの活動",
+            tabCustomDashboards: "AIのカスタムダッシュボード",
+            customDashboards: {
+                heading: "AIのカスタムダッシュボード",
+                subtitle:
+                    "AIスケジュールが最新に保つページと、チームメイトが共有したダッシュボードです。すでに開ける内容だけが表示されます。",
+                listLabel: "ダッシュボード",
+                own: "自分の",
+                shared: "共有されたもの",
+                updated: "{when}に更新",
+                notRun: "まだ実行されていません",
+                paused: "一時停止中",
+                sharedBy: "作成者: {name}",
+                runNow: "今すぐ実行",
+                openNote: "ノートを開く",
+                runDone: "ダッシュボードを更新しました。",
+                runFailed: "ダッシュボードを更新できませんでした。",
+                notRunTitle: "このダッシュボードはまだ実行されていません",
+                notRunBody: "今すぐ実行してページを作成します。",
+                emptyTitle: "ダッシュボードはまだありません",
+                emptyBody:
+                    "AIスケジュールが最新に保つダッシュボードと、チームメイトが共有したものがここに表示されます。",
+                unavailableTitle: "ダッシュボードはまだ利用できません",
+                unavailableBody:
+                    "このサーバーではまだダッシュボードを一覧できません。後でもう一度お試しください。",
+                errorTitle: "ダッシュボードを読み込めませんでした",
+                errorBody: "接続を確認して、もう一度お試しください。",
+                retry: "再試行",
+            },
             tabToday: "今日",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
             today: {

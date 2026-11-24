@@ -4062,6 +4062,33 @@ export const ar: DeepPartial<Messages> = {
                 teamLoadHide: "إخفاء حمل الفريق",
             },
             tabAgentActivity: "نشاط الوكلاء",
+            tabCustomDashboards: "لوحات معلومات مخصصة بالذكاء الاصطناعي",
+            customDashboards: {
+                heading: "لوحات معلومات مخصصة بالذكاء الاصطناعي",
+                subtitle:
+                    "صفحات تُبقيها جداولك الذكية محدّثة، ولوحات معلومات يشاركها زملاؤك معك. تظهر فقط ما يمكنك فتحه أصلًا.",
+                listLabel: "لوحات المعلومات",
+                own: "الخاصة بك",
+                shared: "تمت مشاركتها معك",
+                updated: "آخر تحديث {when}",
+                notRun: "لم تُشغَّل بعد",
+                paused: "متوقفة مؤقتًا",
+                sharedBy: "بواسطة {name}",
+                runNow: "شغّلها الآن",
+                openNote: "فتح الملاحظة",
+                runDone: "تم تحديث لوحة المعلومات.",
+                runFailed: "تعذّر تحديث لوحة المعلومات.",
+                notRunTitle: "لم تُشغَّل لوحة المعلومات هذه بعد",
+                notRunBody: "شغّلها الآن لإنشاء الصفحة.",
+                emptyTitle: "لا توجد لوحات معلومات بعد",
+                emptyBody:
+                    "تظهر هنا لوحات المعلومات التي تُبقيها جداولك الذكية محدّثة، وتلك التي يشاركها زملاؤك معك.",
+                unavailableTitle: "لوحات المعلومات غير متاحة بعد",
+                unavailableBody: "لا يستطيع هذا الخادم عرض لوحات المعلومات بعد. حاول لاحقًا.",
+                errorTitle: "تعذّر تحميل لوحات المعلومات",
+                errorBody: "تحقق من اتصالك وحاول مرة أخرى.",
+                retry: "حاول مرة أخرى",
+            },
             tabToday: "اليوم",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
             today: {
