@@ -249,6 +249,8 @@ export const settings = {
         deliverProjectChat: "{name} (project chat)",
         deliverChatHint:
             "The report is posted in this chat as a message, with no AI and no notification. Everyone in the chat can read it, so a project report can only go to a chat of that project's members.",
+        deliverChatHintAi:
+            "The report is posted in this chat as a message. It uses AI credits and shows its cost in the message, and it can only go to a chat that only you are in. No notification is sent.",
         rowDeliver: "Posts in: {name}",
         reportPosted: "Report posted in {chat}",
         rowProject: "Project: {name}",
@@ -1140,7 +1142,13 @@ export const settings = {
         intro: "A skill is a note of instructions with a name. Write the steps once and keep them for yourself or share them with your team.",
         newDefaultTitle: "New skill",
         untitled: "Untitled skill",
-        tabs: { label: "Skills", mine: "My skills", team: "Team", hub: "Genos Hub" },
+        tabs: {
+            label: "Skills",
+            mine: "My skills",
+            team: "Team",
+            installed: "Installed",
+            hub: "Genos Hub",
+        },
         newSkill: "New skill",
         newBlank: "Blank skill",
         newTemplate: "From template",
@@ -1153,6 +1161,11 @@ export const settings = {
             emptyTeamTitle: "No team skills yet",
             emptyTeamBody:
                 "Skills that teammates share with the team appear here. Share one of yours from its details.",
+            emptyInstalledTitle: "No installed skills yet",
+            emptyInstalledBody:
+                "Public skills you install appear here, and you are told when the author publishes an update.",
+            installedUpToDate: "Version {n} · up to date",
+            installedBehind: "Version {from} · latest {to}",
             limitReached:
                 "Your plan keeps up to {limit} skills and you have {used}. Delete one or upgrade to add more.",
             usage: "{used} of {limit} skills used",
@@ -1428,6 +1441,64 @@ export const settings = {
             sent: "Thank you. We will look at it.",
             failed: "Couldn't send the report. Please try again.",
             limit: "You have sent as many reports as you can today. Try again tomorrow.",
+        },
+        // The first-run card before an outside author's skill runs (MIP-2192).
+        runCard: {
+            title: "Run this skill?",
+            intro: "Read what this skill says before it runs for the first time. It runs only if you choose Run this skill.",
+            loading: "Loading the skill…",
+            loadFailed: "Couldn't load this skill. Please try again.",
+            confirmFailed: "Couldn't save your answer. Please try again.",
+            harmful: "The skill this was copied from was removed by Genos as harmful.",
+            writtenBy: "Written by",
+            noAuthor: "No author named",
+            version: "Version {n}",
+            textLabel: "What this skill says",
+            emptyText: "(This version has no text.)",
+            mayLabel: "What it may do",
+            readOnly: "It can only read. It cannot create or change anything.",
+            propose: {
+                create_task: "Propose creating a task",
+                create_note: "Propose creating a note",
+                create_todo_item: "Propose adding a to-do item",
+            },
+            approveFirst: "Each one happens only after you approve it.",
+            run: "Run this skill",
+        },
+        // "Update available" for an installed public skill (MIP-2192).
+        updateDiff: {
+            title: "Update available",
+            loading: "Loading the changes…",
+            loadFailed: "Couldn't load the changes. Please try again.",
+            upToDate: "You already have the latest version.",
+            versions: "From version {from} to version {to}",
+            versionShort: "Version {n}",
+            changelogsLabel: "What the author says changed",
+            noChangelog: "No note from the author.",
+            changesLabel: "Changed details",
+            none: "none",
+            language: "Language",
+            becomes: "becomes",
+            toolRaisedTitle: "This version can now propose changes",
+            toolRaised:
+                "Earlier versions could only read. This one may suggest creating tasks, notes or to-do items for you. Each suggestion still needs your approval.",
+            needsConfirmation: "You will be asked to confirm before this version runs.",
+            diffLabel: "Changes to the text",
+            diffEmpty: "The text did not change.",
+            truncated: "The changes are too long to show in full. Only the first part is shown.",
+            moved: "The author published another version while you were reading. The changes below are the latest.",
+            updateFailed: "Couldn't update the skill. Please try again.",
+            update: "Update to version {n}",
+            updateGeneric: "Update",
+            keep: "Keep version {n}",
+            close: "Close",
+            updated: "Updated to version {n}.",
+        },
+        // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+        // the operator wrote.
+        sourceHarmful: {
+            chip: "Copied from a removed skill",
+            warning: "The skill this was copied from was removed by Genos as harmful.",
         },
         moderation: {
             title: {

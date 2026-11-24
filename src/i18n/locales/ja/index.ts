@@ -188,7 +188,7 @@ export const ja: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "メール受信箱を確認してください",
-                    body: "確認リンクを {email} に送信しました。それをクリックしてサインアップを完了します。",
+                    body: "{email} にメールを送信しました。メールを開いてサインアップを完了するか、すでにアカウントをお持ちの場合はサインインしてください。",
                     checkInboxHint: "メール内のリンクをクリックしてアドレスを確認します。",
                     resend: "メールを再送信する",
                     resending: "送信中…",
@@ -254,6 +254,10 @@ export const ja: DeepPartial<Messages> = {
                 generic: "問題が発生しました。しばらくしてからもう一度お試しください。",
                 unexpected: "予期しないエラーが発生しました。もう一度お試しください。",
                 duplicateEmail: "別のメールアドレスでお試しください。",
+                passwordCommon:
+                    "このパスワードは一般的すぎるか、推測されやすいものです。別のパスワードを選んでください。",
+                passwordBreached:
+                    "このパスワードは過去の情報漏えいで確認されています。別のパスワードを選んでください。",
                 duplicateName: "別の名前でお試しください。",
                 demoRateLimited:
                     "このネットワークからのデモサインインが多すぎます。しばらくしてからお試しください。",
@@ -4849,6 +4853,8 @@ export const ja: DeepPartial<Messages> = {
             deliverProjectChat: "{name}（プロジェクトのチャット）",
             deliverChatHint:
                 "レポートはメッセージとしてこのチャットに投稿されます。AI は使わず、通知も送りません。チャットの全員が読めるため、プロジェクトのレポートはそのプロジェクトのメンバーだけのチャットにしか送れません。",
+            deliverChatHintAi:
+                "レポートはメッセージとしてこのチャットに投稿されます。AI クレジットを使い、メッセージにその費用が表示されます。あなただけのチャットにしか送れません。通知は送りません。",
             rowDeliver: "投稿先: {name}",
             reportPosted: "{chat} にレポートを投稿しました",
             rowProject: "プロジェクト: {name}",
@@ -4900,7 +4906,13 @@ export const ja: DeepPartial<Messages> = {
             intro: "スキルは、名前の付いた手順のノートです。手順を一度書けば、自分だけで使うことも、チームで共有することもできます。",
             newDefaultTitle: "新しいスキル",
             untitled: "無題のスキル",
-            tabs: { label: "スキル", mine: "自分のスキル", team: "チーム", hub: "Genos Hub" },
+            tabs: {
+                label: "スキル",
+                mine: "自分のスキル",
+                team: "チーム",
+                installed: "インストール済み",
+                hub: "Genos Hub",
+            },
             newSkill: "新しいスキル",
             newBlank: "空のスキル",
             newTemplate: "テンプレートから",
@@ -4913,6 +4925,11 @@ export const ja: DeepPartial<Messages> = {
                 emptyTeamTitle: "チームのスキルはまだありません",
                 emptyTeamBody:
                     "チームメンバーが共有したスキルがここに表示されます。自分のスキルは詳細から共有できます。",
+                emptyInstalledTitle: "インストール済みのスキルはまだありません",
+                emptyInstalledBody:
+                    "インストールした公開スキルがここに表示され、作者が更新を公開するとお知らせします。",
+                installedUpToDate: "バージョン {n} · 最新です",
+                installedBehind: "バージョン {from} · 最新 {to}",
                 limitReached:
                     "プランで保存できるスキルは {limit} 件までで、現在 {used} 件あります。削除するか、プランをアップグレードしてください。",
                 usage: "{used} / {limit} 件のスキルを使用中",
@@ -5187,6 +5204,65 @@ export const ja: DeepPartial<Messages> = {
                 sent: "ありがとうございます。内容を確認します。",
                 failed: "報告を送信できませんでした。もう一度お試しください。",
                 limit: "本日送信できる報告の上限に達しました。明日もう一度お試しください。",
+            },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "このスキルを実行しますか？",
+                intro: "初めて実行する前に、このスキルの内容を確認してください。「このスキルを実行」を選んだときだけ実行されます。",
+                loading: "スキルを読み込んでいます…",
+                loadFailed: "このスキルを読み込めませんでした。もう一度お試しください。",
+                confirmFailed: "回答を保存できませんでした。もう一度お試しください。",
+                harmful: "コピー元のスキルは、有害であるとして Genos により削除されました。",
+                writtenBy: "作成者",
+                noAuthor: "作成者名なし",
+                version: "バージョン {n}",
+                textLabel: "このスキルの内容",
+                emptyText: "（このバージョンにはテキストがありません。）",
+                mayLabel: "できること",
+                readOnly: "読み取りのみです。何かを作成したり変更したりすることはできません。",
+                propose: {
+                    create_task: "タスクの作成を提案",
+                    create_note: "ノートの作成を提案",
+                    create_todo_item: "To-Do 項目の追加を提案",
+                },
+                approveFirst: "どの提案も、あなたが承認した後にのみ実行されます。",
+                run: "このスキルを実行",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "アップデートがあります",
+                loading: "変更内容を読み込んでいます…",
+                loadFailed: "変更内容を読み込めませんでした。もう一度お試しください。",
+                upToDate: "すでに最新バージョンです。",
+                versions: "バージョン {from} からバージョン {to} へ",
+                versionShort: "バージョン {n}",
+                changelogsLabel: "作成者による変更内容",
+                noChangelog: "作成者からの説明はありません。",
+                changesLabel: "変更された詳細",
+                none: "なし",
+                language: "言語",
+                becomes: "から次に変更",
+                toolRaisedTitle: "このバージョンは変更を提案できるようになります",
+                toolRaised:
+                    "以前のバージョンは読み取りだけでした。このバージョンは、タスク・ノート・ToDo の作成を提案する場合があります。どの提案も、あなたの承認が必要です。",
+                needsConfirmation: "このバージョンを実行する前に確認が求められます。",
+                diffLabel: "テキストの変更点",
+                diffEmpty: "テキストに変更はありません。",
+                truncated:
+                    "変更が長いため、すべては表示していません。最初の部分のみ表示しています。",
+                moved: "読んでいる間に、作成者が別のバージョンを公開しました。以下は最新の変更内容です。",
+                updateFailed: "スキルを更新できませんでした。もう一度お試しください。",
+                update: "バージョン {n} に更新",
+                updateGeneric: "更新",
+                keep: "バージョン {n} のままにする",
+                close: "閉じる",
+                updated: "バージョン {n} に更新しました。",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "削除されたスキルのコピー",
+                warning: "コピー元のスキルは、有害であるとして Genos により削除されました。",
             },
             moderation: {
                 title: {

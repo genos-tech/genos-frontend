@@ -1088,6 +1088,8 @@ export const es: DeepPartial<Messages> = {
             deliverProjectChat: "{name} (chat del proyecto)",
             deliverChatHint:
                 "El informe se publica en este chat como un mensaje, sin IA y sin notificación. Todos los del chat pueden leerlo, así que un informe de proyecto solo puede ir a un chat de los miembros de ese proyecto.",
+            deliverChatHintAi:
+                "El informe se publica en este chat como un mensaje. Usa créditos de IA y muestra su coste en el mensaje, y solo puede ir a un chat en el que estés solo tú. No se envía ninguna notificación.",
             rowDeliver: "Se publica en: {name}",
             reportPosted: "Informe publicado en {chat}",
             rowProject: "Proyecto: {name}",
@@ -1146,6 +1148,7 @@ export const es: DeepPartial<Messages> = {
                 label: "Habilidades",
                 mine: "Mis habilidades",
                 team: "Equipo",
+                installed: "Instaladas",
                 hub: "Genos Hub",
             },
             newSkill: "Nueva habilidad",
@@ -1161,6 +1164,11 @@ export const es: DeepPartial<Messages> = {
                 emptyTeamTitle: "Aún no hay habilidades del equipo",
                 emptyTeamBody:
                     "Aquí aparecen las habilidades que tus compañeros comparten con el equipo. Comparte una tuya desde sus detalles.",
+                emptyInstalledTitle: "Aún no hay habilidades instaladas",
+                emptyInstalledBody:
+                    "Aquí aparecen las habilidades públicas que instalas, y te avisamos cuando el autor publica una actualización.",
+                installedUpToDate: "Versión {n} · al día",
+                installedBehind: "Versión {from} · última {to}",
                 limitReached:
                     "Tu plan permite hasta {limit} habilidades y tienes {used}. Elimina una o mejora tu plan para añadir más.",
                 usage: "{used} de {limit} habilidades en uso",
@@ -1436,6 +1444,65 @@ export const es: DeepPartial<Messages> = {
                 sent: "Gracias. La revisaremos.",
                 failed: "No se pudo enviar la denuncia. Inténtalo de nuevo.",
                 limit: "Has enviado el máximo de denuncias de hoy. Inténtalo de nuevo mañana.",
+            },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "¿Ejecutar esta habilidad?",
+                intro: "Lee lo que dice esta habilidad antes de ejecutarla por primera vez. Solo se ejecuta si eliges Ejecutar esta habilidad.",
+                loading: "Cargando la habilidad…",
+                loadFailed: "No se pudo cargar esta habilidad. Inténtalo de nuevo.",
+                confirmFailed: "No se pudo guardar tu respuesta. Inténtalo de nuevo.",
+                harmful: "La habilidad de la que se copió fue eliminada por Genos por ser dañina.",
+                writtenBy: "Escrita por",
+                noAuthor: "Sin autor indicado",
+                version: "Versión {n}",
+                textLabel: "Lo que dice esta habilidad",
+                emptyText: "(Esta versión no tiene texto.)",
+                mayLabel: "Lo que puede hacer",
+                readOnly: "Solo puede leer. No puede crear ni cambiar nada.",
+                propose: {
+                    create_task: "Proponer crear una tarea",
+                    create_note: "Proponer crear una nota",
+                    create_todo_item: "Proponer añadir un elemento a tu lista de tareas",
+                },
+                approveFirst: "Cada una solo ocurre después de que la apruebes.",
+                run: "Ejecutar esta habilidad",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "Actualización disponible",
+                loading: "Cargando los cambios…",
+                loadFailed: "No se pudieron cargar los cambios. Inténtalo de nuevo.",
+                upToDate: "Ya tienes la última versión.",
+                versions: "De la versión {from} a la versión {to}",
+                versionShort: "Versión {n}",
+                changelogsLabel: "Lo que el autor dice que cambió",
+                noChangelog: "Sin nota del autor.",
+                changesLabel: "Detalles modificados",
+                none: "ninguno",
+                language: "Idioma",
+                becomes: "pasa a",
+                toolRaisedTitle: "Esta versión ahora puede proponer cambios",
+                toolRaised:
+                    "Las versiones anteriores solo podían leer. Esta puede sugerir crear tareas, notas o elementos de tareas pendientes por ti. Cada sugerencia sigue necesitando tu aprobación.",
+                needsConfirmation: "Se te pedirá confirmación antes de ejecutar esta versión.",
+                diffLabel: "Cambios en el texto",
+                diffEmpty: "El texto no cambió.",
+                truncated:
+                    "Los cambios son demasiado largos para mostrarlos completos. Solo se muestra la primera parte.",
+                moved: "El autor publicó otra versión mientras leías. Los cambios de abajo son los más recientes.",
+                updateFailed: "No se pudo actualizar la habilidad. Inténtalo de nuevo.",
+                update: "Actualizar a la versión {n}",
+                updateGeneric: "Actualizar",
+                keep: "Mantener la versión {n}",
+                close: "Cerrar",
+                updated: "Actualizada a la versión {n}.",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "Copia de una habilidad eliminada",
+                warning: "La habilidad de la que se copió fue eliminada por Genos por ser dañina.",
             },
             moderation: {
                 title: {
@@ -5947,7 +6014,7 @@ export const es: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "Revisa tu bandeja de entrada",
-                    body: "Enviamos un enlace de verificación a {email}. Haz clic en él para finalizar el registro.",
+                    body: "Enviamos un correo a {email}. Ábrelo para finalizar el registro o para iniciar sesión si ya tienes una cuenta.",
                     checkInboxHint:
                         "Haz clic en el enlace del correo electrónico para verificar su dirección.",
                     resend: "Reenviar correo electrónico",
@@ -5983,6 +6050,10 @@ export const es: DeepPartial<Messages> = {
                 generic: "Algo salió mal. Inténtalo de nuevo más tarde.",
                 unexpected: "Ocurrió un error inesperado. Inténtalo de nuevo.",
                 duplicateEmail: "Prueba con un correo diferente.",
+                passwordCommon:
+                    "Esta contraseña es demasiado común o fácil de adivinar. Elige otra.",
+                passwordBreached:
+                    "Esta contraseña aparece en una filtración de datos conocida. Elige otra.",
                 duplicateName: "Prueba con un nombre diferente.",
                 demoRateLimited:
                     "Demasiados inicios de sesión demo desde esta red. Inténtalo de nuevo más tarde.",

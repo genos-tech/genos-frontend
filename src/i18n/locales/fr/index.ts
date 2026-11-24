@@ -199,7 +199,7 @@ export const fr: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "Vérifiez votre boîte de réception",
-                    body: "Nous avons envoyé un lien de vérification à {email}. Cliquez dessus pour terminer votre inscription.",
+                    body: "Nous avons envoyé un e-mail à {email}. Ouvrez-le pour terminer votre inscription, ou pour vous connecter si vous avez déjà un compte.",
                     checkInboxHint:
                         "Cliquez sur le lien dans l'e-mail pour vérifier votre adresse.",
                     resend: "Renvoyer l'e-mail",
@@ -266,6 +266,10 @@ export const fr: DeepPartial<Messages> = {
                 generic: "Une erreur est survenue. Veuillez réessayer plus tard.",
                 unexpected: "Une erreur inattendue est survenue. Veuillez réessayer.",
                 duplicateEmail: "Veuillez essayer avec une autre adresse e-mail.",
+                passwordCommon:
+                    "Ce mot de passe est trop courant ou trop facile à deviner. Veuillez en choisir un autre.",
+                passwordBreached:
+                    "Ce mot de passe figure dans une fuite de données connue. Veuillez en choisir un autre.",
                 duplicateName: "Veuillez essayer avec un autre nom.",
                 demoRateLimited:
                     "Trop de connexions démo depuis ce réseau. Veuillez réessayer plus tard.",
@@ -4932,6 +4936,8 @@ export const fr: DeepPartial<Messages> = {
             deliverProjectChat: "{name} (chat du projet)",
             deliverChatHint:
                 "Le rapport est publié dans ce chat sous forme de message, sans IA et sans notification. Tous les membres du chat peuvent le lire : un rapport de projet ne peut donc aller que dans un chat réservé aux membres de ce projet.",
+            deliverChatHintAi:
+                "Le rapport est publié dans ce chat sous forme de message. Il utilise des crédits d'IA et affiche son coût dans le message, et il ne peut aller que dans un chat où vous êtes seul(e). Aucune notification n'est envoyée.",
             rowDeliver: "Publié dans : {name}",
             reportPosted: "Rapport publié dans {chat}",
             rowProject: "Projet : {name}",
@@ -4991,6 +4997,7 @@ export const fr: DeepPartial<Messages> = {
                 label: "Compétences",
                 mine: "Mes compétences",
                 team: "Équipe",
+                installed: "Installées",
                 hub: "Genos Hub",
             },
             newSkill: "Nouvelle compétence",
@@ -5005,6 +5012,11 @@ export const fr: DeepPartial<Messages> = {
                 emptyTeamTitle: "Aucune compétence d'équipe pour l'instant",
                 emptyTeamBody:
                     "Les compétences que vos collègues partagent avec l'équipe apparaissent ici. Partagez l'une des vôtres depuis ses détails.",
+                emptyInstalledTitle: "Aucune compétence installée pour l'instant",
+                emptyInstalledBody:
+                    "Les compétences publiques que vous installez apparaissent ici, et vous êtes prévenu quand l'auteur publie une mise à jour.",
+                installedUpToDate: "Version {n} · à jour",
+                installedBehind: "Version {from} · dernière {to}",
                 limitReached:
                     "Votre offre permet jusqu'à {limit} compétences et vous en avez {used}. Supprimez-en une ou passez à une offre supérieure.",
                 usage: "{used} compétences sur {limit} utilisées",
@@ -5283,6 +5295,68 @@ export const fr: DeepPartial<Messages> = {
                 sent: "Merci. Nous allons l'examiner.",
                 failed: "Impossible d'envoyer le signalement. Veuillez réessayer.",
                 limit: "Vous avez envoyé le nombre maximal de signalements aujourd'hui. Réessayez demain.",
+            },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "Exécuter cette compétence ?",
+                intro: "Lisez ce que dit cette compétence avant sa première exécution. Elle ne s'exécute que si vous choisissez Exécuter cette compétence.",
+                loading: "Chargement de la compétence…",
+                loadFailed: "Impossible de charger cette compétence. Veuillez réessayer.",
+                confirmFailed: "Impossible d'enregistrer votre réponse. Veuillez réessayer.",
+                harmful:
+                    "La compétence dont celle-ci est une copie a été retirée par Genos car jugée nuisible.",
+                writtenBy: "Écrite par",
+                noAuthor: "Aucun auteur indiqué",
+                version: "Version {n}",
+                textLabel: "Ce que dit cette compétence",
+                emptyText: "(Cette version n'a pas de texte.)",
+                mayLabel: "Ce qu'elle peut faire",
+                readOnly: "Elle peut seulement lire. Elle ne peut rien créer ni modifier.",
+                propose: {
+                    create_task: "Proposer de créer une tâche",
+                    create_note: "Proposer de créer une note",
+                    create_todo_item: "Proposer d'ajouter un élément à faire",
+                },
+                approveFirst: "Chacune n'a lieu qu'après votre approbation.",
+                run: "Exécuter cette compétence",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "Mise à jour disponible",
+                loading: "Chargement des modifications…",
+                loadFailed: "Impossible de charger les modifications. Veuillez réessayer.",
+                upToDate: "Vous avez déjà la dernière version.",
+                versions: "De la version {from} à la version {to}",
+                versionShort: "Version {n}",
+                changelogsLabel: "Ce que l'auteur indique avoir changé",
+                noChangelog: "Pas de note de l'auteur.",
+                changesLabel: "Détails modifiés",
+                none: "aucun",
+                language: "Langue",
+                becomes: "devient",
+                toolRaisedTitle: "Cette version peut désormais proposer des modifications",
+                toolRaised:
+                    "Les versions précédentes ne pouvaient que lire. Celle-ci peut suggérer de créer des tâches, des notes ou des éléments de liste de tâches pour vous. Chaque suggestion nécessite toujours votre approbation.",
+                needsConfirmation:
+                    "Une confirmation vous sera demandée avant l'exécution de cette version.",
+                diffLabel: "Modifications du texte",
+                diffEmpty: "Le texte n'a pas changé.",
+                truncated:
+                    "Les modifications sont trop longues pour être affichées en entier. Seul le début est affiché.",
+                moved: "L'auteur a publié une autre version pendant votre lecture. Les modifications ci-dessous sont les plus récentes.",
+                updateFailed: "Impossible de mettre à jour la compétence. Veuillez réessayer.",
+                update: "Passer à la version {n}",
+                updateGeneric: "Mettre à jour",
+                keep: "Garder la version {n}",
+                close: "Fermer",
+                updated: "Mise à jour vers la version {n} effectuée.",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "Copie d'une compétence retirée",
+                warning:
+                    "La compétence dont celle-ci est une copie a été retirée par Genos car jugée nuisible.",
             },
             moderation: {
                 title: {

@@ -177,7 +177,7 @@ export const zh: DeepPartial<Messages> = {
                 },
                 afterSubmit: {
                     title: "检查你的收件箱",
-                    body: "我们向 {email} 发送了验证链接。点击它即可完成注册。",
+                    body: "我们已向 {email} 发送了一封邮件。打开它即可完成注册；如果你已有账号，请直接登录。",
                     checkInboxHint: "点击邮箱中的链接以验证你的地址。",
                     resend: "重新发送邮箱",
                     resending: "正在发送…",
@@ -239,6 +239,8 @@ export const zh: DeepPartial<Messages> = {
                 generic: "出现了一些问题，请稍后再试。",
                 unexpected: "发生未知错误，请重试。",
                 duplicateEmail: "请尝试使用其他邮箱。",
+                passwordCommon: "此密码过于常见或容易被猜到，请换一个。",
+                passwordBreached: "此密码出现在已知的数据泄露中，请换一个。",
                 duplicateName: "请尝试使用其他名称。",
                 demoRateLimited: "此网络的体验登录次数过多，请稍后再试。",
                 demoFailed: "无法创建体验会话，请稍后再试。",
@@ -4657,6 +4659,8 @@ export const zh: DeepPartial<Messages> = {
             deliverProjectChat: "{name}（项目聊天）",
             deliverChatHint:
                 "报告会作为消息发布到此聊天，不使用 AI，也不发送通知。聊天中的所有人都能看到它，因此项目报告只能发到该项目成员的聊天中。",
+            deliverChatHintAi:
+                "报告会作为消息发布到此聊天。它会使用 AI 额度，并在消息中显示费用，只能发到只有你一人的聊天中。不会发送通知。",
             rowDeliver: "发布到：{name}",
             reportPosted: "报告已发布到 {chat}",
             rowProject: "项目：{name}",
@@ -4707,7 +4711,13 @@ export const zh: DeepPartial<Messages> = {
             intro: "技能是一份带名称的说明笔记。步骤只需写一次,可以自己使用,也可以与团队共享。",
             newDefaultTitle: "新技能",
             untitled: "未命名技能",
-            tabs: { label: "技能", mine: "我的技能", team: "团队", hub: "Genos Hub" },
+            tabs: {
+                label: "技能",
+                mine: "我的技能",
+                team: "团队",
+                installed: "已安装",
+                hub: "Genos Hub",
+            },
             newSkill: "新技能",
             newBlank: "空白技能",
             newTemplate: "从模板创建",
@@ -4720,6 +4730,10 @@ export const zh: DeepPartial<Messages> = {
                 emptyTeamTitle: "还没有团队技能",
                 emptyTeamBody:
                     "队友与团队共享的技能会显示在这里。你可以在技能详情中共享自己的技能。",
+                emptyInstalledTitle: "还没有已安装的技能",
+                emptyInstalledBody: "你安装的公开技能会显示在这里,作者发布更新时你会收到提示。",
+                installedUpToDate: "版本 {n} · 已是最新",
+                installedBehind: "版本 {from} · 最新 {to}",
                 limitReached:
                     "你的套餐最多可保存 {limit} 个技能,你已有 {used} 个。请删除一个或升级套餐。",
                 usage: "已使用 {used} / {limit} 个技能",
@@ -4988,6 +5002,64 @@ export const zh: DeepPartial<Messages> = {
                 sent: "谢谢，我们会尽快查看。",
                 failed: "无法提交举报，请重试。",
                 limit: "你今天提交的举报已达上限，请明天再试。",
+            },
+            // The first-run card before an outside author's skill runs (MIP-2192).
+            runCard: {
+                title: "运行此技能？",
+                intro: "首次运行前，请先阅读此技能的内容。只有选择“运行此技能”后，它才会运行。",
+                loading: "正在加载技能…",
+                loadFailed: "无法加载此技能。请重试。",
+                confirmFailed: "无法保存你的选择。请重试。",
+                harmful: "此技能的复制来源已被 Genos 因有害而移除。",
+                writtenBy: "作者",
+                noAuthor: "未署名作者",
+                version: "版本 {n}",
+                textLabel: "此技能的内容",
+                emptyText: "（此版本没有文本。）",
+                mayLabel: "它可以做什么",
+                readOnly: "它只能读取，不能创建或更改任何内容。",
+                propose: {
+                    create_task: "建议创建任务",
+                    create_note: "建议创建笔记",
+                    create_todo_item: "建议添加待办事项",
+                },
+                approveFirst: "每一项都只会在你批准之后执行。",
+                run: "运行此技能",
+            },
+            // "Update available" for an installed public skill (MIP-2192).
+            updateDiff: {
+                title: "有可用更新",
+                loading: "正在加载更改…",
+                loadFailed: "无法加载更改。请重试。",
+                upToDate: "你已经是最新版本。",
+                versions: "从版本 {from} 到版本 {to}",
+                versionShort: "版本 {n}",
+                changelogsLabel: "作者说明的更改",
+                noChangelog: "作者没有留下说明。",
+                changesLabel: "已更改的详情",
+                none: "无",
+                language: "语言",
+                becomes: "变为",
+                toolRaisedTitle: "此版本现在可以建议更改",
+                toolRaised:
+                    "之前的版本只能读取。此版本可能会建议为你创建任务、笔记或待办事项。每一项建议仍需要你的批准。",
+                needsConfirmation: "运行此版本之前，系统会请你确认。",
+                diffLabel: "文本的更改",
+                diffEmpty: "文本没有变化。",
+                truncated: "更改内容过长，无法完整显示，仅显示开头部分。",
+                moved: "你阅读期间，作者发布了另一个版本。下面是最新的更改。",
+                updateFailed: "无法更新技能。请重试。",
+                update: "更新到版本 {n}",
+                updateGeneric: "更新",
+                keep: "保留版本 {n}",
+                close: "关闭",
+                updated: "已更新到版本 {n}。",
+            },
+            // A copy of a skill an operator took down as harmful (MIP-2192): fixed wording, nothing
+            // the operator wrote.
+            sourceHarmful: {
+                chip: "复制自已移除的技能",
+                warning: "此技能的复制来源已被 Genos 因有害而移除。",
             },
             moderation: {
                 title: {
