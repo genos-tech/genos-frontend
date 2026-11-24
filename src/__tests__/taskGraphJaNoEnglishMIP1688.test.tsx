@@ -2,7 +2,7 @@
  * MIP-1688: the Japanese task graph (`tasks.diagram.*`) left words in English: the schedule
  * verdicts On track / At risk / Behind, the legend title, "Openブロッカー", "Openマイルストーン".
  *
- * Decision: Open and Close stay English in ja because they are the app's status names (the
+ * Decision: Open and Closed (the status names) stay English in ja because they are the app's status names (the
  * status chips, filters and the GitHub merge copy all show them). Everything else is Japanese.
  * This renders the graph in ja and reads every visible word and accessible name, and also scans
  * the whole ja block so a string the render does not reach cannot slip back.
@@ -33,9 +33,10 @@ vi.stubGlobal(
     }
 );
 
-// English words that must not appear. Open / Close are the status names and stay.
+// English words that must not appear. Open / WIP / Closed / Blocked are the status names and stay; the bare "Close" is not one.
 const ENGLISH = [
     "Legend",
+    "Close",
     "On track",
     "At risk",
     "Behind",
@@ -142,7 +143,7 @@ describe("the task graph in Japanese has no English words (MIP-1688)", () => {
         expect(document.body.textContent).toContain("凡例");
     });
 
-    it("no string of the ja block is English, except the status names Open / Close", () => {
+    it("no string of the ja block is English, except the status names Open / Closed", () => {
         const diagram = (ja as unknown as { tasks: { diagram: Record<string, unknown> } }).tasks
             .diagram;
         const leaves: Array<[string, string]> = [];
@@ -156,7 +157,7 @@ describe("the task graph in Japanese has no English words (MIP-1688)", () => {
         const offenders = leaves
             .map(([k, v]) => [k, v.replace(/\{[^}]*\}/g, "")] as const)
             // Status names and key names that are English everywhere in the app.
-            .map(([k, v]) => [k, v.replace(/\b(Open|Close|Enter)\b/g, "")] as const)
+            .map(([k, v]) => [k, v.replace(/\b(Open|Closed|Enter)\b/g, "")] as const)
             .filter(([, v]) => /[A-Za-z]{2,}/.test(v))
             .map(([k]) => k);
         expect(offenders).toEqual([]);

@@ -7750,7 +7750,7 @@ export const ja: DeepPartial<Messages> = {
                     "一部の依存関係の線を読み込めませんでした。図を開き直すと再試行します。",
             },
             schedule: {
-                closed: "Close",
+                closed: "完了",
                 dueToday: "本日締切",
                 dueTomorrow: "明日締め切り",
                 dueInDays: "締切: {count}日",
@@ -7776,7 +7776,7 @@ export const ja: DeepPartial<Messages> = {
                 cardAriaLabel: "{id} {title}、{status}",
                 cardAriaHint:
                     "Enter キーまたはスペースキーでプレビューを開きます。矢印キーでリンクされたタスクへ移動します。",
-                healthSummary: "Close済み {actualPct}% · 予想 {expectedPct}%",
+                healthSummary: "完了済み {actualPct}% · 予想 {expectedPct}%",
                 expectedByToday: "今日までの予想: {expectedPct}%",
                 openBlockerOne: "未解決のブロッカー {count} 件",
                 openBlockerOther: "未解決のブロッカー {count} 件",
@@ -7787,8 +7787,8 @@ export const ja: DeepPartial<Messages> = {
                 addSubTask: "サブタスクの追加",
                 openMilestone: "マイルストーンを開く",
                 addTaskToMilestone: "このマイルストーンの下にタスクを追加します",
-                hideClosed: "Close済みのタスクを非表示にする",
-                showClosed: "Close済みのタスクを表示する",
+                hideClosed: "完了済みのタスクを非表示にする",
+                showClosed: "完了済みのタスクを表示する",
                 close: "閉じる",
                 collapse: "非表示にする",
                 expand: "拡大する",
