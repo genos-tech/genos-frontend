@@ -1,5 +1,6 @@
 import { compareText } from "../../../../i18n/collate";
 import { parseCalendarDate } from "../../../../utils/calendarDate";
+import { STATUS_NAMES, WORKFLOW_STATUS_NAMES } from "../../meta/taskStatuses";
 import { statusSolid } from "../../meta/taskTone";
 import { Milestone, Sprint } from "../types";
 
@@ -8,7 +9,7 @@ import { Milestone, Sprint } from "../types";
 // Custom display order for the milestone status chip. Anything not
 // in this list is treated as "after Closed" so unknown / future
 // statuses don't silently bubble to the top.
-export const MILESTONE_STATUS_ORDER = ["Open", "WIP", "Blocked", "Pending", "Closed"] as const;
+export const MILESTONE_STATUS_ORDER = WORKFLOW_STATUS_NAMES;
 const MILESTONE_STATUS_LAST = MILESTONE_STATUS_ORDER.length;
 
 /**
@@ -19,13 +20,7 @@ const MILESTONE_STATUS_LAST = MILESTONE_STATUS_ORDER.length;
  * sidebar, filter, picker and dashboard. "Deleted" is left out on purpose:
  * with no `statuses` at all the API returns "Deleted"-status rows too.
  */
-export const MILESTONE_LIST_STATUSES: readonly string[] = [
-    "Open",
-    "WIP",
-    "Blocked",
-    "Pending",
-    "Closed",
-];
+export const MILESTONE_LIST_STATUSES: readonly string[] = WORKFLOW_STATUS_NAMES;
 
 // Shared palette for the milestone status chip. Mirrors the table's
 // `statusOptions` swatch in `DraggableTaskTable.tsx` so the milestone
@@ -36,14 +31,8 @@ export const MILESTONE_LIST_STATUSES: readonly string[] = [
 // `Open` tone so an unknown / future status still renders sensibly.
 // Derived from the one tone source (MIP-1122), so a milestone's Pending reads as
 // a task's Pending. (Milestones auto-Block when a dependency blocks them.)
-export const MILESTONE_STATUS_CHIP_COLORS: Record<string, { color: string; textColor: string }> = {
-    Open: statusSolid("Open"),
-    WIP: statusSolid("WIP"),
-    Blocked: statusSolid("Blocked"),
-    Pending: statusSolid("Pending"),
-    Closed: statusSolid("Closed"),
-    Deleted: statusSolid("Deleted"),
-};
+export const MILESTONE_STATUS_CHIP_COLORS: Record<string, { color: string; textColor: string }> =
+    Object.fromEntries(STATUS_NAMES.map((name) => [name, statusSolid(name)]));
 
 /** Resolve the chip palette for a milestone status, falling back to the `Open` tone. */
 export const getMilestoneStatusChipColor = (

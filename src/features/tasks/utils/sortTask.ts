@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 
 import { compareText } from "../../../i18n/collate";
 import { TaskTableProps } from "../../../types/tasks";
+import { STATUS_RANK } from "../meta/taskStatuses";
 import { deriveDaysLeft } from "./daysLeft";
 import { computeTaskWeight } from "./taskWeight";
 
@@ -56,14 +57,7 @@ export const EFFORT_RANK: Record<string, number> = {
     Minimal: 1,
 };
 
-export const STATUS_RANK: Record<string, number> = {
-    Open: 1,
-    WIP: 2,
-    Blocked: 3,
-    Pending: 4,
-    Closed: 5,
-    Deleted: 6,
-};
+export { STATUS_RANK };
 
 // Parse a date string into epoch ms for numeric comparison. `dueDate` is
 // a free-form locale-ish string in the table model, so a plain string
