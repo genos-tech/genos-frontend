@@ -24,6 +24,11 @@ const strings = en.settings.llmModel;
 
 let currentProvider = "gemini";
 
+// No token: the section's demo-visitor check (MIP-2341) stays inert, as for a real user.
+vi.mock("../context/authState", () => ({
+    useAuth: () => ({ accessToken: null }),
+}));
+
 // The section reads its catalog from this hook and nothing else, so the
 // hook is the whole boundary worth stubbing.
 vi.mock("../hooks/common/useLlmModelPreference", () => ({
