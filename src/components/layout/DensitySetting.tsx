@@ -39,6 +39,7 @@ export const DensitySetting = () => {
             <SettingRow
                 alignItems="center"
                 direction="row"
+                guideId="general.density"
                 justifyContent="space-between"
                 spacing={2}
             >
