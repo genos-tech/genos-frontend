@@ -70,6 +70,7 @@ webhook ids, tool ids (`create_task`), shortcuts.
   (the noun gave toy bricks / building blocks). The graph's "Legend" is a map key: `图例`, `संकेत सूची`,
   `وسيلة الإيضاح` (not a story: `传奇`, `दंतकथा`, `أسطورة`). Collapse / expand are about a panel:
   `折叠`/`展开`, `संक्षिप्त करें`/`विस्तृत करें` (not a building falling). `localeGlossary.test.ts` pins these.
+- **Japanese task graph (MIP-1688):** `Open` / `Closed` stay English as the app's status names; the Closed card's schedule word `Close` is `完了`; the rest is Japanese: schedule `順調` / `リスクあり` / `遅れ`, legend `凡例`, open blocker `未解決のブロッカー`, days `{count}日`. `taskGraphJaNoEnglishMIP1688.test.tsx` renders the graph in ja and fails on any other English word.
 - Placeholders (`{name}`, `{count, plural, ...}`) are never translated. The coverage test
   (`src/__tests__/localeCatalogCoverage.test.ts`) fails on a missing key, a changed argument,
   or an Arabic string that is just English; `localeGlossary.test.ts` pins the terms above that
