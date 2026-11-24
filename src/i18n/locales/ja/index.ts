@@ -4808,6 +4808,8 @@ export const ja: DeepPartial<Messages> = {
             deliverProjectChat: "{name}（プロジェクトのチャット）",
             deliverChatHint:
                 "レポートはメッセージとしてこのチャットに投稿されます。AI は使わず、通知も送りません。チャットの全員が読めるため、プロジェクトのレポートはそのプロジェクトのメンバーだけのチャットにしか送れません。",
+            deliverChatHintAi:
+                "レポートはメッセージとしてこのチャットに投稿されます。AI クレジットを使い、メッセージにその費用が表示されます。あなただけのチャットにしか送れません。通知は送りません。",
             rowDeliver: "投稿先: {name}",
             reportPosted: "{chat} にレポートを投稿しました",
             rowProject: "プロジェクト: {name}",
