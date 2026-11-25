@@ -2,9 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "../../../context/authState";
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
+import { loadMyNoteFolders } from "../../../features/notes/my-notes/services/loadMyNoteFolders";
+import { loadTeamNoteFolders } from "../../../features/notes/team-notes/services/loadTeamNoteFolders";
 import { loadProjectMilestones } from "../../../features/tasks/sprint-milestone/services/loadProjectMilestones";
 import type { Milestone } from "../../../features/tasks/sprint-milestone/types";
 import { projectAvatarSrcMap } from "../../../features/tasks/utils/projectAvatar";
+import type { MyNoteFolderProps, TeamNoteFolderProps } from "../../../types/notes";
 import type { ProjectProps } from "../../../types/tasks";
 
 /** The projects the member is in, from the list the app already holds (the `#`
@@ -65,3 +68,48 @@ export const useProjectMilestones = (projects: ProjectProps[]) => {
 };
 
 export type Group = { project: ProjectProps; milestones: Milestone[] };
+
+/** The member's own note folders and the team folders they can reach, for the dashboard "Save to"
+ *  picker (MIP-2357): the two lists the Notes sidebar reads, asked for once when the picker is on
+ *  screen. The API filters the team list to what the member may open; which of those they may add
+ *  notes to is decided from each folder's role (`noteFolderChoices`). A failed team list is told
+ *  apart from "no team folders", so an empty picker is never mistaken for an answer. */
+export const useNoteFolders = () => {
+    const { accessToken } = useAuth();
+    const { myself } = useHashMentionData();
+    const [state, setState] = useState<{
+        mine: MyNoteFolderProps[];
+        team: TeamNoteFolderProps[];
+        loading: boolean;
+        failed: boolean;
+    }>({ mine: [], team: [], loading: true, failed: false });
+    // A refreshed token must not refetch both lists and flash the picker back to "Loading".
+    const tokenRef = useRef(accessToken);
+    tokenRef.current = accessToken;
+    const meRef = useRef(myself);
+    meRef.current = myself;
+    const teamId = myself?.teamId;
+    const userId = myself?.userId;
+
+    useEffect(() => {
+        const me = meRef.current;
+        if (!me) {
+            setState({ mine: [], team: [], loading: false, failed: false });
+            return undefined;
+        }
+        let cancelled = false;
+        setState((cur) => ({ ...cur, loading: true }));
+        void Promise.all([
+            loadMyNoteFolders(me, tokenRef.current),
+            loadTeamNoteFolders(me, tokenRef.current),
+        ]).then(([mine, team]) => {
+            if (cancelled) return;
+            setState({ mine, team: team ?? [], loading: false, failed: team === undefined });
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [teamId, userId]);
+
+    return state;
+};

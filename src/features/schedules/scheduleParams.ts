@@ -20,7 +20,7 @@ type TextKey = {
     [K in keyof ScheduleStrings]: ScheduleStrings[K] extends string ? K : never;
 }[keyof ScheduleStrings];
 
-export type ParamPicker = "project" | "milestone" | "skill" | "chat";
+export type ParamPicker = "project" | "milestone" | "skill" | "chat" | "folder";
 
 export interface KnownParam {
     label: TextKey;
@@ -84,6 +84,10 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
     // The one group chat a catch-up covers (MIP-2348); empty means every busy chat.
     channel_id: { label: "paramChat", hint: "paramChatHint", picker: "chat" },
     input: { label: "paramSkillInput", hint: "paramSkillInputHint" },
+    // Where the page is saved (MIP-2357): ONE picker draws `folder_id` and sets it together with
+    // `save_to`, which is therefore never drawn on its own.
+    save_to: { label: "paramSaveTo", hint: "paramSaveToHint", hidden: true },
+    folder_id: { label: "paramSaveTo", hint: "paramSaveToHint", picker: "folder" },
     // The dashboard page (MIP-2357): what it covers, over which window, and what to look at.
     kind: {
         label: "paramKind",

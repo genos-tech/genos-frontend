@@ -5141,6 +5141,18 @@ export const fr: DeepPartial<Messages> = {
             paramChatHint:
                 "Facultatif. Choisissez une discussion de groupe à rattraper, ou laissez toutes les discussions actives. Seules vos discussions sont listées.",
             chatAllBusy: "Toutes les discussions actives",
+            paramSaveTo: "Enregistrer dans",
+            paramSaveToHint:
+                "Où la page est enregistrée. Chaque endroit indique qui peut l'ouvrir.",
+            saveToMyNotes: "Mes notes",
+            saveToGroupMine: "Mes dossiers",
+            saveToGroupTeam: "Dossiers d'équipe",
+            saveToOnlyYou: "Vous seul",
+            saveToTeamPublic: "Toute l'équipe",
+            saveToTeamPrivate: "Membres de {name}",
+            saveToReaders: "Qui peut l'ouvrir : {who}",
+            saveToLoading: "Chargement des dossiers…",
+            saveToLoadFailed: "Les dossiers n'ont pas pu être chargés.",
             paramChoose: "Choisir…",
             paramKind: "Tableau de bord de",
             paramKindHint:

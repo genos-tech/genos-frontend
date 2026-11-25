@@ -1,8 +1,12 @@
+import { useMemo } from "react";
+import LockRoundedIcon from "@mui/icons-material/LockRounded";
+import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
 import {
     Autocomplete,
     AutocompleteOption,
     Box,
     createFilterOptions,
+    FormHelperText,
     List,
     ListItem,
     ListSubheader,
@@ -14,6 +18,13 @@ import { useTheme } from "@mui/joy/styles";
 
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import { useRunnableSkillRows } from "../../../features/genos/skills/useRunnableSkills";
+import {
+    buildFolderChoices,
+    findChoice,
+    isMyNotes,
+    type FolderReaders,
+    type SaveTo,
+} from "../../../features/schedules/noteFolderChoices";
 import {
     isSameProject,
     projectListboxSlotProps,
@@ -35,7 +46,12 @@ import type { ProjectProps } from "../../../types/tasks";
 import { formatMonthDay } from "../../../utils/calendarDate";
 import { INBOX_TARGET, type DeliverTarget } from "./chatTarget";
 import { ChatTargetDecorator, ChatTargetOption } from "./ChatTargetOption";
-import { useJoinedProjects, useProjectAvatars, useProjectMilestones } from "./scheduleParamHooks";
+import {
+    useJoinedProjects,
+    useNoteFolders,
+    useProjectAvatars,
+    useProjectMilestones,
+} from "./scheduleParamHooks";
 
 /** A dropdown is portaled to <body>, so it must clear the dialog it opens from. Both
  *  hosts of the schedules (Settings, the Genos page's dialog) are Joy modals, and a
@@ -459,5 +475,169 @@ export const SkillParamSelect = ({ value, onChange }: Props) => {
                 );
             })}
         </Select>
+    );
+};
+
+// One row of the "Save to" dropdown. `group` keeps My notes (no header), the member's folders and
+// the team folders together. The stand-in row of a stored folder that is not offered is `stray`.
+type FolderOption = {
+    id: string;
+    /** What the closed field shows: the whole path. */
+    label: string;
+    /** What the row shows: the folder's own name. */
+    name: string;
+    depth: number;
+    group: "me" | "mine" | "team";
+    readers: FolderReaders;
+    saveTo: SaveTo;
+    folderId: string;
+    stray?: boolean;
+};
+
+/** Where a dashboard page is saved (MIP-2357), by name: "My notes", each of the member's own folders
+ *  (nested as in the Notes sidebar) and each team folder they may add notes to, public or private.
+ *  Each row says who can open the page there, so the API's refusal of a place that shows a project's
+ *  data to someone off it is no surprise. ONE choice sets `save_to` and `folder_id` together. A
+ *  stored folder that is no longer offered (deleted, or the member lost the right) stays selectable
+ *  as "(unavailable)", as the project picker does, so the form never shows a blank for what is saved. */
+export const FolderParamSelect = ({
+    saveTo,
+    folderId,
+    disabled = false,
+    onChange,
+}: {
+    saveTo: string;
+    folderId: string;
+    disabled?: boolean;
+    onChange: (saveTo: SaveTo, folderId: string) => void;
+}) => {
+    const { t, locale } = useTranslation();
+    const s = t.settings.schedules;
+    const popupZIndex = useDialogPopupZIndex();
+    const { mine, team, loading, failed } = useNoteFolders();
+    const choices = useMemo(
+        () => buildFolderChoices(mine, team, (a, b) => compareText(a, b, { locale })),
+        [mine, team, locale]
+    );
+    const me: FolderOption = {
+        id: "me",
+        label: s.saveToMyNotes,
+        name: s.saveToMyNotes,
+        depth: 0,
+        group: "me",
+        readers: "onlyYou",
+        saveTo: "me",
+        folderId: "",
+    };
+    const folders: FolderOption[] = choices.map((c) => ({
+        id: c.id,
+        label: c.path,
+        name: c.name,
+        depth: c.depth,
+        group: c.group,
+        readers: c.readers,
+        saveTo: c.saveTo,
+        folderId: c.folderId,
+    }));
+    const myNotes = isMyNotes(saveTo, folderId);
+    const found = myNotes ? null : findChoice(choices, saveTo, folderId);
+    // A stored folder that is not listed: "Loading" while the lists are on their way (it may be
+    // among them), "(unavailable)" once they are in and it is not.
+    const stray: FolderOption | null =
+        !myNotes && !found
+            ? {
+                  id: "stray",
+                  label: loading ? s.saveToLoading : s.unavailable,
+                  name: loading ? s.saveToLoading : s.unavailable,
+                  depth: 0,
+                  group: "me",
+                  readers: "onlyYou",
+                  saveTo: saveTo === "team_folder" ? "team_folder" : "personal_folder",
+                  folderId,
+                  stray: true,
+              }
+            : null;
+    const options = [...(stray ? [stray] : []), me, ...folders];
+    const selected = stray ?? (found ? folders.find((f) => f.id === found.id) : me) ?? me;
+    const readersText = (o: FolderOption) =>
+        o.readers === "teamPublic"
+            ? s.saveToTeamPublic
+            : o.readers === "teamPrivate"
+              ? fmt(s.saveToTeamPrivate, { name: o.name })
+              : s.saveToOnlyYou;
+
+    return (
+        <>
+            <Autocomplete<FolderOption, false, true, false>
+                disabled={disabled}
+                getOptionLabel={(o) => o.label}
+                groupBy={(o) => o.group}
+                isOptionEqualToValue={(o, v) => o.id === v.id}
+                loading={loading}
+                loadingText={s.saveToLoading}
+                noOptionsText={failed ? s.saveToLoadFailed : t.common.empty.noResults}
+                options={options}
+                slotProps={projectListboxSlotProps(popupZIndex)}
+                sx={{ minWidth: 0 }}
+                value={selected}
+                renderGroup={({ key, group, children }) => (
+                    <ListItem key={key} nested>
+                        {group !== "me" && (
+                            <ListSubheader sx={{ textTransform: "none", letterSpacing: 0 }} sticky>
+                                {group === "mine" ? s.saveToGroupMine : s.saveToGroupTeam}
+                            </ListSubheader>
+                        )}
+                        <List>{children}</List>
+                    </ListItem>
+                )}
+                renderOption={(optionProps, option) => (
+                    <AutocompleteOption
+                        {...optionProps}
+                        key={option.id}
+                        sx={{
+                            alignItems: "center",
+                            display: "flex",
+                            gap: 1,
+                            minWidth: 0,
+                            paddingInlineStart: `${12 + option.depth * 16}px`,
+                        }}
+                    >
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                            <Typography level="body-sm" sx={{ color: "inherit" }} noWrap>
+                                {option.name}
+                            </Typography>
+                            {!option.stray && (
+                                <Typography level="body-xs" sx={{ color: "text.tertiary" }} noWrap>
+                                    {readersText(option)}
+                                </Typography>
+                            )}
+                        </Box>
+                        {option.group === "team" &&
+                            (option.readers === "teamPublic" ? (
+                                <PublicRoundedIcon
+                                    fontSize="small"
+                                    titleAccess={s.saveToTeamPublic}
+                                />
+                            ) : (
+                                <LockRoundedIcon
+                                    fontSize="small"
+                                    titleAccess={readersText(option)}
+                                />
+                            ))}
+                    </AutocompleteOption>
+                )}
+                disableClearable
+                onChange={(_, option) => {
+                    // The "(unavailable)" stand-in only shows what is stored: it is not a choice.
+                    if (option.stray) return;
+                    onChange(option.saveTo, option.folderId);
+                }}
+            />
+            {!selected.stray && (
+                <FormHelperText sx={{ color: "text.secondary" }}>
+                    {fmt(s.saveToReaders, { who: readersText(selected) })}
+                </FormHelperText>
+            )}
+        </>
     );
 };

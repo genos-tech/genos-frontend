@@ -5055,6 +5055,17 @@ export const ja: DeepPartial<Messages> = {
             paramChatHint:
                 "任意です。振り返るグループチャットを1つ選ぶか、すべての盛り上がったチャットのままにします。自分が参加しているチャットだけが表示されます。",
             chatAllBusy: "盛り上がったチャットすべて",
+            paramSaveTo: "保存先",
+            paramSaveToHint: "ページの保存先です。それぞれの場所で誰が開けるかが表示されます。",
+            saveToMyNotes: "マイノート",
+            saveToGroupMine: "マイフォルダ",
+            saveToGroupTeam: "チームフォルダ",
+            saveToOnlyYou: "自分だけ",
+            saveToTeamPublic: "チーム全員",
+            saveToTeamPrivate: "{name}のメンバー",
+            saveToReaders: "開ける人: {who}",
+            saveToLoading: "フォルダを読み込み中…",
+            saveToLoadFailed: "フォルダを読み込めませんでした。",
             paramChoose: "選択してください…",
             paramKind: "ダッシュボードの対象",
             paramKindHint:
