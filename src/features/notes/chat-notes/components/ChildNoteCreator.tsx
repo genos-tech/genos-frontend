@@ -3,12 +3,12 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { ListItem } from "@mui/joy";
 
 import { NavItem } from "../../../../components/ui/nav/NavItem";
-import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
+import { NoteSidebarRowNM } from "../../common/components/noteSidebarSlices";
 
 interface ChildNoteCreatorProps {
     node: any;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM;
 }
 
 export const ChildNoteCreator = memo(function ChildNoteCreator({

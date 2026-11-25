@@ -7,6 +7,8 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { ChatNoteMetaProps, MyNoteMetaProps, TaskNoteMetaProps } from "../../../../types/notes";
 import { NoteFilterHit } from "../utils/filterNotes";
+import { isNoteOpen } from "../utils/openNote";
+import { NoteSidebarRowNM } from "./noteSidebarSlices";
 import { RecentNoteItem } from "./RecentNoteItem";
 
 type Meta = MyNoteMetaProps | TaskNoteMetaProps | ChatNoteMetaProps;
@@ -20,6 +22,7 @@ export const NoteFilterResults = ({
     result,
     query,
     useNM,
+    activeTab,
     locate,
     listRef,
     onOpened,
@@ -27,7 +30,8 @@ export const NoteFilterResults = ({
 }: {
     result: { hits: NoteFilterHit<Meta>[]; total: number };
     query: string;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM & Partial<Pick<NoteManagementState, "tabsApi">>;
+    activeTab?: Parameters<typeof isNoteOpen>[0];
     locate: (noteType: number, note: Meta) => string | null;
     listRef: Ref<HTMLUListElement>;
     onOpened: (viaKeyboard: boolean) => void;
@@ -51,6 +55,7 @@ export const NoteFilterResults = ({
             {result.hits.map(({ noteType, note }) => (
                 <RecentNoteItem
                     key={`filter-${noteType}-${note.noteId}`}
+                    activeTab={activeTab}
                     locate={locate}
                     note={note}
                     noteType={noteType}

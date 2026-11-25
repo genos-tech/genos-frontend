@@ -4,8 +4,8 @@ import { Box, List, ListItem } from "@mui/joy";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
-import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
+import { useActiveNoteTab } from "../context/ActiveNoteTabContext";
 import { useNoteUnread } from "../context/noteUnreadState";
 import { BaseNoteTreeNode } from "../types/noteTypes";
 import { isHtmlNote } from "../utils/htmlNote";
@@ -13,6 +13,7 @@ import { isNoteOpen } from "../utils/openNote";
 import { HtmlNoteChipFor } from "./HtmlNoteChip";
 import { NoteFavoriteStar } from "./NoteFavoriteStar";
 import { NoteKindIcon } from "./noteOrigin";
+import { NoteSidebarRowNM } from "./noteSidebarSlices";
 import { NoteUnreadDot } from "./NoteUnreadDot";
 
 interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
@@ -20,10 +21,10 @@ interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
     // The tab that is open. A prop (and not read from `useNM` alone) so the row's `memo` sees the
     // selection change: only rows whose selected state flips need to re-render (MIP-1678). It
     // replaces the `timestamp` that `useNoteTreeState` used to bump on every tree or tab change.
-    activeTab: Parameters<typeof isNoteOpen>[0];
+    activeTab?: Parameters<typeof isNoteOpen>[0];
     currentChain: T[] | undefined;
     noteType: number;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM;
     createChildNoteList: (node: T) => ReactNode;
     depth?: number;
     // Optional per-row "⋯" menu (e.g. "Move to folder…" on my notes).
@@ -62,7 +63,8 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
 
     // Is this the note that is open? Asked of the active tab, not of `currentNoteType`:
     // clicking a section header changes that, and used to un-tint the open note (MIP-1429).
-    const isSelected = isNoteOpen(activeTab, noteType, node.noteId);
+    const contextTab = useActiveNoteTab();
+    const isSelected = isNoteOpen(activeTab ?? contextTab, noteType, node.noteId);
 
     // Bring the row for the newly-opened note into view. The folder rows
     // above it auto-expand (GroupedNoteSection / the expanded-node set),

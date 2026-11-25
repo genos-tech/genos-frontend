@@ -79,7 +79,24 @@ interface Props {
     open: boolean;
     onClose: () => void;
     context: ImportMarkdownContext;
-    useNM: NoteManagementState;
+    useNM: Pick<
+        NoteManagementState,
+        | "chatNoteMeta"
+        | "getChatNoteMeta"
+        | "getMyNoteFolders"
+        | "getMyNoteMeta"
+        | "getTaskNoteMeta"
+        | "getTeamNoteFolders"
+        | "getTeamNoteMeta"
+        | "handleCreateNewChatNote"
+        | "handleCreateNewMyNote"
+        | "handleCreateNewTaskNote"
+        | "loadNote"
+        | "myNoteFolders"
+        | "setCurrentNoteType"
+        | "taskNoteMeta"
+        | "teamNoteFolders"
+    >;
     /** Owner of the created notes, and the uploader of record for any
      *  images a folder import brings over. */
     myself: UserProps;

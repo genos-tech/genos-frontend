@@ -18,12 +18,12 @@ import { ExternalChip } from "../../../../components/ui/misc/ExternalChip";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
 import { navNestedListSx } from "../../../../components/ui/nav/navStyles";
-import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { MyNoteMetaTreeNode, TeamNoteFolderTreeNode } from "../../../../types/notes";
 import { FolderFavoriteStar } from "../../common/components/FolderFavoriteStar";
 import { highlightedFolderSx } from "../../common/components/folderFavoriteStarHelpers";
+import { NoteSidebarRowNM } from "../../common/components/noteSidebarSlices";
 import { folderFavoriteMenuItem } from "../../common/utils/folderFavoriteMenuItem";
 import { NOTE_ROLE_VIEWER } from "../../common/utils/noteRoles";
 import { folderTagChipSx } from "../modals/modalTeamFolderTagsHelpers";
@@ -46,7 +46,7 @@ export type TeamFolderActionHandlers = {
 
 type TeamNoteFolderTreeProps = {
     folder: TeamNoteFolderTreeNode;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM;
     actions: TeamFolderActionHandlers;
     renderNote: (node: MyNoteMetaTreeNode) => ReactNode;
     // Tag filter result, or null when no filter is active. Ancestors of

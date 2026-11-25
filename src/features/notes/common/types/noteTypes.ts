@@ -51,6 +51,7 @@ export interface NoteTreeState<T extends BaseNoteTreeNode> {
 export interface UseNoteTreeStateProps<T extends BaseNoteTreeNode> {
     metaTree: T[];
     currentChain: T[] | undefined;
-    selectedTabIndex: number;
+    // Not read by the hook (MIP-2379).
+    selectedTabIndex?: number;
     currentNote: any;
 }

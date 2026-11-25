@@ -50,7 +50,10 @@ const filterRows = createFilterOptions<DestinationOption>({
 });
 
 interface Props {
-    useNM: NoteManagementState;
+    useNM: Pick<
+        NoteManagementState,
+        "getMyNoteFolders" | "getTeamNoteFolders" | "myNoteFolders" | "teamNoteFolders"
+    >;
     myself: UserProps;
     accessToken: string | null;
     /** What to preselect. Omitted = My Notes (root). */

@@ -1,4 +1,15 @@
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    ComponentProps,
+    createContext,
+    memo,
+    ReactNode,
+    useCallback,
+    useContext,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import CreateNewFolderRoundedIcon from "@mui/icons-material/CreateNewFolderRounded";
@@ -80,6 +91,7 @@ import {
     type ResolvedTemplate,
     type TemplatePick,
 } from "../../templates/templateMenuItems";
+import { ActiveNoteTabContext } from "../context/ActiveNoteTabContext";
 import { useNoteUnread } from "../context/noteUnreadState";
 import {
     DraggableNoteRow,
@@ -109,6 +121,13 @@ import { NoteListState } from "./NoteListState";
 import { NoteOriginIcon } from "./noteOrigin";
 import { NotePinnedSection } from "./NotePinnedSection";
 import { NoteSearchBar } from "./NoteSearchBar";
+import {
+    NoteSidebarCM,
+    NoteSidebarRowNM,
+    NoteSidebarShellNM,
+    NoteSidebarTEM,
+    useNoteSidebarSlices,
+} from "./noteSidebarSlices";
 import { NoteTreeRenderer } from "./NoteTreeRenderer";
 import { NoteTypeSection } from "./NoteTypeSection";
 import { RecentNoteItem } from "./RecentNoteItem";
@@ -221,8 +240,67 @@ type NoteSidebarProps = {
     useUISM: UIStateManagementState;
 };
 
+// The managers the avatars and the team-members dialog take whole. They are new objects on every
+// `AppBody` render, so they reach those few components through this context and not through the
+// props of the memoized body: only those components re-render on each pass (MIP-2379).
+type SidebarManagers = {
+    useCM: ChatManagementState;
+    useTEM: TeamManagementState;
+    useUISM: UIStateManagementState;
+};
+// What the row menu builders need of a note row.
+type RowNode = { noteId: number; title: string; children: unknown[] };
+const SidebarManagersContext = createContext<SidebarManagers | null>(null);
+
+const WithSidebarManagers = ({
+    children,
+}: {
+    children: (managers: SidebarManagers) => ReactNode;
+}) => {
+    const managers = useContext(SidebarManagersContext);
+    if (!managers) return null;
+    return <>{children(managers)}</>;
+};
+
+/**
+ * The notes sidebar. This outer component only builds the stable handles (`useNoteSidebarSlices`)
+ * and renders the memoized body, so a render of the page that changed nothing the sidebar reads
+ * does not re-render its tree (MIP-2379).
+ */
 export const NoteSidebar = (props: NoteSidebarProps) => {
     const { useNM, myself, setMyself, socket, useTEM, useCM, useUISM } = props;
+    const slices = useNoteSidebarSlices({ useNM, useCM, useTEM });
+    const managers = useMemo(() => ({ useCM, useTEM, useUISM }), [useCM, useTEM, useUISM]);
+    return (
+        <SidebarManagersContext.Provider value={managers}>
+            {/* `tabsApi` is a new object on every render, but the tab itself is not. */}
+            <ActiveNoteTabContext.Provider value={useNM.tabsApi.activeTab}>
+                <NoteSidebarBody
+                    cm={slices.cm}
+                    myself={myself}
+                    rowNM={slices.rowNM}
+                    setMyself={setMyself}
+                    socket={socket}
+                    tem={slices.tem}
+                    useNM={slices.shellNM}
+                />
+            </ActiveNoteTabContext.Provider>
+        </SidebarManagersContext.Provider>
+    );
+};
+
+type NoteSidebarBodyProps = {
+    useNM: NoteSidebarShellNM;
+    rowNM: NoteSidebarRowNM;
+    cm: NoteSidebarCM;
+    tem: NoteSidebarTEM;
+    myself: UserProps;
+    setMyself: (me: UserProps) => void;
+    socket: Socket | null;
+};
+
+const NoteSidebarBody = memo(function NoteSidebarBody(props: NoteSidebarBodyProps) {
+    const { useNM, rowNM, myself, setMyself, socket, tem: useTEM, cm: useCM } = props;
     const allChats = useCM.allChats;
     const { mode } = useColorScheme();
     const theme = useTheme();
@@ -278,7 +356,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         locate={locateNote}
                         note={meta}
                         noteType={bucket}
-                        useNM={useNM}
+                        useNM={rowNM}
                     />
                 );
             })}
@@ -316,21 +394,18 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const myNoteState = useNoteTreeState({
         metaTree: useNM.myNoteMetaTree,
         currentChain: useNM.currentMyNoteChain,
-        selectedTabIndex: useNM.selectedTabIndex,
         currentNote: useNM.currentMyNote,
     });
 
     const taskNoteState = useNoteTreeState({
         metaTree: useNM.taskNoteMetaTree,
         currentChain: useNM.currentTaskNoteChain,
-        selectedTabIndex: useNM.selectedTabIndex,
         currentNote: useNM.currentTaskNote,
     });
 
     const chatNoteState = useNoteTreeState({
         metaTree: useNM.chatNoteMetaTree,
         currentChain: useNM.currentChatNoteChain,
-        selectedTabIndex: useNM.selectedTabIndex,
         currentNote: useNM.currentChatNote,
     });
 
@@ -340,7 +415,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const sharedNoteState = useNoteTreeState<SharedNoteMetaTreeNode>({
         metaTree: useNM.sharedNoteMetaTree,
         currentChain: undefined,
-        selectedTabIndex: useNM.selectedTabIndex,
         currentNote: useNM.currentMyNote,
     });
 
@@ -349,7 +423,6 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const teamNoteState = useNoteTreeState<MyNoteMetaTreeNode>({
         metaTree: useNM.teamNoteMetaTree,
         currentChain: undefined,
-        selectedTabIndex: useNM.selectedTabIndex,
         currentNote: useNM.currentMyNote,
     });
 
@@ -431,24 +504,24 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // row. Sidebar buckets 4 (shared) and 8 (team) are UI-only aliases
     // of personal notes, so the export goes out as type 1 — see
     // `toBackendNoteType`.
-    const buildExportMenuItem = (
-        noteType: number,
-        node: { noteId: number; title: string }
-    ): MoreMenuItem => ({
-        id: "export-note",
-        kind: "export",
-        label: t.notes.header.exportMarkdown,
-        icon: <FileDownloadRoundedIcon sx={{ fontSize: 16 }} />,
-        onClick: () => {
-            void exportNoteMarkdown({
-                myself,
-                noteType: toBackendNoteType(noteType),
-                noteId: node.noteId,
-                accessToken,
-                fallbackTitle: node.title,
-            });
-        },
-    });
+    const buildExportMenuItem = useCallback(
+        (noteType: number, node: { noteId: number; title: string }): MoreMenuItem => ({
+            id: "export-note",
+            kind: "export",
+            label: t.notes.header.exportMarkdown,
+            icon: <FileDownloadRoundedIcon sx={{ fontSize: 16 }} />,
+            onClick: () => {
+                void exportNoteMarkdown({
+                    myself,
+                    noteType: toBackendNoteType(noteType),
+                    noteId: node.noteId,
+                    accessToken,
+                    fallbackTitle: node.title,
+                });
+            },
+        }),
+        [t, myself, accessToken]
+    );
 
     // MIP-1697: build the template (blocks come from the built-ins) and hand title + body to the
     // creator of the surface the menu belongs to.
@@ -558,38 +631,53 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
 
     // Builds the shared "Delete" row-menu item for any note row. Kept out
     // of the per-type render helpers so my / task / chat stay consistent.
-    const buildDeleteMenuItem = (
-        noteType: number,
-        node: { noteId: number; title: string; children: unknown[] }
-    ): MoreMenuItem => ({
-        id: "delete-note",
-        kind: "delete",
-        label: t.notes.header.deleteNote,
-        icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />,
-        danger: true,
-        onClick: () =>
-            setDeleteNoteModal({
-                noteType,
-                noteId: node.noteId,
-                title: node.title || t.notes.defaults.untitled,
-                hasChildren: node.children.length > 0,
-            }),
-    });
+    const buildDeleteMenuItem = useCallback(
+        (
+            noteType: number,
+            node: { noteId: number; title: string; children: unknown[] }
+        ): MoreMenuItem => ({
+            id: "delete-note",
+            kind: "delete",
+            label: t.notes.header.deleteNote,
+            icon: <DeleteOutlineRoundedIcon sx={{ fontSize: 16 }} />,
+            danger: true,
+            onClick: () =>
+                setDeleteNoteModal({
+                    noteType,
+                    noteId: node.noteId,
+                    title: node.title || t.notes.defaults.untitled,
+                    hasChildren: node.children.length > 0,
+                }),
+        }),
+        [t]
+    );
 
     // "Delete permanently" (MIP-1937) for my own notes (bucket 1); task, chat and team notes use
     // their header menu, where the owner role is known. The server decides again (403 / 409).
-    const buildForceDeleteMenuItem = (node: { noteId: number; title: string }): MoreMenuItem => ({
-        id: "force-delete-note",
-        kind: "delete",
-        label: t.common.forceDelete.menu,
-        icon: <DeleteForeverRoundedIcon sx={{ fontSize: 16 }} />,
-        danger: true,
-        onClick: () =>
-            setForceDeleteNoteModal({
-                noteId: node.noteId,
-                title: node.title || t.notes.defaults.untitled,
-            }),
-    });
+    const buildForceDeleteMenuItem = useCallback(
+        (node: { noteId: number; title: string }): MoreMenuItem => ({
+            id: "force-delete-note",
+            kind: "delete",
+            label: t.common.forceDelete.menu,
+            icon: <DeleteForeverRoundedIcon sx={{ fontSize: 16 }} />,
+            danger: true,
+            onClick: () =>
+                setForceDeleteNoteModal({
+                    noteId: node.noteId,
+                    title: node.title || t.notes.defaults.untitled,
+                }),
+        }),
+        [t]
+    );
+
+    // One identity for every row's "add a sub-note" creator while the row manager is unchanged
+    // (a new function per render would re-render every row).
+    const renderChildCreator = useCallback(
+        (node: ComponentProps<typeof ChildNoteCreator>["node"]) => (
+            <ChildNoteCreator node={node} useNM={rowNM} />
+        ),
+        [rowNM]
+    );
 
     const folderActions: FolderActionHandlers = {
         onCreateNoteHere: (folderId) => {
@@ -628,34 +716,52 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         }
     };
 
+    // The row menus are called while a row renders, so they are `useCallback`s with their real
+    // dependencies: one stable function per note type lets the row's `memo` hold (MIP-2379).
+    const myRowMenuItems = useCallback(
+        (node: MyNoteMetaTreeNode) => [
+            {
+                id: "move-to-folder",
+                kind: "move" as const,
+                label: t.notes.folders.moveToFolder,
+                icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
+                onClick: () =>
+                    setMoveModal({
+                        kind: "note",
+                        noteId: node.noteId,
+                        currentFolderId: node.folderId ?? null,
+                        isChild: node.parentNoteId != null,
+                    }),
+            },
+            buildExportMenuItem(1, node),
+            buildDeleteMenuItem(1, node),
+            buildForceDeleteMenuItem(node),
+        ],
+        [t, buildExportMenuItem, buildDeleteMenuItem, buildForceDeleteMenuItem]
+    );
+    const taskRowMenuItems = useCallback(
+        (node: RowNode) => [buildExportMenuItem(2, node), buildDeleteMenuItem(2, node)],
+        [buildExportMenuItem, buildDeleteMenuItem]
+    );
+    const chatRowMenuItems = useCallback(
+        (node: RowNode) => [buildExportMenuItem(3, node), buildDeleteMenuItem(3, node)],
+        [buildExportMenuItem, buildDeleteMenuItem]
+    );
+    const sharedRowMenuItems = useCallback(
+        (node: SharedNoteMetaTreeNode) => [buildExportMenuItem(4, node)],
+        [buildExportMenuItem]
+    );
+
     // Render functions for each note type
     const renderMyNoteTree = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
-            activeTab={useNM.tabsApi.activeTab}
-            createChildNoteList={(node) => <ChildNoteCreator node={node} useNM={useNM} />}
+            createChildNoteList={renderChildCreator}
             currentChain={myNoteState.tmpCurrentChain}
             node={node}
             noteType={1}
-            useNM={useNM}
-            rowMenuItems={(node: MyNoteMetaTreeNode) => [
-                {
-                    id: "move-to-folder",
-                    kind: "move",
-                    label: t.notes.folders.moveToFolder,
-                    icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
-                    onClick: () =>
-                        setMoveModal({
-                            kind: "note",
-                            noteId: node.noteId,
-                            currentFolderId: node.folderId ?? null,
-                            isChild: node.parentNoteId != null,
-                        }),
-                },
-                buildExportMenuItem(1, node),
-                buildDeleteMenuItem(1, node),
-                buildForceDeleteMenuItem(node),
-            ]}
+            rowMenuItems={myRowMenuItems}
+            useNM={rowNM}
         />
     );
 
@@ -768,7 +874,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         actions={folderActions}
                         folder={folder}
                         renderNote={renderMyNoteTree}
-                        useNM={useNM}
+                        useNM={rowNM}
                     />
                 ))}
                 <DroppableNoteList containerId={myRootContainerId()} kind={1}>
@@ -790,26 +896,24 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderTaskNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
-            activeTab={useNM.tabsApi.activeTab}
-            createChildNoteList={(node) => <ChildNoteCreator node={node} useNM={useNM} />}
+            createChildNoteList={renderChildCreator}
             currentChain={taskNoteState.tmpCurrentChain}
             node={node}
             noteType={2}
-            rowMenuItems={(node) => [buildExportMenuItem(2, node), buildDeleteMenuItem(2, node)]}
-            useNM={useNM}
+            rowMenuItems={taskRowMenuItems}
+            useNM={rowNM}
         />
     );
 
     const renderChatNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
-            activeTab={useNM.tabsApi.activeTab}
-            createChildNoteList={(node) => <ChildNoteCreator node={node} useNM={useNM} />}
+            createChildNoteList={renderChildCreator}
             currentChain={chatNoteState.tmpCurrentChain}
             node={node}
             noteType={3}
-            rowMenuItems={(node) => [buildExportMenuItem(3, node), buildDeleteMenuItem(3, node)]}
-            useNM={useNM}
+            rowMenuItems={chatRowMenuItems}
+            useNM={rowNM}
         />
     );
 
@@ -819,13 +923,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderSharedNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
-            activeTab={useNM.tabsApi.activeTab}
-            createChildNoteList={(node) => <ChildNoteCreator node={node} useNM={useNM} />}
+            createChildNoteList={renderChildCreator}
             currentChain={sharedNoteState.tmpCurrentChain}
             node={node}
             noteType={4}
-            rowMenuItems={(node) => [buildExportMenuItem(4, node)]}
-            useNM={useNM}
+            rowMenuItems={sharedRowMenuItems}
+            useNM={rowNM}
         />
     );
 
@@ -835,40 +938,45 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     // Can this user edit the folder the note sits in? Move and delete
     // are folder-scoped, not note-scoped: the server gates them on
     // folder role, so a viewer shouldn't be offered actions that 403.
-    const canEditTeamNote = (node: { folderId?: number | null }): boolean => {
-        const folder = useNM.teamNoteFolders.find((f) => f.folderId === node.folderId);
-        return folder != null && folder.myRoleId < 3;
-    };
+    const canEditTeamNote = useCallback(
+        (node: { folderId?: number | null }): boolean => {
+            const folder = useNM.teamNoteFolders.find((f) => f.folderId === node.folderId);
+            return folder != null && folder.myRoleId < 3;
+        },
+        [useNM.teamNoteFolders]
+    );
+    const teamRowMenuItems = useCallback(
+        (node: MyNoteMetaTreeNode) =>
+            canEditTeamNote(node)
+                ? [
+                      {
+                          id: "move-to-folder",
+                          kind: "move" as const,
+                          label: t.notes.folders.moveToFolder,
+                          icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
+                          onClick: () =>
+                              setTeamNoteMoveModal({
+                                  noteId: node.noteId,
+                                  currentFolderId: node.folderId ?? null,
+                                  isChild: node.parentNoteId != null,
+                              }),
+                      },
+                      buildExportMenuItem(8, node),
+                      buildDeleteMenuItem(8, node),
+                  ]
+                : [buildExportMenuItem(8, node)],
+        [t, canEditTeamNote, buildExportMenuItem, buildDeleteMenuItem]
+    );
 
     const renderTeamNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
-            activeTab={useNM.tabsApi.activeTab}
-            createChildNoteList={(node) => <ChildNoteCreator node={node} useNM={useNM} />}
+            createChildNoteList={renderChildCreator}
             currentChain={teamNoteState.tmpCurrentChain}
             node={node}
             noteType={8}
-            useNM={useNM}
-            rowMenuItems={(node: MyNoteMetaTreeNode) =>
-                canEditTeamNote(node)
-                    ? [
-                          {
-                              id: "move-to-folder",
-                              kind: "move",
-                              label: t.notes.folders.moveToFolder,
-                              icon: <DriveFileMoveRoundedIcon sx={{ fontSize: 16 }} />,
-                              onClick: () =>
-                                  setTeamNoteMoveModal({
-                                      noteId: node.noteId,
-                                      currentFolderId: node.folderId ?? null,
-                                      isChild: node.parentNoteId != null,
-                                  }),
-                          },
-                          buildExportMenuItem(8, node),
-                          buildDeleteMenuItem(8, node),
-                      ]
-                    : [buildExportMenuItem(8, node)]
-            }
+            rowMenuItems={teamRowMenuItems}
+            useNM={rowNM}
         />
     );
 
@@ -992,7 +1100,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     actions={teamFolderActions}
                     folder={folder}
                     renderNote={renderTeamNoteTreeItem}
-                    useNM={useNM}
+                    useNM={rowNM}
                     visibleFolderIds={visibleFolderIds}
                 />
             ));
@@ -1206,16 +1314,20 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         if (!pmChat) return undefined;
         return (
             <Box sx={{ display: "flex", flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
-                <ProjectAvatar
-                    avatarSize={18}
-                    myself={myself}
-                    pmChat={pmChat}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useCM={useCM}
-                    useTEM={useTEM}
-                    useUISM={useUISM}
-                />
+                <WithSidebarManagers>
+                    {(m) => (
+                        <ProjectAvatar
+                            avatarSize={18}
+                            myself={myself}
+                            pmChat={pmChat}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={m.useCM}
+                            useTEM={m.useTEM}
+                            useUISM={m.useUISM}
+                        />
+                    )}
+                </WithSidebarManagers>
             </Box>
         );
     };
@@ -1247,45 +1359,57 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
         let avatar: ReactNode;
         if (chatGroup.chatType === 1 && chat.dmPartnerUser?.userId) {
             avatar = (
-                <AvatarWithStatus
-                    avatarSize={18}
-                    avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser.userId]}
-                    chat={chat}
-                    isYou={chat.dmPartnerUser.userId === myself.userId}
-                    myself={myself}
-                    setMyself={setMyself}
-                    showPulseDot={false}
-                    socket={socket}
-                    useCM={useCM}
-                    useUISM={useUISM}
-                />
+                <WithSidebarManagers>
+                    {(m) => (
+                        <AvatarWithStatus
+                            avatarSize={18}
+                            avatarUser={useTEM.teamMemberProfiles[chat.dmPartnerUser!.userId]}
+                            chat={chat}
+                            isYou={chat.dmPartnerUser!.userId === myself.userId}
+                            myself={myself}
+                            setMyself={setMyself}
+                            showPulseDot={false}
+                            socket={socket}
+                            useCM={m.useCM}
+                            useUISM={m.useUISM}
+                        />
+                    )}
+                </WithSidebarManagers>
             );
         } else if (chatGroup.chatType === 2) {
             avatar = (
-                <GMAvatar
-                    avatarSize={18}
-                    gmChat={chat}
-                    isYou={false}
-                    myself={myself}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useCM={useCM}
-                    useTEM={useTEM}
-                    useUISM={useUISM}
-                />
+                <WithSidebarManagers>
+                    {(m) => (
+                        <GMAvatar
+                            avatarSize={18}
+                            gmChat={chat}
+                            isYou={false}
+                            myself={myself}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={m.useCM}
+                            useTEM={m.useTEM}
+                            useUISM={m.useUISM}
+                        />
+                    )}
+                </WithSidebarManagers>
             );
         } else if (chatGroup.chatType === 3) {
             avatar = (
-                <ProjectAvatar
-                    avatarSize={18}
-                    myself={myself}
-                    pmChat={chat}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useCM={useCM}
-                    useTEM={useTEM}
-                    useUISM={useUISM}
-                />
+                <WithSidebarManagers>
+                    {(m) => (
+                        <ProjectAvatar
+                            avatarSize={18}
+                            myself={myself}
+                            pmChat={chat}
+                            setMyself={setMyself}
+                            socket={socket}
+                            useCM={m.useCM}
+                            useTEM={m.useTEM}
+                            useUISM={m.useUISM}
+                        />
+                    )}
+                </WithSidebarManagers>
             );
         } else if (chatGroup.chatType === 4) {
             avatar = <MDMAvatar avatarSize={18} members={chat.mdmMembers} />;
@@ -1402,7 +1526,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             locate={locateFavoriteNote}
             note={note}
             noteType={noteType}
-            useNM={useNM}
+            useNM={rowNM}
         />
     );
 
@@ -1468,7 +1592,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                             <FavoriteFolderItem
                                 key={`fav-folder-${folder.folderId}`}
                                 folder={folder}
-                                useNM={useNM}
+                                useNM={rowNM}
                                 spaceLabel={
                                     folder.scope === "team"
                                         ? t.notes.sidebar.teamNotes
@@ -1691,7 +1815,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             );
         }
 
-        return <RecentNotesList locate={locateNote} rows={rows} useNM={useNM} />;
+        return <RecentNotesList locate={locateNote} rows={rows} useNM={rowNM} />;
     };
 
     // Note type configurations for cleaner code
@@ -1823,7 +1947,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                         locate={locateNote}
                         query={filterQuery}
                         result={filterResult}
-                        useNM={useNM}
+                        useNM={rowNM}
                         onKeyDown={noteFilter.onResultsKeyDown}
                         onOpened={noteFilter.onOpened}
                     />
@@ -1872,7 +1996,7 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                                     isCurrent={config.isCurrent}
                                     noteType={config.noteType}
                                     title={config.title}
-                                    useNM={useNM}
+                                    useNM={rowNM}
                                 >
                                     {/* Every section renders through its grouped
                                 function now — My Notes joined task/chat/
@@ -2039,21 +2163,25 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
                     })();
                 }}
             />
-            <ModalTeamFolderMembers
-                folder={teamMembersModal}
-                myself={myself}
-                open={teamMembersModal !== null}
-                socket={socket}
-                useCM={useCM}
-                useTEM={useTEM}
-                onClose={() => setTeamMembersModal(null)}
-                onChanged={() => {
-                    // A grant or revoke can change which folders and
-                    // notes this user resolves, so refetch both.
-                    void useNM.getTeamNoteFolders();
-                    void useNM.getTeamNoteMeta();
-                }}
-            />
+            <WithSidebarManagers>
+                {(m) => (
+                    <ModalTeamFolderMembers
+                        folder={teamMembersModal}
+                        myself={myself}
+                        open={teamMembersModal !== null}
+                        socket={socket}
+                        useCM={m.useCM}
+                        useTEM={m.useTEM}
+                        onClose={() => setTeamMembersModal(null)}
+                        onChanged={() => {
+                            // A grant or revoke can change which folders and
+                            // notes this user resolves, so refetch both.
+                            void useNM.getTeamNoteFolders();
+                            void useNM.getTeamNoteMeta();
+                        }}
+                    />
+                )}
+            </WithSidebarManagers>
             <ModalNoteTemplates
                 folders={useNM.teamNoteFolders}
                 myself={myself}
@@ -2146,4 +2274,4 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
             </ModalFrame>
         </Sheet>
     );
-};
+});
