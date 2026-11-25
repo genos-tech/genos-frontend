@@ -38,6 +38,9 @@ export interface ScheduleForm {
     weekdays: number[];
     monthDay: string;
     runDate: string;
+    /** One time only, a NEW schedule: run it as soon as it is saved instead of at a date and time
+     *  (MIP-2402). The date and time are not asked, and not sent. */
+    runRightAway: boolean;
     deliverPush: boolean;
     /** "" = the job's own default (MIP-1212); else the member's own level. */
     aiEffort: string;
@@ -54,6 +57,7 @@ export const emptyForm = (jobs: ScheduleJob[]): ScheduleForm => ({
     weekdays: [],
     monthDay: "1",
     runDate: "",
+    runRightAway: false,
     // On for a new schedule (MIP-1374): a report nobody is told about goes unread.
     deliverPush: true,
     aiEffort: "",
@@ -85,6 +89,7 @@ export const formFromSchedule = (s: Schedule, jobs: ScheduleJob[]): ScheduleForm
     weekdays: [...(s.weekdays ?? [])].sort((a, b) => a - b),
     monthDay: s.monthDay === undefined ? "1" : String(s.monthDay),
     runDate: s.runDate ?? "",
+    runRightAway: false,
     deliverPush: s.deliverPush,
     aiEffort: asEffortLevel(s.aiEffort) ?? "",
     deliverChannelId: s.deliverChannelId ?? "",
@@ -154,6 +159,11 @@ export interface FormProblems {
     runDate?: FieldProblem;
 }
 
+/** True when the form is a one-time schedule set to run as soon as it is saved. The choice is
+ *  kept when the member flips the frequency away and back, but means nothing for any other one. */
+export const runsRightAway = (form: ScheduleForm): boolean =>
+    form.frequency === "once" && form.runRightAway;
+
 export const hasProblems = (p: FormProblems): boolean =>
     Boolean(p.name || p.job || p.timeOfDay || p.weekdays || p.monthDay || p.runDate) ||
     Object.keys(p.params).length > 0;
@@ -201,6 +211,8 @@ export const validateForm = (
         }
     }
 
+    // "Run right away" has no date and no time to ask (the server uses now).
+    if (runsRightAway(form)) return problems;
     if (normalizeTime(form.timeOfDay) === null) {
         problems.timeOfDay = form.timeOfDay.trim() === "" ? "required" : "format";
     }
@@ -220,6 +232,8 @@ export const validateForm = (
 
 /** The recurrence fields the chosen frequency uses; the rest are not sent. */
 const recurrence = (form: ScheduleForm): Partial<ScheduleFields> => {
+    // The server makes the schedule and picks the moment: nothing about WHEN goes on the wire.
+    if (runsRightAway(form)) return { frequency: "once", runNow: true };
     const out: Partial<ScheduleFields> = {
         frequency: form.frequency,
         timeOfDay: normalizeTime(form.timeOfDay) ?? form.timeOfDay.trim(),
@@ -242,7 +256,7 @@ export const buildCreate = (form: ScheduleForm, job: ScheduleJob | undefined): S
         deliverPush: form.deliverPush,
         ...(form.deliverChannelId ? { deliverChannelId: form.deliverChannelId } : {}),
         ...(effort ? { aiEffort: effort } : {}),
-        ...(recurrence(form) as Pick<ScheduleFields, "frequency" | "timeOfDay">),
+        ...(recurrence(form) as Pick<ScheduleFields, "frequency">),
     };
 };
 

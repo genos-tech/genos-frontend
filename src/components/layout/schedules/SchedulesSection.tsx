@@ -5,7 +5,10 @@ import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import { Alert, Box, Button, Chip, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../context/authState";
-import { runScheduleAndAnnounce } from "../../../features/schedules/runScheduleAndAnnounce";
+import {
+    announceRunResult,
+    runScheduleAndAnnounce,
+} from "../../../features/schedules/runScheduleAndAnnounce";
 import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
 import { rowEffort, withoutAi } from "../../../features/schedules/scheduleEffort";
 import {
@@ -20,6 +23,7 @@ import {
     createSchedule,
     deleteSchedule,
     listSchedules,
+    RunOutcome,
     Schedule,
     ScheduleChange,
     ScheduleFields,
@@ -194,12 +198,30 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
             setMode(null);
             return { ok: true };
         }
-        const res = editing
-            ? await updateSchedule(accessToken, teamId, editing, body)
-            : await createSchedule(accessToken, teamId, body as ScheduleFields);
+        let ran: RunOutcome | undefined;
+        let res;
+        if (editing) {
+            res = await updateSchedule(accessToken, teamId, editing, body);
+        } else {
+            const made = await createSchedule(accessToken, teamId, body as ScheduleFields);
+            ran = made.ok ? made.outcome : undefined;
+            res = made;
+        }
         if (res.ok) {
             setError(null);
             setMode(null);
+            // "Run right away" (MIP-2402): the create already ran the report, so only announce it
+            // (the Inbox resync and the toast). Running it again here would file it twice. Not
+            // awaited: the dialog is done, the toast follows the resync.
+            if (ran) {
+                const chat = res.schedule.deliverChannel;
+                void announceRunResult(
+                    { ok: true, outcome: ran },
+                    res.schedule.id,
+                    () => false,
+                    chat ? chat.title || s.unavailable : null
+                );
+            }
             await refresh();
         } else if (res.planRequired) {
             await planRefused();

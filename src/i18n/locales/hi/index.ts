@@ -1540,6 +1540,13 @@ export const hi: DeepPartial<Messages> = {
             frequencyWeekly: "सप्ताह के मेरे चुने हुए दिनों पर",
             frequencyMonthly: "महीने में एक बार",
             frequencyOnce: "केवल एक बार",
+            onceWhen: "कब चलाना है",
+            onceAtTime: "किसी तारीख़ और समय पर",
+            onceRightAway: "तुरंत चलाएँ",
+            runRightAwayHintInbox:
+                "“अभी चलाएँ” दबाते ही यह चल जाता है। रिपोर्ट आपके इनबॉक्स में आती है।",
+            runRightAwayHintChat:
+                "“अभी चलाएँ” दबाते ही यह चल जाता है। रिपोर्ट {chat} में पोस्ट होती है।",
             weekdays: "इन दिनों पर",
             monthDay: "महीने का दिन",
             monthDayHint: "जिस महीने में वह दिन न हो, उसमें यह आख़िरी दिन चलता है।",
