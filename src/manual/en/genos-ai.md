@@ -47,21 +47,21 @@ A schedule (Settings > Genos > Schedules, Core and above) prepares a report at t
 **Scheduled job by Genos AI.** Six reports have a **Mode** choice, plain or Scheduled job by Genos AI: What to do today, What is left from last week, Project updates, Milestone updates, Team activity and Dashboard page. Plain is the default. Group chat catch-up and What you did cannot use AI. Run a skill always uses AI.
 
 - In What to do today, AI adds one short sentence under a task when its comments explain where it stands. In the other reports, AI adds a short summary (2 to 4 sentences) at the top, written from what the report already lists.
-- **AI effort** (Low, Medium or High) appears only when AI is on. The form shows an estimate of the credits one run uses, and each report shows the real figure. If your plan allows a lower level, the form says your plan runs the schedule at that level.
+- **AI effort** (Low, Medium or High) appears only when AI is on. The form shows an estimate of the credits one run uses, and each report shows the real figure. If your plan does not allow the level a saved schedule asks for, the form says which level your plan runs it at.
 - AI uses your AI credits. When you have none left, AI cannot be turned on, and a schedule that already has AI on still sends its report, without the AI part. If your Genos has AI reports turned off, the report also arrives without the AI part.
 
 **AI reports in shared chats.** Turning AI on does not widen or narrow who may receive a report: a report goes only to the chats that would take its plain version. The post in the chat includes the AI sentences, but never what the run cost. The cost is shown only to you, in your Inbox. No notification is sent for the post. A scheduled skill is different: it runs on your own skills and data, so it can only be posted in a chat that only you are in.
 
-**Dashboard page.** This report keeps one dashboard page up to date: counts by status, what was closed and created, and what is ready to start or blocked. Choose:
+**Dashboard page.** This report keeps one dashboard page up to date: counts by status and what was closed and created. A milestone page also lists what is ready to start and what is blocked. My progress shows what you closed and created. Choose:
 
 - **Dashboard of:** one milestone, one project, or My progress.
-- **Period:** Last week, Last month (the default), Last quarter or Last year. This is how far back the numbers go, not how often the schedule runs. A schedule runs at most once a day.
+- **Period:** Last week, Last month (the default), Last quarter or Last year. This is how far back the numbers go, not how often the schedule runs. A schedule runs on its own at most once a day (Run now is extra).
 - **Focus:** optional, a few words on what the page should look at.
 
 The first run saves the page as one HTML page in your notes, and each run after replaces it with the new numbers. Dashboards need a plan that has HTML pages (Core and above). Each run counts toward your plan's HTML page saves per hour (30 on Core, 60 on Pro and above). You can keep up to 10 dashboard schedules.
 
-- **Who can read it.** The page names only tasks that everyone who can read the note may open. A project or milestone dashboard is refused when someone who can read the note is not on that project, and the message names nobody. My progress counts only the projects all of its readers are on, and says so on the page.
-- **AI summary.** With AI on, the page also gets one short summary. If the numbers are the same as at the last AI run (within 8 days), Genos reuses that summary and spends no credits. If your Genos has AI dashboard summaries turned off, or you have no credits left, the page is plain.
+- **Who can read it.** The page names only tasks that everyone who can read the note may open. A project or milestone dashboard is refused when someone who can read the note is not on that project, and the message names nobody. My progress counts only the projects all of its readers are on, and, when others can read the page, says so on the page.
+- **AI summary.** With AI on, the page also gets one short summary. If nothing the page shows has changed since the last AI run (the numbers, the lists and the focus, within 8 days), Genos reuses that summary and spends no credits. If your Genos has AI dashboard summaries turned off, the page is plain. If you have no credits left, the page is plain unless an unchanged summary from the last 8 days can be reused.
 - **In a chat.** A dashboard schedule that posts to a chat sends a short notice with the title, one line and a link to the page, not the full report. Every person who reads the chat must be able to open the page. If not, the run fails and posts nothing.
 - **Where to find them.** Task Stats has a **Custom dashboards by AI** tab. It lists the dashboards your schedules keep up to date (Yours) and dashboards teammates share with you (Shared with you). Only pages you can already open are listed. From there you can open the page, click **Run now**, or add a **New dashboard**, which opens the same schedule form.
 - **From an AI app.** A connected AI app (Claude, ChatGPT) can create or edit a dashboard schedule for you, including the chat it posts to and the place the page is saved. It asks for your approval first, and the same rules apply.
