@@ -45,6 +45,30 @@ export const JA_SETTINGS_TEXT: Record<SettingGuideId, JaSettingText> = {
     "spotlight.contentLength": { name: "Genosの書く量", default: "標準" },
     "spotlight.sharedAnswers": { name: "自分の回答でチームメイトを助ける", default: "オフ" },
     "spotlight.noteActivity": { name: "自分の作業を記録する", default: "オン" },
+    "spotlight.scheduleMode": {
+        name: "スケジュール: モード(通常、または Genos AI によるスケジュールジョブ)",
+        default: "通常: AI もクレジットも使いません",
+    },
+    "spotlight.scheduleEffort": {
+        name: "スケジュール: AI の Effort",
+        default: "Low(スキルの実行は Medium)。AI モードのときだけ表示",
+    },
+    "spotlight.scheduleDeliver": {
+        name: "スケジュール: レポートの送信先",
+        default: "自分の受信箱",
+    },
+    "spotlight.scheduleDashboardKind": {
+        name: "スケジュール、ダッシュボードページ: ダッシュボードの対象(マイルストーン、プロジェクト、自分の進捗)",
+        default: "未選択: 1つ選びます",
+    },
+    "spotlight.scheduleDashboardPeriod": {
+        name: "スケジュール、ダッシュボードページ: 期間",
+        default: "直近1か月",
+    },
+    "spotlight.scheduleDashboardFocus": {
+        name: "スケジュール、ダッシュボードページ: 注目する点",
+        default: "空欄",
+    },
     chat: {
         default:
             "メッセージレイアウト、クイックリアクション、メッセージのアクション、ダブルクリック",

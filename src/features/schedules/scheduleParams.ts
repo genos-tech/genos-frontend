@@ -11,6 +11,7 @@
 // the label made from its key, so it still shows up with no change to this file.
 
 import type { Messages } from "../../i18n";
+import type { SettingGuideId } from "../../manual/settingsMap";
 import type { JobParam, ScheduleJob } from "../../services/schedules";
 
 type ScheduleStrings = Messages["settings"]["schedules"];
@@ -33,6 +34,9 @@ export interface KnownParam {
     boolean?: { defaultOn: boolean };
     /** This switch turns the job's AI step off: the AI effort control is hidden while it is off. */
     aiSwitch?: boolean;
+    /** The settings-map id of this field (the manual's "Settings A-Z"), set on the form control
+     *  as `data-guide-id`. */
+    guideId?: SettingGuideId;
     /** Show our own localized hint even when the server sends a description: the server's is
      *  English only, and for the AI switch it must stay neutral about whether AI is running. */
     preferOwnHint?: boolean;
@@ -69,6 +73,7 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         hint: "scheduleModeAiHint",
         boolean: { defaultOn: false },
         aiSwitch: true,
+        guideId: "spotlight.scheduleMode",
         preferOwnHint: true,
     },
     // A schedule that runs a skill (MIP-2045). The skill is picked by name; the version it runs
@@ -80,9 +85,21 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
     channel_id: { label: "paramChat", hint: "paramChatHint", picker: "chat" },
     input: { label: "paramSkillInput", hint: "paramSkillInputHint" },
     // The dashboard page (MIP-2357): what it covers, over which window, and what to look at.
-    kind: { label: "paramKind", hint: "paramKindHint" },
-    period: { label: "paramPeriod", hint: "paramPeriodHint" },
-    focus: { label: "paramFocus", hint: "paramFocusHint" },
+    kind: {
+        label: "paramKind",
+        hint: "paramKindHint",
+        guideId: "spotlight.scheduleDashboardKind",
+    },
+    period: {
+        label: "paramPeriod",
+        hint: "paramPeriodHint",
+        guideId: "spotlight.scheduleDashboardPeriod",
+    },
+    focus: {
+        label: "paramFocus",
+        hint: "paramFocusHint",
+        guideId: "spotlight.scheduleDashboardFocus",
+    },
 };
 
 // Own-property lookups only: a key that arrives from the API must never read

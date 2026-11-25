@@ -433,6 +433,7 @@ export const ScheduleFormPanel = ({
                                     return (
                                         <FormControl
                                             key={key}
+                                            data-guide-id={known.guideId}
                                             data-testid="schedule-mode"
                                             sx={{ minWidth: 0 }}
                                         >
@@ -515,6 +516,7 @@ export const ScheduleFormPanel = ({
                             return (
                                 <FormControl
                                     key={key}
+                                    data-guide-id={known?.guideId}
                                     error={!!problem}
                                     required={required}
                                     sx={{ minWidth: 0 }}
@@ -594,7 +596,11 @@ export const ScheduleFormPanel = ({
                 )}
 
                 {showsEffort(job, form.params) && !aiCreditsOut && (
-                    <FormControl data-testid="schedule-effort" sx={{ minWidth: 0 }}>
+                    <FormControl
+                        data-guide-id="spotlight.scheduleEffort"
+                        data-testid="schedule-effort"
+                        sx={{ minWidth: 0 }}
+                    >
                         <FormLabel id={effortLabelId}>{s.effortLabel}</FormLabel>
                         <RadioGroup
                             aria-labelledby={effortLabelId}
@@ -644,7 +650,11 @@ export const ScheduleFormPanel = ({
                 )}
 
                 {deliverOptions.length > 0 && (
-                    <FormControl data-testid="schedule-deliver" sx={{ minWidth: 0 }}>
+                    <FormControl
+                        data-guide-id="spotlight.scheduleDeliver"
+                        data-testid="schedule-deliver"
+                        sx={{ minWidth: 0 }}
+                    >
                         <FormLabel>{s.deliverLabel}</FormLabel>
                         <ChatTargetSelect
                             chats={deliverOptions}

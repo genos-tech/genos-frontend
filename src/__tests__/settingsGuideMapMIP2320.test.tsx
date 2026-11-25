@@ -41,7 +41,9 @@ const sources = import.meta.glob(["../**/*.{ts,tsx}", "!../__tests__/**", "!../m
 const declaredInSource = (): Map<string, string[]> => {
     const found = new Map<string, string[]>();
     for (const [file, text] of Object.entries(sources)) {
-        for (const match of text.matchAll(/\bguideId="([\w.]+)"/g)) {
+        for (const match of text.matchAll(
+            /(?:\bguideId=|data-guide-id=|\bguideId:\s*)"([\w.]+)"/g
+        )) {
             found.set(match[1], [...(found.get(match[1]) ?? []), file]);
         }
     }
