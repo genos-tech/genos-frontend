@@ -225,6 +225,10 @@ describe("NoteSidebar render boundary (MIP-2379)", () => {
     beforeEach(() => {
         counts.sections = 0;
         counts.rows = 0;
+        // jsdom has no scrollIntoView; the selected row calls it from a 260 ms
+        // timer that can fire after a test ends, which vitest reports as an
+        // unhandled error and fails the shard.
+        Element.prototype.scrollIntoView = vi.fn();
     });
 
     it("draws its sections and one row per note when it mounts", async () => {
