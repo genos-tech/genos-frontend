@@ -264,6 +264,31 @@ describe("pressing Run now", () => {
         expect(runScheduleNow).not.toHaveBeenCalled();
     });
 
+    it("refuses a name another schedule already has, in the form, before anything is sent", async () => {
+        // A member never has two schedules with one name; the default name is the report's title.
+        listSchedules.mockResolvedValue(
+            LIST([{ ...SAVED_ONCE, id: "s2", name: "What you did", runDate: "2026-12-30" }])
+        );
+        render(<SchedulesSection teamId="t1" />);
+        const user = userEvent.setup();
+        await user.click(await screen.findByRole("button", { name: /^New schedule$/ }));
+        await user.click(screen.getByRole("combobox", { name: "Repeat" }));
+        await user.click(await screen.findByRole("option", { name: s.frequencyOnce }));
+        await chooseRightAway(user);
+
+        expect(await screen.findByText(/already have a schedule named/i)).toBeTruthy();
+        const form = within(screen.getByTestId("schedule-form"));
+        const run = form.getByRole("button", { name: s.runNow });
+        expect(run).toBeDisabled();
+        expect(createSchedule).not.toHaveBeenCalled();
+
+        // Another name is fine.
+        const name = screen.getByRole("textbox", { name: /^Name/ });
+        await user.clear(name);
+        await user.type(name, "What you did, right now");
+        await waitFor(() => expect(form.getByRole("button", { name: s.runNow })).toBeEnabled());
+    });
+
     it("a date-and-time create is unchanged: no runNow, no announcement", async () => {
         createSchedule.mockResolvedValue({ ok: true, schedule: SAVED_ONCE });
         render(<SchedulesSection teamId="t1" />);

@@ -170,9 +170,9 @@ export const ScheduleFormPanel = ({
     // edit only when the change CREATES the duplicate: two schedules that already
     // look alike must stay editable (pause, push, time) without the first one flagged.
     const duplicateNow = useMemo(() => {
-        // "Run right away" has no time to compare: the server asks the same question, in the
-        // same minute, and a report run again later with the same name is fine.
-        if (hasProblems(problems) || runsRightAway(form)) return null;
+        // "Run right away" has no time, so only its NAME can match another schedule here (a name
+        // is never used twice); the same thing in the same minute is the server's to refuse.
+        if (hasProblems(problems)) return null;
         const found = findDuplicate(buildCreate(form, job), existing, schedule?.id);
         if (!found || !schedule) return found;
         const before = findDuplicate(
