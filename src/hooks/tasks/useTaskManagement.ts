@@ -9,6 +9,7 @@ import {
     useState,
 } from "react";
 
+import { buildTaskListGroups } from "../../features/tasks/meta/taskStatuses";
 import {
     createTaskDependency,
     CreateTaskDependencyResult,
@@ -646,16 +647,7 @@ export const useTaskManagement = (
     const [isNewTaskCreated, setIsNewTaskCreated] = useState(false);
 
     // Task lists
-    const taskTypes: TaskTypesProps = {
-        all: {
-            id: 0,
-            statuses: ["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"],
-            name: "All",
-        },
-        ongoing: { id: 1, statuses: ["Open", "WIP", "Blocked", "Pending"], name: "Ongoing" },
-        closed: { id: 2, statuses: ["Closed"], name: "Closed" },
-        deleted: { id: 3, statuses: ["Deleted"], name: "Deleted" },
-    };
+    const taskTypes: TaskTypesProps = buildTaskListGroups();
     // --- The open project's rows -------------------------------------------
     //
     // `allTasks` holds the rows of the OPEN project, and it changes with the

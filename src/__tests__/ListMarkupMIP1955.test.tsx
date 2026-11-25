@@ -125,11 +125,11 @@ describe("the Notes sidebar sections", () => {
                     <List>
                         <NotePinnedSection id="fav" title="Favorites">
                             <NoteTreeRenderer
+                                activeTab={null}
                                 createChildNoteList={() => null}
                                 currentChain={[]}
                                 node={root}
                                 noteType={1}
-                                timestamp=""
                                 useNM={useNM}
                             />
                         </NotePinnedSection>

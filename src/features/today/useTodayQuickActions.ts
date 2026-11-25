@@ -8,6 +8,7 @@ import { UserProps } from "../../types/admin";
 import { TaskTableProps } from "../../types/tasks";
 import { parseCalendarDate } from "../../utils/calendarDate";
 import { patchTaskFields } from "../tasks/diagram/services/patchTaskFields";
+import { STATUS_CLOSED } from "../tasks/meta/taskStatuses";
 import { afterTaskDeleted, syncDeletedTaskCard } from "../tasks/services/deleteTaskCommit";
 import { statuses } from "../tasks/utils/taskMeta";
 import type { BriefingTask, BriefingToday } from "./briefingToday";
@@ -48,7 +49,7 @@ const actions = new Map<
     }
 >();
 
-export const DONE_STATUS = "Closed";
+export const DONE_STATUS = STATUS_CLOSED;
 
 const doneCode = statuses.find((s) => s.status === DONE_STATUS)?.code ?? 0;
 

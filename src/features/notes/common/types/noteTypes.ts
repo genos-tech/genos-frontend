@@ -46,7 +46,6 @@ export type NoteMetaTreeNode = MyNoteMetaTreeNode | TaskNoteMetaTreeNode | ChatN
 export interface NoteTreeState<T extends BaseNoteTreeNode> {
     tmpCurrentChain: T[] | undefined;
     tmpMetaTree: T[];
-    timestamp: string;
 }
 
 export interface UseNoteTreeStateProps<T extends BaseNoteTreeNode> {
