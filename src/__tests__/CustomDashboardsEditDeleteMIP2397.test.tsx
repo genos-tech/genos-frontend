@@ -51,6 +51,13 @@ vi.mock("../components/ui/feedback/toastStore", () => ({
     },
 }));
 vi.mock("../components/layout/schedules/scheduleParamHooks", () => ({
+    // The folders the "Save to" picker offers: one personal folder, the one s-1 is saved in.
+    useNoteFolders: () => ({
+        mine: [{ folderId: 5, name: "Reports", parentFolderId: null }],
+        team: [],
+        loading: false,
+        failed: false,
+    }),
     useJoinedProjects: () => [],
     useProjectAvatars: () => new Map(),
     useProjectMilestones: () => ({ groups: [], loading: false, failed: false }),
@@ -240,8 +247,11 @@ describe("Edit", () => {
     it("locks where the page is saved once the page exists, and says why once", async () => {
         const { form } = await openEdit("Milestone X dashboard");
         const params = within(form).getByTestId("schedule-params");
-        expect(within(params).getByRole("combobox", { name: /Save to/i })).toBeDisabled();
-        expect(within(params).getByRole("spinbutton", { name: /Folder/i })).toBeDisabled();
+        // ONE picker for the place, showing the folder by name; it is the only thing locked.
+        const place = within(params).getByRole("combobox", { name: /Save to/i });
+        expect(place).toBeDisabled();
+        expect(place).toHaveValue("Reports");
+        expect(within(params).queryByRole("spinbutton")).toBeNull();
         expect(within(params).getAllByText(c().editLockedHint)).toHaveLength(1);
         // The other options stay editable.
         expect(within(params).getByRole("combobox", { name: /Period/i })).not.toBeDisabled();

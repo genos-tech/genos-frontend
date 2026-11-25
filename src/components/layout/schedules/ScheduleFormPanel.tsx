@@ -68,6 +68,7 @@ import { useJoinedProjects } from "./scheduleParamHooks";
 import {
     ChatParamSelect,
     ChatTargetSelect,
+    FolderParamSelect,
     MilestoneParamSelect,
     ProjectParamSelect,
     SkillParamSelect,
@@ -374,7 +375,11 @@ export const ScheduleFormPanel = ({
                             // under the first locked one.
                             const locked = lockedParams?.keys.includes(key) === true;
                             const lockHint =
-                                locked && key === lockedParams?.keys.find((k) => k in job.params)
+                                locked &&
+                                key ===
+                                    lockedParams?.keys.find(
+                                        (k) => k in job.params && !knownParam(k)?.hidden
+                                    )
                                     ? lockedParams.hint
                                     : null;
                             const required = paramRequiredNow(job, key, spec, form.params);
@@ -552,6 +557,20 @@ export const ScheduleFormPanel = ({
                                         <ChatParamSelect
                                             value={form.params[key] ?? ""}
                                             onChange={setParam}
+                                        />
+                                    ) : known?.picker === "folder" ? (
+                                        // ONE choice sets the kind of place and the folder.
+                                        <FolderParamSelect
+                                            disabled={locked}
+                                            folderId={form.params[key] ?? ""}
+                                            saveTo={form.params.save_to ?? ""}
+                                            onChange={(place, id) =>
+                                                set("params", {
+                                                    ...form.params,
+                                                    save_to: place,
+                                                    [key]: id,
+                                                })
+                                            }
                                         />
                                     ) : known?.picker === "skill" ? (
                                         <SkillParamSelect

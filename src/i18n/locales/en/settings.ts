@@ -321,6 +321,17 @@ export const settings = {
         paramChatHint:
             "Optional. Pick one group chat to catch up on, or leave it on all busy chats. Only chats you are in are listed.",
         chatAllBusy: "All busy chats",
+        paramSaveTo: "Save to",
+        paramSaveToHint: "Where the page is saved. Each place says who can open it.",
+        saveToMyNotes: "My notes",
+        saveToGroupMine: "My folders",
+        saveToGroupTeam: "Team folders",
+        saveToOnlyYou: "Only you",
+        saveToTeamPublic: "Everyone in the team",
+        saveToTeamPrivate: "Members of {name}",
+        saveToReaders: "Who can open it: {who}",
+        saveToLoading: "Loading folders…",
+        saveToLoadFailed: "Folders could not be loaded.",
         paramChoose: "Choose…",
         // The dashboard page (MIP-2357).
         paramKind: "Dashboard of",

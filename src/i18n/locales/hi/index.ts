@@ -1625,6 +1625,17 @@ export const hi: DeepPartial<Messages> = {
             paramChatHint:
                 "वैकल्पिक। कैच-अप के लिए एक ग्रुप चैट चुनें, या सभी व्यस्त चैट पर रहने दें। केवल वे चैट दिखती हैं जिनमें आप हैं।",
             chatAllBusy: "सभी व्यस्त चैट",
+            paramSaveTo: "यहाँ सहेजें",
+            paramSaveToHint: "पेज कहाँ सहेजा जाता है। हर जगह बताती है कि उसे कौन खोल सकता है।",
+            saveToMyNotes: "मेरे नोट्स",
+            saveToGroupMine: "मेरे फ़ोल्डर",
+            saveToGroupTeam: "टीम फ़ोल्डर",
+            saveToOnlyYou: "केवल आप",
+            saveToTeamPublic: "टीम में सभी",
+            saveToTeamPrivate: "{name} के सदस्य",
+            saveToReaders: "कौन खोल सकता है: {who}",
+            saveToLoading: "फ़ोल्डर लोड हो रहे हैं…",
+            saveToLoadFailed: "फ़ोल्डर लोड नहीं हो सके।",
             paramChoose: "चुनें…",
             paramKind: "डैशबोर्ड किसका",
             paramKindHint:
