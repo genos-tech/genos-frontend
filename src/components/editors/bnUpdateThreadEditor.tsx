@@ -12,6 +12,7 @@ import {
     withoutTrailingBlank,
     withTrailingBlank,
 } from "./utils/messageBlocks";
+import { useInsertSelectedEmoji } from "./utils/useInsertSelectedEmoji";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { getFirstLine } from "../../features/chat/utils/common";
@@ -156,11 +157,7 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         );
         setShowGifPicker(false);
     };
-    useEffect(() => {
-        if (selectedEmoji !== null) {
-            insertEmoji(selectedEmoji);
-        }
-    }, [selectedEmoji]);
+    useInsertSelectedEmoji(selectedEmoji, insertEmoji);
 
     useEffect(() => {
         if (isInEdit === false) {

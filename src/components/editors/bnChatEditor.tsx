@@ -8,6 +8,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { withTrailingBlank } from "./utils/messageBlocks";
+import { useInsertSelectedEmoji } from "./utils/useInsertSelectedEmoji";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { sendChatMessage } from "../../features/chat/services/sendChatMessage";
@@ -169,11 +170,7 @@ export const BnChatEditor = (props: BnChatEditorProps) => {
         );
         setShowGifPicker(false);
     };
-    useEffect(() => {
-        if (selectedEmoji !== null) {
-            insertEmoji(selectedEmoji);
-        }
-    }, [selectedEmoji]);
+    useInsertSelectedEmoji(selectedEmoji, insertEmoji);
 
     return (
         <Box>

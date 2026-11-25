@@ -151,11 +151,19 @@ describe("MobileChatHome task preview", () => {
         expect(screen.queryByTestId("task-preview")).toBeNull();
     });
 
-    it("leaves the create-task overlay on its own shell, padded and scrolling as before", () => {
+    it("puts a form opened with no preview into the shared shell, scrolling (MIP-2373)", () => {
         renderInTheme(<MobileChatHome {...props({ preview: false, creating: true })} />);
         const form = screen.getByTestId("create-task");
-        // Not the shared shell (no overlay body), and still wrapped.
-        expect(screen.queryByTestId("mobile-overlay-body")).toBeNull();
+        // The form shares the preview's overlay, so the submit swaps its content.
+        expect(screen.getByTestId("mobile-overlay-body")).toContainElement(form);
+        expect(getComputedStyle(form.parentElement as HTMLElement).overflow).toBe("auto");
+    });
+
+    it("leaves a form opened beside an open preview on its own shell, padded and scrolling", () => {
+        renderInTheme(<MobileChatHome {...props({ preview: true, creating: true })} />);
+        const form = screen.getByTestId("create-task");
+        expect(screen.getByTestId("task-preview")).toBeInTheDocument();
+        expect(screen.getByTestId("mobile-overlay-body")).not.toContainElement(form);
         expect(form.parentElement).not.toBeNull();
         expect(getComputedStyle(form.parentElement as HTMLElement).overflow).toBe("auto");
     });

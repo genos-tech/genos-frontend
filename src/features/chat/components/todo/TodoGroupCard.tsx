@@ -112,10 +112,11 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
     const accent = isToday ? COLORS.today : isTomorrow ? COLORS.tomorrow : null;
 
     // Bucket items by categoryId. Uncategorized (null) renders first.
+    const groupItems = group.items;
     const sections = useMemo(() => {
-        const uncategorized = group.items.filter((i) => i.categoryId === null);
-        const byCategory = new Map<number, typeof group.items>();
-        for (const i of group.items) {
+        const uncategorized = groupItems.filter((i) => i.categoryId === null);
+        const byCategory = new Map<number, typeof groupItems>();
+        for (const i of groupItems) {
             if (i.categoryId === null) continue;
             const arr = byCategory.get(i.categoryId) ?? [];
             arr.push(i);
@@ -148,7 +149,7 @@ export const TodoGroupCard = (props: TodoGroupCardProps) => {
         }
         result.push(...categoryEntries);
         return result;
-    }, [group.items, categories, tagFilter, t.chat.todoPane.general]);
+    }, [groupItems, categories, tagFilter, t.chat.todoPane.general]);
 
     const completedCount = group.items.filter((i) => i.isCompleted).length;
     const totalCount = group.items.length;
