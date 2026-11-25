@@ -151,6 +151,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     // Init task contents
     const [taskContent, setTaskContent] = useState<TaskProps>();
+    // Latest values for effects that are keyed on something else (title, body, submit flag):
+    // reading them here keeps those effects from re-running on every content or manager change.
+    const taskContentRef = useRef(taskContent);
+    taskContentRef.current = taskContent;
+    const useTMRef = useRef(useTM);
+    useTMRef.current = useTM;
     const [taskTitle, setTaskTitle] = useState<string>("");
     // Seed the body with the correct kind's built-in template on mount so a
     // milestone form doesn't briefly show the task scaffold. The project
@@ -866,9 +872,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     // Update task title when it changes
     useEffect(() => {
-        if (taskContent && taskTitle !== "") {
+        const current = taskContentRef.current;
+        if (current && taskTitle !== "") {
             setTaskContent({
-                ...taskContent,
+                ...current,
                 title: taskTitle,
             });
         }
@@ -876,9 +883,10 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
 
     // Update task body when it changes
     useEffect(() => {
-        if (taskContent && body.length > 0) {
+        const current = taskContentRef.current;
+        if (current && body.length > 0) {
             setTaskContent({
-                ...taskContent,
+                ...current,
                 body: body,
             });
         }
@@ -887,11 +895,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
     // Update status once task is created
     useEffect(() => {
         if (isSubmitted) {
+            const tm = useTMRef.current;
             // The submitted task is now persisted to the backend — the
             // draft no longer represents in-progress work.
-            useTM.setTaskDraft(null);
-            if (useTM.setIsCreatingTask) {
-                useTM.setIsCreatingTask({
+            tm.setTaskDraft(null);
+            if (tm.setIsCreatingTask) {
+                tm.setIsCreatingTask({
                     flag: false,
                     parentTaskId: null,
                     rootTaskId: null,
@@ -905,12 +914,12 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             // mount starts from a clean slate; the bootstrap effect's
             // ref guard backstops this, but keeping the global truthful
             // avoids confusing other readers.
-            if (useTM.setInitialEmptyTaskId) {
-                useTM.setInitialEmptyTaskId(undefined);
+            if (tm.setInitialEmptyTaskId) {
+                tm.setInitialEmptyTaskId(undefined);
             }
-            if (useTM.setIsNewTaskCreated) {
+            if (tm.setIsNewTaskCreated) {
                 setTimeout(() => {
-                    useTM.setIsNewTaskCreated(true);
+                    tm.setIsNewTaskCreated(true);
                 }, 500);
             }
         }

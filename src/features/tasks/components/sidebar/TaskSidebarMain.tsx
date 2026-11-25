@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import { Box, List, Sheet } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -101,8 +101,11 @@ const TaskSidebarBody = memo(function TaskSidebarBody(props: TaskSidebarBodyProp
         })();
     };
 
+    // Keyed on team and token only: the reload reads the latest closure through a ref.
+    const updateRecentTasksRef = useRef(updateRecentTasks);
+    updateRecentTasksRef.current = updateRecentTasks;
     useEffect(() => {
-        updateRecentTasks();
+        updateRecentTasksRef.current();
     }, [myself?.teamId, accessToken]);
 
     // An open is recorded by the task preview wherever it is shown (this sidebar
