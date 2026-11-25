@@ -125,6 +125,8 @@ export interface AgentMentionCandidate {
     skillOwner?: string;
     /** `/skill`: the skill's title, searched beside its name and shown on the row. */
     skillTitle?: string;
+    /** `/skill`: its tags as chips (MIP-2398); the built-in `template` one marks an official template. */
+    skillTags?: ReadonlyArray<{ name: string; color: string }>;
 }
 
 export const mentionKey = (ref: AgentMentionRef): string => {

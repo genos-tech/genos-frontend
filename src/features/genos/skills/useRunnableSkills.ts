@@ -15,6 +15,7 @@ const toCandidate = (s: RunnableSkill): AgentMentionCandidate => {
         skillGroup: s.group,
         skillOwner: s.ownerName || undefined,
         skillTitle: s.title,
+        skillTags: s.tagChips.length > 0 ? s.tagChips : undefined,
     };
 };
 

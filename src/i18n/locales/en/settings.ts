@@ -354,6 +354,8 @@ export const settings = {
         skillPlaceholder: "Choose a skill",
         skillLoading: "Loading skills…",
         skillNone: "You have no skill to run yet. Write one in Skills first.",
+        skillTagFilter: "Filter skills by tag",
+        skillNoMatch: "No skill has all of these tags.",
         skillNotPublished: "{name} (share it with your team to publish a version first)",
         errorSkill: "Choose a skill.",
         effortHintNoEstimate:

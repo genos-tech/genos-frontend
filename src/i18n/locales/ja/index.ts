@@ -5086,6 +5086,8 @@ export const ja: DeepPartial<Messages> = {
             skillPlaceholder: "スキルを選択",
             skillLoading: "スキルを読み込み中…",
             skillNone: "実行できるスキルがまだありません。先にスキルを作成してください。",
+            skillTagFilter: "タグでスキルを絞り込む",
+            skillNoMatch: "これらのタグをすべて持つスキルはありません。",
             skillNotPublished: "{name}（先にチームと共有してバージョンを公開してください）",
             errorSkill: "スキルを選択してください。",
             effortHintNoEstimate:

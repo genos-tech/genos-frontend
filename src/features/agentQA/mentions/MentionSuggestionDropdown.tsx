@@ -59,6 +59,7 @@ import { fmt, useTranslation, type Messages } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
 import { StatusLabel } from "../../tasks/components/meta/StatusLabel";
+import { ProjectTagChip } from "../../tasks/components/ProjectTagChip";
 import type { AgentMentionCandidate, AgentMentionRef } from "./types";
 
 // Above the Spotlight sheet (13100) and every Joy modal so the portaled
@@ -399,6 +400,17 @@ export const MentionSuggestionDropdown = ({
                             badge={
                                 c.isSelf ? (
                                     <MentionSelfChip label={t.common.editor.mentionYou} />
+                                ) : c.skillTags && c.skillTags.length > 0 ? (
+                                    // A skill's tags (MIP-2398), at most two so a long title keeps its room.
+                                    <Box sx={{ display: "inline-flex", gap: 0.5 }}>
+                                        {c.skillTags.slice(0, 2).map((tag) => (
+                                            <ProjectTagChip
+                                                key={tag.name}
+                                                label={tag.name}
+                                                tagColor={tag.color}
+                                            />
+                                        ))}
+                                    </Box>
                                 ) : undefined
                             }
                         />
