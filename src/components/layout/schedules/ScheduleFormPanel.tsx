@@ -83,6 +83,9 @@ type Props = {
     aiCreditsOut?: boolean;
     /** The member's schedules on screen, for the instant "you already have this" check. */
     existing?: Schedule[];
+    /** Parameters shown but not editable, with the one sentence that says why (MIP-2397: where a
+     *  dashboard's page was saved cannot be changed once the page exists). Only for an edit. */
+    lockedParams?: { keys: readonly string[]; hint: string };
     timeZone: string;
     /** Resolves with the server's verdict; the panel shows its sentence. */
     onSubmit: (body: ScheduleFields | ScheduleChange) => Promise<ScheduleResult<object>>;
@@ -114,6 +117,7 @@ export const ScheduleFormPanel = ({
     chatTargets = [],
     aiCreditsOut = false,
     existing = [],
+    lockedParams,
     timeZone,
     onSubmit,
     onCancel,
@@ -366,6 +370,13 @@ export const ScheduleFormPanel = ({
                             // A milestone or project that the chosen dashboard kind does not use.
                             if (!paramApplies(job, key, form.params)) return null;
                             const problem = show ? problems.params[key] : undefined;
+                            // A locked parameter is shown, not editable. The hint is said once,
+                            // under the first locked one.
+                            const locked = lockedParams?.keys.includes(key) === true;
+                            const lockHint =
+                                locked && key === lockedParams?.keys.find((k) => k in job.params)
+                                    ? lockedParams.hint
+                                    : null;
                             const required = paramRequiredNow(job, key, spec, form.params);
                             const range =
                                 spec.minimum !== undefined && spec.maximum !== undefined
@@ -549,6 +560,7 @@ export const ScheduleFormPanel = ({
                                         />
                                     ) : kind === "enum" ? (
                                         <Select
+                                            disabled={locked}
                                             placeholder={required ? s.paramChoose : s.paramDefault}
                                             sx={{ minWidth: 0 }}
                                             value={form.params[key] || null}
@@ -565,6 +577,7 @@ export const ScheduleFormPanel = ({
                                         </Select>
                                     ) : (
                                         <Input
+                                            disabled={locked}
                                             placeholder={s.paramDefault}
                                             value={form.params[key] ?? ""}
                                             slotProps={{
@@ -585,10 +598,16 @@ export const ScheduleFormPanel = ({
                                             onChange={(e) => setParam(e.target.value)}
                                         />
                                     )}
-                                    {hint && (
+                                    {lockHint ? (
                                         <FormHelperText sx={{ color: g.text.secondary }}>
-                                            {hint}
+                                            {lockHint}
                                         </FormHelperText>
+                                    ) : (
+                                        hint && (
+                                            <FormHelperText sx={{ color: g.text.secondary }}>
+                                                {hint}
+                                            </FormHelperText>
+                                        )
                                     )}
                                     {problem && (
                                         <FormHelperText>{problemText(problem)}</FormHelperText>

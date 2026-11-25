@@ -7569,6 +7569,17 @@ export const fr: DeepPartial<Messages> = {
                 newDashboardNoJob:
                     "Ce serveur ne peut pas encore créer de tableaux de bord. Réessayez plus tard.",
                 newDashboardLoadFailed: "Le formulaire n'a pas pu être chargé.",
+                editNamed: "Modifier {name}",
+                deleteNamed: "Supprimer {name}",
+                editTitle: "Modifier le tableau de bord",
+                editSaved: "Modifications enregistrées.",
+                editGone: "Ce tableau de bord n'existe plus. La liste a été actualisée.",
+                editLockedHint:
+                    "La page reste où elle est. Pour l'enregistrer ailleurs, déplacez la note.",
+                deleteTitle: "Supprimer ce tableau de bord ?",
+                deleteBody: "« {name} » ne sera plus mis à jour. La page reste dans vos notes.",
+                deleteDone: "Tableau de bord supprimé. Sa page reste dans vos notes.",
+                deleteFailed: "Le tableau de bord n'a pas pu être supprimé.",
             },
             tabToday: "Aujourd'hui",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

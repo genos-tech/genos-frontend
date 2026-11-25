@@ -4432,6 +4432,17 @@ export const hi: DeepPartial<Messages> = {
                 newDashboardSaved: "डैशबोर्ड शेड्यूल हो गया। पेज बनाने के लिए अभी चलाएँ।",
                 newDashboardNoJob: "यह सर्वर अभी डैशबोर्ड नहीं बना सकता। बाद में फिर कोशिश करें।",
                 newDashboardLoadFailed: "फ़ॉर्म लोड नहीं हो सका।",
+                editNamed: "{name} संपादित करें",
+                deleteNamed: "{name} हटाएँ",
+                editTitle: "डैशबोर्ड संपादित करें",
+                editSaved: "बदलाव सहेज लिए गए।",
+                editGone: "यह डैशबोर्ड अब मौजूद नहीं है। सूची ताज़ा कर दी गई है।",
+                editLockedHint:
+                    "पेज वहीं रहता है जहाँ है। इसे कहीं और सहेजने के लिए नोट को ले जाएँ।",
+                deleteTitle: "यह डैशबोर्ड हटाएँ?",
+                deleteBody: "“{name}” अब अपडेट नहीं होगा। पेज आपके नोट्स में रहेगा।",
+                deleteDone: "डैशबोर्ड हटा दिया गया। उसका पेज आपके नोट्स में है।",
+                deleteFailed: "डैशबोर्ड हटाया नहीं जा सका।",
             },
             tabToday: "आज",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

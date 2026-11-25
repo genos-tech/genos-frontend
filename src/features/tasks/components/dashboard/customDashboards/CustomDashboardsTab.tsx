@@ -1,25 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DashboardCustomizeRoundedIcon from "@mui/icons-material/DashboardCustomizeRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
-import { Box, Button, Typography } from "@mui/joy";
+import { Box, Button, IconButton, Typography } from "@mui/joy";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
+import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { SectionHeading } from "../../../../../components/ui/dashboard";
 import { EmptyState } from "../../../../../components/ui/feedback/EmptyState";
 import { SkeletonLines } from "../../../../../components/ui/feedback/Skeleton";
 import { toast } from "../../../../../components/ui/feedback/toastStore";
+import { ConfirmDialog } from "../../../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../../../context/authState";
 import { fmt, useTranslation } from "../../../../../i18n";
-import { runScheduleNow } from "../../../../../services/schedules";
+import { deleteSchedule, runScheduleNow } from "../../../../../services/schedules";
 import { focusRing, g } from "../../../../../theme/tokens";
 import { HtmlNoteView } from "../../../../notes/common/components/HtmlNoteView";
 import { useCustomDashboards } from "../../../hooks/useCustomDashboards";
 import type { OwnDashboard, SharedDashboard } from "../../../services/loadCustomDashboards";
 import { formatAgentWhen } from "../agentActivity/agentActivityLinks";
 import { CUSTOM_DASHBOARD_PARAM } from "../dashboardTab";
-import { NewDashboardDialog } from "./NewDashboardDialog";
+import { DashboardScheduleDialog } from "./DashboardScheduleDialog";
 
 const TASKS_PATH = "/workspace/tasks";
 /** The HTML note viewer's `noteType` for a My Note (the API's `personal`). */
@@ -64,77 +68,171 @@ const sharedEntry = (row: SharedDashboard, by: string): Entry => ({
     shared: true,
 });
 
+/** Room kept at the end of an own row for its two icon buttons, so a title never runs under them. */
+const ACTIONS_ROOM = 76;
+
 const DashboardRow = ({
     entry,
     selected,
     onSelect,
+    onEdit,
+    onDelete,
+    editLabel,
+    deleteLabel,
 }: {
     entry: Entry;
     selected: boolean;
     onSelect: () => void;
-}) => (
-    <Box
-        aria-current={selected ? "true" : undefined}
-        component="button"
-        data-testid="custom-dashboard-row"
-        type="button"
-        sx={{
-            appearance: "none",
-            background: selected ? g.accent.subtle : "transparent",
-            border: 0,
-            borderRadius: "8px",
-            color: "inherit",
-            cursor: "pointer",
-            display: "block",
-            font: "inherit",
-            // One geometry for every row, own or shared: two lines, the same height.
-            maxWidth: "100%",
-            minHeight: 52,
-            minWidth: 0,
-            px: 1.25,
-            py: 0.75,
-            textAlign: "start",
-            width: "100%",
-            "&:hover": { background: selected ? g.accent.subtle : g.hover },
-            "&:focus-visible": focusRing,
-        }}
-        onClick={onSelect}
-    >
-        <Typography
-            level="title-sm"
+    /** Own dashboards only: a shared row has no actions. */
+    onEdit?: () => void;
+    onDelete?: () => void;
+    editLabel: string;
+    deleteLabel: string;
+}) => {
+    const actions = !!onEdit && !!onDelete;
+    return (
+        // The row is a container, not the button: a button cannot hold buttons. The actions sit over
+        // the row's end edge, hidden until hover or keyboard focus anywhere in the row (opacity, so
+        // they stay in the tab order), and always shown where there is no hover (touch).
+        <Box
+            data-dashboard-row=""
             sx={{
-                color: g.text.primary,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                borderRadius: "8px",
+                position: "relative",
+                "&:hover > button": { background: selected ? g.accent.subtle : g.hover },
+                ...(actions
+                    ? {
+                          "&:has(:focus-visible) > [data-dashboard-actions]": {
+                              opacity: 1,
+                              pointerEvents: "auto",
+                          },
+                          "@media (hover: hover)": {
+                              "&:hover > [data-dashboard-actions]": {
+                                  opacity: 1,
+                                  pointerEvents: "auto",
+                              },
+                          },
+                          "@media (hover: none)": {
+                              "& > [data-dashboard-actions]": {
+                                  opacity: 1,
+                                  pointerEvents: "auto",
+                              },
+                          },
+                      }
+                    : {}),
             }}
         >
-            {entry.title}
-        </Typography>
-        <Typography
-            level="body-xs"
-            sx={{
-                color: g.text.secondary,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-            }}
-        >
-            {entry.meta}
-        </Typography>
-    </Box>
-);
+            <Box
+                aria-current={selected ? "true" : undefined}
+                component="button"
+                data-testid="custom-dashboard-row"
+                type="button"
+                sx={{
+                    appearance: "none",
+                    background: selected ? g.accent.subtle : "transparent",
+                    border: 0,
+                    borderRadius: "8px",
+                    color: "inherit",
+                    cursor: "pointer",
+                    display: "block",
+                    font: "inherit",
+                    // One geometry for every row, own or shared: two lines, the same height.
+                    maxWidth: "100%",
+                    minHeight: 52,
+                    minWidth: 0,
+                    px: 1.25,
+                    ...(actions ? { pe: `${ACTIONS_ROOM}px` } : {}),
+                    py: 0.75,
+                    textAlign: "start",
+                    width: "100%",
+                    "&:focus-visible": focusRing,
+                }}
+                onClick={onSelect}
+            >
+                <Typography
+                    level="title-sm"
+                    sx={{
+                        color: g.text.primary,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {entry.title}
+                </Typography>
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        color: g.text.secondary,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {entry.meta}
+                </Typography>
+            </Box>
+            {actions && (
+                <Box
+                    data-dashboard-actions=""
+                    sx={{
+                        alignItems: "center",
+                        display: "flex",
+                        gap: 0.25,
+                        insetBlock: 0,
+                        insetInlineEnd: 6,
+                        opacity: 0,
+                        pointerEvents: "none",
+                        position: "absolute",
+                    }}
+                >
+                    <AppTooltip title={editLabel}>
+                        <IconButton
+                            aria-label={editLabel}
+                            data-testid="custom-dashboard-row-edit"
+                            size="sm"
+                            variant="plain"
+                            onClick={onEdit}
+                        >
+                            <EditRoundedIcon />
+                        </IconButton>
+                    </AppTooltip>
+                    <AppTooltip title={deleteLabel}>
+                        <IconButton
+                            aria-label={deleteLabel}
+                            color="danger"
+                            data-testid="custom-dashboard-row-delete"
+                            size="sm"
+                            variant="plain"
+                            onClick={onDelete}
+                        >
+                            <DeleteOutlineRoundedIcon />
+                        </IconButton>
+                    </AppTooltip>
+                </Box>
+            )}
+        </Box>
+    );
+};
 
 const Group = ({
     label,
     entries,
     selectedKey,
     onSelect,
+    onEdit,
+    onDelete,
+    editLabel,
+    deleteLabel,
 }: {
     label: string;
     entries: Entry[];
     selectedKey: string | null;
     onSelect: (entry: Entry) => void;
+    onEdit?: (entry: Entry) => void;
+    onDelete?: (entry: Entry) => void;
+    editLabel?: (entry: Entry) => string;
+    deleteLabel?: (entry: Entry) => string;
 }) => (
     <Box aria-label={label} component="section" sx={{ minWidth: 0 }}>
         <Typography
@@ -148,8 +246,12 @@ const Group = ({
             {entries.map((entry) => (
                 <DashboardRow
                     key={entry.key}
+                    deleteLabel={deleteLabel?.(entry) ?? ""}
+                    editLabel={editLabel?.(entry) ?? ""}
                     entry={entry}
                     selected={entry.key === selectedKey}
+                    onDelete={onDelete ? () => onDelete(entry) : undefined}
+                    onEdit={onEdit ? () => onEdit(entry) : undefined}
                     onSelect={() => onSelect(entry)}
                 />
             ))}
@@ -257,6 +359,38 @@ export const CustomDashboardsTab = ({ teamId }: Props) => {
     };
 
     const [creating, setCreating] = useState(false);
+    // Edit (MIP-2397): the dialog for a saved dashboard schedule; `hasNote` locks where its page is.
+    const [editing, setEditing] = useState<{ scheduleId: string; hasNote: boolean } | null>(null);
+    const edit = (entry: Entry) => {
+        if (entry.scheduleId)
+            setEditing({ scheduleId: entry.scheduleId, hasNote: entry.noteId != null });
+    };
+    // Delete: one confirm. The schedule goes; its page stays as an ordinary note in the member's notes.
+    const [deleting, setDeleting] = useState<Entry | null>(null);
+    const removeDashboard = async (entry: Entry): Promise<boolean> => {
+        if (!entry.scheduleId) return true;
+        const res = await deleteSchedule(accessToken, teamId, entry.scheduleId);
+        if (!res.ok && !res.gone) {
+            // The dialog shows a throw's message and stays open.
+            throw new Error(res.error || c.deleteFailed);
+        }
+        if (res.ok) toast.success(c.deleteDone, { id: "custom-dashboard-deleted" });
+        // The page is no longer a dashboard here: if the address named it, let go of it.
+        if (entry.noteId != null && search.get(CUSTOM_DASHBOARD_PARAM) === String(entry.noteId)) {
+            setSearch(
+                (prev) => {
+                    const next = new URLSearchParams(prev);
+                    next.delete(CUSTOM_DASHBOARD_PARAM);
+                    return next;
+                },
+                { replace: true }
+            );
+        }
+        view.refresh();
+        return true;
+    };
+    const editLabelOf = (entry: Entry) => fmt(c.editNamed, { name: entry.title });
+    const deleteLabelOf = (entry: Entry) => fmt(c.deleteNamed, { name: entry.title });
     const heading = <SectionHeading description={c.subtitle} title={c.heading} />;
     // The same heading with "New dashboard" beside it, once the lists are known.
     const headingWithNew = (
@@ -278,12 +412,32 @@ export const CustomDashboardsTab = ({ teamId }: Props) => {
             >
                 {c.newDashboard}
             </Button>
-            <NewDashboardDialog
+            <DashboardScheduleDialog
                 open={creating}
                 teamId={teamId}
                 onClose={() => setCreating(false)}
-                onCreated={view.refresh}
+                onSaved={view.refresh}
             />
+            <DashboardScheduleDialog
+                editing={editing}
+                open={editing !== null}
+                teamId={teamId}
+                onClose={() => setEditing(null)}
+                onSaved={view.refresh}
+            />
+            {deleting && (
+                <ConfirmDialog
+                    cancelLabel={t.common.actions.cancel}
+                    confirmLabel={t.common.actions.delete}
+                    description={fmt(c.deleteBody, { name: deleting.title })}
+                    title={c.deleteTitle}
+                    closeOnConfirm
+                    destructive
+                    open
+                    onClose={() => setDeleting(null)}
+                    onConfirm={() => removeDashboard(deleting)}
+                />
+            )}
         </Box>
     );
 
@@ -345,9 +499,13 @@ export const CustomDashboardsTab = ({ teamId }: Props) => {
                 >
                     {own.length > 0 && (
                         <Group
+                            deleteLabel={deleteLabelOf}
+                            editLabel={editLabelOf}
                             entries={own}
                             label={c.own}
                             selectedKey={selectedKey}
+                            onDelete={setDeleting}
+                            onEdit={edit}
                             onSelect={select}
                         />
                     )}
@@ -402,6 +560,17 @@ export const CustomDashboardsTab = ({ teamId }: Props) => {
                                 </Typography>
                             )}
                             <Box sx={{ display: "flex", gap: 0.75, marginInlineStart: "auto" }}>
+                                {selected.scheduleId && (
+                                    <IconButton
+                                        aria-label={editLabelOf(selected)}
+                                        data-testid="custom-dashboard-header-edit"
+                                        size="sm"
+                                        variant="outlined"
+                                        onClick={() => edit(selected)}
+                                    >
+                                        <EditRoundedIcon />
+                                    </IconButton>
+                                )}
                                 {selected.scheduleId && (
                                     <Button
                                         loading={running}
