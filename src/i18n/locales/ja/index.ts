@@ -7450,6 +7450,17 @@ export const ja: DeepPartial<Messages> = {
                 newDashboardNoJob:
                     "このサーバーではまだダッシュボードを作成できません。後でもう一度お試しください。",
                 newDashboardLoadFailed: "フォームを読み込めませんでした。",
+                editNamed: "「{name}」を編集",
+                deleteNamed: "「{name}」を削除",
+                editTitle: "ダッシュボードを編集",
+                editSaved: "変更を保存しました。",
+                editGone: "このダッシュボードはもうありません。一覧を更新しました。",
+                editLockedHint:
+                    "ページは今の場所に残ります。別の場所に保存するには、ノートを移動してください。",
+                deleteTitle: "このダッシュボードを削除しますか?",
+                deleteBody: "「{name}」は更新されなくなります。ページはノートに残ります。",
+                deleteDone: "ダッシュボードを削除しました。ページはノートに残っています。",
+                deleteFailed: "ダッシュボードを削除できませんでした。",
             },
             tabToday: "今日",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

@@ -4201,6 +4201,17 @@ export const es: DeepPartial<Messages> = {
                 newDashboardNoJob:
                     "Este servidor aún no puede crear paneles. Inténtalo más tarde.",
                 newDashboardLoadFailed: "No se pudo cargar el formulario.",
+                editNamed: "Editar {name}",
+                deleteNamed: "Eliminar {name}",
+                editTitle: "Editar panel",
+                editSaved: "Cambios guardados.",
+                editGone: "Este panel ya no existe. Se ha actualizado la lista.",
+                editLockedHint:
+                    "La página se queda donde está. Para guardarla en otro sitio, mueve la nota.",
+                deleteTitle: "¿Eliminar este panel?",
+                deleteBody: "«{name}» dejará de actualizarse. La página se queda en tus notas.",
+                deleteDone: "Panel eliminado. Su página sigue en tus notas.",
+                deleteFailed: "No se pudo eliminar el panel.",
             },
             tabToday: "Hoy",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

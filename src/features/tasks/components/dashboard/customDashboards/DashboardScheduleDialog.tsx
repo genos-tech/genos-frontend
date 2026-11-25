@@ -12,6 +12,7 @@ import { fmt, useTranslation } from "../../../../../i18n";
 import {
     createSchedule,
     listSchedules,
+    updateSchedule,
     type ScheduleChange,
     type ScheduleFields,
     type ScheduleList,
@@ -24,21 +25,29 @@ import { localizeJob } from "../../../../schedules/scheduleParams";
 /** The schedule job that makes a dashboard page (MIP-2353). */
 export const DASHBOARD_JOB = "ai_dashboard";
 
+/** What a dashboard's save place is made of; fixed once its page exists (MIP-2397). */
+const PLACE_PARAMS = ["save_to", "folder_id"] as const;
+
 type Props = {
     open: boolean;
     teamId: string;
+    /** Set to edit a saved dashboard schedule; empty makes a new one. `hasNote`: its page exists,
+     *  so where it is saved can no longer change (the API refuses to move it). */
+    editing?: { scheduleId: string; hasNote: boolean } | null;
     onClose: () => void;
     /** The schedule was saved: the tab reads its lists again. */
-    onCreated: () => void;
+    onSaved: () => void;
 };
 
 /**
- * "New dashboard" (MIP-2357): the EXISTING schedule form (`ScheduleFormPanel`), with the dashboard
- * job as the only report on offer. Nothing is built here beyond opening that form: the pickers for
- * kind, period and focus, the AI mode, the frequency and the audience refusals all come from the
- * form and the API, so what Settings > Schedules does for this job, this does too.
+ * "New dashboard" (MIP-2357) and "Edit dashboard" (MIP-2397): the EXISTING schedule form
+ * (`ScheduleFormPanel`), with the dashboard job as the only report on offer. Nothing is built here
+ * beyond opening that form: the pickers for kind, period and focus, the AI mode, the frequency and
+ * the audience refusals all come from the form and the API, so what Settings > Schedules does for
+ * this job, this does too. Editing sends what changed (`buildPatch`); the report itself cannot be
+ * switched (the form lists only this one), so a dashboard stays a dashboard.
  */
-export const NewDashboardDialog = ({ open, teamId, onClose, onCreated }: Props) => {
+export const DashboardScheduleDialog = ({ open, teamId, editing, onClose, onSaved }: Props) => {
     const { t } = useTranslation();
     const c = t.tasks.dashboard.customDashboards;
     const s = t.settings.schedules;
@@ -72,13 +81,36 @@ export const NewDashboardDialog = ({ open, teamId, onClose, onCreated }: Props) 
     const [refusedByPlan, setRefusedByPlan] = useState(false);
     const planBlocked = (!!list && list.planAllowed === false) || refusedByPlan;
 
+    const target = editing ? list?.schedules.find((x) => x.id === editing.scheduleId) : undefined;
+
     const submit = async (
         body: ScheduleFields | ScheduleChange
     ): Promise<ScheduleResult<object>> => {
+        if (editing) {
+            // Nothing changed: nothing to ask the server.
+            if (Object.keys(body).length === 0) {
+                onClose();
+                return { ok: true };
+            }
+            const saved = await updateSchedule(accessToken, teamId, editing.scheduleId, body);
+            if (saved.ok) {
+                toast.success(c.editSaved, { id: "custom-dashboard-edited" });
+                onSaved();
+                onClose();
+            } else if (saved.planRequired) {
+                setRefusedByPlan(true);
+            } else if (saved.gone) {
+                // Deleted elsewhere since the list was read: say so, and show the real list.
+                toast.error(c.editGone, { id: "custom-dashboard-edited" });
+                onSaved();
+                onClose();
+            }
+            return saved;
+        }
         const res = await createSchedule(accessToken, teamId, body as ScheduleFields);
         if (res.ok) {
             toast.success(c.newDashboardSaved, { id: "custom-dashboard-created" });
-            onCreated();
+            onSaved();
             onClose();
         } else if (res.planRequired) {
             setRefusedByPlan(true);
@@ -93,7 +125,7 @@ export const NewDashboardDialog = ({ open, teamId, onClose, onCreated }: Props) 
             icon={<DashboardCustomizeRoundedIcon sx={{ color: g.accent.text }} />}
             open={open}
             size="lg"
-            title={c.newDashboardTitle}
+            title={editing ? c.editTitle : c.newDashboardTitle}
             zIndex={theme.zIndex.modal}
             clearBottomBar
             headerDivider
@@ -127,18 +159,31 @@ export const NewDashboardDialog = ({ open, teamId, onClose, onCreated }: Props) 
                 <Typography level="body-sm" role="status" sx={{ color: g.text.secondary }}>
                     {c.newDashboardNoJob}
                 </Typography>
+            ) : editing && !target ? (
+                // The schedule is not in the list any more: deleted elsewhere.
+                <Typography level="body-sm" role="status" sx={{ color: g.text.secondary }}>
+                    {c.editGone}
+                </Typography>
             ) : (
                 <>
-                    <Typography level="body-sm" sx={{ color: g.text.secondary, mb: 1.5 }}>
-                        {c.newDashboardIntro}
-                    </Typography>
+                    {!editing && (
+                        <Typography level="body-sm" sx={{ color: g.text.secondary, mb: 1.5 }}>
+                            {c.newDashboardIntro}
+                        </Typography>
+                    )}
                     <ScheduleFormPanel
+                        key={editing?.scheduleId ?? "new"}
                         aiCreditsOut={list.aiCreditsOut === true}
                         chatTargets={list.chatTargets ?? []}
                         existing={list.schedules}
                         jobs={[localizeJob(job, s)]}
-                        schedule={null}
+                        schedule={target ?? null}
                         timeZone={list.timeZone}
+                        lockedParams={
+                            editing?.hasNote
+                                ? { keys: PLACE_PARAMS, hint: c.editLockedHint }
+                                : undefined
+                        }
                         onCancel={onClose}
                         onSubmit={submit}
                     />
