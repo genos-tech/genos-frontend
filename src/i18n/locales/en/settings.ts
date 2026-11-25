@@ -334,6 +334,11 @@ export const settings = {
         saveToLoadFailed: "Folders could not be loaded.",
         paramChoose: "Choose…",
         // The dashboard page (MIP-2357).
+        paramSource: "Made by",
+        paramSourceHint:
+            "A built-in page for a milestone, a project or your own progress, or a page one of your skills makes from your data. A page made by a skill is saved where only you can read it.",
+        sourceTemplate: "Built-in page",
+        sourceSkill: "A skill I choose",
         paramKind: "Dashboard of",
         paramKindHint: "What the page covers: one milestone, one project, or your own progress.",
         paramPeriod: "Period",

@@ -1247,6 +1247,11 @@ export const ar: DeepPartial<Messages> = {
             saveToLoading: "جارٍ تحميل المجلدات…",
             saveToLoadFailed: "تعذّر تحميل المجلدات.",
             paramChoose: "اختر…",
+            paramSource: "يُنشأ بواسطة",
+            paramSourceHint:
+                "صفحة مدمجة لمعلم أو مشروع أو تقدمك الشخصي، أو صفحة تنشئها إحدى مهاراتك من بياناتك. تُحفظ الصفحة التي تنشئها مهارة في مكان لا يقرأه غيرك.",
+            sourceTemplate: "صفحة مدمجة",
+            sourceSkill: "مهارة أختارها",
             paramKind: "لوحة معلومات عن",
             paramKindHint: "ما تغطيه الصفحة: معلَم واحد أو مشروع واحد أو تقدمك الخاص.",
             paramPeriod: "الفترة",

@@ -5154,6 +5154,11 @@ export const fr: DeepPartial<Messages> = {
             saveToLoading: "Chargement des dossiers…",
             saveToLoadFailed: "Les dossiers n'ont pas pu être chargés.",
             paramChoose: "Choisir…",
+            paramSource: "Créé par",
+            paramSourceHint:
+                "Une page intégrée pour un jalon, un projet ou votre propre progression, ou une page qu'une de vos compétences crée à partir de vos données. Une page créée par une compétence est enregistrée là où vous seul pouvez la lire.",
+            sourceTemplate: "Page intégrée",
+            sourceSkill: "Une compétence de mon choix",
             paramKind: "Tableau de bord de",
             paramKindHint:
                 "Ce que couvre la page : un jalon, un projet ou votre propre progression.",

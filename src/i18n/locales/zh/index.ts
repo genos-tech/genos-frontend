@@ -4867,6 +4867,11 @@ export const zh: DeepPartial<Messages> = {
             saveToLoading: "正在加载文件夹…",
             saveToLoadFailed: "无法加载文件夹。",
             paramChoose: "请选择…",
+            paramSource: "生成方式",
+            paramSourceHint:
+                "为里程碑、项目或你自己的进度生成的内置页面，或由你的某个技能根据你的数据生成的页面。由技能生成的页面会保存在只有你能阅读的位置。",
+            sourceTemplate: "内置页面",
+            sourceSkill: "我选择的技能",
             paramKind: "仪表板对象",
             paramKindHint: "页面涵盖的内容：一个里程碑、一个项目，或你自己的进度。",
             paramPeriod: "时间范围",

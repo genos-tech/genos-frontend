@@ -46,9 +46,33 @@ export interface KnownParam {
     /** Drawn, sent and required only while another parameter of the same job has this value: a
      *  dashboard's milestone belongs to `kind = milestone` alone, and the API refuses it with any
      *  other kind. A job that does not declare that other parameter is not gated (`project_id`
-     *  of the project reports). */
-    onlyWhen?: { param: string; value: string };
+     *  of the project reports). Several gates must ALL hold (a milestone is for a built-in page of
+     *  kind milestone, MIP-2399). */
+    onlyWhen?: ParamGate | ParamGate[];
+    /** With `onlyWhen`: it is drawn and sent only then, but a member may leave it empty. (A gated
+     *  parameter is otherwise required while it is shown: a dashboard's milestone.) */
+    optionalWhenShown?: boolean;
+    /** What an enum select shows while nothing is typed: the value the server uses by default. */
+    defaultValue?: string;
 }
+
+/** `value`: what the other parameter must be. `unset`: what an EMPTY other parameter counts as
+ *  (a dashboard with no `source` is a built-in one). */
+export interface ParamGate {
+    param: string;
+    value: string;
+    unset?: string;
+}
+
+const TEMPLATE_SOURCE: ParamGate = { param: "source", value: "template", unset: "template" };
+const SKILL_SOURCE: ParamGate = { param: "source", value: "skill" };
+
+const gatesOf = (known: KnownParam | undefined): ParamGate[] =>
+    known?.onlyWhen === undefined
+        ? []
+        : Array.isArray(known.onlyWhen)
+          ? known.onlyWhen
+          : [known.onlyWhen];
 
 export const KNOWN_PARAMS: Record<string, KnownParam> = {
     changed_hours: { label: "paramChangedHours", hint: "paramChangedHoursHint" },
@@ -57,7 +81,7 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         hint: "paramProjectHint",
         requiredHint: "paramProjectRequiredHint",
         picker: "project",
-        onlyWhen: { param: "kind", value: "project" },
+        onlyWhen: [TEMPLATE_SOURCE, { param: "kind", value: "project" }],
     },
     day: { label: "paramDay", hint: "paramDayHint" },
     days: { label: "paramDays", hint: "paramDaysHint" },
@@ -65,7 +89,7 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         label: "paramMilestone",
         hint: "paramMilestoneHint",
         picker: "milestone",
-        onlyWhen: { param: "kind", value: "milestone" },
+        onlyWhen: [TEMPLATE_SOURCE, { param: "kind", value: "milestone" }],
     },
     hours: { label: "paramHours", hint: "paramHoursHint" },
     ai_sentences: {
@@ -75,15 +99,37 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         aiSwitch: true,
         guideId: "spotlight.scheduleMode",
         preferOwnHint: true,
+        onlyWhen: TEMPLATE_SOURCE,
+        optionalWhenShown: true,
     },
     // A schedule that runs a skill (MIP-2045). The skill is picked by name; the version it runs
     // is the published one, pinned by the server when the schedule is saved, so it is carried
     // along untouched and never drawn (a member who picks another skill drops it).
-    skill_id: { label: "paramSkill", hint: "paramSkillHint", picker: "skill" },
-    version_no: { label: "paramSkill", hint: "paramSkillHint", hidden: true },
+    skill_id: {
+        label: "paramSkill",
+        hint: "paramSkillHint",
+        picker: "skill",
+        onlyWhen: SKILL_SOURCE,
+    },
+    // The server pins it: carried and sent, never drawn, never asked for.
+    version_no: {
+        label: "paramSkill",
+        hint: "paramSkillHint",
+        hidden: true,
+        onlyWhen: SKILL_SOURCE,
+        optionalWhenShown: true,
+    },
+
     // The one group chat a catch-up covers (MIP-2348); empty means every busy chat.
     channel_id: { label: "paramChat", hint: "paramChatHint", picker: "chat" },
-    input: { label: "paramSkillInput", hint: "paramSkillInputHint" },
+    input: {
+        label: "paramSkillInput",
+        hint: "paramSkillInputHint",
+        onlyWhen: SKILL_SOURCE,
+        optionalWhenShown: true,
+    },
+    // What makes a dashboard page (MIP-2399): the built-in pages, or one of the member's skills.
+    source: { label: "paramSource", hint: "paramSourceHint", defaultValue: "template" },
     // Where the page is saved (MIP-2357): ONE picker draws `folder_id` and sets it together with
     // `save_to`, which is therefore never drawn on its own.
     save_to: { label: "paramSaveTo", hint: "paramSaveToHint", hidden: true },
@@ -93,16 +139,21 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         label: "paramKind",
         hint: "paramKindHint",
         guideId: "spotlight.scheduleDashboardKind",
+        onlyWhen: TEMPLATE_SOURCE,
     },
     period: {
         label: "paramPeriod",
         hint: "paramPeriodHint",
         guideId: "spotlight.scheduleDashboardPeriod",
+        onlyWhen: TEMPLATE_SOURCE,
+        optionalWhenShown: true,
     },
     focus: {
         label: "paramFocus",
         hint: "paramFocusHint",
         guideId: "spotlight.scheduleDashboardFocus",
+        onlyWhen: TEMPLATE_SOURCE,
+        optionalWhenShown: true,
     },
 };
 
@@ -127,10 +178,13 @@ export const paramApplies = (
     key: string,
     typed: Record<string, string>
 ): boolean => {
-    const gate = knownParam(key)?.onlyWhen;
-    if (!gate || !job || !Object.prototype.hasOwnProperty.call(job.params, gate.param))
-        return true;
-    return (typed[gate.param] ?? "") === gate.value;
+    if (!job) return true;
+    // Every gate whose other parameter the job declares must hold.
+    return gatesOf(knownParam(key)).every((gate) => {
+        if (!Object.prototype.hasOwnProperty.call(job.params, gate.param)) return true;
+        const have = typed[gate.param] ?? "";
+        return (have === "" ? (gate.unset ?? "") : have) === gate.value;
+    });
 };
 
 /** Whether the form must have a value for it: the catalog says so, or it is a gated parameter
@@ -142,11 +196,14 @@ export const paramRequiredNow = (
     typed: Record<string, string>
 ): boolean => {
     if (isRequiredParam(spec)) return true;
-    const gate = knownParam(key)?.onlyWhen;
+    const known = knownParam(key);
+    if (known?.optionalWhenShown) return false;
+    // Gated and shown: required, when the job declares at least one of its gates.
     return (
-        !!gate &&
         !!job &&
-        Object.prototype.hasOwnProperty.call(job.params, gate.param) &&
+        gatesOf(known).some((gate) =>
+            Object.prototype.hasOwnProperty.call(job.params, gate.param)
+        ) &&
         paramApplies(job, key, typed)
     );
 };
@@ -158,6 +215,8 @@ export const ENUM_LABELS = {
     milestone: "kindMilestone",
     project: "kindProject",
     mine: "kindMine",
+    template: "sourceTemplate",
+    skill: "sourceSkill",
     week: "periodWeek",
     month: "periodMonth",
     quarter: "periodQuarter",
