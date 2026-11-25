@@ -1332,6 +1332,33 @@ export const tasks = {
             teamLoadHide: "Hide team load",
         },
         tabAgentActivity: "Agent Activity",
+        tabCustomDashboards: "Custom dashboards by AI",
+        customDashboards: {
+            heading: "Custom dashboards by AI",
+            subtitle:
+                "Pages your AI schedules keep up to date, and dashboards teammates share with you. Only what you can already open.",
+            listLabel: "Dashboards",
+            own: "Yours",
+            shared: "Shared with you",
+            updated: "Updated {when}",
+            notRun: "Not run yet",
+            paused: "Paused",
+            sharedBy: "By {name}",
+            runNow: "Run now",
+            openNote: "Open note",
+            runDone: "Dashboard updated.",
+            runFailed: "The dashboard could not be updated.",
+            notRunTitle: "This dashboard has not run yet",
+            notRunBody: "Run it now to build the page.",
+            emptyTitle: "No dashboards yet",
+            emptyBody:
+                "Dashboards your AI schedules keep up to date, and ones teammates share with you, appear here.",
+            unavailableTitle: "Dashboards are not available yet",
+            unavailableBody: "This server cannot list dashboards yet. Try again later.",
+            errorTitle: "Dashboards could not be loaded",
+            errorBody: "Check your connection and try again.",
+            retry: "Try again",
+        },
         tabToday: "Today",
         // MIP-1005 / MIP-1696: every string of the Today view is a DRAFT for a native reader (TODO(copy)).
         today: {

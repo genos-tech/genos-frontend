@@ -12,6 +12,7 @@ import {
     withoutTrailingBlank,
     withTrailingBlank,
 } from "./utils/messageBlocks";
+import { useInsertSelectedEmoji } from "./utils/useInsertSelectedEmoji";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { getFirstLine } from "../../features/chat/utils/common";
@@ -136,6 +137,11 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         },
     });
     const { editor } = composer;
+    // Latest editor for effects that must keep their own trigger deps.
+    const editorRef = useRef(editor);
+    useEffect(() => {
+        editorRef.current = editor;
+    });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
@@ -156,21 +162,17 @@ export const BnUpdateThreadEditor = (props: BnUpdateThreadEditorProps) => {
         );
         setShowGifPicker(false);
     };
-    useEffect(() => {
-        if (selectedEmoji !== null) {
-            insertEmoji(selectedEmoji);
-        }
-    }, [selectedEmoji]);
+    useInsertSelectedEmoji(selectedEmoji, insertEmoji);
 
     useEffect(() => {
         if (isInEdit === false) {
-            editor.replaceBlocks(editor.document, []);
+            editorRef.current.replaceBlocks(editorRef.current.document, []);
         }
     }, [isInEdit]);
 
     useEffect(() => {
         const newInitialContent = withoutTrailingBlank(message.content);
-        replaceBlocksSafely(editor, newInitialContent, "editing the message");
+        replaceBlocksSafely(editorRef.current, newInitialContent, "editing the message");
     }, [message]);
 
     return (

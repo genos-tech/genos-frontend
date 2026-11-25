@@ -8,6 +8,9 @@ import type { TaskDashboardTab } from "./taskHomeTypes";
 export const TASKS_PATH = "/workspace/tasks";
 /** The address-bar parameter that names the open dashboard tab: `?view=today`. */
 export const DASHBOARD_VIEW_PARAM = "view";
+/** The open dashboard of the Custom dashboards tab (`?view=custom&dashboard=<note id>`); it belongs to
+ *  that tab only, so any other tab (or leaving) drops it. */
+export const CUSTOM_DASHBOARD_PARAM = "dashboard";
 
 export const DASHBOARD_TABS: readonly TaskDashboardTab[] = [
     "today",
@@ -15,6 +18,7 @@ export const DASHBOARD_TABS: readonly TaskDashboardTab[] = [
     "milestones",
     "people",
     "agent",
+    "custom",
 ];
 
 export const isDashboardTab = (v: unknown): v is TaskDashboardTab =>
@@ -95,6 +99,7 @@ export const useDashboardTab = (userId: string) => {
         const next = new URLSearchParams(search);
         if (tab) next.set(DASHBOARD_VIEW_PARAM, tab);
         else next.delete(DASHBOARD_VIEW_PARAM);
+        if (tab !== "custom") next.delete(CUSTOM_DASHBOARD_PARAM);
         const qs = next.toString();
         navigate({ pathname, search: qs ? `?${qs}` : "" }, { replace: true });
     };

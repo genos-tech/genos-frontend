@@ -46,12 +46,12 @@ export type NoteMetaTreeNode = MyNoteMetaTreeNode | TaskNoteMetaTreeNode | ChatN
 export interface NoteTreeState<T extends BaseNoteTreeNode> {
     tmpCurrentChain: T[] | undefined;
     tmpMetaTree: T[];
-    timestamp: string;
 }
 
 export interface UseNoteTreeStateProps<T extends BaseNoteTreeNode> {
     metaTree: T[];
     currentChain: T[] | undefined;
-    selectedTabIndex: number;
+    // Not read by the hook (MIP-2379).
+    selectedTabIndex?: number;
     currentNote: any;
 }

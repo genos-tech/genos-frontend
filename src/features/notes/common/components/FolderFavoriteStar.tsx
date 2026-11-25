@@ -3,9 +3,9 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { IconButton } from "@mui/joy";
 
 import { NAV_KEEP_CLASS } from "../../../../components/ui/nav/navStyles";
-import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
+import { NoteSidebarRowNM } from "./noteSidebarSlices";
 
 // A folder row's favorite star (MIP-747): always shown once starred
 // (NAV_KEEP_CLASS opts it out of the row's action fade), otherwise revealed
@@ -15,7 +15,7 @@ export const FolderFavoriteStar = ({
     useNM,
 }: {
     folderId: number;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM;
 }) => {
     const { t } = useTranslation();
     const isFavorited = useNM.isFolderFavorited(folderId);

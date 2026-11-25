@@ -128,9 +128,15 @@ export const useNotifications = (
         await updateNotificationPreferences(accessTokenRef.current, patch);
     }, []);
 
+    // The manager is a singleton built once: it reads the user id and the
+    // open-intent handler as they were on the first render (later changes
+    // reach it through `setCurrentUserId` / `setOnOpenIntent` below).
+    const initialUserIdRef = useRef(myself.userId);
+    const initialOnOpenIntentRef = useRef(onOpenIntent);
+
     const manager = useMemo(() => {
         const m = new NotificationManager({
-            currentUserId: myself.userId || null,
+            currentUserId: initialUserIdRef.current || null,
             onPreferencesChange: (patch) => {
                 pendingPatchRef.current = {
                     ...pendingPatchRef.current,
@@ -139,10 +145,10 @@ export const useNotifications = (
                 if (pushTimerRef.current) clearTimeout(pushTimerRef.current);
                 pushTimerRef.current = setTimeout(flushPush, PUSH_DEBOUNCE_MS);
             },
-            onOpenIntent,
+            onOpenIntent: initialOnOpenIntentRef.current,
         });
         return m;
-    }, []);
+    }, [flushPush]);
 
     // Keep the manager's currentUserId in sync as the user finishes auth.
     useEffect(() => {

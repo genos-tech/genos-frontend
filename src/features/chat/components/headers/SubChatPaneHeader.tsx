@@ -119,17 +119,19 @@ export const SubChatPaneHeader = (props: SubChatPaneHeaderProps) => {
     // handles its own state.
     const subChatIdLegacy = subChat ? (subChat.chatId as unknown as number) : undefined;
 
+    const hasSubChat = Boolean(subChat);
+    const subChatType = subChat?.chatType;
     const unreadActivityCount = useMemo(
         () =>
-            subChat
+            hasSubChat
                 ? useCM.activityMessages.filter(
                       (a) =>
-                          a.chatType === subChat.chatType &&
+                          a.chatType === subChatType &&
                           a.chatId === subChatIdLegacy &&
                           a.isRead === false
                   ).length
                 : 0,
-        [useCM.activityMessages, subChat?.chatType, subChatIdLegacy]
+        [useCM.activityMessages, hasSubChat, subChatType, subChatIdLegacy]
     );
 
     return (

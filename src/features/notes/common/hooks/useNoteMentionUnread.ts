@@ -105,8 +105,15 @@ export const useNoteMentionUnread = (
         [unreadKeys]
     );
 
+    // `markRead` reads the newest manager and user through a ref, so its identity depends on the
+    // token only. With `useCM` / `myself` in its dependencies the context value below changed on
+    // every render of the app and re-rendered every consumer, the whole notes sidebar among them
+    // (MIP-2379).
+    const latest = useRef({ useCM, myself });
+    latest.current = { useCM, myself };
     const markRead = useCallback(
         (noteType: number, noteId: number) => {
+            const { useCM, myself } = latest.current;
             if (!accessToken) return;
             const surface = noteTypeToSurface(noteType);
             const targets = (useCM.activityMessages || []).filter(
@@ -139,7 +146,7 @@ export const useNoteMentionUnread = (
                 useCM.setActivityMessages(list);
             })();
         },
-        [accessToken, myself, useCM]
+        [accessToken]
     );
 
     // Stable object identity so context consumers only re-render when the

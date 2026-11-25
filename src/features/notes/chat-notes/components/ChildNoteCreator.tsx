@@ -3,16 +3,12 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { ListItem } from "@mui/joy";
 
 import { NavItem } from "../../../../components/ui/nav/NavItem";
-import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
+import { NoteSidebarRowNM } from "../../common/components/noteSidebarSlices";
 
 interface ChildNoteCreatorProps {
     node: any;
-    // Not read here: it is part of the props so `memo` re-renders the button
-    // when the sidebar tree changes. It used to be baked into the root `key`,
-    // which remounted the button on every bump; keep it out of keys.
-    timestamp: string;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM;
 }
 
 export const ChildNoteCreator = memo(function ChildNoteCreator({

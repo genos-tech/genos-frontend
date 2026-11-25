@@ -13,6 +13,7 @@ import {
     withoutTrailingBlank,
     withTrailingBlank,
 } from "./utils/messageBlocks";
+import { useInsertSelectedEmoji } from "./utils/useInsertSelectedEmoji";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
@@ -143,6 +144,11 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
         },
     });
     const { editor } = composer;
+    // Latest editor for effects that must keep their own trigger deps.
+    const editorRef = useRef(editor);
+    useEffect(() => {
+        editorRef.current = editor;
+    });
 
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [showGifPicker, setShowGifPicker] = useState<boolean>(false);
@@ -166,26 +172,28 @@ export const BnUpdateTaskCommentEditor = (props: BnUpdateTaskCommentEditorProps)
 
     // Mirror the local line count back up to the task page. Editor
     // height is now controlled by App.css min/max-height bounds.
+    const taskCommentLinesRef = useRef(taskCommentLines);
+    const setTaskCommentLinesRef = useRef(setTaskCommentLines);
     useEffect(() => {
-        if (numEditorLines !== taskCommentLines) {
-            setTaskCommentLines(numEditorLines);
+        taskCommentLinesRef.current = taskCommentLines;
+        setTaskCommentLinesRef.current = setTaskCommentLines;
+    });
+    useEffect(() => {
+        if (numEditorLines !== taskCommentLinesRef.current) {
+            setTaskCommentLinesRef.current(numEditorLines);
         }
     }, [numEditorLines]);
 
     // Initial num of lines
     useEffect(() => {
-        setNumEditorLines(countEditorLines(editor.document));
+        setNumEditorLines(countEditorLines(editorRef.current.document));
     }, []);
 
-    useEffect(() => {
-        if (selectedEmoji !== null) {
-            insertEmoji(selectedEmoji);
-        }
-    }, [selectedEmoji]);
+    useInsertSelectedEmoji(selectedEmoji, insertEmoji);
 
     useEffect(() => {
         if (isInEdit === false) {
-            editor.replaceBlocks(editor.document, []);
+            editorRef.current.replaceBlocks(editorRef.current.document, []);
         }
     }, [isInEdit, taskId]);
 
