@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import DashboardCustomizeRoundedIcon from "@mui/icons-material/DashboardCustomizeRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -18,6 +19,7 @@ import { useCustomDashboards } from "../../../hooks/useCustomDashboards";
 import type { OwnDashboard, SharedDashboard } from "../../../services/loadCustomDashboards";
 import { formatAgentWhen } from "../agentActivity/agentActivityLinks";
 import { CUSTOM_DASHBOARD_PARAM } from "../dashboardTab";
+import { NewDashboardDialog } from "./NewDashboardDialog";
 
 const TASKS_PATH = "/workspace/tasks";
 /** The HTML note viewer's `noteType` for a My Note (the API's `personal`). */
@@ -254,7 +256,36 @@ export const CustomDashboardsTab = ({ teamId }: Props) => {
         }
     };
 
+    const [creating, setCreating] = useState(false);
     const heading = <SectionHeading description={c.subtitle} title={c.heading} />;
+    // The same heading with "New dashboard" beside it, once the lists are known.
+    const headingWithNew = (
+        <Box
+            sx={{
+                alignItems: "start",
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 1.5,
+                justifyContent: "space-between",
+            }}
+        >
+            <Box sx={{ flex: "1 1 260px", minWidth: 0 }}>{heading}</Box>
+            <Button
+                data-testid="new-dashboard"
+                size="sm"
+                startDecorator={<AddRoundedIcon />}
+                onClick={() => setCreating(true)}
+            >
+                {c.newDashboard}
+            </Button>
+            <NewDashboardDialog
+                open={creating}
+                teamId={teamId}
+                onClose={() => setCreating(false)}
+                onCreated={view.refresh}
+            />
+        </Box>
+    );
 
     if (view.status === "loading") {
         return (
@@ -285,7 +316,7 @@ export const CustomDashboardsTab = ({ teamId }: Props) => {
     if (all.length === 0) {
         return (
             <Box sx={{ display: "grid", gap: 2 }}>
-                {heading}
+                {headingWithNew}
                 <EmptyState
                     body={c.emptyBody}
                     data-empty="custom-dashboards"
@@ -298,7 +329,7 @@ export const CustomDashboardsTab = ({ teamId }: Props) => {
 
     return (
         <Box sx={{ display: "grid", gap: 2, minWidth: 0 }}>
-            {heading}
+            {headingWithNew}
             <Box
                 sx={{
                     alignItems: "start",

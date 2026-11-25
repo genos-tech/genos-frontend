@@ -39,6 +39,11 @@ export interface KnownParam {
     /** Kept in the form and sent, never drawn: the server's own bookkeeping that the member has no
      *  words for (`version_no`, the published version a schedule is pinned to, MIP-2045). */
     hidden?: boolean;
+    /** Drawn, sent and required only while another parameter of the same job has this value: a
+     *  dashboard's milestone belongs to `kind = milestone` alone, and the API refuses it with any
+     *  other kind. A job that does not declare that other parameter is not gated (`project_id`
+     *  of the project reports). */
+    onlyWhen?: { param: string; value: string };
 }
 
 export const KNOWN_PARAMS: Record<string, KnownParam> = {
@@ -48,6 +53,7 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         hint: "paramProjectHint",
         requiredHint: "paramProjectRequiredHint",
         picker: "project",
+        onlyWhen: { param: "kind", value: "project" },
     },
     day: { label: "paramDay", hint: "paramDayHint" },
     days: { label: "paramDays", hint: "paramDaysHint" },
@@ -55,6 +61,7 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         label: "paramMilestone",
         hint: "paramMilestoneHint",
         picker: "milestone",
+        onlyWhen: { param: "kind", value: "milestone" },
     },
     hours: { label: "paramHours", hint: "paramHoursHint" },
     ai_sentences: {
@@ -72,6 +79,10 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
     // The one group chat a catch-up covers (MIP-2348); empty means every busy chat.
     channel_id: { label: "paramChat", hint: "paramChatHint", picker: "chat" },
     input: { label: "paramSkillInput", hint: "paramSkillInputHint" },
+    // The dashboard page (MIP-2357): what it covers, over which window, and what to look at.
+    kind: { label: "paramKind", hint: "paramKindHint" },
+    period: { label: "paramPeriod", hint: "paramPeriodHint" },
+    focus: { label: "paramFocus", hint: "paramFocusHint" },
 };
 
 // Own-property lookups only: a key that arrives from the API must never read
@@ -88,10 +99,48 @@ export const isRequiredParam = (spec: JobParam): boolean => spec.required === tr
 export const paramHintKey = (known: KnownParam, required: boolean): TextKey =>
     required && known.requiredHint ? known.requiredHint : known.hint;
 
+/** Whether a parameter applies to the form as it is now: false only for a gated parameter
+ *  (`onlyWhen`) of a job that declares the gating one, while that one has another value. */
+export const paramApplies = (
+    job: ScheduleJob | undefined,
+    key: string,
+    typed: Record<string, string>
+): boolean => {
+    const gate = knownParam(key)?.onlyWhen;
+    if (!gate || !job || !Object.prototype.hasOwnProperty.call(job.params, gate.param))
+        return true;
+    return (typed[gate.param] ?? "") === gate.value;
+};
+
+/** Whether the form must have a value for it: the catalog says so, or it is a gated parameter
+ *  that applies (a project dashboard cannot be saved without its project). */
+export const paramRequiredNow = (
+    job: ScheduleJob | undefined,
+    key: string,
+    spec: JobParam,
+    typed: Record<string, string>
+): boolean => {
+    if (isRequiredParam(spec)) return true;
+    const gate = knownParam(key)?.onlyWhen;
+    return (
+        !!gate &&
+        !!job &&
+        Object.prototype.hasOwnProperty.call(job.params, gate.param) &&
+        paramApplies(job, key, typed)
+    );
+};
+
 /** The values a job's enum offers, in the member's language. Unknown value: the caller falls back. */
 export const ENUM_LABELS = {
     today: "paramDayToday",
     yesterday: "paramDayYesterday",
+    milestone: "kindMilestone",
+    project: "kindProject",
+    mine: "kindMine",
+    week: "periodWeek",
+    month: "periodMonth",
+    quarter: "periodQuarter",
+    year: "periodYear",
 } as const satisfies Record<string, TextKey>;
 
 export const enumLabelKey = (value: string): TextKey | undefined =>

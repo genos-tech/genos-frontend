@@ -182,6 +182,11 @@ export const settings = {
         job: "Report",
         jobPlaceholder: "Choose a report",
         jobCatalog: {
+            ai_dashboard: {
+                title: "Dashboard page",
+                description:
+                    "One living dashboard page for a milestone, a project or your own progress: counts by status, what was closed and created, and what is ready or blocked. The page is saved as one note and replaced each run.",
+            },
             what_to_do_today: {
                 title: "What to do today",
                 description:
@@ -311,6 +316,22 @@ export const settings = {
         paramChatHint:
             "Optional. Pick one group chat to catch up on, or leave it on all busy chats. Only chats you are in are listed.",
         chatAllBusy: "All busy chats",
+        paramChoose: "Choose…",
+        // The dashboard page (MIP-2357).
+        paramKind: "Dashboard of",
+        paramKindHint: "What the page covers: one milestone, one project, or your own progress.",
+        paramPeriod: "Period",
+        paramPeriodHint:
+            "How far back the numbers go. This is the data window, not how often it runs.",
+        paramFocus: "Focus",
+        paramFocusHint: "Optional. A few words on what the page should look at.",
+        kindMilestone: "A milestone",
+        kindProject: "A project",
+        kindMine: "My progress",
+        periodWeek: "Last week",
+        periodMonth: "Last month",
+        periodQuarter: "Last quarter",
+        periodYear: "Last year",
         paramSkillInput: "What to give it",
         paramSkillInputHint:
             "Optional. The words you would type after the skill's name, such as a project or a week.",

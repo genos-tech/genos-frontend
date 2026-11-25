@@ -4914,6 +4914,11 @@ export const ja: DeepPartial<Messages> = {
             job: "レポート",
             jobPlaceholder: "レポートを選択",
             jobCatalog: {
+                ai_dashboard: {
+                    title: "ダッシュボードページ",
+                    description:
+                        "マイルストーン、プロジェクト、または自分の進捗について、1つの最新ページを保ちます。ステータス別の件数、完了・作成されたもの、着手可能なものとブロックされたものを表示します。ページは1つのノートとして保存され、実行のたびに置き換わります。",
+                },
                 what_to_do_today: {
                     title: "今日やること",
                     description:
@@ -5043,6 +5048,21 @@ export const ja: DeepPartial<Messages> = {
             paramChatHint:
                 "任意です。振り返るグループチャットを1つ選ぶか、すべての盛り上がったチャットのままにします。自分が参加しているチャットだけが表示されます。",
             chatAllBusy: "盛り上がったチャットすべて",
+            paramChoose: "選択してください…",
+            paramKind: "ダッシュボードの対象",
+            paramKindHint:
+                "ページの対象です。マイルストーン、プロジェクト、または自分の進捗から選びます。",
+            paramPeriod: "期間",
+            paramPeriodHint: "数字をさかのぼる期間です。実行の頻度ではなく、データの範囲です。",
+            paramFocus: "注目する点",
+            paramFocusHint: "任意です。ページで見たいことを短く書きます。",
+            kindMilestone: "マイルストーン",
+            kindProject: "プロジェクト",
+            kindMine: "自分の進捗",
+            periodWeek: "直近1週間",
+            periodMonth: "直近1か月",
+            periodQuarter: "直近3か月",
+            periodYear: "直近1年",
             paramSkillInput: "スキルに渡す内容",
             paramSkillInputHint: "任意。スキル名の後に入力する言葉です（プロジェクトや週など）。",
             skillPlaceholder: "スキルを選択",
@@ -7414,6 +7434,15 @@ export const ja: DeepPartial<Messages> = {
                 errorTitle: "ダッシュボードを読み込めませんでした",
                 errorBody: "接続を確認して、もう一度お試しください。",
                 retry: "再試行",
+                newDashboard: "新しいダッシュボード",
+                newDashboardTitle: "新しいダッシュボード",
+                newDashboardIntro:
+                    "スケジュールが1つのページを最新に保ちます。最初の実行でページを作り、以降の実行で置き換えます。",
+                newDashboardSaved:
+                    "ダッシュボードをスケジュールしました。今すぐ実行してページを作成します。",
+                newDashboardNoJob:
+                    "このサーバーではまだダッシュボードを作成できません。後でもう一度お試しください。",
+                newDashboardLoadFailed: "フォームを読み込めませんでした。",
             },
             tabToday: "今日",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

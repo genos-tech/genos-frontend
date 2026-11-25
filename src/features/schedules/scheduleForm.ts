@@ -18,7 +18,7 @@ import type {
     ScheduleJob,
 } from "../../services/schedules";
 import { asEffortLevel, showsEffort } from "./scheduleEffort";
-import { isRequiredParam, knownParam } from "./scheduleParams";
+import { knownParam, paramApplies, paramRequiredNow } from "./scheduleParams";
 
 export const FREQUENCIES: ScheduleFrequency[] = ["daily", "weekdays", "weekly", "monthly", "once"];
 
@@ -135,6 +135,7 @@ export const paramsFromForm = (
 ): Record<string, ParamValue> => {
     const out: Record<string, ParamValue> = {};
     for (const [key, spec] of Object.entries(job?.params ?? {})) {
+        if (!paramApplies(job, key, typed)) continue;
         const v = wireValue(spec, typed[key] ?? "");
         if (v !== undefined && v !== null) out[key] = v;
     }
@@ -174,15 +175,17 @@ export const validateForm = (
     if (!job && !keepsUnknownJob) problems.job = "required";
 
     for (const [key, spec] of Object.entries(job?.params ?? {})) {
+        if (!paramApplies(job, key, form.params)) continue;
         const raw = (form.params[key] ?? "").trim();
+        const required = paramRequiredNow(job, key, spec, form.params);
         if (raw === "") {
             // A parameter the report cannot run without (the milestone one).
-            if (isRequiredParam(spec)) problems.params[key] = "required";
+            if (required) problems.params[key] = "required";
             continue;
         }
         if (
             pickableProjects &&
-            isRequiredParam(spec) &&
+            required &&
             knownParam(key)?.picker === "project" &&
             !pickableProjects.has(raw)
         ) {

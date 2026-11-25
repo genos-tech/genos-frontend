@@ -1484,6 +1484,11 @@ export const hi: DeepPartial<Messages> = {
             job: "रिपोर्ट",
             jobPlaceholder: "रिपोर्ट चुनें",
             jobCatalog: {
+                ai_dashboard: {
+                    title: "डैशबोर्ड पेज",
+                    description:
+                        "किसी माइलस्टोन, प्रोजेक्ट या आपकी अपनी प्रगति के लिए एक हमेशा अद्यतन डैशबोर्ड पेज: स्थिति के अनुसार गिनती, क्या बंद और बनाया गया, और क्या तैयार या रुका हुआ है। पेज एक नोट के रूप में सहेजा जाता है और हर बार बदल दिया जाता है।",
+                },
                 what_to_do_today: {
                     title: "आज क्या करना है",
                     description:
@@ -1613,6 +1618,22 @@ export const hi: DeepPartial<Messages> = {
             paramChatHint:
                 "वैकल्पिक। कैच-अप के लिए एक ग्रुप चैट चुनें, या सभी व्यस्त चैट पर रहने दें। केवल वे चैट दिखती हैं जिनमें आप हैं।",
             chatAllBusy: "सभी व्यस्त चैट",
+            paramChoose: "चुनें…",
+            paramKind: "डैशबोर्ड किसका",
+            paramKindHint:
+                "पेज किसे कवर करता है: एक माइलस्टोन, एक प्रोजेक्ट, या आपकी अपनी प्रगति।",
+            paramPeriod: "अवधि",
+            paramPeriodHint:
+                "आंकड़े कितना पीछे तक जाते हैं। यह डेटा की सीमा है, चलने की आवृत्ति नहीं।",
+            paramFocus: "फ़ोकस",
+            paramFocusHint: "वैकल्पिक। पेज को किस पर ध्यान देना है, इस बारे में कुछ शब्द।",
+            kindMilestone: "एक माइलस्टोन",
+            kindProject: "एक प्रोजेक्ट",
+            kindMine: "मेरी प्रगति",
+            periodWeek: "पिछला सप्ताह",
+            periodMonth: "पिछला महीना",
+            periodQuarter: "पिछली तिमाही",
+            periodYear: "पिछला साल",
             paramSkillInput: "इसे क्या दें",
             paramSkillInputHint:
                 "वैकल्पिक। स्किल के नाम के बाद आप जो शब्द लिखते, जैसे कोई प्रोजेक्ट या कोई सप्ताह।",
@@ -4397,6 +4418,13 @@ export const hi: DeepPartial<Messages> = {
                 errorTitle: "डैशबोर्ड लोड नहीं हो सके",
                 errorBody: "अपना कनेक्शन जाँचें और फिर कोशिश करें।",
                 retry: "फिर कोशिश करें",
+                newDashboard: "नया डैशबोर्ड",
+                newDashboardTitle: "नया डैशबोर्ड",
+                newDashboardIntro:
+                    "एक शेड्यूल एक पेज को अद्यतन रखता है। पहली बार चलने पर वह बनता है और हर अगली बार उसकी जगह नया आ जाता है।",
+                newDashboardSaved: "डैशबोर्ड शेड्यूल हो गया। पेज बनाने के लिए अभी चलाएँ।",
+                newDashboardNoJob: "यह सर्वर अभी डैशबोर्ड नहीं बना सकता। बाद में फिर कोशिश करें।",
+                newDashboardLoadFailed: "फ़ॉर्म लोड नहीं हो सका।",
             },
             tabToday: "आज",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

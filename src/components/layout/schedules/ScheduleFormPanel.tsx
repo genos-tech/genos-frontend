@@ -45,9 +45,10 @@ import {
 import { humanizeKey, weekdayName } from "../../../features/schedules/scheduleFormat";
 import {
     enumLabelKey,
-    isRequiredParam,
     knownParam,
+    paramApplies,
     paramHintKey,
+    paramRequiredNow,
 } from "../../../features/schedules/scheduleParams";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
 import { fmt, useTranslation } from "../../../i18n";
@@ -358,8 +359,10 @@ export const ScheduleFormPanel = ({
                             // The server's own bookkeeping (the version a skill schedule is
                             // pinned to): carried in the form and sent, never drawn.
                             if (known?.hidden) return null;
+                            // A milestone or project that the chosen dashboard kind does not use.
+                            if (!paramApplies(job, key, form.params)) return null;
                             const problem = show ? problems.params[key] : undefined;
-                            const required = isRequiredParam(spec);
+                            const required = paramRequiredNow(job, key, spec, form.params);
                             const range =
                                 spec.minimum !== undefined && spec.maximum !== undefined
                                     ? fmt(s.paramRangeNote, {
@@ -540,7 +543,7 @@ export const ScheduleFormPanel = ({
                                         />
                                     ) : kind === "enum" ? (
                                         <Select
-                                            placeholder={s.paramDefault}
+                                            placeholder={required ? s.paramChoose : s.paramDefault}
                                             sx={{ minWidth: 0 }}
                                             value={form.params[key] || null}
                                             onChange={(_, v) => setParam(v ?? "")}
