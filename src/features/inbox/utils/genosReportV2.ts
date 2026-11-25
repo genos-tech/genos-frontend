@@ -15,6 +15,7 @@
  * exactly as before.
  */
 
+import { WORKFLOW_STATUS_NAMES } from "../../tasks/meta/taskStatuses";
 import { safeReportLink } from "./genosReport";
 
 export const REPORT_KINDS = [
@@ -32,7 +33,7 @@ export const REPORT_KINDS = [
 export type ReportKind = (typeof REPORT_KINDS)[number];
 
 /** The statuses the server may send (`Deleted` is never one). */
-export const REPORT_STATUSES = ["Open", "WIP", "Blocked", "Pending", "Closed"] as const;
+export const REPORT_STATUSES = WORKFLOW_STATUS_NAMES;
 export type ReportStatus = (typeof REPORT_STATUSES)[number];
 
 export const REPORT_PRIORITIES = ["Minimal", "Low", "Normal", "High", "Critical"] as const;

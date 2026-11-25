@@ -12,6 +12,7 @@ import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { SprintConfigDialog } from "../../sprint-milestone/components/SprintConfigDialog";
 import { SprintManagerDialog } from "../../sprint-milestone/components/SprintManagerDialog";
 import { AgentActivityTab } from "./agentActivity/AgentActivityTab";
+import { CustomDashboardsTab } from "./customDashboards/CustomDashboardsTab";
 import { MilestoneProgressTab } from "./milestoneProgress/MilestoneProgressTab";
 import { PeopleTab } from "./tabs/PeopleTab";
 import { ProjectTab } from "./tabs/ProjectTab";
@@ -241,7 +242,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                             is in flight, or failed with nothing cached, say so instead of
                             "No tasks" / "Nothing assigned" / zeroed charts. The member picker
                             below needs no rows and stays. */}
-                            {tasksUnread && (
+                            {tasksUnread && activeTab !== "custom" && (
                                 <DataState
                                     error={tasksSync.failed}
                                     hasData={false}
@@ -257,6 +258,12 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                                         !tasksSync.failed
                                     }
                                 />
+                            )}
+
+                            {/* Custom dashboards by AI (MIP-2356): needs no task rows, only the
+                                dashboards API and the HTML note viewer. */}
+                            {activeTab === "custom" && (
+                                <CustomDashboardsTab teamId={myself.teamId} />
                             )}
 
                             {/* ════════ TAB: Milestones — progress check (MIP-1187) ════════ */}

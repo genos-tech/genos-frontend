@@ -185,11 +185,11 @@ describe("which row is selected", () => {
             withUnread(
                 false,
                 <NoteTreeRenderer
+                    activeTab={useNM.tabsApi.activeTab}
                     createChildNoteList={() => null}
                     currentChain={[]}
                     node={node}
                     noteType={1}
-                    timestamp="t"
                     useNM={useNM}
                 />
             );
@@ -204,11 +204,11 @@ describe("a note in the tree", () => {
         withUnread(
             unread,
             <NoteTreeRenderer
+                activeTab={null}
                 createChildNoteList={() => null}
                 currentChain={[]}
                 node={node}
                 noteType={1}
-                timestamp="t"
                 useNM={makeUseNM()}
             />
         );

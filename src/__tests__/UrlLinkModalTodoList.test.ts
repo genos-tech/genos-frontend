@@ -2,7 +2,7 @@
  * MIP-1044: the to-do modal can be opened for the WHOLE list (no day, no
  * item), by the shortcut, the sidebar button and the switcher.
  */
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
 import { useUrlLinkModalState } from "../hooks/common/useUrlLinkModalState";
@@ -21,13 +21,13 @@ describe("openTodoList", () => {
         expect(navigate).not.toHaveBeenCalled();
     });
 
-    it("carries the caller's 'open full page' action: it closes the modal first, then runs", () => {
+    it("carries the caller's 'open full page' action: it closes the modal first, then runs", async () => {
         const { result } = setup();
         const onOpenFullPage = vi.fn();
         act(() => result.current.openTodoList({ onOpenFullPage }));
         expect(result.current.openFullPage).not.toBeNull();
         act(() => result.current.openFullPage?.());
-        expect(onOpenFullPage).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(onOpenFullPage).toHaveBeenCalledTimes(1));
         expect(result.current.target).toBeNull();
     });
 

@@ -1260,7 +1260,7 @@ export const es: DeepPartial<Messages> = {
                 "{name} (compártela con tu equipo para publicar una versión primero)",
             errorSkill: "Elige una habilidad.",
             effortHintNoEstimate:
-                "Cuánto trabaja la IA en esta ejecución. Gasta tus créditos de IA como una pregunta en Spotlight; la cifra real aparece en cada informe.",
+                "Cuánto trabaja la IA en esta ejecución. Gasta tus créditos de IA como una pregunta en Spotlight; el coste real solo se muestra a ti, en tu bandeja de entrada.",
             scheduleModeLabel: "Modo",
             scheduleModePlain: "Tarea programada",
             scheduleModeAi: "Tarea programada por Genos AI",
@@ -1279,7 +1279,7 @@ export const es: DeepPartial<Messages> = {
                 "Entre {from} y {to} créditos por ejecución, aproximadamente. Es una estimación.",
             effortCostTiny: "Menos de 0.01 créditos por ejecución. Es una estimación.",
             effortHint:
-                "Cuánto se esfuerza la IA en este informe. La estimación es para un informe de unas 10 tareas; la cifra real se muestra en cada informe.",
+                "Cuánto se esfuerza la IA en este informe. La estimación es para un informe de unas 10 tareas; el coste real solo se muestra a ti, en tu bandeja de entrada.",
             effortHeld: "Tu plan ejecuta esta programación con esfuerzo {level}.",
             rowEffort: "Esfuerzo de la IA: {level}",
             duplicateSame: "Ya tienes una programación que hace lo mismo a la misma hora: {name}.",
@@ -4139,6 +4139,34 @@ export const es: DeepPartial<Messages> = {
                 teamLoadHide: "Ocultar carga del equipo",
             },
             tabAgentActivity: "Actividad de agentes",
+            tabCustomDashboards: "Paneles personalizados con IA",
+            customDashboards: {
+                heading: "Paneles personalizados con IA",
+                subtitle:
+                    "Páginas que tus programaciones de IA mantienen al día y paneles que tus compañeros comparten contigo. Solo lo que ya puedes abrir.",
+                listLabel: "Paneles",
+                own: "Tuyos",
+                shared: "Compartidos contigo",
+                updated: "Actualizado {when}",
+                notRun: "Aún no se ha ejecutado",
+                paused: "En pausa",
+                sharedBy: "De {name}",
+                runNow: "Ejecutar ahora",
+                openNote: "Abrir nota",
+                runDone: "Panel actualizado.",
+                runFailed: "No se pudo actualizar el panel.",
+                notRunTitle: "Este panel aún no se ha ejecutado",
+                notRunBody: "Ejecútalo ahora para crear la página.",
+                emptyTitle: "Aún no hay paneles",
+                emptyBody:
+                    "Aquí aparecen los paneles que tus programaciones de IA mantienen al día y los que tus compañeros comparten contigo.",
+                unavailableTitle: "Los paneles aún no están disponibles",
+                unavailableBody:
+                    "Este servidor todavía no puede listar paneles. Inténtalo más tarde.",
+                errorTitle: "No se pudieron cargar los paneles",
+                errorBody: "Comprueba tu conexión e inténtalo de nuevo.",
+                retry: "Reintentar",
+            },
             tabToday: "Hoy",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
             today: {

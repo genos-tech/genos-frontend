@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "react-resizable-panels";
@@ -39,6 +40,10 @@ interface TaskPreviewPanelProps {
      *  load) — show the loading pane instead of the previously-loaded
      *  (stale) task. See TaskPreview.tsx. */
     guardStaleTaskId?: boolean;
+    /** MIP-2373: when set, this slot shows the create-task form instead of the preview
+     *  (the form opened with no preview on screen). Same Panel and frame, so submitting
+     *  swaps the content to the new task's preview without the pane closing and reopening. */
+    createForm?: ReactNode;
 }
 
 export const TaskPreviewPanel = ({
@@ -54,6 +59,7 @@ export const TaskPreviewPanel = ({
     useSM,
     setTodoFromMessageBubble,
     guardStaleTaskId,
+    createForm,
 }: TaskPreviewPanelProps) => {
     const { mode } = useColorScheme();
 
@@ -79,20 +85,22 @@ export const TaskPreviewPanel = ({
                     borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                 }}
             >
-                <TaskPreview
-                    guardStaleTaskId={guardStaleTaskId}
-                    myself={myself}
-                    setMyself={setMyself}
-                    setTodoFromMessageBubble={setTodoFromMessageBubble}
-                    socket={socket}
-                    useCM={useCM}
-                    useNM={useNM}
-                    usePM={usePM}
-                    useSM={useSM}
-                    useTEM={useTEM}
-                    useTM={useTM}
-                    useUISM={useUISM}
-                />
+                {createForm ?? (
+                    <TaskPreview
+                        guardStaleTaskId={guardStaleTaskId}
+                        myself={myself}
+                        setMyself={setMyself}
+                        setTodoFromMessageBubble={setTodoFromMessageBubble}
+                        socket={socket}
+                        useCM={useCM}
+                        useNM={useNM}
+                        usePM={usePM}
+                        useSM={useSM}
+                        useTEM={useTEM}
+                        useTM={useTM}
+                        useUISM={useUISM}
+                    />
+                )}
             </Box>
         </Panel>
     );
