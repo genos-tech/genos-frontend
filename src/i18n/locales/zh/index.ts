@@ -4885,6 +4885,8 @@ export const zh: DeepPartial<Messages> = {
             skillPlaceholder: "选择技能",
             skillLoading: "正在加载技能…",
             skillNone: "你还没有可运行的技能。请先在“技能”中创建一个。",
+            skillTagFilter: "按标签筛选技能",
+            skillNoMatch: "没有同时带有这些标签的技能。",
             skillNotPublished: "{name}（请先与团队共享以发布一个版本）",
             errorSkill: "请选择一个技能。",
             effortHintNoEstimate:

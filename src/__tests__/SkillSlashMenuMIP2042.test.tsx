@@ -403,6 +403,7 @@ describe("the runnable list from the server", () => {
                 group: "team",
                 ownerName: "Alice",
                 publishedVersionNo: 0,
+                tagChips: [],
             },
             {
                 id: "b",
@@ -412,6 +413,7 @@ describe("the runnable list from the server", () => {
                 group: "mine",
                 ownerName: "",
                 publishedVersionNo: 0,
+                tagChips: [],
             },
         ]);
         expect(parseRunnableSkills(null)).toBeNull();

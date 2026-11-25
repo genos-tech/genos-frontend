@@ -559,6 +559,9 @@ export type RunnableSkill = {
     /** The version a schedule would run (MIP-2045); 0 = none (a skill never published), so it
      *  cannot be scheduled. A server that predates it sends none: read as 0. */
     publishedVersionNo: number;
+    /** The skill's tags as chips (MIP-2398): the owner's colours where the reader may see them,
+     *  `template` in its own fixed one. A server that predates it sends none: no chips. */
+    tagChips: SkillTagChip[];
 };
 
 export const parseRunnableSkills = (raw: unknown): RunnableSkill[] | null => {
@@ -578,6 +581,13 @@ export const parseRunnableSkills = (raw: unknown): RunnableSkill[] | null => {
                 group: oneOf(s.group, ["mine", "team", "installed", "official"] as const, "mine"),
                 ownerName: str(s.ownerName, 120),
                 publishedVersionNo: int(s.publishedVersionNo),
+                tagChips: Array.isArray(s.tagChips)
+                    ? parseTagChips(s.tagChips).slice(0, 10)
+                    : (Array.isArray(s.tags) ? s.tags : [])
+                          .map((t) => str(t, 60).trim())
+                          .filter((t) => t !== "")
+                          .slice(0, 10)
+                          .map((name) => ({ name, color: NEUTRAL_TAG, textColor: "white" })),
             },
         ];
     });

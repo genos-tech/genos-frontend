@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
 import {
@@ -17,6 +17,11 @@ import {
 import { useTheme } from "@mui/joy/styles";
 
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
+import {
+    filterByTags,
+    tagChoices,
+    toggleTag,
+} from "../../../features/genos/skills/skillTagFilter";
 import { useRunnableSkillRows } from "../../../features/genos/skills/useRunnableSkills";
 import {
     buildFolderChoices,
@@ -36,12 +41,14 @@ import {
     ProjectIdentityDecorator,
     ProjectIdentityRow,
 } from "../../../features/tasks/components/ProjectIdentityRow";
+import { ProjectTagChip } from "../../../features/tasks/components/ProjectTagChip";
 import { toneCss } from "../../../features/tasks/meta/taskTone";
 import type { Milestone } from "../../../features/tasks/sprint-milestone/types";
 import { isOverdueDate } from "../../../features/tasks/utils/dueWindow";
 import { fmt, useTranslation } from "../../../i18n";
 import { compareText } from "../../../i18n/collate";
 import type { ChatTarget } from "../../../services/schedules";
+import { focusRing, g } from "../../../theme/tokens";
 import type { ProjectProps } from "../../../types/tasks";
 import { formatMonthDay } from "../../../utils/calendarDate";
 import { INBOX_TARGET, type DeliverTarget } from "./chatTarget";
@@ -436,45 +443,115 @@ export const SkillParamSelect = ({ value, onChange }: Props) => {
     const rows = useRunnableSkillRows();
     const popupZIndex = useDialogPopupZIndex();
 
-    const skills = rows ?? [];
-    const stray = value !== "" && rows !== undefined && !skills.some((r) => r.id === value);
+    // The tags the member ticked to narrow the list (MIP-2398): a skill must carry all of them.
+    const [ticked, setTicked] = useState<string[]>([]);
+    const all = rows ?? [];
+    const choices = tagChoices(all);
+    const skills = filterByTags(all, ticked, value);
+    const stray = value !== "" && rows !== undefined && !all.some((r) => r.id === value);
 
     return (
-        <Select
-            placeholder={rows === undefined ? s.skillLoading : s.skillPlaceholder}
-            slotProps={{ listbox: { sx: { zIndex: popupZIndex, maxHeight: 280 } } }}
-            sx={{ minWidth: 0 }}
-            value={value || null}
-            onChange={(_, next) => {
-                if (next) onChange(next);
-            }}
-        >
-            {stray && (
-                <Option value={value} disabled>
-                    {s.unavailable}
-                </Option>
+        <>
+            {choices.length > 0 && (
+                <Box
+                    aria-label={s.skillTagFilter}
+                    data-testid="skill-tag-filter"
+                    role="group"
+                    sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, minWidth: 0 }}
+                >
+                    {choices.map((chip) => {
+                        const on = ticked.includes(chip.name);
+                        return (
+                            <Box
+                                key={chip.name}
+                                aria-pressed={on}
+                                component="button"
+                                type="button"
+                                sx={{
+                                    appearance: "none",
+                                    background: "transparent",
+                                    border: 0,
+                                    borderRadius: "999px",
+                                    cursor: "pointer",
+                                    // Ticked: a ring and full colour; unticked: dimmed, as the
+                                    // to-do tag bar does.
+                                    opacity: on || ticked.length === 0 ? 1 : 0.5,
+                                    outline: on ? `2px solid ${g.accent.text}` : "none",
+                                    outlineOffset: 1,
+                                    p: 0,
+                                    "&:focus-visible": focusRing,
+                                }}
+                                onClick={() => setTicked((cur) => toggleTag(cur, chip.name))}
+                            >
+                                <ProjectTagChip label={chip.name} tagColor={chip.color} />
+                            </Box>
+                        );
+                    })}
+                </Box>
             )}
-            {rows?.length === 0 && (
-                <Option value="" disabled>
-                    {s.skillNone}
-                </Option>
-            )}
-            {skills.map((r) => {
-                const name = r.title || r.slug;
-                return (
-                    <Option
-                        key={r.id}
-                        disabled={r.publishedVersionNo <= 0}
-                        label={name}
-                        value={r.id}
-                    >
-                        <Typography level="body-sm" sx={{ color: "inherit", minWidth: 0 }} noWrap>
-                            {r.publishedVersionNo > 0 ? name : fmt(s.skillNotPublished, { name })}
-                        </Typography>
+            <Select
+                placeholder={rows === undefined ? s.skillLoading : s.skillPlaceholder}
+                slotProps={{ listbox: { sx: { zIndex: popupZIndex, maxHeight: 280 } } }}
+                sx={{ minWidth: 0 }}
+                value={value || null}
+                onChange={(_, next) => {
+                    if (next) onChange(next);
+                }}
+            >
+                {stray && (
+                    <Option value={value} disabled>
+                        {s.unavailable}
                     </Option>
-                );
-            })}
-        </Select>
+                )}
+                {rows?.length === 0 && (
+                    <Option value="" disabled>
+                        {s.skillNone}
+                    </Option>
+                )}
+                {rows !== undefined && rows.length > 0 && skills.length === 0 && (
+                    <Option value="" disabled>
+                        {s.skillNoMatch}
+                    </Option>
+                )}
+                {skills.map((r) => {
+                    const name = r.title || r.slug;
+                    return (
+                        <Option
+                            key={r.id}
+                            disabled={r.publishedVersionNo <= 0}
+                            label={name}
+                            value={r.id}
+                        >
+                            <Box
+                                sx={{
+                                    alignItems: "center",
+                                    display: "flex",
+                                    gap: 0.75,
+                                    minWidth: 0,
+                                }}
+                            >
+                                <Typography
+                                    level="body-sm"
+                                    sx={{ color: "inherit", minWidth: 0 }}
+                                    noWrap
+                                >
+                                    {r.publishedVersionNo > 0
+                                        ? name
+                                        : fmt(s.skillNotPublished, { name })}
+                                </Typography>
+                                {(r.tagChips ?? []).slice(0, 3).map((chip) => (
+                                    <ProjectTagChip
+                                        key={chip.name}
+                                        label={chip.name}
+                                        tagColor={chip.color}
+                                    />
+                                ))}
+                            </Box>
+                        </Option>
+                    );
+                })}
+            </Select>
+        </>
     );
 };
 

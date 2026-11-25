@@ -1294,6 +1294,8 @@ export const es: DeepPartial<Messages> = {
             skillLoading: "Cargando habilidades…",
             skillNone:
                 "Todavía no tienes ninguna habilidad para ejecutar. Escribe una primero en Habilidades.",
+            skillTagFilter: "Filtrar habilidades por etiqueta",
+            skillNoMatch: "Ninguna habilidad tiene todas estas etiquetas.",
             skillNotPublished:
                 "{name} (compártela con tu equipo para publicar una versión primero)",
             errorSkill: "Elige una habilidad.",

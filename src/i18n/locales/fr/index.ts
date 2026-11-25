@@ -5176,6 +5176,8 @@ export const fr: DeepPartial<Messages> = {
             skillLoading: "Chargement des compétences…",
             skillNone:
                 "Vous n'avez pas encore de compétence à exécuter. Écrivez-en une d'abord dans Compétences.",
+            skillTagFilter: "Filtrer les compétences par balise",
+            skillNoMatch: "Aucune compétence n'a toutes ces balises.",
             skillNotPublished:
                 "{name} (partagez-la d'abord avec votre équipe pour publier une version)",
             errorSkill: "Choisissez une compétence.",
