@@ -5,8 +5,10 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
+import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import { Box, Button, IconButton, Typography } from "@mui/joy";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import type { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../../components/ui/AppTooltip";
 import { SectionHeading } from "../../../../../components/ui/dashboard";
@@ -15,10 +17,15 @@ import { SkeletonLines } from "../../../../../components/ui/feedback/Skeleton";
 import { toast } from "../../../../../components/ui/feedback/toastStore";
 import { ConfirmDialog } from "../../../../../components/ui/modal/ConfirmDialog";
 import { useAuth } from "../../../../../context/authState";
+import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { deleteSchedule, runScheduleNow } from "../../../../../services/schedules";
 import { focusRing, g } from "../../../../../theme/tokens";
+import type { UserProps } from "../../../../../types/admin";
 import { HtmlNoteView } from "../../../../notes/common/components/HtmlNoteView";
+import { ModalNoteSharing } from "../../../../notes/common/components/ModalNoteSharing";
 import { useCustomDashboards } from "../../../hooks/useCustomDashboards";
 import type { OwnDashboard, SharedDashboard } from "../../../services/loadCustomDashboards";
 import { formatAgentWhen } from "../agentActivity/agentActivityLinks";
@@ -259,9 +266,22 @@ const Group = ({
     </Box>
 );
 
+/** What the share dialog of a dashboard's page needs from the app (it is the Notes page's own
+ *  dialog). Absent where the host has no notes manager: there is then no Share button. */
+export type DashboardShareHost = {
+    myself: UserProps;
+    setMyself: (me: UserProps) => void;
+    socket: Socket | null;
+    teamMembers: UserProps[];
+    useCM: ChatManagementState;
+    useNM: NoteManagementState;
+    useUISM: UIStateManagementState;
+};
+
 type Props = {
     /** The team the tab shows. The API needs it on every request; a change refetches. */
     teamId: string;
+    share?: DashboardShareHost;
 };
 
 /**
@@ -274,7 +294,7 @@ type Props = {
  * Settings > Schedules. The open dashboard lives in the address (`?view=custom&dashboard=<note>`)
  * so a link lands on it.
  */
-export const CustomDashboardsTab = ({ teamId }: Props) => {
+export const CustomDashboardsTab = ({ teamId, share }: Props) => {
     const { t, locale } = useTranslation();
     const c = t.tasks.dashboard.customDashboards;
     const { accessToken } = useAuth();
@@ -359,6 +379,15 @@ export const CustomDashboardsTab = ({ teamId }: Props) => {
     };
 
     const [creating, setCreating] = useState(false);
+    // Share (MIP-2357): the page's own share dialog, opened on the page that is on screen. The
+    // members come from the notes manager, which holds one note's at a time, so they are read for
+    // THIS note as the dialog opens; the dialog's grant and revoke name the note themselves.
+    const [sharing, setSharing] = useState<{ noteId: number; title: string } | null>(null);
+    const startSharing = (entry: Entry) => {
+        if (!share || entry.noteId == null) return;
+        setSharing({ noteId: entry.noteId, title: entry.title });
+        void share.useNM.loadNoteMembers(MY_NOTE_TYPE, entry.noteId);
+    };
     // Edit (MIP-2397): the dialog for a saved dashboard schedule; `hasNote` locks where its page is.
     const [editing, setEditing] = useState<{ scheduleId: string; hasNote: boolean } | null>(null);
     const edit = (entry: Entry) => {
@@ -425,6 +454,23 @@ export const CustomDashboardsTab = ({ teamId }: Props) => {
                 onClose={() => setEditing(null)}
                 onSaved={view.refresh}
             />
+            {share && sharing && (
+                <ModalNoteSharing
+                    myself={share.myself}
+                    noteId={sharing.noteId}
+                    noteTitle={sharing.title}
+                    noteType={MY_NOTE_TYPE}
+                    notice={c.shareNotice}
+                    setMyself={share.setMyself}
+                    socket={share.socket}
+                    teamMembers={share.teamMembers}
+                    useCM={share.useCM}
+                    useNM={share.useNM}
+                    useUISM={share.useUISM}
+                    open
+                    onClose={() => setSharing(null)}
+                />
+            )}
             {deleting && (
                 <ConfirmDialog
                     cancelLabel={t.common.actions.cancel}
@@ -560,6 +606,17 @@ export const CustomDashboardsTab = ({ teamId }: Props) => {
                                 </Typography>
                             )}
                             <Box sx={{ display: "flex", gap: 0.75, marginInlineStart: "auto" }}>
+                                {share && selected.scheduleId && selected.noteId != null && (
+                                    <IconButton
+                                        aria-label={fmt(c.shareNamed, { name: selected.title })}
+                                        data-testid="custom-dashboard-header-share"
+                                        size="sm"
+                                        variant="outlined"
+                                        onClick={() => startSharing(selected)}
+                                    >
+                                        <ShareRoundedIcon />
+                                    </IconButton>
+                                )}
                                 {selected.scheduleId && (
                                     <IconButton
                                         aria-label={editLabelOf(selected)}

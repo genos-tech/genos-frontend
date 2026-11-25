@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import PersonAddRoundedIcon from "@mui/icons-material/PersonAddRounded";
 import {
+    Alert,
     Box,
     Button,
     Chip,
@@ -47,6 +48,9 @@ interface ModalNoteSharingProps {
     useUISM: UIStateManagementState;
     teamMembers: UserProps[];
     useNM: NoteManagementState;
+    /** A warning drawn above the members, for a note whose readers matter to its owner's job (a
+     *  scheduled dashboard page checks every reader at each run, MIP-2357). Absent for a plain note. */
+    notice?: string;
 }
 
 const ROLE_OWNER = NOTE_ROLE_OWNER;
@@ -66,6 +70,7 @@ export const ModalNoteSharing = ({
     useUISM,
     teamMembers,
     useNM,
+    notice,
 }: ModalNoteSharingProps) => {
     const theme = useTheme();
     const { t } = useTranslation();
@@ -154,6 +159,11 @@ export const ModalNoteSharing = ({
             ownsListboxPopups
             onClose={onClose}
         >
+            {notice && (
+                <Alert color="warning" role="note" size="sm" sx={{ mb: 1 }} variant="soft">
+                    {notice}
+                </Alert>
+            )}
             {/* Current members */}
             <Box sx={{ mb: 1 }}>
                 {members.length === 0 ? (

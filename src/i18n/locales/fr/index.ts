@@ -7592,6 +7592,9 @@ export const fr: DeepPartial<Messages> = {
                 deleteBody: "« {name} » ne sera plus mis à jour. La page reste dans vos notes.",
                 deleteDone: "Tableau de bord supprimé. Sa page reste dans vos notes.",
                 deleteFailed: "Le tableau de bord n'a pas pu être supprimé.",
+                shareNamed: "Partager {name}",
+                shareNotice:
+                    "Cette page est reconstruite à chaque exécution à partir des données du tableau de bord, et chaque exécution vérifie que toutes les personnes qui peuvent l'ouvrir ont le droit de voir toutes ces données. Si ce n'est pas le cas pour quelqu'un, l'exécution échoue, et après 3 échecs la planification est mise en pause.",
             },
             tabToday: "Aujourd'hui",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

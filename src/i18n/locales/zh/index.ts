@@ -7186,6 +7186,9 @@ export const zh: DeepPartial<Messages> = {
                 deleteBody: "“{name}”将不再更新。页面会保留在你的笔记中。",
                 deleteDone: "仪表板已删除。其页面仍保留在你的笔记中。",
                 deleteFailed: "无法删除该仪表板。",
+                shareNamed: "共享{name}",
+                shareNotice:
+                    "此页面每次运行都会根据仪表板的数据重新生成，并且每次运行都会检查所有能打开该页面的人是否都有权查看这些数据。如果有人无权查看，运行会失败，失败 3 次后定时任务将暂停。",
             },
             tabToday: "今天",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

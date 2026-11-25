@@ -1375,6 +1375,9 @@ export const tasks = {
             deleteBody: "“{name}” will stop updating. The page stays in your notes.",
             deleteDone: "Dashboard deleted. Its page is still in your notes.",
             deleteFailed: "The dashboard could not be deleted.",
+            shareNamed: "Share {name}",
+            shareNotice:
+                "This page is rebuilt on every run from the dashboard's data, and each run checks that everyone who can open the page may see all of that data. If someone cannot, the run fails, and after 3 failed runs the schedule pauses.",
         },
         tabToday: "Today",
         // MIP-1005 / MIP-1696: every string of the Today view is a DRAFT for a native reader (TODO(copy)).

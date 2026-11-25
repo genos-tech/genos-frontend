@@ -133,6 +133,7 @@ export const TaskHomeLayout = ({
                     setMyself={setMyself}
                     socket={socket}
                     useCM={useCM}
+                    useNM={useNM}
                     usePM={usePM}
                     useSM={useSM}
                     useTEM={useTEM}

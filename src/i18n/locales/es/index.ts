@@ -4223,6 +4223,9 @@ export const es: DeepPartial<Messages> = {
                 deleteBody: "«{name}» dejará de actualizarse. La página se queda en tus notas.",
                 deleteDone: "Panel eliminado. Su página sigue en tus notas.",
                 deleteFailed: "No se pudo eliminar el panel.",
+                shareNamed: "Compartir {name}",
+                shareNotice:
+                    "Esta página se reconstruye en cada ejecución a partir de los datos del panel, y cada ejecución comprueba que todas las personas que pueden abrirla pueden ver todos esos datos. Si alguien no puede, la ejecución falla, y tras 3 fallos la programación se pausa.",
             },
             tabToday: "Hoy",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

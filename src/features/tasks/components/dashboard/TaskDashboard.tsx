@@ -4,6 +4,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -19,6 +20,7 @@ type TaskDashboardProps = {
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
     socket: Socket | null;
+    useNM?: NoteManagementState;
     onCloseTaskHome: () => void;
 };
 
@@ -32,6 +34,7 @@ export const TaskDashboard = ({
     useCM,
     useUISM,
     socket,
+    useNM,
     onCloseTaskHome,
 }: TaskDashboardProps) => {
     return (
@@ -40,6 +43,7 @@ export const TaskDashboard = ({
             setMyself={setMyself}
             socket={socket}
             useCM={useCM}
+            useNM={useNM}
             usePM={usePM}
             useSM={useSM}
             useTEM={useTEM}
