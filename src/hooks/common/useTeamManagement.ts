@@ -143,8 +143,10 @@ export const useTeamManagement = (
     // got the handful of rows that changed in the meantime, and left an
     // otherwise empty inbox behind — with `bootRefreshedTeamRef` in App
     // suppressing any further refresh for that team.
+    const initCurrentTeamRef = useRef(initCurrentTeam);
+    initCurrentTeamRef.current = initCurrentTeam;
     useEffect(() => {
-        initCurrentTeam();
+        void initCurrentTeamRef.current();
 
         if (!myself.userId) return;
 

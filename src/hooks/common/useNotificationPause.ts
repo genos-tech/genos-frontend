@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { NotificationManager } from "../../services/notifications/notificationManager";
 import {
@@ -10,7 +10,7 @@ import {
 } from "../../services/notifications/snooze";
 import { writeSnoozeMirror } from "../../services/notifications/snoozeMirror";
 import { UserProps } from "../../types/admin";
-import { resolveDisplayZone } from "../../utils/userTimezone";
+import { useSelfDisplayZone } from "./useSelfDisplayZone";
 
 /** Backstop re-evaluation cadence. The `setTimeout` armed to the exact next
  *  boundary is the primary mechanism; this only catches a boundary the timer
@@ -59,10 +59,7 @@ export const useNotificationPause = (
     manager: NotificationManager,
     myself: UserProps
 ): NotificationPauseState => {
-    const zone = useMemo(
-        () => resolveDisplayZone(myself, true) ?? "UTC",
-        [myself.currentLocation, myself.timezone]
-    );
+    const zone = useSelfDisplayZone(myself);
 
     // Feed the zone to the manager via a ref-backed provider so its `notify()`
     // gate resolves the schedule in the user's zone without rebuilding the

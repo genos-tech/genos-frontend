@@ -17,12 +17,10 @@ import { NoteUnreadDot } from "./NoteUnreadDot";
 
 interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
     node: T;
-    // Bumped by `useNoteTreeState` whenever the tree or the selected tab
-    // changes. It is a prop ONLY so the `memo` below sees a change and
-    // re-renders the row; it must never reach a React `key`, because a key
-    // change unmounts and rebuilds the row's whole subtree (every child row
-    // and the "⋯" menu), which is what used to happen on every refresh tick.
-    timestamp: string;
+    // The tab that is open. A prop (and not read from `useNM` alone) so the row's `memo` sees the
+    // selection change: only rows whose selected state flips need to re-render (MIP-1678). It
+    // replaces the `timestamp` that `useNoteTreeState` used to bump on every tree or tab change.
+    activeTab: Parameters<typeof isNoteOpen>[0];
     currentChain: T[] | undefined;
     noteType: number;
     useNM: NoteManagementState;
@@ -36,7 +34,7 @@ interface NoteTreeRendererProps<T extends BaseNoteTreeNode> {
 
 function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
     node,
-    timestamp,
+    activeTab,
     currentChain,
     noteType,
     useNM,
@@ -64,7 +62,7 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
 
     // Is this the note that is open? Asked of the active tab, not of `currentNoteType`:
     // clicking a section header changes that, and used to un-tint the open note (MIP-1429).
-    const isSelected = isNoteOpen(useNM.tabsApi.activeTab, noteType, node.noteId);
+    const isSelected = isNoteOpen(activeTab, noteType, node.noteId);
 
     // Bring the row for the newly-opened note into view. The folder rows
     // above it auto-expand (GroupedNoteSection / the expanded-node set),
@@ -176,13 +174,13 @@ function NoteTreeRendererComponent<T extends BaseNoteTreeNode>({
                         {node.children.map((child) => (
                             <NoteTreeRenderer
                                 key={child.noteId}
+                                activeTab={activeTab}
                                 createChildNoteList={createChildNoteList}
                                 currentChain={currentChain}
                                 depth={depth + 1}
                                 node={child as T}
                                 noteType={noteType}
                                 rowMenuItems={rowMenuItems}
-                                timestamp={timestamp}
                                 useNM={useNM}
                             />
                         ))}

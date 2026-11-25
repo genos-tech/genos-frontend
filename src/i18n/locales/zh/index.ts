@@ -4853,7 +4853,7 @@ export const zh: DeepPartial<Messages> = {
             skillNotPublished: "{name}（请先与团队共享以发布一个版本）",
             errorSkill: "请选择一个技能。",
             effortHintNoEstimate:
-                "AI 在这次运行中投入的程度。它会像在 Spotlight 中提问一样消耗你的 AI 额度；实际用量会显示在每份报告上。",
+                "AI 在这次运行中投入的程度。它会像在 Spotlight 中提问一样消耗你的 AI 额度；实际费用只会显示给你，在你的收件箱中。",
             scheduleModeLabel: "模式",
             scheduleModePlain: "定时任务",
             scheduleModeAi: "由 Genos AI 执行的定时任务",
@@ -4870,7 +4870,7 @@ export const zh: DeepPartial<Messages> = {
             effortCostRange: "每次运行约 {from} 至 {to} 积分。这只是估算。",
             effortCostTiny: "每次运行不到 0.01 积分。这只是估算。",
             effortHint:
-                "AI 在这份报告上投入的程度。估算按约 10 个任务的报告计算;实际数字会显示在每份报告上。",
+                "AI 在这份报告上投入的程度。估算按约 10 个任务的报告计算;实际费用只会显示给你，在你的收件箱中。",
             effortHeld: "你的套餐以“{level}”运行此定时任务。",
             rowEffort: "AI 推理强度:{level}",
             duplicateSame: "你已经有一个在相同时间做相同事情的定时任务:{name}。",
@@ -7108,6 +7108,33 @@ export const zh: DeepPartial<Messages> = {
                 teamLoadHide: "隐藏团队负载",
             },
             tabAgentActivity: "智能体活动",
+            tabCustomDashboards: "AI 自定义仪表盘",
+            customDashboards: {
+                heading: "AI 自定义仪表盘",
+                subtitle:
+                    "由你的 AI 计划保持更新的页面，以及同事与你共享的仪表盘。只显示你本来就能打开的内容。",
+                listLabel: "仪表盘",
+                own: "我的",
+                shared: "与我共享",
+                updated: "更新于 {when}",
+                notRun: "尚未运行",
+                paused: "已暂停",
+                sharedBy: "来自 {name}",
+                runNow: "立即运行",
+                openNote: "打开笔记",
+                runDone: "仪表盘已更新。",
+                runFailed: "无法更新仪表盘。",
+                notRunTitle: "此仪表盘尚未运行",
+                notRunBody: "立即运行以生成页面。",
+                emptyTitle: "还没有仪表盘",
+                emptyBody:
+                    "由你的 AI 计划保持更新的仪表盘，以及同事与你共享的仪表盘，会显示在这里。",
+                unavailableTitle: "仪表盘暂不可用",
+                unavailableBody: "此服务器暂时无法列出仪表盘，请稍后再试。",
+                errorTitle: "无法加载仪表盘",
+                errorBody: "请检查网络连接后重试。",
+                retry: "重试",
+            },
             tabToday: "今天",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.
             today: {

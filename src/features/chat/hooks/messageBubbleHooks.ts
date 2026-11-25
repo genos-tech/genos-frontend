@@ -9,14 +9,20 @@ export const useScrollToBottomOnNewMessage = (
     chat: unknown,
     targetIndex: number
 ) => {
+    // Latest values are read through refs so the effect still fires only when
+    // `chat` changes (a new targetIndex alone must not re-scroll).
+    const virtuosoRefLatest = useRef(virtuosoRef);
+    virtuosoRefLatest.current = virtuosoRef;
+    const targetIndexRef = useRef(targetIndex);
+    targetIndexRef.current = targetIndex;
     useEffect(() => {
-        const virtuoso = virtuosoRef.current;
+        const virtuoso = virtuosoRefLatest.current.current;
         if (virtuoso === null) {
             return;
         } else {
             setTimeout(() => {
                 virtuoso.scrollToIndex({
-                    index: targetIndex,
+                    index: targetIndexRef.current,
                     behavior: smoothScrollBehavior(),
                 });
             }, 200); // wait 200ms
@@ -64,9 +70,28 @@ export const useScrollToBottomOnChatChange = (
     // Which chat we've already had our first effect-fire for. Reset when the
     // chat id changes so the next chat's open fire is recognised as its first.
     const openedForChatRef = useRef<number | null>(null);
+    // Everything except the chat id and `indexMap` is read at fire time through
+    // this ref, so the effect keeps firing only on those two.
+    const latest = useRef({
+        virtuosoRef,
+        visibleRangeRef,
+        maxIndex,
+        moveToSpecificIndex,
+        notMove,
+        firstUnreadIndex,
+    });
+    latest.current = {
+        virtuosoRef,
+        visibleRangeRef,
+        maxIndex,
+        moveToSpecificIndex,
+        notMove,
+        firstUnreadIndex,
+    };
     useEffect(() => {
-        const virtuoso = virtuosoRef.current;
-        const visibleRangeEnd = visibleRangeRef.current?.endIndex ?? 0;
+        const { maxIndex, moveToSpecificIndex, notMove, firstUnreadIndex } = latest.current;
+        const virtuoso = latest.current.virtuosoRef.current;
+        const visibleRangeEnd = latest.current.visibleRangeRef.current?.endIndex ?? 0;
         // Don't consume the "first fire" flag until the chat actually has rows.
         // A cold channel (not yet in IDB) fires this effect once while its sync
         // is still in flight: messages empty, Virtuoso not mounted, and — the
@@ -123,9 +148,11 @@ export const useScrollToBottomOnNewActivity = (
     activityMessages: ActivityMessageProps[],
     notMove: boolean
 ) => {
+    const latest = useRef({ virtuosoRef, notMove });
+    latest.current = { virtuosoRef, notMove };
     useEffect(() => {
-        const virtuoso = virtuosoRef.current;
-        if (virtuoso === null || notMove === true) {
+        const virtuoso = latest.current.virtuosoRef.current;
+        if (virtuoso === null || latest.current.notMove === true) {
             return;
         } else {
             setTimeout(() => {

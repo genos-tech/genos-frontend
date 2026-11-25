@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 
 import { TaskNoteMetaProps, TaskNoteMetaTreeNode, TaskNoteProps } from "../../types/notes";
+import { mergeNoteIdChain } from "./mergeNoteIdChain";
 
 function areArraysEqualByJSON<T>(arr1: T[], arr2: T[]): boolean {
     return JSON.stringify(arr1) === JSON.stringify(arr2);
@@ -92,11 +93,13 @@ export const updataTaskNoteChain = (props: updataTaskNoteChainProps) => {
                     setCurrentChain(chain);
                 }
 
-                setAllChains((prev) => ({
-                    ...prev,
-                    [`${tabItems[selectedTabIndex].noteType}-${tabItems[selectedTabIndex].noteId}`]:
-                        chain.map((item) => item.noteId),
-                }));
+                setAllChains((prev) =>
+                    mergeNoteIdChain(
+                        prev,
+                        `${tabItems[selectedTabIndex].noteType}-${tabItems[selectedTabIndex].noteId}`,
+                        chain.map((item) => item.noteId)
+                    )
+                );
             }
         } else {
             setCurrentChain([]);

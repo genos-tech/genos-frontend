@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import DashboardCustomizeRoundedIcon from "@mui/icons-material/DashboardCustomizeRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import GroupsRoundedIcon from "@mui/icons-material/GroupsRounded";
 import SmartToyRoundedIcon from "@mui/icons-material/SmartToyRounded";
@@ -42,6 +43,11 @@ export const TaskHomeTabBar = ({ activeTab, setActiveTab }: TaskHomeTabBarProps)
                 id: "agent",
                 label: t.tasks.dashboard.tabAgentActivity,
                 icon: <SmartToyRoundedIcon />,
+            },
+            {
+                id: "custom",
+                label: t.tasks.dashboard.tabCustomDashboards,
+                icon: <DashboardCustomizeRoundedIcon />,
             },
         ],
         [t]

@@ -1,3 +1,4 @@
+import { DIAGRAM_STATUS_ORDER } from "../../meta/taskStatuses";
 import { READABLE_ZOOM } from "./initialViewport";
 import { COL_GAP, FREE_ROW_COLUMNS, MARGIN, NODE_WIDTH } from "./layoutDiagram";
 
@@ -6,7 +7,7 @@ import { COL_GAP, FREE_ROW_COLUMNS, MARGIN, NODE_WIDTH } from "./layoutDiagram";
  * are testable without a browser.
  */
 
-const STATUS_ORDER = ["WIP", "Blocked", "Open", "Pending"];
+const STATUS_ORDER = DIAGRAM_STATUS_ORDER;
 const PRIORITY_ORDER = ["Critical", "High", "Normal", "Low", "Minimal"];
 
 /**

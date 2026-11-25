@@ -632,14 +632,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderMyNoteTree = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
+            activeTab={useNM.tabsApi.activeTab}
+            createChildNoteList={(node) => <ChildNoteCreator node={node} useNM={useNM} />}
             currentChain={myNoteState.tmpCurrentChain}
             node={node}
             noteType={1}
-            timestamp={myNoteState.timestamp}
             useNM={useNM}
-            createChildNoteList={(node) => (
-                <ChildNoteCreator node={node} timestamp={myNoteState.timestamp} useNM={useNM} />
-            )}
             rowMenuItems={(node: MyNoteMetaTreeNode) => [
                 {
                     id: "move-to-folder",
@@ -792,30 +790,26 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderTaskNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
+            activeTab={useNM.tabsApi.activeTab}
+            createChildNoteList={(node) => <ChildNoteCreator node={node} useNM={useNM} />}
             currentChain={taskNoteState.tmpCurrentChain}
             node={node}
             noteType={2}
             rowMenuItems={(node) => [buildExportMenuItem(2, node), buildDeleteMenuItem(2, node)]}
-            timestamp={taskNoteState.timestamp}
             useNM={useNM}
-            createChildNoteList={(node) => (
-                <ChildNoteCreator node={node} timestamp={taskNoteState.timestamp} useNM={useNM} />
-            )}
         />
     );
 
     const renderChatNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
+            activeTab={useNM.tabsApi.activeTab}
+            createChildNoteList={(node) => <ChildNoteCreator node={node} useNM={useNM} />}
             currentChain={chatNoteState.tmpCurrentChain}
             node={node}
             noteType={3}
             rowMenuItems={(node) => [buildExportMenuItem(3, node), buildDeleteMenuItem(3, node)]}
-            timestamp={chatNoteState.timestamp}
             useNM={useNM}
-            createChildNoteList={(node) => (
-                <ChildNoteCreator node={node} timestamp={chatNoteState.timestamp} useNM={useNM} />
-            )}
         />
     );
 
@@ -825,19 +819,13 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderSharedNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
+            activeTab={useNM.tabsApi.activeTab}
+            createChildNoteList={(node) => <ChildNoteCreator node={node} useNM={useNM} />}
             currentChain={sharedNoteState.tmpCurrentChain}
             node={node}
             noteType={4}
             rowMenuItems={(node) => [buildExportMenuItem(4, node)]}
-            timestamp={sharedNoteState.timestamp}
             useNM={useNM}
-            createChildNoteList={(node) => (
-                <ChildNoteCreator
-                    node={node}
-                    timestamp={sharedNoteState.timestamp}
-                    useNM={useNM}
-                />
-            )}
         />
     );
 
@@ -855,14 +843,12 @@ export const NoteSidebar = (props: NoteSidebarProps) => {
     const renderTeamNoteTreeItem = (node: any) => (
         <NoteTreeRenderer
             key={node.noteId}
+            activeTab={useNM.tabsApi.activeTab}
+            createChildNoteList={(node) => <ChildNoteCreator node={node} useNM={useNM} />}
             currentChain={teamNoteState.tmpCurrentChain}
             node={node}
             noteType={8}
-            timestamp={teamNoteState.timestamp}
             useNM={useNM}
-            createChildNoteList={(node) => (
-                <ChildNoteCreator node={node} timestamp={teamNoteState.timestamp} useNM={useNM} />
-            )}
             rowMenuItems={(node: MyNoteMetaTreeNode) =>
                 canEditTeamNote(node)
                     ? [
