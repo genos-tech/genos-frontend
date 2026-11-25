@@ -38,6 +38,7 @@ import {
     hasProblems,
     NAME_MAX,
     paramKind,
+    runsRightAway,
     ScheduleForm,
     validateForm,
     WEEKDAY_NUMBERS,
@@ -125,6 +126,7 @@ export const ScheduleFormPanel = ({
         high: t.settings.llmModel.effortHigh,
     };
     const effortLabelId = useId();
+    const onceWhenLabelId = useId();
 
     const [form, setForm] = useState<ScheduleForm>(() => {
         if (schedule) return formFromSchedule(schedule, jobs);
@@ -168,7 +170,9 @@ export const ScheduleFormPanel = ({
     // edit only when the change CREATES the duplicate: two schedules that already
     // look alike must stay editable (pause, push, time) without the first one flagged.
     const duplicateNow = useMemo(() => {
-        if (hasProblems(problems)) return null;
+        // "Run right away" has no time to compare: the server asks the same question, in the
+        // same minute, and a report run again later with the same name is fine.
+        if (hasProblems(problems) || runsRightAway(form)) return null;
         const found = findDuplicate(buildCreate(form, job), existing, schedule?.id);
         if (!found || !schedule) return found;
         const before = findDuplicate(
@@ -746,7 +750,41 @@ export const ScheduleFormPanel = ({
                     </FormControl>
                 )}
 
-                {form.frequency === "once" && (
+                {/* A new one-time schedule can run as soon as it is saved (MIP-2402). Editing one
+                    keeps its date and time: there is nothing to "run right away" on a saved row. */}
+                {form.frequency === "once" && !schedule && (
+                    <FormControl data-testid="schedule-once-when" sx={{ minWidth: 0 }}>
+                        <FormLabel id={onceWhenLabelId}>{s.onceWhen}</FormLabel>
+                        <RadioGroup
+                            aria-labelledby={onceWhenLabelId}
+                            orientation="horizontal"
+                            sx={{ flexWrap: "wrap", gap: 1.5 }}
+                            value={form.runRightAway ? "now" : "at"}
+                            onChange={(e) => set("runRightAway", e.target.value === "now")}
+                        >
+                            {(["at", "now"] as const).map((choice) => (
+                                <Radio
+                                    key={choice}
+                                    label={choice === "now" ? s.onceRightAway : s.onceAtTime}
+                                    size="sm"
+                                    // A finger needs 44 px; the label is the hit area.
+                                    sx={{ alignItems: "center", minHeight: { xs: 44, md: 28 } }}
+                                    value={choice}
+                                />
+                            ))}
+                        </RadioGroup>
+                    </FormControl>
+                )}
+
+                {runsRightAway(form) && (
+                    <Typography level="body-sm" role="status" sx={{ color: g.text.secondary }}>
+                        {chosenChat
+                            ? fmt(s.runRightAwayHintChat, { chat: chatLabel(chosenChat) })
+                            : s.runRightAwayHintInbox}
+                    </Typography>
+                )}
+
+                {form.frequency === "once" && !runsRightAway(form) && (
                     <FormControl error={show && !!problems.runDate} sx={{ minWidth: 0 }}>
                         <FormLabel>{s.runDate}</FormLabel>
                         <Input
@@ -761,36 +799,38 @@ export const ScheduleFormPanel = ({
                     </FormControl>
                 )}
 
-                <FormControl error={show && !!problems.timeOfDay} sx={{ minWidth: 0 }}>
-                    <FormLabel>{s.timeOfDay}</FormLabel>
-                    <Input
-                        placeholder="09:00"
-                        sx={{ maxWidth: 140 }}
-                        value={form.timeOfDay}
-                        slotProps={{
-                            input: {
-                                inputMode: "numeric",
-                                maxLength: 5,
-                                autoComplete: "off",
-                                name: "timeOfDay",
-                                spellCheck: false,
-                                // Times are digits and a colon in every language.
-                                dir: "ltr",
-                            },
-                        }}
-                        onChange={(e) => set("timeOfDay", e.target.value)}
-                    />
-                    {timeZone && (
-                        <FormHelperText sx={{ color: g.text.secondary }}>
-                            {fmt(s.timeZone, { zone: timeZone })}
-                        </FormHelperText>
-                    )}
-                    {show && problems.timeOfDay && (
-                        <FormHelperText>
-                            {problems.timeOfDay === "required" ? s.errorRequired : s.errorTime}
-                        </FormHelperText>
-                    )}
-                </FormControl>
+                {!runsRightAway(form) && (
+                    <FormControl error={show && !!problems.timeOfDay} sx={{ minWidth: 0 }}>
+                        <FormLabel>{s.timeOfDay}</FormLabel>
+                        <Input
+                            placeholder="09:00"
+                            sx={{ maxWidth: 140 }}
+                            value={form.timeOfDay}
+                            slotProps={{
+                                input: {
+                                    inputMode: "numeric",
+                                    maxLength: 5,
+                                    autoComplete: "off",
+                                    name: "timeOfDay",
+                                    spellCheck: false,
+                                    // Times are digits and a colon in every language.
+                                    dir: "ltr",
+                                },
+                            }}
+                            onChange={(e) => set("timeOfDay", e.target.value)}
+                        />
+                        {timeZone && (
+                            <FormHelperText sx={{ color: g.text.secondary }}>
+                                {fmt(s.timeZone, { zone: timeZone })}
+                            </FormHelperText>
+                        )}
+                        {show && problems.timeOfDay && (
+                            <FormHelperText>
+                                {problems.timeOfDay === "required" ? s.errorRequired : s.errorTime}
+                            </FormHelperText>
+                        )}
+                    </FormControl>
+                )}
 
                 {/* A report in a chat sends no push: it is a message the chat's members read. */}
                 {!form.deliverChannelId && (
@@ -818,7 +858,7 @@ export const ScheduleFormPanel = ({
 
                 <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap" }} useFlexGap>
                     <Button disabled={!!duplicate} loading={busy} size="sm" type="submit">
-                        {schedule ? s.save : s.create}
+                        {schedule ? s.save : runsRightAway(form) ? s.runNow : s.create}
                     </Button>
                     <Button
                         color="neutral"

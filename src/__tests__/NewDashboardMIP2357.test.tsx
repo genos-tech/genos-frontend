@@ -125,6 +125,7 @@ describe("which parameters apply", () => {
             weekdays: [0],
             monthDay: "1",
             runDate: "",
+            runRightAway: false,
             deliverPush: true,
             aiEffort: "",
             deliverChannelId: "",

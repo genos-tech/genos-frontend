@@ -152,10 +152,14 @@ export interface ScheduleFields {
     job: string;
     params: Record<string, ParamValue>;
     frequency: ScheduleFrequency;
-    timeOfDay: string;
+    /** Omitted with `runNow`: the server uses the moment it runs. */
+    timeOfDay?: string;
     weekdays?: number[];
     monthDay?: number;
     runDate?: string;
+    /** "Run right away" (MIP-2402), a one-time schedule only: the server makes the schedule and
+     *  runs it in the same request, and the answer carries the run's `outcome`. */
+    runNow?: boolean;
     deliverPush: boolean;
     /** A chat to post the report in; null goes back to the Inbox; omitted leaves it alone. */
     deliverChannelId?: string | null;
@@ -246,16 +250,31 @@ export const createSchedule = async (
     accessToken: string | null,
     teamId: string,
     fields: ScheduleFields
-): Promise<ScheduleResult<{ schedule: Schedule }>> => {
+): Promise<ScheduleResult<{ schedule: Schedule; outcome?: RunOutcome }>> => {
     const api = authApi(accessToken);
     if (!api || !teamId) return NO_SESSION;
     try {
-        const res = await api.post<{ schedule: Schedule }>(
+        const res = await api.post<{ schedule: Schedule; run?: Partial<RunOutcome> }>(
             "/schedules/",
             { ...fields, team_id: teamId },
             SILENT
         );
-        return { ok: true, schedule: res.data.schedule };
+        const run = res.data.run;
+        return {
+            ok: true,
+            schedule: res.data.schedule,
+            // Only a "Run right away" create runs: the same shape `runScheduleNow` answers with.
+            ...(run
+                ? {
+                      outcome: {
+                          status: run.status === "ok" ? ("ok" as const) : ("failed" as const),
+                          error: run.error ?? "",
+                          title: run.title ?? "",
+                          items: run.items ?? 0,
+                      },
+                  }
+                : {}),
+        };
     } catch (error) {
         return failure(error);
     }

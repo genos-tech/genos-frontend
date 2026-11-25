@@ -4970,6 +4970,13 @@ export const ja: DeepPartial<Messages> = {
             frequencyWeekly: "選んだ曜日",
             frequencyMonthly: "月に1回",
             frequencyOnce: "1回のみ",
+            onceWhen: "実行のタイミング",
+            onceAtTime: "日時を指定",
+            onceRightAway: "今すぐ実行",
+            runRightAwayHintInbox:
+                "「今すぐ実行」を押すとすぐに実行されます。レポートは受信箱に届きます。",
+            runRightAwayHintChat:
+                "「今すぐ実行」を押すとすぐに実行されます。レポートは{chat}に投稿されます。",
             weekdays: "曜日",
             monthDay: "日付(月)",
             monthDayHint: "その日がない月は最終日に実行されます。",

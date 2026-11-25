@@ -1177,6 +1177,13 @@ export const es: DeepPartial<Messages> = {
             frequencyWeekly: "En los días de la semana que elija",
             frequencyMonthly: "Una vez al mes",
             frequencyOnce: "Solo una vez",
+            onceWhen: "Cuándo ejecutarlo",
+            onceAtTime: "En una fecha y hora",
+            onceRightAway: "Ejecutar de inmediato",
+            runRightAwayHintInbox:
+                "Se ejecuta en cuanto pulsas Ejecutar ahora. El informe llega a tu Bandeja.",
+            runRightAwayHintChat:
+                "Se ejecuta en cuanto pulsas Ejecutar ahora. El informe se publica en {chat}.",
             weekdays: "En estos días",
             monthDay: "Día del mes",
             monthDayHint: "Un mes sin ese día se ejecuta el último día.",

@@ -20,7 +20,8 @@ import type {
 
 /** What is compared: the fields of a schedule that define what it does and when. */
 export type ScheduleShape = Pick<ScheduleFields, "name" | "job" | "params" | "frequency"> & {
-    timeOfDay: string;
+    /** Absent for a "Run right away" form, which has no time and is never compared here. */
+    timeOfDay?: string;
     weekdays?: number[];
     monthDay?: number;
     runDate?: string;

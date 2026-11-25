@@ -40,8 +40,20 @@ export const runScheduleAndAnnounce = async (
     id: string,
     stillShown: () => boolean = () => false,
     postedIn: string | null = null
+): Promise<RunResult> =>
+    announceRunResult(await runScheduleNow(accessToken, teamId, id), id, stillShown, postedIn);
+
+/**
+ * The announcing half of `runScheduleAndAnnounce`, for a run that already happened: "Run right
+ * away" makes the schedule and runs it in ONE request (MIP-2402), so there is a result and nothing
+ * left to run. Calling `runScheduleNow` again would file the report twice.
+ */
+export const announceRunResult = async (
+    res: RunResult,
+    id: string,
+    stillShown: () => boolean = () => false,
+    postedIn: string | null = null
 ): Promise<RunResult> => {
-    const res = await runScheduleNow(accessToken, teamId, id);
     const s = getMessages().settings.schedules;
     const toastId = `schedule-run-${id}`;
 
