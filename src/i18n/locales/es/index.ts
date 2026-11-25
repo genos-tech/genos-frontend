@@ -1280,7 +1280,7 @@ export const es: DeepPartial<Messages> = {
                 "{name} (compártela con tu equipo para publicar una versión primero)",
             errorSkill: "Elige una habilidad.",
             effortHintNoEstimate:
-                "Cuánto trabaja la IA en esta ejecución. Gasta tus créditos de IA como una pregunta en Spotlight; la cifra real aparece en cada informe.",
+                "Cuánto trabaja la IA en esta ejecución. Gasta tus créditos de IA como una pregunta en Spotlight; el coste real solo se muestra a ti, en tu bandeja de entrada.",
             scheduleModeLabel: "Modo",
             scheduleModePlain: "Tarea programada",
             scheduleModeAi: "Tarea programada por Genos AI",
@@ -1299,7 +1299,7 @@ export const es: DeepPartial<Messages> = {
                 "Entre {from} y {to} créditos por ejecución, aproximadamente. Es una estimación.",
             effortCostTiny: "Menos de 0.01 créditos por ejecución. Es una estimación.",
             effortHint:
-                "Cuánto se esfuerza la IA en este informe. La estimación es para un informe de unas 10 tareas; la cifra real se muestra en cada informe.",
+                "Cuánto se esfuerza la IA en este informe. La estimación es para un informe de unas 10 tareas; el coste real solo se muestra a ti, en tu bandeja de entrada.",
             effortHeld: "Tu plan ejecuta esta programación con esfuerzo {level}.",
             rowEffort: "Esfuerzo de la IA: {level}",
             duplicateSame: "Ya tienes una programación que hace lo mismo a la misma hora: {name}.",

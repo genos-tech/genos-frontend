@@ -437,14 +437,51 @@ export const useNoteManagement = (
         // boot into a section that renders nothing.
         return stored === 0 ? 1 : stored;
     });
-    const [tabItems, setTabItems] = useState<NoteTabItem[]>([]);
-    const [selectedTabIndex, setSelectedTabIndex] = useState(0);
-
     // New tab API — synchronous tab operations + persistence-driven
     // rehydrate. This is the source of truth going forward; the legacy
     // `tabItems`/`selectedTabIndex` above are kept temporarily for
     // unmigrated consumers and will be removed in a follow-up cleanup.
     const tabsApi = useNoteTabs({ myself, accessToken });
+
+    // Legacy mirrors of the tab strip (`tabItems`, `selectedTabIndex`), DERIVED from `tabsApi` in
+    // the same render instead of synced by an effect: the effect cost a second commit of the
+    // whole Notes page on every tab change (MIP-1678). Nothing writes them any more, so the
+    // setters kept on the returned object are no-ops for the few callers that still hold them.
+    const tabItems = useMemo<NoteTabItem[]>(
+        () =>
+            tabsApi.tabs.map((t) => {
+                if (t.kind === "my") {
+                    return { noteType: 1, noteId: t.noteId, title: t.title } as any;
+                }
+                if (t.kind === "task") {
+                    return {
+                        noteType: 2,
+                        noteId: t.noteId,
+                        projectId: t.projectId,
+                        taskId: t.taskId,
+                        title: t.title,
+                    } as any;
+                }
+                return {
+                    noteType: 3,
+                    noteId: t.noteId,
+                    chatType: t.chatType,
+                    chatId: t.chatId,
+                    isThread: t.isThread,
+                    threadId: t.threadId,
+                    title: t.title,
+                } as any;
+            }),
+        [tabsApi.tabs]
+    );
+    const selectedTabIndex = useMemo(() => {
+        const idx = tabsApi.activeTabId
+            ? tabsApi.tabs.findIndex((t) => t.id === tabsApi.activeTabId)
+            : -1;
+        return idx === -1 ? 0 : idx;
+    }, [tabsApi.tabs, tabsApi.activeTabId]);
+    const setTabItems = useCallback((_items: NoteTabItem[]) => {}, []);
+    const setSelectedTabIndex = useCallback((_index: number) => {}, []);
     // MIP-1307: with a tab open the toast is enough (the pane still shows a note);
     // with none, the failure has to outlive the toast or the pane reads as "nothing
     // was asked for". The ref lets `loadNote` (a plain closure) see the live count.
@@ -1771,7 +1808,12 @@ export const useNoteManagement = (
         () => new Set((favoriteNotes?.folders ?? []).map((f) => f.folderId)),
         [favoriteNotes]
     );
-    const isFolderFavorited = (folderId: number): boolean => favoriteFolderIds.has(folderId);
+    // `useCallback`: the sidebar's stars call it while rendering, so it cannot sit behind a
+    // latest-ref wrapper; it changes only when the favorites do (MIP-2379).
+    const isFolderFavorited = useCallback(
+        (folderId: number): boolean => favoriteFolderIds.has(folderId),
+        [favoriteFolderIds]
+    );
 
     const toggleFolderFavorite = async (folderId: number): Promise<void> => {
         if (!accessToken) return;
@@ -1812,9 +1854,11 @@ export const useNoteManagement = (
     // — otherwise a team note's star writes an unknown `note_type: 8`
     // the server rejects, and the local key never matches the one the
     // favorites list is built from.
-    const isNoteFavorited = (noteId: number, noteType: number): boolean => {
-        return favoriteNoteIds.has(`${toBackendNoteType(noteType)}-${noteId}`);
-    };
+    const isNoteFavorited = useCallback(
+        (noteId: number, noteType: number): boolean =>
+            favoriteNoteIds.has(`${toBackendNoteType(noteType)}-${noteId}`),
+        [favoriteNoteIds]
+    );
 
     const toggleFavorite = async (noteId: number, bucketNoteType: number): Promise<boolean> => {
         if (!accessToken) return false;
@@ -2331,8 +2375,6 @@ export const useNoteManagement = (
         setCurrentMyNote(null);
         setMyNoteMeta([]);
         setMyNoteFolders([]);
-        setTabItems([]);
-        setSelectedTabIndex(0);
         setIsTaskNoteVisible(false);
         setIsTaskVisibleInNote(false);
         setCurrentChatNoteChain(undefined);
@@ -2717,41 +2759,6 @@ export const useNoteManagement = (
         loadNoteVersionsFor(nt, active.noteId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tabsApi.activeTabId, tabsApi.activeTab?.noteId]);
-
-    // Keep the legacy `tabItems`/`selectedTabIndex` mirrors in sync with
-    // the new tabsApi state so any unmigrated consumer reads a coherent
-    // value. Direct setters are no longer the source of truth — they're
-    // overwritten by this effect on every tabsApi change.
-    useEffect(() => {
-        const items = tabsApi.tabs.map((t) => {
-            if (t.kind === "my") {
-                return { noteType: 1, noteId: t.noteId, title: t.title } as any;
-            }
-            if (t.kind === "task") {
-                return {
-                    noteType: 2,
-                    noteId: t.noteId,
-                    projectId: t.projectId,
-                    taskId: t.taskId,
-                    title: t.title,
-                } as any;
-            }
-            return {
-                noteType: 3,
-                noteId: t.noteId,
-                chatType: t.chatType,
-                chatId: t.chatId,
-                isThread: t.isThread,
-                threadId: t.threadId,
-                title: t.title,
-            } as any;
-        });
-        setTabItems(items);
-        const idx = tabsApi.activeTabId
-            ? tabsApi.tabs.findIndex((t) => t.id === tabsApi.activeTabId)
-            : -1;
-        setSelectedTabIndex(idx === -1 ? 0 : idx);
-    }, [tabsApi.tabs, tabsApi.activeTabId]);
 
     return {
         // New tab-strip + chat-panel APIs (synchronous, race-free).

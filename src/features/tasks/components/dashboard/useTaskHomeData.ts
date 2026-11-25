@@ -26,6 +26,8 @@ import type { TaskHomeContentProps } from "./taskHomeTypes";
 import { useMoreAnalyticsOpen } from "./useMoreAnalyticsOpen";
 import { useTeamLoadOpen } from "./useTeamLoadOpen";
 
+const NO_TASKS: TaskTableProps[] = [];
+
 export const useTaskHomeData = (props: TaskHomeContentProps) => {
     const { useTM, usePM, useSM, myself, useCM } = props;
     const { mode } = useColorScheme();
@@ -95,19 +97,25 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
               groupedSprints.past[groupedSprints.past.length - 1] ??
               null);
 
+    const selectedSprintId = selectedSprint?.sprintId;
+    // Keyed on the sprint DATES (the only inputs): an unrelated store refresh hands back a new
+    // sprint object with the same dates and must not recompute the window.
+    const sprintStartDate = selectedSprint?.startDate;
+    const sprintEndDate = selectedSprint?.endDate;
+    const hasSprint = selectedSprint != null;
     const now = useMemo(() => {
         // The sprint's last day is a calendar day: the window runs to the END of it, local time.
-        if (selectedSprint)
-            return sprintWindowMs(selectedSprint.startDate, selectedSprint.endDate).end;
+        if (hasSprint)
+            return sprintWindowMs(sprintStartDate as string, sprintEndDate as string).end;
         return Date.now();
-    }, [selectedSprint?.sprintId]);
+    }, [hasSprint, sprintStartDate, sprintEndDate]);
     const sprintStart = useMemo(() => {
-        if (selectedSprint)
-            return sprintWindowMs(selectedSprint.startDate, selectedSprint.endDate).start;
+        if (hasSprint)
+            return sprintWindowMs(sprintStartDate as string, sprintEndDate as string).start;
         return Date.now() - 14 * 86400000;
-    }, [selectedSprint?.sprintId]);
+    }, [hasSprint, sprintStartDate, sprintEndDate]);
     // ── All-project stats ──
-    const allTasks = useTM.allTasks || [];
+    const allTasks = useTM.allTasks || NO_TASKS;
     // MIP-2000: a project is first loaded for the ongoing statuses only. Every tab but Today and
     // Agent counts the WHOLE project (closed counts, completion, milestone progress), so they
     // ask for all statuses and say "loading" until those rows are held, instead of counting a
@@ -226,9 +234,9 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
         if (!projectId) return [];
         const all = useSM.projectMilestones[projectId] ?? [];
         return all.filter((m) =>
-            selectedSprint ? m.sprintId === selectedSprint.sprintId : m.sprintId == null
+            selectedSprintId != null ? m.sprintId === selectedSprintId : m.sprintId == null
         );
-    }, [usePM.currentProject?.projectId, selectedSprint?.sprintId, useSM.projectMilestones]);
+    }, [usePM.currentProject?.projectId, selectedSprintId, useSM.projectMilestones]);
 
     // Roll the per-milestone task counts up into one sprint total.
     // Each milestone's `tasksTotal` / `tasksClosed` already excludes Deleted
@@ -375,7 +383,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     const recentTasks = useMemo(() => {
         return effectiveTasks
             .filter((t) =>
-                selectedSprint ? t.sprintId === selectedSprint.sprintId : t.sprintId == null
+                selectedSprintId != null ? t.sprintId === selectedSprintId : t.sprintId == null
             )
             .sort((a, b) => {
                 const dA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
@@ -383,7 +391,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
                 return dB - dA;
             })
             .slice(0, 12);
-    }, [effectiveTasks, selectedSprint?.sprintId]);
+    }, [effectiveTasks, selectedSprintId]);
 
     // Numeric task ids for the sprint-scoped velocity chart. Same filter
     // as `recentTasks` (selected sprint, or backlog when none) — velocity
@@ -392,20 +400,20 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     const sprintTaskIds = useMemo(() => {
         return effectiveTasks
             .filter((t) =>
-                selectedSprint ? t.sprintId === selectedSprint.sprintId : t.sprintId == null
+                selectedSprintId != null ? t.sprintId === selectedSprintId : t.sprintId == null
             )
             .map((t) => Number(t.id))
             .filter((n) => Number.isFinite(n) && n > 0);
-    }, [effectiveTasks, selectedSprint?.sprintId]);
+    }, [effectiveTasks, selectedSprintId]);
 
     const sprintTaskUpdatedAt = useMemo(
         () =>
             taskUpdatedAtById(
                 effectiveTasks.filter((t) =>
-                    selectedSprint ? t.sprintId === selectedSprint.sprintId : t.sprintId == null
+                    selectedSprintId != null ? t.sprintId === selectedSprintId : t.sprintId == null
                 )
             ),
-        [effectiveTasks, selectedSprint?.sprintId]
+        [effectiveTasks, selectedSprintId]
     );
 
     // Per-assignee task-id subsets for the velocity chart's "by member"
@@ -416,9 +424,8 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
     const sprintMembers = useMemo(() => {
         const map = new Map<string, { id: string; name: string; taskIds: number[] }>();
         for (const t of effectiveTasks) {
-            const inSprint = selectedSprint
-                ? t.sprintId === selectedSprint.sprintId
-                : t.sprintId == null;
+            const inSprint =
+                selectedSprintId != null ? t.sprintId === selectedSprintId : t.sprintId == null;
             if (!inSprint || !t.assigneeId) continue;
             const id = Number(t.id);
             if (!Number.isFinite(id) || id <= 0) continue;
@@ -431,7 +438,7 @@ export const useTaskHomeData = (props: TaskHomeContentProps) => {
             map.set(t.assigneeId, entry);
         }
         return Array.from(map.values()).sort((a, b) => b.taskIds.length - a.taskIds.length);
-    }, [effectiveTasks, selectedSprint?.sprintId]);
+    }, [effectiveTasks, selectedSprintId]);
 
     // ── Priority breakdown (active tasks only) ──
     // "Active" uses effectiveStatus, so sub-tasks of Closed parents are

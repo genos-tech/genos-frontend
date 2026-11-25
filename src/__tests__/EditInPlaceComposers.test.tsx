@@ -429,6 +429,29 @@ describe("BnUpdateTaskCommentEditor (comment edit)", () => {
         expect(setTaskCommentLines).toHaveBeenLastCalledWith(4);
     });
 
+    it("does not re-mirror the line count when only the parent's count prop changes", () => {
+        const view = render(commentEdit());
+        expect(setTaskCommentLines).toHaveBeenCalledTimes(1);
+        view.rerender(commentEdit({ taskCommentLines: 99 }));
+        view.rerender(commentEdit({ taskCommentLines: 7, setTaskCommentLines: vi.fn() }));
+        expect(setTaskCommentLines).toHaveBeenCalledTimes(1);
+    });
+
+    it("mirrors through the latest setter when the line count changes", () => {
+        const later = vi.fn();
+        const view = render(commentEdit());
+        view.rerender(commentEdit({ setTaskCommentLines: later }));
+        typeInto("a", 2);
+        expect(later).toHaveBeenLastCalledWith(4);
+    });
+
+    it("does not clear again on a re-render while edit mode stays off", () => {
+        const view = render(commentEdit({ isInEdit: false }));
+        const cleared = lastEditor().replaceBlocks.mock.calls.length;
+        view.rerender(commentEdit({ isInEdit: false, taskCommentLines: 3 }));
+        expect(lastEditor().replaceBlocks.mock.calls.length).toBe(cleared);
+    });
+
     it("empties the editor when edit mode ends or the task changes", () => {
         const view = render(commentEdit());
         view.rerender(commentEdit({ isInEdit: false }));

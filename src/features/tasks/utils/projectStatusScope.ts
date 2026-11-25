@@ -15,20 +15,15 @@
 // This file is imported by the IndexedDB worker as well as the UI, so it holds
 // plain functions only (no React, no i18n, no theme).
 
+import { ACTIVE_STATUS_NAMES, STATUS_NAMES } from "../meta/taskStatuses";
+
 export type StatusScope = readonly string[] | null;
 
 /** The statuses the server accepts on `?statuses=` (genos-api task_status_scope.py). */
-export const SERVER_STATUS_LABELS: readonly string[] = [
-    "Open",
-    "WIP",
-    "Blocked",
-    "Pending",
-    "Closed",
-    "Deleted",
-];
+export const SERVER_STATUS_LABELS: readonly string[] = STATUS_NAMES;
 
 /** What the table shows by default and the first load asks for: everything not finished. */
-export const ACTIVE_STATUSES: readonly string[] = ["Open", "WIP", "Blocked", "Pending"];
+export const ACTIVE_STATUSES: readonly string[] = ACTIVE_STATUS_NAMES;
 
 /** localStorage switch (and `VITE_TASK_STATUS_SCOPE=off` at build time): every load asks for
  *  all statuses again, exactly the behaviour before MIP-2000. */

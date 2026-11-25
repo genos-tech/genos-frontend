@@ -34,12 +34,13 @@
 
 import { rgbString } from "../../../theme/tokens/color";
 import { buildRoles, SemanticRoles } from "../../../theme/tokens/roles";
+import { STATUS_NAMES, type StatusName } from "./taskStatuses";
 
 export type Tone = "info" | "warning" | "danger" | "success" | "neutral" | "muted";
 
-export const STATUS_NAMES = ["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"] as const;
+export { STATUS_NAMES };
+export type { StatusName };
 export const PRIORITY_NAMES = ["Minimal", "Low", "Normal", "High", "Critical"] as const;
-export type StatusName = (typeof STATUS_NAMES)[number];
 export type PriorityName = (typeof PRIORITY_NAMES)[number];
 
 export const STATUS_TONE: Record<StatusName, Tone> = {

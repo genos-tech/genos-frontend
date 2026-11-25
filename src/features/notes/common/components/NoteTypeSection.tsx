@@ -7,13 +7,14 @@ import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import { DroppableHeader, type SidebarDndKind } from "../dnd/sidebarNoteDnd";
+import { NoteSidebarRowNM } from "./noteSidebarSlices";
 
 interface NoteTypeSectionProps {
     title: string;
     noteType: number;
     icon: ReactNode;
     children: ReactNode;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM & Partial<Pick<NoteManagementState, "currentNoteType">>;
     isDisabled?: boolean;
     /**
      * Override "is the open note in this section?", which is otherwise the note's

@@ -25,6 +25,17 @@ type uploadTaskProps = {
     setCurrentPreviewTaskId: (value: number) => void;
 };
 
+/** The "task created" cards are live-sync extras: `channelService.send` only
+ *  settles on the realtime socket's ack, and while the socket is down it
+ *  stays queued (flushed on reconnect) and never resolves. The task is
+ *  already saved by the PUT, so finishing the create must not wait on it.
+ *  Failures are logged, never thrown. */
+const postCardWithoutWaiting = (sent: Promise<unknown>, errorLabel: string): void => {
+    sent.catch((e) => {
+        console.error(errorLabel, e);
+    });
+};
+
 /** Did the task actually land? The caller tears the create form down (and
  *  wipes the draft) on success, so this MUST NOT be optimistic — every
  *  failure path returns `ok: false` and leaves the reason on screen in the
@@ -372,14 +383,13 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                         // No thread follow-up is posted: the task thread's
                         // Activities tab renders the structured audit log
                         // (`/task/activity/`) rather than system bubbles.
-                        try {
-                            await channelService.send(pmChannel.id, createTaskMessage, {
+                        postCardWithoutWaiting(
+                            channelService.send(pmChannel.id, createTaskMessage, {
                                 bodyText: taskContent.title,
                                 metadata: taskMetadata,
-                            });
-                        } catch (e) {
-                            console.error("uploadNewTask: failed to post PM task message", e);
-                        }
+                            }),
+                            "uploadNewTask: failed to post PM task message"
+                        );
                     }
                 }
 
@@ -402,8 +412,8 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     taskContent.project &&
                     createTaskMessage
                 ) {
-                    try {
-                        await channelService.send(String(taskContent.chatId), createTaskMessage, {
+                    postCardWithoutWaiting(
+                        channelService.send(String(taskContent.chatId), createTaskMessage, {
                             bodyText: taskContent.title,
                             parentId: String(taskContent.threadId),
                             metadata: {
@@ -412,13 +422,9 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                                 taskStatus: taskCreateData.task.status,
                                 systemUserId: taskContent.project.systemUserId,
                             },
-                        });
-                    } catch (e) {
-                        console.error(
-                            "uploadNewTask: failed to post task summary into open thread",
-                            e
-                        );
-                    }
+                        }),
+                        "uploadNewTask: failed to post task summary into open thread"
+                    );
                 }
                 void socket;
                 return { ok: true, taskId: taskCreateData.task.task_id };

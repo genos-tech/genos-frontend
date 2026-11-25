@@ -341,7 +341,7 @@ export const settings = {
         skillNotPublished: "{name} (share it with your team to publish a version first)",
         errorSkill: "Choose a skill.",
         effortHintNoEstimate:
-            "How hard the AI works on this run. It spends your AI credits like a question in Spotlight; the real figure is shown on each report.",
+            "How hard the AI works on this run. It spends your AI credits like a question in Spotlight; the real cost is shown only to you, in your Inbox.",
         scheduleModeLabel: "Mode",
         scheduleModePlain: "Scheduled job",
         scheduleModeAi: "Scheduled job by Genos AI",
@@ -358,7 +358,7 @@ export const settings = {
         effortCostRange: "About {from} to {to} credits per run. This is an estimate.",
         effortCostTiny: "Less than 0.01 credits per run. This is an estimate.",
         effortHint:
-            "How hard the AI works on this report. The estimate is for a report of about 10 tasks; the real figure is shown on each report.",
+            "How hard the AI works on this report. The estimate is for a report of about 10 tasks; the real cost is shown only to you, in your Inbox.",
         effortHeld: "Your plan runs this schedule at {level}.",
         rowEffort: "AI effort: {level}",
         duplicateSame:
