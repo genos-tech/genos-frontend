@@ -6,6 +6,7 @@
 // The choice sets TWO parameters of the dashboard job at once: `save_to` (me, personal_folder or
 // team_folder) and `folder_id`. The API wants `folder_id` exactly when `save_to` is a folder.
 
+import { compareText } from "../../i18n/collate";
 import type { MyNoteFolderProps, TeamNoteFolderProps } from "../../types/notes";
 
 export type SaveTo = "me" | "personal_folder" | "team_folder";
@@ -74,7 +75,7 @@ const inTreeOrder = <T extends Folder>(
 export const buildFolderChoices = (
     mine: MyNoteFolderProps[],
     team: TeamNoteFolderProps[],
-    compare: Compare = (a, b) => a.localeCompare(b)
+    compare: Compare = (a, b) => compareText(a, b)
 ): FolderChoice[] => {
     const own = inTreeOrder(mine, () => true, compare).map(
         ({ folder, depth, path }): FolderChoice => ({
