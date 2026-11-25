@@ -4,6 +4,7 @@ import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { UserProps } from "../../../../types/admin";
@@ -22,6 +23,9 @@ export type TaskHomeContentProps = {
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
     socket: Socket | null;
+    /** The notes manager, for the share dialog of a dashboard's page (MIP-2357). Optional: a host
+     *  without it simply has no Share button. */
+    useNM?: NoteManagementState;
     onCloseTaskHome: () => void;
 };
 

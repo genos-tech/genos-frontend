@@ -33,6 +33,7 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
         useCM,
         useUISM,
         socket,
+        useNM,
         onCloseTaskHome,
     } = props;
     const {
@@ -263,7 +264,22 @@ export const TaskHomeContent = (props: TaskHomeContentProps) => {
                             {/* Custom dashboards by AI (MIP-2356): needs no task rows, only the
                                 dashboards API and the HTML note viewer. */}
                             {activeTab === "custom" && (
-                                <CustomDashboardsTab teamId={myself.teamId} />
+                                <CustomDashboardsTab
+                                    teamId={myself.teamId}
+                                    share={
+                                        useNM
+                                            ? {
+                                                  myself,
+                                                  setMyself,
+                                                  socket,
+                                                  teamMembers: useTEM.teamMembers,
+                                                  useCM,
+                                                  useNM,
+                                                  useUISM,
+                                              }
+                                            : undefined
+                                    }
+                                />
                             )}
 
                             {/* ════════ TAB: Milestones — progress check (MIP-1187) ════════ */}

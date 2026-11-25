@@ -7461,6 +7461,9 @@ export const ja: DeepPartial<Messages> = {
                 deleteBody: "「{name}」は更新されなくなります。ページはノートに残ります。",
                 deleteDone: "ダッシュボードを削除しました。ページはノートに残っています。",
                 deleteFailed: "ダッシュボードを削除できませんでした。",
+                shareNamed: "「{name}」を共有",
+                shareNotice:
+                    "このページは実行のたびにダッシュボードのデータから作り直されます。実行ごとに、ページを開ける全員がそのデータをすべて見てよいかを確認します。見てはいけない人がいると実行は失敗し、3回失敗するとスケジュールは一時停止します。",
             },
             tabToday: "今日",
             // TODO(copy): MIP-1005 / MIP-1696 draft wording for a native reader.

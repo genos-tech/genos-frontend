@@ -427,6 +427,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             setMyself={setMyself}
                             socket={socket}
                             useCM={useCM}
+                            useNM={useNM}
                             usePM={usePM}
                             useSM={useSM}
                             useTEM={useTEM}
