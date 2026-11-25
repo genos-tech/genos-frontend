@@ -9,6 +9,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { withTrailingBlank } from "./utils/messageBlocks";
+import { useInsertSelectedEmoji } from "./utils/useInsertSelectedEmoji";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
@@ -237,11 +238,7 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
         }
     }, [numEditorLines]);
 
-    useEffect(() => {
-        if (selectedEmoji !== null) {
-            insertEmoji(selectedEmoji);
-        }
-    }, [selectedEmoji]);
+    useInsertSelectedEmoji(selectedEmoji, insertEmoji);
 
     // Picker is rendered via portal into document.body with position:fixed so it
     // can never be clipped by an overflow:hidden ancestor and always stacks on top.
