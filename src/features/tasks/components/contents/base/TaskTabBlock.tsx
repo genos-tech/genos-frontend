@@ -65,6 +65,8 @@ import { TaskCommentEditorBlock } from "./sub/TaskCommentEditorBlock";
 import { TaskCommentList } from "./sub/TaskCommentList";
 import { TaskProgressFeed } from "./sub/TaskProgressFeed";
 
+const NO_ATTACHMENTS: AttachmentFileProps[] = [];
+
 type TaskTabBlockProps = {
     socket: Socket | null;
     myself: UserProps;
@@ -180,7 +182,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     }, [itemId]);
     const showUnder = hasChildren && activityScope === "under";
 
-    const attachments = taskContent.attachments ?? [];
+    const attachments = taskContent.attachments ?? NO_ATTACHMENTS;
     const previews = useAttachmentPreviews(attachments);
     const nextClientId = useAttachmentClientIds();
     // Per-file size cap. `filterFiles` accepts only files within the

@@ -30,6 +30,11 @@ export const useAppInitialization = () => {
     // (vs. the initial mount where currentTeamId starts as "").
     const lastInitializedTeamIdRef = useRef<string>("");
 
+    // The managers are new objects every render; the team-switch effect below
+    // runs on `myself` only and reads the latest ones through this ref.
+    const managersRef = useRef({ useTEM, useUISM });
+    managersRef.current = { useTEM, useUISM };
+
     // Initialize database
     useEffect(() => {
         initDB();
@@ -46,6 +51,7 @@ export const useAppInitialization = () => {
         // fired by `useTeamManagement`'s own `[myself]` effect — calling it
         // here too fired findTeam twice on boot. This effect only owns the
         // team-switch IDB wipe + isLoading toggle below.
+        const { useTEM, useUISM } = managersRef.current;
         if (myself.teamId !== useTEM.currentTeamId) {
             const previousTeamId = lastInitializedTeamIdRef.current;
             const isTeamSwitch = previousTeamId !== "" && previousTeamId !== myself.teamId;

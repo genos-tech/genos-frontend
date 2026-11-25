@@ -82,15 +82,17 @@ describe("Settings guide map (MIP-2320)", () => {
         }
     });
 
-    it("renders every enabled tab and every rendered guide id is in the map", () => {
-        for (const def of SETTINGS_TABS.filter((t) => t.enabled)) {
-            const ids = renderTab(def.key);
-            expect(ids.has(def.key), `tab panel ${def.key} has no data-guide-id`).toBe(true);
+    // One test per tab: each render is its own 5 s budget instead of all tabs sharing one.
+    it.each(SETTINGS_TABS.filter((t) => t.enabled).map((t) => t.key))(
+        "renders the %s tab and every rendered guide id is in the map",
+        (key) => {
+            const ids = renderTab(key);
+            expect(ids.has(key), `tab panel ${key} has no data-guide-id`).toBe(true);
             for (const id of ids) {
                 expect(ALL_GUIDE_IDS, `rendered id "${id}" has no map entry`).toContain(id);
             }
         }
-    });
+    );
 
     it("has a rendered row for every map entry (source scan covers panels stubbed here)", () => {
         const declared = declaredInSource();

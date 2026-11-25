@@ -137,6 +137,43 @@ describe("uploadNewTask → PM channel", () => {
         expect(dmSends[0][2].parentId).toBe("thread-uuid");
     });
 
+    it("finishes on the HTTP response when the socket is down (card send never settles)", async () => {
+        // Socket down: `channelService.send` queues the card and its promise
+        // stays pending until a reconnect. The create must still resolve.
+        vi.spyOn(channelService, "send").mockReturnValue(new Promise(() => undefined) as never);
+
+        const result = await Promise.race([
+            uploadNewTask({
+                ...baseInput(),
+                taskContent: makeTaskContent({
+                    chatType: 1,
+                    chatId: "dm-uuid",
+                    threadId: "thread-uuid",
+                }),
+            }),
+            new Promise((resolve) => setTimeout(() => resolve("hung"), 500)),
+        ]);
+
+        expect(result).toEqual({ ok: true, taskId: 101 });
+        const send = channelService.send as unknown as ReturnType<typeof vi.fn>;
+        // Both cards were still handed to the queue for live sync.
+        expect(send).toHaveBeenCalledTimes(2);
+    });
+
+    it("logs, and still succeeds, when a card send is rejected", async () => {
+        const err = vi.spyOn(console, "error").mockImplementation(() => undefined);
+        vi.spyOn(channelService, "send").mockRejectedValue(new Error("socket gone"));
+
+        const result = await uploadNewTask(baseInput());
+        await Promise.resolve();
+
+        expect(result).toEqual({ ok: true, taskId: 101 });
+        expect(err).toHaveBeenCalledWith(
+            "uploadNewTask: failed to post PM task message",
+            expect.any(Error)
+        );
+    });
+
     it("does NOT cross-post from ambient chat state when taskContent has no linkage", async () => {
         // The pre-fix behavior: an open-but-unrelated thread leaked its
         // ids into the create. With no captured linkage there must be no

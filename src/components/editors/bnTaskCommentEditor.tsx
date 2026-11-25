@@ -9,6 +9,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { withTrailingBlank } from "./utils/messageBlocks";
+import { useInsertSelectedEmoji } from "./utils/useInsertSelectedEmoji";
 
 import { useMentionGroupsContext } from "../../context/MentionGroupsContext";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
@@ -231,17 +232,19 @@ export const BnTaskCommentEditor = (props: BnTaskCommentEditorProps) => {
     // parent's sticky-comment chip can react. Height is no longer
     // computed here — the editor auto-sizes inside its CSS min/max
     // bounds and the comment list flexes above it.
+    const taskCommentLinesRef = useRef(taskCommentLines);
+    const setTaskCommentLinesRef = useRef(setTaskCommentLines);
     useEffect(() => {
-        if (numEditorLines !== taskCommentLines) {
-            setTaskCommentLines(numEditorLines);
+        taskCommentLinesRef.current = taskCommentLines;
+        setTaskCommentLinesRef.current = setTaskCommentLines;
+    });
+    useEffect(() => {
+        if (numEditorLines !== taskCommentLinesRef.current) {
+            setTaskCommentLinesRef.current(numEditorLines);
         }
     }, [numEditorLines]);
 
-    useEffect(() => {
-        if (selectedEmoji !== null) {
-            insertEmoji(selectedEmoji);
-        }
-    }, [selectedEmoji]);
+    useInsertSelectedEmoji(selectedEmoji, insertEmoji);
 
     // Picker is rendered via portal into document.body with position:fixed so it
     // can never be clipped by an overflow:hidden ancestor and always stacks on top.

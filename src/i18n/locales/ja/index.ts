@@ -5071,7 +5071,7 @@ export const ja: DeepPartial<Messages> = {
             skillNotPublished: "{name}（先にチームと共有してバージョンを公開してください）",
             errorSkill: "スキルを選択してください。",
             effortHintNoEstimate:
-                "この実行で AI がどれだけ深く考えるか。Spotlight での質問と同じように AI クレジットを使います。実際の消費量は各レポートに表示されます。",
+                "この実行で AI がどれだけ深く考えるか。Spotlight での質問と同じように AI クレジットを使います。実際の費用はあなたの受信箱にだけ表示されます。",
             scheduleModeLabel: "モード",
             scheduleModePlain: "スケジュールジョブ",
             scheduleModeAi: "Genos AI によるスケジュールジョブ",
@@ -5089,7 +5089,7 @@ export const ja: DeepPartial<Messages> = {
             effortCostRange: "1 回の実行あたり約 {from}〜{to} クレジット。これは見積もりです。",
             effortCostTiny: "1 回の実行あたり 0.01 クレジット未満。これは見積もりです。",
             effortHint:
-                "このレポートで AI がどれだけ深く考えるかです。見積もりはタスク約 10 件のレポートの場合で、実際の数値は各レポートに表示されます。",
+                "このレポートで AI がどれだけ深く考えるかです。見積もりはタスク約 10 件のレポートの場合で、実際の費用はあなたの受信箱にだけ表示されます。",
             effortHeld: "ご利用のプランでは、このスケジュールは「{level}」で実行されます。",
             rowEffort: "AI の Effort：{level}",
             duplicateSame: "同じ時刻に同じ内容を行うスケジュールがすでにあります：{name}。",

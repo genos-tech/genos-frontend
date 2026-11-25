@@ -12,6 +12,7 @@ import { ProjectManagementState } from "../../hooks/common/useProjectManagement"
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../hooks/notes/useNoteManagement";
+import { useHoldPreviewAfterSolo, useSoloCreatePane } from "../../hooks/tasks/useSoloCreatePane";
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { UseTodoGroupsState } from "../../hooks/useTodoGroups";
@@ -24,6 +25,7 @@ import { ChatNoteMain } from "../notes/chat-notes/components/ChatNoteMain";
 import { isNotePaneVisible } from "../notes/common/utils/notePaneVisibility";
 import { CreateTaskForm } from "../tasks/components/contents/CreateTaskForm";
 import { TaskPreview } from "../tasks/components/contents/TaskPreview";
+import { isRealTaskId } from "../tasks/utils/taskPreviewPaneVisibility";
 import { MessagesPane } from "./MainChatPane";
 import { ThreadPane } from "./ThreadChatPane";
 
@@ -146,6 +148,40 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
         useTM.setIsCreatingTask
     );
 
+    // MIP-2373: a create form opened with no preview overlay on screen shares the preview
+    // overlay, so submitting swaps its content to the new task's preview instead of closing
+    // one overlay and opening another. Same gates as the overlays below.
+    const previewOverlayShown =
+        isTaskPreviewVisibleHere &&
+        useTM.isTaskPreviewVisible === true &&
+        !!(useTM.currentPreviewTask || useTM.currentPreviewKind === "milestone");
+    const createOverlayShown =
+        useTM.isCreatingTask.flag === true && isActiveRoute && !createBlocked;
+    const soloCreate = useSoloCreatePane(createOverlayShown, previewOverlayShown);
+    // The overlay only opens for a LOADED task, and the new task loads a beat after the
+    // form closes: hold it up (TaskPreview shows its loading pane) until then.
+    const holdPreviewOverlay = useHoldPreviewAfterSolo(
+        soloCreate,
+        useTM.previewOpenCount ?? 0,
+        useTM.isTaskPreviewVisible === true &&
+            (isRealTaskId(useTM.currentPreviewTaskId) || useTM.currentPreviewKind === "milestone"),
+        previewOverlayShown
+    );
+    const createForm = (
+        <CreateTaskForm
+            myself={myself}
+            setMyself={setMyself}
+            socket={socket}
+            useCM={useCM}
+            useNM={useNM}
+            usePM={usePM}
+            useSM={useSM}
+            useTEM={useTEM}
+            useTM={useTM}
+            useUISM={useUISM}
+        />
+    );
+
     // URL-driven pane selection. Sidebar is the default; main chat takes
     // over once a chatId appears in the URL; thread replaces main once a
     // threadId appears.
@@ -236,39 +272,38 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                 Home may mount CreateTaskForm (each mount POSTs its own
                 empty task and writes the shared `initialEmptyTaskId`,
                 so a hidden second instance races the visible one). */}
-            {useTM.isCreatingTask.flag === true && isActiveRoute && !createBlocked && (
+            {createOverlayShown && !soloCreate && (
                 <MobileOverlay
                     onClose={() => useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))}
                 >
-                    <Box sx={{ p: 1, pt: 6, height: "100%", overflow: "auto" }}>
-                        <CreateTaskForm
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useNM={useNM}
-                            usePM={usePM}
-                            useSM={useSM}
-                            useTEM={useTEM}
-                            useTM={useTM}
-                            useUISM={useUISM}
-                        />
-                    </Box>
+                    <Box sx={{ p: 1, pt: 6, height: "100%", overflow: "auto" }}>{createForm}</Box>
                 </MobileOverlay>
             )}
 
             {/* Same surface-scoping as the desktop chat pane: the global
                 `isTaskPreviewVisible` is shared with the task page, so on
                 its own it would pop this overlay open on the chat page
-                for a preview the user opened on the task page. */}
-            {isTaskPreviewVisibleHere &&
-                useTM.isTaskPreviewVisible === true &&
-                (useTM.currentPreviewTask || useTM.currentPreviewKind === "milestone") && (
-                    // The shared shell, not the local copy above: that one floats
-                    // Close over the pane (hence `pt: 6` = 48px of blank at the top),
-                    // pads the pane by 8px, and leaves a dead strip under it. The
-                    // preview's Sheet is the one scroller, as on the task page.
-                    <SharedMobileOverlay onClose={() => useTM.setIsTaskPreviewVisible(false)}>
+                for a preview the user opened on the task page.
+                A create form opened with no preview on screen (`soloCreate`)
+                fills THIS overlay (MIP-2373), and on submit the same shell
+                swaps to the new task's preview. */}
+            {(soloCreate || previewOverlayShown || holdPreviewOverlay) && (
+                // The shared shell, not the local copy above: that one floats
+                // Close over the pane (hence `pt: 6` = 48px of blank at the top),
+                // pads the pane by 8px, and leaves a dead strip under it. The
+                // preview's Sheet is the one scroller, as on the task page.
+                <SharedMobileOverlay
+                    onClose={
+                        soloCreate
+                            ? () => useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }))
+                            : () => useTM.setIsTaskPreviewVisible(false)
+                    }
+                >
+                    {soloCreate ? (
+                        <Box sx={{ p: 1, flex: 1, minHeight: 0, overflow: "auto" }}>
+                            {createForm}
+                        </Box>
+                    ) : (
                         <TaskPreview
                             myself={myself}
                             setMyself={setMyself}
@@ -281,9 +316,11 @@ export const MobileChatHome = (props: MobileChatHomeProps) => {
                             useTEM={useTEM}
                             useTM={useTM}
                             useUISM={useUISM}
+                            holdSwitchWithLoader
                         />
-                    </SharedMobileOverlay>
-                )}
+                    )}
+                </SharedMobileOverlay>
+            )}
 
             {/* Derived, not the raw intent flag: `ChatNoteMain` renders
                 nothing without an open note, so the overlay would be an

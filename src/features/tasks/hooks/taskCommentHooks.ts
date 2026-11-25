@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { VirtuosoHandle } from "react-virtuoso";
 
 import { TaskCommentProps } from "../../../types/tasks";
@@ -9,9 +9,13 @@ export const useScrollToBottomOnNewTaskComment = (
     taskComments: TaskCommentProps[],
     scrollToBottom: boolean
 ) => {
+    // Read at effect time: the effect is keyed on the comment list alone, so a
+    // flag flip must not re-run it (and scroll) by itself.
+    const scrollToBottomRef = useRef(scrollToBottom);
+    scrollToBottomRef.current = scrollToBottom;
     useEffect(() => {
         const virtuoso = virtuosoRef.current;
-        if (virtuoso === null || scrollToBottom === false) {
+        if (virtuoso === null || scrollToBottomRef.current === false) {
             return;
         } else {
             setTimeout(() => {
@@ -21,7 +25,7 @@ export const useScrollToBottomOnNewTaskComment = (
                 });
             }, 300); // wait 300ms
         }
-    }, [taskComments]);
+    }, [taskComments, virtuosoRef]);
 };
 
 /**
@@ -52,5 +56,5 @@ export const useScrollToTaskCommentByCommentId = (
         return () => clearTimeout(timer);
         // `taskComments` is included so a deep link that lands before
         // the list has loaded still scrolls once the comments arrive.
-    }, [focusedCommentId, taskComments]);
+    }, [focusedCommentId, taskComments, virtuosoRef]);
 };

@@ -1,4 +1,5 @@
 import { TaskTableProps } from "../../../types/tasks";
+import { WORKFLOW_STATUS_NAMES } from "../meta/taskStatuses";
 import { effectiveStatusOf, selectAncestorVerdicts } from "./closedByAncestor";
 
 /**
@@ -14,7 +15,7 @@ import { effectiveStatusOf, selectAncestorVerdicts } from "./closedByAncestor";
 
 /** Statuses that get a chip of their own, in the order used across the app
  *  (the task table, the filters, the milestone status order). */
-export const MILESTONE_PROGRESS_ORDER = ["Open", "WIP", "Blocked", "Pending", "Closed"] as const;
+export const MILESTONE_PROGRESS_ORDER = WORKFLOW_STATUS_NAMES;
 
 export type MilestoneProgressStatus = (typeof MILESTONE_PROGRESS_ORDER)[number];
 

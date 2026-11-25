@@ -17,6 +17,7 @@ import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useOptionalAccessToken } from "../../../../context/authState";
 import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
+import { WORKFLOW_STATUS_NAMES } from "../../meta/taskStatuses";
 import {
     commitTaskImport,
     previewTaskImport,
@@ -51,7 +52,7 @@ const FIELDS: ImportField[] = [
     "parent",
     "external_id",
 ];
-const STATUSES = ["Open", "WIP", "Blocked", "Pending", "Closed"] as const;
+const STATUSES = WORKFLOW_STATUS_NAMES;
 const PRIORITIES = ["Minimal", "Low", "Normal", "High", "Critical"] as const;
 
 interface Props {

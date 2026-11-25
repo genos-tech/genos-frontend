@@ -31,6 +31,10 @@ export const useAdoptableTitleDraft = (
 ) => {
     const [titleDraft, setTitleDraftState] = useState(externalTitle ?? "");
     const editedRef = useRef(false);
+    // Latest external title, read by the identity-switch effect below without
+    // making it a dependency (that effect is keyed on the id alone).
+    const externalTitleRef = useRef(externalTitle);
+    externalTitleRef.current = externalTitle;
 
     // The user typed: the draft is now ahead of the store, so stop adopting.
     const setTitleDraft = useCallback((next: string) => {
@@ -52,9 +56,10 @@ export const useAdoptableTitleDraft = (
     // already the new entity's (the caller's lookup memo recomputes in the
     // same render).
     useEffect(() => {
-        if (externalTitle == null) return;
+        const latestTitle = externalTitleRef.current;
+        if (latestTitle == null) return;
         editedRef.current = false;
-        setTitleDraftState(externalTitle);
+        setTitleDraftState(latestTitle);
     }, [entityId]);
 
     // Adopt an external rename, unless a local edit is still unsaved.

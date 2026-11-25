@@ -3,9 +3,9 @@ import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { IconButton } from "@mui/joy";
 
 import { NAV_KEEP_CLASS } from "../../../../components/ui/nav/navStyles";
-import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
+import { NoteSidebarRowNM } from "./noteSidebarSlices";
 
 /**
  * A note row's favorite star (MIP-1430): a lit star stays visible, an unlit one appears with
@@ -22,7 +22,7 @@ export const NoteFavoriteStar = ({
 }: {
     noteId: number;
     noteType: number;
-    useNM: NoteManagementState;
+    useNM: NoteSidebarRowNM;
 }) => {
     const { t } = useTranslation();
     const isFavorited = useNM.isNoteFavorited(noteId, noteType);

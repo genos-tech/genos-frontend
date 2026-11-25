@@ -1108,13 +1108,17 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         () => (rehydrateKeys(stored.memberKeys) as MemberFilterKey[] | null) ?? [MEMBER_ALL]
     );
     const [openMemberFilter, setOpenMemberFilter] = React.useState(false);
+    // Latest selection, read by the prune effect below (which is keyed on the roster only).
+    const selectedMemberKeysRef = React.useRef(selectedMemberKeys);
+    selectedMemberKeysRef.current = selectedMemberKeys;
     // Drop a selected member id that's no longer on the team (member
     // removed) so we don't filter by a stale id and show an empty table.
     useEffect(() => {
-        if (selectedMemberKeys.length === 1 && selectedMemberKeys[0] === MEMBER_ALL) return;
+        const keys = selectedMemberKeysRef.current;
+        if (keys.length === 1 && keys[0] === MEMBER_ALL) return;
         const validIds = new Set((teamMembers ?? []).map((m) => String(m.userId)));
-        const pruned = selectedMemberKeys.filter((k) => k === MEMBER_NONE || validIds.has(k));
-        if (pruned.length === selectedMemberKeys.length) return;
+        const pruned = keys.filter((k) => k === MEMBER_NONE || validIds.has(k));
+        if (pruned.length === keys.length) return;
         setSelectedMemberKeys(pruned.length > 0 ? pruned : [MEMBER_ALL]);
     }, [teamMembers]);
     const handleCloseMemberFilter = (key: MemberFilterKey) => {

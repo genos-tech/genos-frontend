@@ -4872,7 +4872,7 @@ export const zh: DeepPartial<Messages> = {
             skillNotPublished: "{name}（请先与团队共享以发布一个版本）",
             errorSkill: "请选择一个技能。",
             effortHintNoEstimate:
-                "AI 在这次运行中投入的程度。它会像在 Spotlight 中提问一样消耗你的 AI 额度；实际用量会显示在每份报告上。",
+                "AI 在这次运行中投入的程度。它会像在 Spotlight 中提问一样消耗你的 AI 额度；实际费用只会显示给你，在你的收件箱中。",
             scheduleModeLabel: "模式",
             scheduleModePlain: "定时任务",
             scheduleModeAi: "由 Genos AI 执行的定时任务",
@@ -4889,7 +4889,7 @@ export const zh: DeepPartial<Messages> = {
             effortCostRange: "每次运行约 {from} 至 {to} 积分。这只是估算。",
             effortCostTiny: "每次运行不到 0.01 积分。这只是估算。",
             effortHint:
-                "AI 在这份报告上投入的程度。估算按约 10 个任务的报告计算;实际数字会显示在每份报告上。",
+                "AI 在这份报告上投入的程度。估算按约 10 个任务的报告计算;实际费用只会显示给你，在你的收件箱中。",
             effortHeld: "你的套餐以“{level}”运行此定时任务。",
             rowEffort: "AI 推理强度:{level}",
             duplicateSame: "你已经有一个在相同时间做相同事情的定时任务:{name}。",
