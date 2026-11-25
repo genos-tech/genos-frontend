@@ -5067,6 +5067,11 @@ export const ja: DeepPartial<Messages> = {
             saveToLoading: "フォルダを読み込み中…",
             saveToLoadFailed: "フォルダを読み込めませんでした。",
             paramChoose: "選択してください…",
+            paramSource: "作成方法",
+            paramSourceHint:
+                "マイルストーン、プロジェクト、自分の進捗の標準ページ、またはあなたのスキルがデータから作るページです。スキルが作るページは、あなただけが読める場所に保存されます。",
+            sourceTemplate: "標準のページ",
+            sourceSkill: "選んだスキル",
             paramKind: "ダッシュボードの対象",
             paramKindHint:
                 "ページの対象です。マイルストーン、プロジェクト、または自分の進捗から選びます。",

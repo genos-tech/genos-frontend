@@ -43,6 +43,12 @@ export const showsEffort = (
     typed: Record<string, string>
 ): boolean => {
     if (!jobUsesAi(job)) return false;
+    // A dashboard made by a skill always uses the model (MIP-2399): no switch to leave off.
+    if (
+        Object.prototype.hasOwnProperty.call(job?.params ?? {}, "source") &&
+        typed.source === "skill"
+    )
+        return true;
     const key = aiSwitchKey(job);
     return key === undefined || typed[key] === "true";
 };

@@ -1273,6 +1273,11 @@ export const es: DeepPartial<Messages> = {
             saveToLoading: "Cargando carpetas…",
             saveToLoadFailed: "No se pudieron cargar las carpetas.",
             paramChoose: "Elige…",
+            paramSource: "Creado por",
+            paramSourceHint:
+                "Una página integrada para un hito, un proyecto o tu propio progreso, o una página que una de tus habilidades crea con tus datos. Una página creada por una habilidad se guarda donde solo tú puedes leerla.",
+            sourceTemplate: "Página integrada",
+            sourceSkill: "Una habilidad que elijo",
             paramKind: "Panel de",
             paramKindHint: "Qué cubre la página: un hito, un proyecto o tu propio progreso.",
             paramPeriod: "Periodo",

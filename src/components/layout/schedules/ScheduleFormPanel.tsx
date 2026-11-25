@@ -582,7 +582,7 @@ export const ScheduleFormPanel = ({
                                             disabled={locked}
                                             placeholder={required ? s.paramChoose : s.paramDefault}
                                             sx={{ minWidth: 0 }}
-                                            value={form.params[key] || null}
+                                            value={form.params[key] || known?.defaultValue || null}
                                             onChange={(_, v) => setParam(v ?? "")}
                                         >
                                             {(spec.enum ?? []).map((v) => {
