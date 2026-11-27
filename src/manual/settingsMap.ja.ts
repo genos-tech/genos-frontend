@@ -57,6 +57,14 @@ export const JA_SETTINGS_TEXT: Record<SettingGuideId, JaSettingText> = {
         name: "スケジュール: レポートの送信先",
         default: "自分の受信箱",
     },
+    "spotlight.scheduleRunRightAway": {
+        name: "スケジュール、1回のみ: 実行のタイミング(日時を指定、または今すぐ実行)",
+        default: "日時を指定",
+    },
+    "spotlight.scheduleDashboardSource": {
+        name: "スケジュール、ダッシュボードページ: 作成方法(標準のページ、またはスキル)",
+        default: "標準のページ",
+    },
     "spotlight.scheduleDashboardKind": {
         name: "スケジュール、ダッシュボードページ: ダッシュボードの対象(マイルストーン、プロジェクト、自分の進捗)",
         default: "未選択: 1つ選びます",
@@ -68,6 +76,10 @@ export const JA_SETTINGS_TEXT: Record<SettingGuideId, JaSettingText> = {
     "spotlight.scheduleDashboardFocus": {
         name: "スケジュール、ダッシュボードページ: 注目する点",
         default: "空欄",
+    },
+    "spotlight.scheduleDashboardSaveTo": {
+        name: "スケジュール、ダッシュボードページ: 保存先",
+        default: "マイノート",
     },
     chat: {
         default:
