@@ -1,7 +1,7 @@
 /**
- * The phone / location / local-time / about rows on the profile card.
+ * The location / local-time / about rows on the profile card.
  *
- * The recurring rule across all four: a field you haven't set renders as
+ * The recurring rule across all of them: a field you haven't set renders as
  * a prompt on YOUR card and as nothing at all on anyone else's. An empty
  * labelled row on a colleague's profile is noise — it reports an absence
  * nobody asked about — and on your own it's the affordance.
@@ -16,7 +16,6 @@ import { UserProfileAbout } from "../features/admin/components/modals/sub/UserPr
 import { UserProfileLocalTime } from "../features/admin/components/modals/sub/UserProfileLocalTime";
 import { UserProfileLocation } from "../features/admin/components/modals/sub/UserProfileLocation";
 import { UserProfileLocationShare } from "../features/admin/components/modals/sub/UserProfileLocationShare";
-import { UserProfilePhone } from "../features/admin/components/modals/sub/UserProfilePhone";
 import { updateUserProfile } from "../features/admin/services/updateUserProfile";
 import {
     clearPrivateProfile,
@@ -56,92 +55,6 @@ beforeEach(() => {
     localStorage.clear();
     clearPrivateProfile();
     vi.mocked(updateUserProfile).mockResolvedValue({ ok: true });
-});
-
-describe("UserProfilePhone", () => {
-    it("prompts me to add one when mine is unset", () => {
-        wrap(<UserProfilePhone myself={me} setMyself={vi.fn()} user={me} />);
-        expect(screen.getByText("Add a phone number")).toBeInTheDocument();
-    });
-
-    it("renders nothing for someone else who hasn't set one", () => {
-        const { container } = wrap(
-            <UserProfilePhone myself={me} setMyself={vi.fn()} user={other} />
-        );
-        expect(container).toBeEmptyDOMElement();
-    });
-
-    it("renders nothing when the server withheld the field", () => {
-        // Guests and cross-team collaborators get roster rows with no
-        // `phoneNumber` key at all (`_without_phone` server-side), which
-        // must read the same as "not set" rather than as an empty row.
-        const guestView = makeUser({ userId: "user-2", userName: "Bob" });
-        expect(guestView.phoneNumber).toBeUndefined();
-        const { container } = wrap(
-            <UserProfilePhone myself={me} setMyself={vi.fn()} user={guestView} />
-        );
-        expect(container).toBeEmptyDOMElement();
-    });
-
-    it("shows a colleague's number when they have set one", () => {
-        wrap(
-            <UserProfilePhone
-                myself={me}
-                setMyself={vi.fn()}
-                user={makeUser({ userId: "user-2", phoneNumber: "+81 90-1234-5678" })}
-            />
-        );
-        expect(screen.getByText("+81 90-1234-5678")).toBeInTheDocument();
-    });
-
-    it("is not editable on someone else's profile", async () => {
-        const user = userEvent.setup();
-        wrap(
-            <UserProfilePhone
-                myself={me}
-                setMyself={vi.fn()}
-                user={makeUser({ userId: "user-2", phoneNumber: "+81 90-1234-5678" })}
-            />
-        );
-        await user.click(screen.getByText("+81 90-1234-5678"));
-        expect(screen.queryByRole("textbox")).toBeNull();
-    });
-
-    it("saves my own number and mirrors it in memory, not storage", async () => {
-        const user = userEvent.setup();
-        const setMyself = vi.fn();
-        wrap(<UserProfilePhone myself={me} setMyself={setMyself} user={me} />);
-
-        await user.click(screen.getByText("Add a phone number"));
-        await user.type(screen.getByRole("textbox"), "+81 90-1234-5678");
-        await user.click(screen.getByRole("button", { name: "Save" }));
-
-        await waitFor(() => expect(updateUserProfile).toHaveBeenCalledTimes(1));
-        expect(updateUserProfile).toHaveBeenCalledWith(
-            expect.objectContaining({ userId: "user-1", phoneNumber: "+81 90-1234-5678" })
-        );
-        expect(setMyself).toHaveBeenCalledWith(
-            expect.objectContaining({ phoneNumber: "+81 90-1234-5678" })
-        );
-        expect(getPrivateProfile().phoneNumber).toBe("+81 90-1234-5678");
-        // Profile PII is never written to localStorage (MIP-619).
-        expect(localStorage.getItem("phoneNumber")).toBeNull();
-    });
-
-    it("does not commit locally when the save fails", async () => {
-        const user = userEvent.setup();
-        vi.mocked(updateUserProfile).mockResolvedValue(undefined);
-        const setMyself = vi.fn();
-        wrap(<UserProfilePhone myself={me} setMyself={setMyself} user={me} />);
-
-        await user.click(screen.getByText("Add a phone number"));
-        await user.type(screen.getByRole("textbox"), "+81 90-1234-5678");
-        await user.click(screen.getByRole("button", { name: "Save" }));
-
-        await waitFor(() => expect(updateUserProfile).toHaveBeenCalled());
-        expect(setMyself).not.toHaveBeenCalled();
-        expect(getPrivateProfile().phoneNumber).toBe("");
-    });
 });
 
 describe("UserProfileLocation", () => {

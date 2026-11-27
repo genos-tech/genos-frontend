@@ -30,7 +30,6 @@ interface MeResponse {
     custom_status: string | null;
     role: string | null;
     base_country: string | null;
-    phone_number: string | null;
     current_location: string | null;
     // Opt-out for showing location to others; optional so an older server
     // that omits it doesn't break parsing (treated as shared).
@@ -186,7 +185,7 @@ export const OAuthSuccessHandler = () => {
                 );
                 localStorage.setItem("customStatus", me.custom_status || "");
                 localStorage.setItem("avatarImgPath", me.profile_image_file_name || "");
-                // Email, phone, country, location and bio: memory only (MIP-619).
+                // Email, country, location and bio: memory only (MIP-619).
                 setPrivateProfile(privateProfileFromWire(me));
 
                 if (isDifferentUser) {

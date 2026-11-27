@@ -1,10 +1,9 @@
 /**
- * The roster does not store teammates' phone numbers (MIP-768).
+ * The roster does not store phone numbers (MIP-768, MIP-2464).
  *
- * The roster lives in IndexedDB, which outlives sign-out until the next user
- * switch, so on a shared or lost device it would hold the whole team's phone
- * numbers. The profile card does not need them stored: opening it re-fetches
- * the member (`getTeamMemberInfo`, which carries the phone) and overlays it.
+ * Genos no longer has the field, but the roster lives in IndexedDB, which
+ * outlives sign-out until the next user switch: a number an earlier build
+ * stored, or an older server still sends, must not stay on the device.
  *
  * The strip is at the repository boundary, so every write path is covered, and
  * rows written before this change are swept. The email is deliberately NOT
@@ -25,7 +24,9 @@ vi.mock("../../features/admin/services/loadTeamMembers", () => ({
     loadTeamMembers: vi.fn(async () => ({ serverTime: "t", members: [], forceFull: false })),
 }));
 
-const person = (id: string, over: Partial<UserProps> = {}): UserProps =>
+type LegacyUser = UserProps & { phoneNumber?: string };
+
+const person = (id: string, over: Partial<LegacyUser> = {}): LegacyUser =>
     ({
         teamId: "team-a",
         teamName: "Team A",
@@ -37,10 +38,10 @@ const person = (id: string, over: Partial<UserProps> = {}): UserProps =>
         tsJoined: "2026-01-01",
         phoneNumber: "+81-90-0000-0000",
         ...over,
-    }) as UserProps;
+    }) as LegacyUser;
 
 const phones = async () => {
-    const all = await new UserRepository().getAllUsers();
+    const all: LegacyUser[] = await new UserRepository().getAllUsers();
     return all.map((u) => [u.userId, u.phoneNumber]);
 };
 
