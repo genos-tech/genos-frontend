@@ -7368,8 +7368,8 @@ export const ja: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "ベロシティのグラフを読み込めませんでした",
-                title: "タスクの推移",
+                loadFailed: "ペースのグラフを読み込めませんでした",
+                title: "ペース",
                 subtitle: "作成・着手・完了・更新されたタスク数の推移",
                 day: "日",
                 week: "週",

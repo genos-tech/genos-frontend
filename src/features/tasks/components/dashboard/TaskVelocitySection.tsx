@@ -66,7 +66,7 @@ const defaultWindow = (granularity: VelocityGranularity): { start: string; end: 
 };
 
 /**
- * Dashboard "Velocity" card — how many tasks were created / started /
+ * Dashboard "Pace" card — how many tasks were created / started /
  * closed / updated per day or week across `taskIds`. Owns the Day/Week
  * toggle and the cancel-guarded fetch; the chart is presentational.
  */

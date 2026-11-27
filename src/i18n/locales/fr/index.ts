@@ -7490,8 +7490,8 @@ export const fr: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "Impossible de charger le graphique de vélocité",
-                title: "Vitesse",
+                loadFailed: "Impossible de charger le graphique de rythme",
+                title: "Rythme",
                 subtitle: "Tâches créées, démarrées, fermées et mises à jour au fil du temps",
                 day: "Jour",
                 week: "Semaine",

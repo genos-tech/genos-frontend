@@ -7087,8 +7087,8 @@ export const zh: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "无法加载速度图表",
-                title: "速度",
+                loadFailed: "无法加载节奏图表",
+                title: "节奏",
                 subtitle: "随着时间的推移创建、启动、关闭和更新的任务",
                 day: "天",
                 week: "星期",
