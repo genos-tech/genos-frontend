@@ -59,7 +59,7 @@ function Step({ step, lang }: { step: GuideStep; lang: Lang }) {
                     ))}
                 </ol>
             )}
-            {text.flow && <Flow steps={text.flow} />}
+            {text.flow && <Flow set={step.set} steps={text.flow} />}
         </section>
     );
 }

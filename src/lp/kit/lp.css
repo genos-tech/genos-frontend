@@ -3019,6 +3019,12 @@ a.lp-row:hover .lp-row__arrow {
     transform: translateY(-50%);
     color: var(--lp-text-secondary);
 }
+.lp-flow--set li + li::before {
+    display: none;
+}
+.lp-root .lp-flow--set {
+    gap: 12px;
+}
 [dir="rtl"] .lp-flow li + li::before {
     transform: translateY(-50%) scaleX(-1);
 }

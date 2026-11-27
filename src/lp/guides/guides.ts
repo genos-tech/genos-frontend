@@ -25,6 +25,8 @@ export type GuideStep = Record<Lang, GuideText> & {
     shot?: string;
     /** A picture the home page already uses, under `public/lp/shots/<lang>/`. */
     lpShot?: ShotName;
+    /** The boxes under `flow` are alternatives, not steps: draw no arrows. */
+    set?: boolean;
 };
 
 export const GUIDES: Record<string, GuideStep[]> = {
@@ -140,11 +142,11 @@ export const GUIDES: Record<string, GuideStep[]> = {
             shot: "graph",
             en: {
                 title: "The task graph shows what is waiting",
-                line: "While a task has an open blocker, Genos sets it to Blocked.",
+                line: "When an open blocker is added, Genos sets the task to Blocked.",
             },
             ja: {
                 title: "タスクグラフで「何待ちか」を確認",
-                line: "未完了のブロッカーがあるタスクは、GenosがBlockedにします。",
+                line: "未完了のブロッカーを追加すると、GenosがタスクをBlockedにします。",
             },
         },
     ],
@@ -169,11 +171,12 @@ export const GUIDES: Record<string, GuideStep[]> = {
             },
         },
         {
+            set: true,
             en: {
                 title: "Who can read a note",
                 flow: [
-                    "My Notes: only you",
-                    "Team folder: those you choose",
+                    "My Notes: you, plus anyone you share with",
+                    "Team folder: the team, or people you choose",
                     "Task note: project members",
                     "Chat note: people in the chat",
                 ],
@@ -181,8 +184,8 @@ export const GUIDES: Record<string, GuideStep[]> = {
             ja: {
                 title: "ノートを読める人",
                 flow: [
-                    "マイノート：自分だけ",
-                    "チームフォルダ：選んだ人",
+                    "マイノート：自分と共有相手",
+                    "チームフォルダ：全員か選んだ人",
                     "タスクノート：プロジェクトのメンバー",
                     "チャットノート：チャットの参加者",
                 ],
@@ -205,11 +208,11 @@ export const GUIDES: Record<string, GuideStep[]> = {
             lpShot: "approval",
             en: {
                 title: "Nothing changes without your approval",
-                line: "Genos shows what it will change. Approve, edit or reject. (Changes need Core or above.)",
+                line: "Genos shows what it will change. Approve or reject; many can be edited first. (Changes need Core or above.)",
             },
             ja: {
                 title: "承認するまで何も変わりません",
-                line: "変更内容を表示します。承認・編集・却下を選べます（変更はCore以上）。",
+                line: "変更内容を表示します。承認か却下。多くは編集もできます（変更はCore以上）。",
             },
         },
         {
@@ -267,8 +270,9 @@ export const GUIDES: Record<string, GuideStep[]> = {
             },
         },
         {
+            set: true,
             en: {
-                title: "Two shortcuts that save time",
+                title: "Three shortcuts that save time",
                 flow: ["Cmd-K / Ctrl-K opens it", "@ names a person", "# names a task or note"],
             },
             ja: {
@@ -290,6 +294,7 @@ export const GUIDES: Record<string, GuideStep[]> = {
             },
         },
         {
+            set: true,
             en: {
                 title: "Three ways it can reach you",
                 line: "Email is sent only when your Genos has email turned on.",
@@ -344,13 +349,14 @@ export const GUIDES: Record<string, GuideStep[]> = {
             },
         },
         {
+            set: true,
             en: {
                 title: "Four roles",
                 flow: [
                     "Owner: one per team",
                     "Editor: helps run it",
                     "Viewer: works in it",
-                    "Guest: one project only",
+                    "Guest: only invited projects",
                 ],
             },
             ja: {
@@ -359,7 +365,7 @@ export const GUIDES: Record<string, GuideStep[]> = {
                     "オーナー：チームに1人",
                     "編集者：運営を手伝う",
                     "閲覧者：中で作業する",
-                    "ゲスト：1プロジェクトだけ",
+                    "ゲスト：招待されたプロジェクトのみ",
                 ],
             },
         },
@@ -407,6 +413,7 @@ export const GUIDES: Record<string, GuideStep[]> = {
     ],
     "company-organising": [
         {
+            set: true,
             en: {
                 title: "One department, four things, one name",
                 line: "Keep the whole company in one team.",
@@ -445,11 +452,11 @@ export const GUIDES: Record<string, GuideStep[]> = {
         {
             shot: "settings",
             en: {
-                title: "One window for every setting",
+                title: "Your settings in one window",
                 pins: ["Pick a tab. General has theme, language and sidebar"],
             },
             ja: {
-                title: "設定はひとつの画面に",
+                title: "個人の設定はひとつの画面に",
                 pins: ["タブを選ぶ。「一般」はテーマ・言語・サイドバー"],
             },
         },
@@ -511,7 +518,7 @@ export const GUIDES: Record<string, GuideStep[]> = {
             lpShot: "record",
             en: {
                 title: "Then you can see who wrote what",
-                line: "Entries made through a connected app carry its mark. Entries you type in Genos do not.",
+                line: "Entries made through a connected app are marked. Entries you type in Genos do not.",
             },
             ja: {
                 title: "誰が書いたかが分かります",
