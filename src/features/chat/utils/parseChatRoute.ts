@@ -1,3 +1,5 @@
+import { isLegacyNumericId, isV3Uuid } from "../../../utils/legacyId";
+
 // Pure parser for `/workspace/chat/...` pathnames → the addressable route
 // parts. Extracted from `useChatRouting` so it can be unit-tested without
 // mounting the hook (which pulls in react-router + channelService).
@@ -19,7 +21,10 @@ export type ParsedRoute = {
     // thread-root UUID). See `parseRouteId` — `Number()`-coercing the UUID
     // NaN'd it and broke thread deep-links / cold-reloads.
     threadId: number | string | undefined;
-    messageId: number | undefined;
+    // The `/message/:id` segment: the numeric per-channel `seq` (task id
+    // for PM) or a v3 `Message.id` UUID (Spotlight results, answer
+    // citations). Same two shapes as `parseInternalUrl`'s `toMessageRef`.
+    messageId: number | string | undefined;
     // PM thread "Comments" tab deep-link target (task comment id).
     // Mutually exclusive with `messageId` at the URL level — the path
     // contains either `…/message/:id` or `…/comment/:id`, never both.
@@ -48,6 +53,13 @@ const parseRouteId = (raw: string | undefined): number | string | undefined => {
     return /^\d+$/.test(raw) ? Number(raw) : raw;
 };
 
+// Anything that is neither a number nor a UUID names no message.
+const parseMessageRef = (raw: string | undefined): number | string | undefined => {
+    if (!raw) return undefined;
+    if (isLegacyNumericId(raw)) return Number(raw);
+    return isV3Uuid(raw) ? raw : undefined;
+};
+
 export const parseChatRoute = (pathname: string): ParsedRoute => {
     const pathParts = pathname.split("/").filter(Boolean);
 
@@ -68,10 +80,7 @@ export const parseChatRoute = (pathname: string): ParsedRoute => {
             commentIndex !== -1 && pathParts[commentIndex + 1]
                 ? Number(pathParts[commentIndex + 1])
                 : undefined,
-        messageId:
-            messageIndex !== -1 && pathParts[messageIndex + 1]
-                ? Number(pathParts[messageIndex + 1])
-                : undefined,
+        messageId: messageIndex !== -1 ? parseMessageRef(pathParts[messageIndex + 1]) : undefined,
         threadId: threadIndex !== -1 ? parseRouteId(pathParts[threadIndex + 1]) : undefined,
     };
 };
