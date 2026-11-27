@@ -4906,6 +4906,8 @@ export const zh: DeepPartial<Messages> = {
             scheduleModePlainHint: "根据你的数据生成的普通报告。不使用 AI,不消耗额度。",
             scheduleModeAiHint:
                 "当任务的评论能说明它的进展时,Genos AI 会在任务下方加一句简短的话。这会消耗你的 AI 额度。",
+            scheduleModeAiSummaryHint:
+                "Genos AI 会根据报告中已列出的内容写一段简短的摘要。这会消耗你的 AI 额度。",
             scheduleModeOutOfCredits:
                 "您的 AI 额度已用完,因此无法使用 Genos AI 模式。购买额度或升级套餐即可开启。",
             aiOutOfCreditsBuy: "购买额度",
@@ -4917,6 +4919,8 @@ export const zh: DeepPartial<Messages> = {
             effortCostTiny: "每次运行不到 0.01 积分。这只是估算。",
             effortHint:
                 "AI 在这份报告上投入的程度。估算按约 10 个任务的报告计算;实际费用只会显示给你，在你的收件箱中。",
+            effortHintSummary:
+                "AI 在这份报告上投入的程度。估算按为约 24 行的报告写摘要计算;实际费用只会显示给你，在你的收件箱中。",
             effortHeld: "你的套餐以“{level}”运行此定时任务。",
             rowEffort: "AI 推理强度:{level}",
             duplicateSame: "你已经有一个在相同时间做相同事情的定时任务:{name}。",
