@@ -12,6 +12,8 @@ import { UserProps } from "../../../../../types/admin";
 import { ChatNoteProps } from "../../../../../types/notes";
 import { loadChatSubNotes } from "../../../chat-notes/services/loadChatSubNotes";
 
+const NO_NOTES: ChatNoteProps[] = [];
+
 type ACChatChildNotesProps = {
     myself: UserProps;
     openSearchBox: boolean;
@@ -22,8 +24,13 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
     const { myself, openSearchBox, setOpenSearchBox, useNM } = props;
     const { accessToken } = useAuth();
     const { t } = useTranslation();
-    const [options, setOptions] = useState<ChatNoteProps[]>([]);
-    const loading = openSearchBox && options.length === 0;
+    // Which note's children the box is about. A list is only ever shown for the note it was loaded for.
+    const target = useNM.currentChatNote?.noteId;
+    const [loaded, setLoaded] = useState<{ target: typeof target; notes: ChatNoteProps[] }>();
+    const isLoaded = loaded !== undefined && loaded.target === target;
+    const options = isLoaded ? loaded.notes : NO_NOTES;
+    // Not `options.length === 0`: a task or note with nothing to list has still answered.
+    const loading = openSearchBox && !isLoaded;
 
     const onChangeHandler = async (value: ChatNoteProps) => {
         useNM.tabsApi.openTab({
@@ -40,39 +47,33 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
         });
     };
 
-    // One load per time the box starts loading; who asks and for which note are read then.
-    const latestRef = useLatestRef({ myself, accessToken, noteId: useNM.currentChatNote?.noteId });
+    // One load per opening and per note; who asks is read then.
+    const latestRef = useLatestRef({ myself, accessToken });
 
     useEffect(() => {
         let active = true;
 
-        if (!loading) {
+        if (!openSearchBox) {
             return undefined;
         }
 
         (async () => {
-            const { myself, accessToken, noteId } = latestRef.current;
-            const loadedUsers: ChatNoteProps[] = await loadChatSubNotes(
-                myself,
-                noteId as number,
-                accessToken
-            );
+            const { myself, accessToken } = latestRef.current;
+            // Undefined after an API error.
+            const notes: ChatNoteProps[] =
+                (await loadChatSubNotes(myself, target as number, accessToken)) ?? [];
 
             if (active) {
-                setOptions([...loadedUsers]);
+                setLoaded({ target, notes });
             }
         })();
 
+        // Closing the box drops the list, so the next opening asks again.
         return () => {
             active = false;
+            setLoaded(undefined);
         };
-    }, [loading, latestRef]);
-
-    useEffect(() => {
-        if (!open) {
-            setOptions([]);
-        }
-    }, [openSearchBox]);
+    }, [openSearchBox, target, latestRef]);
 
     return (
         <Autocomplete

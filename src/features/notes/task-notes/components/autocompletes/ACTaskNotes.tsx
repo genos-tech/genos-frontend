@@ -12,6 +12,8 @@ import { UserProps } from "../../../../../types/admin";
 import { TaskNoteProps } from "../../../../../types/notes";
 import { loadTaskNotes } from "../../services/loadTaskNotes";
 
+const NO_NOTES: TaskNoteProps[] = [];
+
 type ACTaskNotesProps = {
     myself: UserProps;
     openSearchBox: boolean;
@@ -22,8 +24,13 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
     const { myself, openSearchBox, setOpenSearchBox, useNM } = props;
     const { accessToken } = useAuth();
     const { t } = useTranslation();
-    const [options, setOptions] = useState<TaskNoteProps[]>([]);
-    const loading = openSearchBox && options.length === 0;
+    // Which task's notes the box is about. A list is only ever shown for the task it was loaded for.
+    const target = `${useNM.currentTaskNote?.projectId}:${useNM.currentTaskNote?.taskId}`;
+    const [loaded, setLoaded] = useState<{ target: typeof target; notes: TaskNoteProps[] }>();
+    const isLoaded = loaded !== undefined && loaded.target === target;
+    const options = isLoaded ? loaded.notes : NO_NOTES;
+    // Not `options.length === 0`: a task or note with nothing to list has still answered.
+    const loading = openSearchBox && !isLoaded;
 
     const onChangeHandler = async (value: TaskNoteProps) => {
         useNM.tabsApi.openTab({
@@ -38,7 +45,7 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
         });
     };
 
-    // One load per time the box starts loading; who asks and for which task are read then.
+    // One load per opening and per task; who asks is read then.
     const latestRef = useLatestRef({
         myself,
         accessToken,
@@ -49,13 +56,13 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
     useEffect(() => {
         let active = true;
 
-        if (!loading) {
+        if (!openSearchBox) {
             return undefined;
         }
 
         (async () => {
             const { myself, accessToken, projectId, taskId } = latestRef.current;
-            const loadedUsers: TaskNoteProps[] =
+            const notes: TaskNoteProps[] =
                 (await loadTaskNotes(
                     myself,
                     projectId as number,
@@ -64,20 +71,16 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
                 )) ?? [];
 
             if (active) {
-                setOptions([...loadedUsers]);
+                setLoaded({ target, notes });
             }
         })();
 
+        // Closing the box drops the list, so the next opening asks again.
         return () => {
             active = false;
+            setLoaded(undefined);
         };
-    }, [loading, latestRef]);
-
-    useEffect(() => {
-        if (!open) {
-            setOptions([]);
-        }
-    }, [openSearchBox]);
+    }, [openSearchBox, target, latestRef]);
 
     return (
         <Autocomplete
