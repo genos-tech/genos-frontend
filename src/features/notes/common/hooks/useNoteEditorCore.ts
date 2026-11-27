@@ -207,6 +207,9 @@ export function useNoteEditorCore<T extends EditableNote>({
                     !target.pendingTitle &&
                     JSON.stringify(target.body ?? []) === target.confirmedBody
                 ) {
+                    // Typed and then undone, or already carried by the save before this one.
+                    target.edited = false;
+                    if (isShown()) setNoteBodyEditedState(false);
                     return null;
                 }
                 // Resolve the title from the freshest source at SAVE time. A save
