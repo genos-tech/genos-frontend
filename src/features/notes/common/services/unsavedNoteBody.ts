@@ -8,7 +8,9 @@
  * overwritten.
  */
 import { PartialBlock } from "@blocknote/core";
+import axios from "axios";
 
+import { emitRequestError } from "../../../../services/requestErrorNotifier";
 import { bodyFingerprint, isKeepingStopped } from "../../../tasks/services/unsavedTaskBody";
 
 // Swept on sign-out (`signOutLeftovers`).
@@ -62,6 +64,14 @@ export const trackNoteBodySave = (noteKey: string, body: PartialBlock[]): (() =>
         if (at !== -1) now.splice(at, 1);
         inFlight.set(noteKey, now);
     };
+};
+
+/** The toast for a save refused for good (MIP-2463). An archived project or group chat has said
+ *  why already (`api.ts`), and ours would take that sentence's place. */
+export const tellNoteNotSaved = (error: unknown) => {
+    const response = axios.isAxiosError(error) ? error.response : undefined;
+    if (response?.status === 409 && response.data?.code === "archived") return;
+    emitRequestError("noteNotSaved");
 };
 
 /** `base` is the stored body (`bodyFingerprint`) the words were typed on top of. */

@@ -12,7 +12,6 @@ import { PartialBlock } from "@blocknote/core";
 import { Socket } from "socket.io-client";
 
 import { getCachedNote, noteCacheKind } from "../../../../hooks/notes/useNoteData";
-import { emitRequestError } from "../../../../services/requestErrorNotifier";
 import { UserProps } from "../../../../types/admin";
 import { isRetryableSaveError } from "../../../tasks/services/isRetryableSaveError";
 import {
@@ -25,6 +24,7 @@ import {
     forgetUnsavedNoteBody,
     keepUnsavedNoteBody,
     settleUnsavedNoteBody,
+    tellNoteNotSaved,
 } from "../services/unsavedNoteBody";
 import { createNoteSaveSession, NoteSaveSession, sendNoteSave } from "./noteSaveSession";
 
@@ -157,6 +157,10 @@ export function useNoteEditorCore<T extends EditableNote>({
         setNoteBodyEditedState(false);
         setNoteBodySaved(false);
     } else {
+        // The stored note changed under this panel (another panel's save, a fresh read): words
+        // typed from now on are on top of it.
+        if (currentNote && currentNote.body !== session.note?.body)
+            session.serverBody = bodyFingerprint(currentNote.body);
         session.note = currentNote;
         session.onNoteUpdate = onNoteUpdate;
     }
@@ -274,12 +278,13 @@ export function useNoteEditorCore<T extends EditableNote>({
                 target.confirmedBody = null;
                 if (retry) target.backoff.failed();
                 // A refusal of a rename says nothing about the body: it goes again without
-                // the title, and is dropped only if that is refused too.
-                else if (!sentTitle) {
+                // the title, and is dropped only if that is refused too. A note already left
+                // has nobody to send it again.
+                else if (!sentTitle || !isShown()) {
                     // Not stored and not going to be: say so, and keep the words (MIP-2463).
                     if (target.edited) keepIfUnsaved(target);
                     target.edited = false;
-                    emitRequestError("noteNotSaved");
+                    tellNoteNotSaved(error);
                 }
                 if (isShown()) {
                     setNoteBodyEditedState(target.edited);
@@ -378,11 +383,14 @@ export function useNoteEditorCore<T extends EditableNote>({
 
     useEffect(resumeKeepingUnsavedBodies, []);
 
-    // Opening a note: save what an earlier visit could not.
+    // Opening a note: save what an earlier visit could not. Once per visit: a token refresh
+    // must not send (and drop) words refused while the note is open.
+    const repairedRef = useRef<NoteSaveSession<T> | null>(null);
     useEffect(() => {
         const { myself, accessToken, socket } = senderRef.current;
         const note = session.note;
-        if (!note || !accessToken) return;
+        if (!note || !accessToken || repairedRef.current === session) return;
+        repairedRef.current = session;
         void repairUnsavedNoteBody({
             myself,
             noteType: note.noteType as 1 | 2 | 3,

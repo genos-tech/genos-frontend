@@ -17,6 +17,7 @@ import {
     readUnsavedNoteBody,
     UNSAVED_NOTE_BODY_PREFIX,
 } from "../features/notes/common/services/unsavedNoteBody";
+import { bodyFingerprint } from "../features/tasks/services/unsavedTaskBody";
 import { useChatPanelNote } from "../hooks/notes/useChatPanelNote";
 import { clearNoteCache, getCachedNote } from "../hooks/notes/useNoteData";
 import { subscribeRequestErrors } from "../services/requestErrorNotifier";
@@ -28,7 +29,7 @@ type Put = {
     title: string;
     text: string;
     ok: () => void;
-    fail: (status?: number) => void;
+    fail: (status?: number, code?: string) => void;
 };
 const net = vi.hoisted(() => ({
     puts: [] as Put[],
@@ -59,11 +60,11 @@ vi.mock("../services/api", async (importOriginal) => ({
                     title: data.title,
                     text: data.body[0]?.text ?? "",
                     ok: () => resolve({ data: {} }),
-                    fail: (status) =>
+                    fail: (status, code) =>
                         reject(
                             new AxiosError("failed", undefined, undefined, undefined, {
                                 status: status ?? 503,
-                                data: {},
+                                data: { code },
                                 statusText: "",
                                 headers: {},
                                 config: { headers: new AxiosHeaders() },
@@ -88,15 +89,15 @@ const note = (noteId: number, title = `Note ${noteId}`) =>
 
 const myself = { teamId: "team", userId: "me" } as never;
 
-type Props = { current: MyNoteProps | null; resync?: number };
+type Props = { current: MyNoteProps | null; resync?: number; token?: string };
 
 const mount = (initial: MyNoteProps, onNoteUpdate = vi.fn()) => {
     const hook = renderHook(
-        ({ current, resync }: Props) =>
+        ({ current, resync, token }: Props) =>
             useNoteEditorCore<MyNoteProps>({
                 currentNote: current,
                 myself,
-                accessToken: "token",
+                accessToken: token ?? "token",
                 socket: null,
                 onNoteUpdate,
                 resyncSignal: resync,
@@ -470,6 +471,61 @@ describe("words that could not be saved (MIP-2463)", () => {
 
         expect(bus.kinds).toEqual(["noteNotSaved"]);
         expect(kept()).toBeNull();
+    });
+
+    it("keeps words typed while the repair was on its way", async () => {
+        const first = mount(note(1));
+        await first.keystroke("kept R");
+        first.unmount();
+        await answer(() => net.puts[0].fail(503));
+
+        const again = mount(note(1));
+        await wait(0);
+        await again.keystroke("newer N");
+        await act(async () => {
+            window.dispatchEvent(new Event("pagehide"));
+        });
+        // The newer words may end up on top of what the repair is storing.
+        expect(kept()?.bases).toContain(bodyFingerprint(doc("kept R")));
+        await answer(net.puts[1].ok);
+
+        expect(kept()?.body).toEqual(doc("newer N"));
+    });
+
+    it("takes the base from the stored note as another panel's save left it", async () => {
+        const ed = mount(note(1));
+        ed.rerender({ current: { ...note(1), body: doc("Saved elsewhere.") }, resync: 0 });
+        await ed.keystroke("mine, on top of it");
+        await act(async () => {
+            window.dispatchEvent(new Event("pagehide"));
+        });
+
+        expect(kept()?.bases).toEqual([bodyFingerprint(doc("Saved elsewhere."))]);
+    });
+
+    it("leaves the archived sentence in place for an archived project", async () => {
+        const bus = heard();
+        const ed = mount(note(1));
+        await typeAndSend(ed, "typed");
+        await answer(() => net.puts[0].fail(409, "archived"));
+        bus.stop();
+
+        expect(bus.kinds).toEqual([]);
+    });
+
+    it("tries the repair once per visit, not on every new token", async () => {
+        const first = mount(note(1));
+        await first.keystroke("mine");
+        first.unmount();
+        await answer(() => net.puts[0].fail(503));
+
+        const again = mount(note(1));
+        await wait(0);
+        await answer(() => net.puts[1].fail(503));
+        again.rerender({ current: note(1), resync: 0, token: "refreshed" });
+        await wait(0);
+
+        expect(net.puts).toHaveLength(2);
     });
 
     it("is cleared on sign-out and not written back by the editor that closes after it", async () => {
