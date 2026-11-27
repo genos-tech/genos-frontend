@@ -396,14 +396,14 @@ export const KeyboardShortcutsSection = () => {
                                                             color="neutral"
                                                             size="sm"
                                                             variant="plain"
-                                                            // Keep focus on the recorder, or its
-                                                            // blur removes this button mid-click.
-                                                            onMouseDown={(e) => e.preventDefault()}
                                                             sx={{
                                                                 "@media (pointer: coarse)": {
                                                                     minHeight: TOUCH_TARGET,
                                                                 },
                                                             }}
+                                                            // Keep focus on the recorder, or its
+                                                            // blur removes this button mid-click.
+                                                            onMouseDown={(e) => e.preventDefault()}
                                                             onClick={() => {
                                                                 cancel();
                                                                 buttons.current
