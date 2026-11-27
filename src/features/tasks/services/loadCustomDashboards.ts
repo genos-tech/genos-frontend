@@ -27,6 +27,8 @@ export type OwnDashboard = {
     lastStatus: string;
     pausedReason?: string;
     note: DashboardNote | null;
+    /** A run holds the schedule right now (MIP-2457). */
+    running?: boolean;
 };
 
 export type SharedDashboard = DashboardNote & { ownerName: string };

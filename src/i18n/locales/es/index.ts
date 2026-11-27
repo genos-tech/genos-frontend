@@ -1108,6 +1108,10 @@ export const es: DeepPartial<Messages> = {
             lastResult: "{title}, {count, plural, one {# elemento} other {# elementos}}",
             runNow: "Ejecutar ahora",
             running: "Ejecutando…",
+            runStarted: "Iniciado. El informe llegará a tu Bandeja de entrada cuando termine.",
+            runStartedChat: "Iniciado. El informe se publicará en {chat} cuando termine.",
+            runStopped:
+                "Esa ejecución no registró ningún resultado. Si el informe no llegó, vuelve a ejecutarla.",
             ranOk: "Ejecutada: {title}, {count, plural, one {# elemento} other {# elementos}}. El informe está en tu bandeja de entrada.",
             ranFailed: "La ejecución falló: {error}",
             reportReady: "Informe listo",
@@ -4212,6 +4216,7 @@ export const es: DeepPartial<Messages> = {
                 runNow: "Ejecutar ahora",
                 openNote: "Abrir nota",
                 runDone: "Panel actualizado.",
+                runStarted: "Iniciado. El panel se actualizará cuando termine la ejecución.",
                 runFailed: "No se pudo actualizar el panel.",
                 notRunTitle: "Este panel aún no se ha ejecutado",
                 notRunBody: "Ejecútalo ahora para crear la página.",

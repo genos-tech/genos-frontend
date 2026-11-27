@@ -107,6 +107,10 @@ export interface Schedule {
     lastResult?: { title: string; items: number };
     /** The job was removed: the schedule stays, and says so. */
     problem?: string;
+    /** A run holds the schedule right now (MIP-2457). Absent on a server that predates it. */
+    running?: boolean;
+    /** When that run started; what `lastRun` will read once it is recorded. */
+    runningSince?: string;
 }
 
 /** An ordinary schedule Genos offers; accepting one is a normal create. */
@@ -185,11 +189,21 @@ export type ScheduleFailure = {
 export type ScheduleResult<T> = ({ ok: true } & T) | ScheduleFailure;
 
 export interface RunOutcome {
-    status: "ok" | "failed";
+    /** `started`: a slow run that goes on after the answer (MIP-2457). */
+    status: "ok" | "failed" | "started";
     error: string;
     title: string;
     items: number;
+    startedAt?: string;
 }
+
+const toOutcome = (run: Partial<RunOutcome>): RunOutcome => ({
+    status: run.status === "ok" || run.status === "started" ? run.status : "failed",
+    error: run.error ?? "",
+    title: run.title ?? "",
+    items: run.items ?? 0,
+    ...(run.startedAt ? { startedAt: run.startedAt } : {}),
+});
 
 // The page renders every failure inline, so the global toast stays off.
 const SILENT = { suppressErrorToast: true } as const;
@@ -264,16 +278,7 @@ export const createSchedule = async (
             ok: true,
             schedule: res.data.schedule,
             // Only a "Run right away" create runs: the same shape `runScheduleNow` answers with.
-            ...(run
-                ? {
-                      outcome: {
-                          status: run.status === "ok" ? ("ok" as const) : ("failed" as const),
-                          error: run.error ?? "",
-                          title: run.title ?? "",
-                          items: run.items ?? 0,
-                      },
-                  }
-                : {}),
+            ...(run ? { outcome: toOutcome(run) } : {}),
         };
     } catch (error) {
         return failure(error);
@@ -316,7 +321,8 @@ export const deleteSchedule = async (
 };
 
 /** Runs the job once, now. The report itself arrives in the Inbox; a 200 can
- *  still say `status: "failed"`, with the reason in `error`. */
+ *  still say `status: "failed"`, with the reason in `error`, or `status: "started"`
+ *  for a slow one, which `followRun` waits for. */
 export const runScheduleNow = async (
     accessToken: string | null,
     teamId: string,
@@ -329,15 +335,7 @@ export const runScheduleNow = async (
             params: { team_id: teamId },
             ...SILENT,
         });
-        return {
-            ok: true,
-            outcome: {
-                status: res.data.status === "ok" ? "ok" : "failed",
-                error: res.data.error ?? "",
-                title: res.data.title ?? "",
-                items: res.data.items ?? 0,
-            },
-        };
+        return { ok: true, outcome: toOutcome(res.data) };
     } catch (error) {
         return failure(error);
     }
