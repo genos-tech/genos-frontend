@@ -25,6 +25,9 @@ export type MilestoneRefusalHooks = {
      *  team (`assignee_not_on_destination`, MIP-1597). The server changed
      *  nothing, so the milestone is still where it was. */
     onMoveRefused?: () => void;
+    /** Called when the save stored nothing, whatever the reason. `retry` is false when sending
+     *  it again cannot help. The description autosave needs this (MIP-2443). */
+    onNotSaved?: (retry: boolean) => void;
 };
 
 /**

@@ -2,7 +2,15 @@ import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 import "../../App.css";
 
-import { startTransition, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+    startTransition,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+    type CSSProperties,
+    type RefObject,
+} from "react";
 import { PartialBlock } from "@blocknote/core";
 import { BlockNoteView } from "@blocknote/mantine";
 import { FormattingToolbarController, SideMenu, SideMenuController } from "@blocknote/react";
@@ -90,6 +98,9 @@ type BnTaskPreviewProps = {
      *  task creation form so it can imperatively swap templates via
      *  `editor.replaceBlocks(...)`. */
     onEditorReady?: (editor: unknown) => void;
+    /** Filled with "run the pending body sync now", so a host that is about to save or to go
+     *  away can read the last words typed (MIP-2443). */
+    flushRef?: RefObject<(() => void) | null>;
 };
 export const BnTaskPreview = (props: BnTaskPreviewProps) => {
     const {
@@ -106,6 +117,7 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
         useCM,
         useUISM,
         onEditorReady,
+        flushRef,
     } = props;
 
     const { mode } = useColorScheme();
@@ -286,6 +298,15 @@ export const BnTaskPreview = (props: BnTaskPreviewProps) => {
             startTransition(commit);
         }
     }, EDITOR_BODY_SYNC_DEBOUNCE_MS);
+
+    const flushBodySync = syncBodyToParent.flush;
+    useEffect(() => {
+        if (!flushRef) return;
+        flushRef.current = flushBodySync;
+        return () => {
+            flushRef.current = null;
+        };
+    }, [flushRef, flushBodySync]);
 
     useInsertSelectedEmoji(selectedEmoji, insertEmoji);
 

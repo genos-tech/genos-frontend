@@ -102,6 +102,7 @@ import {
 import { milestoneToTaskProps } from "../../utils/milestoneTaskProps";
 import { dropRefusedMove } from "../../utils/moveRefusal";
 import { scopeCovers } from "../../utils/projectStatusScope";
+import { createRetryBackoff } from "../../utils/retryBackoff";
 import { getTaskKind } from "../../utils/taskKind";
 import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
 import { StatusLabel } from "../meta/StatusLabel";
@@ -262,6 +263,22 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         setReporter(storedTask.reporter ?? null);
     }, []);
 
+    // The editor's "sync the body now", the body the autosave is done with (JSON) and how soon
+    // a failed save may be sent again. See the autosave notes further down.
+    const bodyFlushRef = useRef<(() => void) | null>(null);
+    const flushBody = useCallback(() => bodyFlushRef.current?.(), []);
+    const lastLoadedBodyRef = useRef<string>("");
+    const prevTaskIdRef = useRef<number | null>(null);
+    const [bodyBackoff] = useState(createRetryBackoff);
+    const handleBodySettled = useCallback(
+        (taskId: number, settled: PartialBlock[]) => {
+            if (prevTaskIdRef.current !== taskId) return;
+            lastLoadedBodyRef.current = JSON.stringify(settled);
+            bodyBackoff.reset();
+        },
+        [bodyBackoff]
+    );
+
     const sendUpdatedTask = useSendUpdatedTask({
         socket,
         myself,
@@ -271,6 +288,9 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         taskEditState,
         // Live body source — see `handleEditorBodySync`.
         bodyRef: currentBodyRef,
+        flushBody,
+        onBodySettled: handleBodySettled,
+        onBodyNotStored: bodyBackoff.failed,
         onStoredTaskRestored: handleStoredTaskRestored,
     });
 
@@ -300,8 +320,9 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     //    view of the body without forcing it to re-create on every
     //    keystroke.
     //
-    //  * `lastLoadedBodyRef` holds the *canonical* baseline for the
-    //    current task. We capture it 100 ms after each task load so
+    //  * `lastLoadedBodyRef` holds what the server has for the current
+    //    task: first the *canonical* form of what loaded, then whatever
+    //    the last successful save sent (MIP-2443). We capture it 100 ms after each task load so
     //    the editor's Yjs initial-sync echo has settled — the raw
     //    server JSON and the editor's canonical form often differ
     //    (id assignment, property reordering), and comparing
@@ -309,8 +330,6 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     //    and fire a spurious autosave. 100 ms is comfortably below
     //    human typing rhythm so the baseline catches the canonical
     //    form before any real edit.
-    const lastLoadedBodyRef = useRef<string>("");
-    const prevTaskIdRef = useRef<number | null>(null);
 
     useEffect(() => {
         currentBodyRef.current = taskEditState.body;
@@ -337,6 +356,20 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     const isBodyDirty = (): boolean => {
         return JSON.stringify(currentBodyRef.current ?? []) !== lastLoadedBodyRef.current;
     };
+    /** For the moments that cannot wait for the editor's debounce: takes its text first. */
+    const hasUnsavedBody = (): boolean => {
+        flushBody();
+        return !!taskEditState.taskBodyEdited && isBodyDirty();
+    };
+
+    // Leaving the preview (another page, a closed modal) drops the editor's pending sync and
+    // the autosave interval, so what was typed in the last seconds is saved here. React runs
+    // this before the editor's own cleanup, so the flush still reaches it.
+    const saveOnLeaveRef = useRef<() => void>(() => {});
+    saveOnLeaveRef.current = () => {
+        if (hasUnsavedBody()) void sendUpdatedTask(true);
+    };
+    useEffect(() => () => saveOnLeaveRef.current(), []);
 
     // Delete this task (the title menu, the status picker's "Deleted"), MIP-1303.
     // The delete waits behind an Undo toast and is sent when the toast is gone,
@@ -356,7 +389,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     const handleDeleteTask = async () => {
         const task = taskEditState.tmpCurrentTaskContent;
         if (task?.id == null || task.project?.projectId == null) return;
-        if (taskEditState.taskUpdated || (taskEditState.taskBodyEdited && isBodyDirty())) {
+        if (taskEditState.taskUpdated || hasUnsavedBody()) {
             try {
                 await sendUpdatedTask(false);
             } catch (error) {
@@ -393,7 +426,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     // interval only fires when there are genuine unsaved edits.
     useEffect(() => {
         const intervalId = setInterval(() => {
-            if (taskEditState.taskBodyEdited === true && isBodyDirty()) {
+            if (taskEditState.taskBodyEdited === true && isBodyDirty() && bodyBackoff.ready()) {
                 taskEditState.setStartIntervalUpdatingTask(true);
             }
         }, 3000);
@@ -444,7 +477,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         if (isSwitch) {
             // Switching to a different task. Save the outgoing one
             // only if the body really changed since we loaded it.
-            if (taskEditState.taskBodyEdited && isBodyDirty()) {
+            if (hasUnsavedBody()) {
                 sendUpdatedTask(true);
             }
             // Reset the unreliable flag for the incoming task — the
@@ -452,6 +485,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
             // we now ignore it until the body actually diverges from
             // the canonical baseline captured 100 ms later.
             taskEditState.setTaskBodyEdited(false);
+            bodyBackoff.reset();
             taskEditState.setTmpCurrentTaskContent(next);
             taskEditState.setCurrentTaskId(next.id);
             taskEditState.setTaskTitle(next.title);
@@ -477,7 +511,12 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         // cycle, Effect 392 mirrors it back, and React throws
         // "Maximum update depth exceeded". A genuine `loadUpdatedTask`
         // returns a freshly-parsed object so this check passes through.
-        if (next === taskEditState.tmpCurrentTaskContent) return;
+        if (next === taskEditState.tmpCurrentTaskContent) {
+            // A preview that MOUNTED with its task open (a modal) only ever gets here for it,
+            // and the next switch must still know there is a task to save (MIP-2443).
+            prevTaskIdRef.current = nextId;
+            return;
+        }
 
         // Preserve any in-flight (negative-id) attachments that the
         // user just dropped — `loadUpdatedTask` is triggered by our
@@ -504,7 +543,9 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         }
         taskEditState.setCurrentTaskId(next.id);
         taskEditState.setTaskTitle(next.title);
-        taskEditState.setBody(next.body || []);
+        // A reload of the SAME task must not put the server's older body over words that are
+        // still waiting to be saved: the next autosave would store the older one (MIP-2443).
+        if (prevId !== nextId || !hasUnsavedBody()) taskEditState.setBody(next.body || []);
         taskEditState.setUploadedFiles(next.attachments || []);
         prevTaskIdRef.current = nextId;
     }, [useTM.currentPreviewTask]);
@@ -905,6 +946,9 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                 : (reroutedMilestoneId as number);
         return (
             <MilestonePreviewInner
+                // One instance per milestone: the unsaved description, its flags and its save
+                // timer must never carry over to the next one (MIP-2443).
+                key={milestoneId}
                 hostZIndex={hostZIndex}
                 milestoneId={milestoneId}
                 myself={myself}
@@ -1064,6 +1108,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
                                 <TaskBodyBlock
                                     key={`TaskBodyBlock-${taskEditState.tmpCurrentTaskContent.id}`}
                                     body={taskEditState.body}
+                                    flushRef={bodyFlushRef}
                                     myself={myself}
                                     setBody={handleEditorBodySync}
                                     setMyself={setMyself}
@@ -2136,6 +2181,41 @@ const MilestonePreviewInner = ({
     // Auto-save body every 3s when edited (mirrors TaskPreview's loop).
     // Reads the body from `bodyDraftRef` at fire time — see the ref's
     // declaration for why the sync no longer flows through state.
+    const bodyFlushRef = useRef<(() => void) | null>(null);
+    /** Sends the description as the editor holds it now. `leaving` applies the answer to the
+     *  app's state at once, as there is no later idle tick to do it. */
+    const saveMilestoneBody = async (leaving: boolean) => {
+        if (!milestone) return null;
+        bodyFlushRef.current?.();
+        const sent = bodyDraftRef.current;
+        let retry = true;
+        const updated = await useSM.updateExistingMilestone(
+            {
+                milestoneId: milestone.milestoneId,
+                description: sent,
+            },
+            milestone.projectId,
+            socket,
+            milestone.taskId != null
+                ? {
+                      taskId: milestone.taskId,
+                      projectId: milestone.projectId,
+                      projectName: usePM.currentProject?.projectName ?? "",
+                      displayId: milestone.displayId ?? null,
+                  }
+                : undefined,
+            {
+                deferStateSync: !leaving,
+                refusal: { onNotSaved: (again) => (retry = again) },
+            }
+        );
+        return { updated, sent, retry };
+    };
+    // The timer lives as long as the unsaved edit does, so it calls through a ref: a retry
+    // must use the current access token and milestone, not the ones it started with.
+    const saveMilestoneBodyRef = useRef(saveMilestoneBody);
+    saveMilestoneBodyRef.current = saveMilestoneBody;
+    const [milestoneBackoff] = useState(createRetryBackoff);
     useEffect(() => {
         const id = setInterval(async () => {
             if (!milestone) return;
@@ -2145,29 +2225,35 @@ const MilestonePreviewInner = ({
                 flushPendingMilestoneSyncRef.current();
                 return;
             }
-            const updated = await useSM.updateExistingMilestone(
-                {
-                    milestoneId: milestone.milestoneId,
-                    description: bodyDraftRef.current,
-                },
-                milestone.projectId,
-                socket,
-                milestone.taskId != null
-                    ? {
-                          taskId: milestone.taskId,
-                          projectId: milestone.projectId,
-                          projectName: usePM.currentProject?.projectName ?? "",
-                          displayId: milestone.displayId ?? null,
-                      }
-                    : undefined,
-                { deferStateSync: true }
-            );
-            if (updated) pendingMilestoneSyncRef.current = updated;
-            setBodyEdited(false);
-            setBodySaved(true);
+            if (!milestoneBackoff.ready()) return;
+            const result = await saveMilestoneBodyRef.current(false);
+            if (!result) return;
+            if (!result.updated) {
+                // Not saved: stay "edited" so the next tick sends it again.
+                setBodySaved(false);
+                if (result.retry) milestoneBackoff.failed();
+                else setBodyEdited(false);
+                return;
+            }
+            milestoneBackoff.reset();
+            pendingMilestoneSyncRef.current = result.updated;
+            // Words typed while it was in flight are not in what was sent (MIP-2443).
+            bodyFlushRef.current?.();
+            const unsent = JSON.stringify(bodyDraftRef.current) !== JSON.stringify(result.sent);
+            setBodyEdited(unsent);
+            setBodySaved(!unsent);
         }, 3000);
         return () => clearInterval(id);
     }, [bodyEdited, milestone?.milestoneId]);
+    // Closing the preview or opening another milestone: save what the timer had not.
+    const saveOnLeaveRef = useRef<() => void>(() => {});
+    saveOnLeaveRef.current = () => {
+        if (!bodyEdited) return;
+        void saveMilestoneBody(true).then((result) => {
+            if (result?.updated) syncMilestoneToAllTasks(result.updated);
+        });
+    };
+    useEffect(() => () => saveOnLeaveRef.current(), []);
 
     // When TaskMainBlock signals taskUpdated, propagate.
     const [taskUpdated, setTaskUpdated] = useState(false);
@@ -2743,6 +2829,7 @@ const MilestonePreviewInner = ({
                         <TaskBodyBlock
                             key={`MilestoneBody-${milestone.milestoneId}`}
                             body={bodyDraft}
+                            flushRef={bodyFlushRef}
                             myself={myself}
                             projectId={milestone.projectId}
                             setBody={handleMilestoneBodySync}

@@ -54,6 +54,18 @@ export interface UseSendUpdatedTaskParams {
      *  typing), so the PUT must read the ref for the freshest content. */
     bodyRef?: { current: PartialBlock[] };
 
+    /** Writes what the editor holds NOW into `bodyRef` (its sync to the host is debounced).
+     *  Called before a save is built, and after it to see whether words were typed that it did
+     *  not carry (MIP-2443). */
+    flushBody?: () => void;
+
+    /** Called when there is nothing more to do with a body that was sent: the server stored it,
+     *  or refused it in a way that sending it again cannot change. */
+    onBodySettled?: (taskId: number, body: PartialBlock[]) => void;
+
+    /** Called when a save stored nothing and is worth sending again. */
+    onBodyNotStored?: () => void;
+
     /** Called with the task as the server holds it after a REFUSED save has
      *  put the working copy back to it, so a host that keeps a mirror of some
      *  fields outside the edit state (TaskPreview's assignee / reporter chips)
@@ -87,6 +99,9 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
         taskEditState?.setStartIntervalUpdatingTask ?? params.setStartIntervalUpdatingTask!;
 
     const bodyRef = params.bodyRef;
+    const flushBody = params.flushBody;
+    const onBodySettled = params.onBodySettled;
+    const onBodyNotStored = params.onBodyNotStored;
     const onStoredTaskRestored = params.onStoredTaskRestored;
 
     // The id of the task the preview shows RIGHT NOW. A refused save puts the
@@ -98,6 +113,10 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
         shownTaskIdRef.current = tmpCurrentTaskContent?.id;
     }, [tmpCurrentTaskContent?.id]);
 
+    // Files a save is uploading right now (`<task id>:<attachment id>`). A second save made
+    // meanwhile (leaving the preview, MIP-2443) must not upload them again.
+    const uploadingRef = useRef(new Set<string>());
+
     const sendUpdatedTask = useCallback(
         // `syncCard` = "this is a metadata save; rebuild the PM task-card +
         // broadcast." Passed true only by the metadata-save effect in
@@ -105,11 +124,18 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
         // false so the card isn't rewritten with identical content. See the
         // `syncCard` note in `sendUpdatedSpecificTask`.
         async (taskSwitched: boolean, syncCard: boolean = false) => {
+            flushBody?.();
             const baseTaskContent: TaskProps = {
                 ...tmpCurrentTaskContent,
                 title: taskTitle === "" ? initTaskTitle : taskTitle,
                 body: bodyRef ? bodyRef.current : body,
             };
+            const uploadKey = (id: number) => `${baseTaskContent.id}:${id}`;
+            if (baseTaskContent.attachments?.some((a) => a.attachment_id < 0)) {
+                baseTaskContent.attachments = baseTaskContent.attachments.filter(
+                    (a) => !uploadingRef.current.has(uploadKey(a.attachment_id))
+                );
+            }
 
             // Snapshot of negative-id rows being sent up — anything
             // *not* in this set is either already-saved (positive id) or
@@ -148,6 +174,9 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             };
 
             let uploadAttachments: Awaited<ReturnType<typeof sendUpdatedSpecificTask>>;
+            // Set when the PUT stored nothing: whether it is worth sending again.
+            let notSaved: { retry: boolean } | null = null;
+            sentNegativeIds.forEach((id) => uploadingRef.current.add(uploadKey(id)));
             try {
                 uploadAttachments = await sendUpdatedSpecificTask(
                     socket,
@@ -156,7 +185,12 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                     syncCard,
                     accessToken,
                     undefined,
-                    { onCollaboratorsPruned: dropPrunedCollaborators }
+                    {
+                        onCollaboratorsPruned: dropPrunedCollaborators,
+                        onNotSaved: (retry) => {
+                            notSaved = { retry };
+                        },
+                    }
                 );
             } catch (error) {
                 if (!(error instanceof TaskSaveRefusedError)) throw error;
@@ -324,6 +358,9 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 // save, and a retry that then fails would leave the edits
                 // looking saved. The retry's own end clears them.
                 const sendAgain = collaboratorsPutBack || movePutBack;
+                if (!sendAgain) {
+                    onBodySettled?.(Number(baseTaskContent.id), baseTaskContent.body ?? []);
+                }
                 setTaskUpdated(sendAgain);
                 if (!sendAgain) {
                     setTaskStatusUpdated(false);
@@ -331,13 +368,16 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 }
                 setStartIntervalUpdatingTask(false);
                 return;
+            } finally {
+                sentNegativeIds.forEach((id) => uploadingRef.current.delete(uploadKey(id)));
             }
 
             // The PUT wrote new activity rows (field/description edits) —
             // tell the open preview to refresh its Activity feed. Scoped
             // by task id, so a save fired while switching away doesn't
             // refetch anything for the newly-opened task.
-            emitTaskTouched(Number(baseTaskContent.id), "update");
+            const failed = notSaved as { retry: boolean } | null;
+            if (!failed) emitTaskTouched(Number(baseTaskContent.id), "update");
 
             const persistedAttachments: AttachmentFileProps[] =
                 uploadAttachments && uploadAttachments.length > 0
@@ -416,10 +456,36 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 );
             }
             setTaskUpdated(false);
-            setTaskBodySaved(true);
             setTaskStatusUpdated(false);
-            setTaskBodyEdited(false);
             setStartIntervalUpdatingTask(false);
+
+            // The two body flags describe the task on screen. A save that finishes after the
+            // person moved on must not clear them for the next task.
+            const stillShown =
+                !taskSwitched && Number(shownTaskIdRef.current) === Number(baseTaskContent.id);
+            if (failed) {
+                // Not saved: the body stays marked as edited, so the autosave sends it again.
+                if (failed.retry) onBodyNotStored?.();
+                else onBodySettled?.(Number(baseTaskContent.id), baseTaskContent.body ?? []);
+                if (stillShown) {
+                    setTaskBodySaved(false);
+                    if (!failed.retry) setTaskBodyEdited(false);
+                }
+                return;
+            }
+            // Words typed while the PUT was in flight (or still waiting in the editor's
+            // debounce) are not in what was sent. Clearing "edited" for them is how a task kept
+            // half a sentence (MIP-2443).
+            if (stillShown) flushBody?.();
+            const unsent =
+                stillShown &&
+                !!bodyRef &&
+                JSON.stringify(bodyRef.current) !== JSON.stringify(baseTaskContent.body);
+            onBodySettled?.(Number(baseTaskContent.id), baseTaskContent.body ?? []);
+            if (stillShown) {
+                setTaskBodySaved(!unsent);
+                setTaskBodyEdited(unsent);
+            }
         },
         [
             socket,
@@ -430,6 +496,9 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             initTaskTitle,
             body,
             bodyRef,
+            flushBody,
+            onBodySettled,
+            onBodyNotStored,
             setUploadedFiles,
             setTmpCurrentTaskContent,
             setCurrentPreviewTask,

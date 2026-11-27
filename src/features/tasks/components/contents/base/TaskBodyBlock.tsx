@@ -1,3 +1,4 @@
+import { type RefObject } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Box, Stack } from "@mui/joy";
 import { Socket } from "socket.io-client";
@@ -21,6 +22,8 @@ type TaskBodyBlockProps = {
     setTaskBodySaved: (value: boolean) => void;
     useCM: ChatManagementState;
     useUISM: UIStateManagementState;
+    /** See `BnTaskPreview`. */
+    flushRef?: RefObject<(() => void) | null>;
 };
 export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
     const {
@@ -36,12 +39,14 @@ export const TaskBodyBlock = (props: TaskBodyBlockProps) => {
         setTaskBodySaved,
         useCM,
         useUISM,
+        flushRef,
     } = props;
     return (
         <Stack direction={"column"} sx={{ width: "100%" }}>
             <Box sx={{ mt: 1 }}>
                 <BnTaskPreview
                     body={body || []}
+                    flushRef={flushRef}
                     myself={myself}
                     projectId={projectId}
                     setBody={setBody}
