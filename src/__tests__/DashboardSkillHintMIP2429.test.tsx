@@ -103,12 +103,12 @@ describe("the Skill field's hint", () => {
 
     it("has its own sentence in all seven languages", () => {
         for (const [lang, m] of Object.entries({ en, ja, zh, es, fr, hi, ar })) {
-            const t = m.settings.schedules;
+            const t = m.settings!.schedules!;
             expect(t.paramDashboardSkillHint, lang).toBeTruthy();
             expect(t.paramDashboardSkillHint, lang).not.toBe(t.paramSkillHint);
             if (lang !== "en") {
                 expect(t.paramDashboardSkillHint, lang).not.toBe(
-                    en.settings.schedules.paramDashboardSkillHint
+                    en.settings!.schedules!.paramDashboardSkillHint
                 );
             }
         }
