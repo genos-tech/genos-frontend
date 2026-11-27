@@ -29,7 +29,7 @@ A project holds tasks, milestones and sprints, and it has its own chat. Create o
 - **Sub-tasks:** break work down with sub-tasks. A task's page shows the sub-tasks under it.
 - **Dependencies:** under Dependencies, mark which tasks a task is **Blocked by** and which it is **Blocking**. Tasks in other projects of the same team can be linked too. While a task has an open blocker, Genos sets it to Blocked. When the last blocker closes, it returns to Open. This only happens if its status is still Blocked; if you set another status yourself, Genos leaves it alone.
 - **Task graph:** shows the task tree and its dependencies. Open it with **Open task graph**, or with Ctrl+Cmd+G on a Mac (Ctrl+Alt+G elsewhere) while a task is open in the preview.
-- **Task Weight (1–25):** combines priority with time pressure, and a bigger effort level starts the pressure earlier. It drives the **By weight** order in Up Next and **Top by Weight**. Team Capacity and Velocity show the load and pace of the project.
+- **Task Weight (1–25):** combines priority with time pressure, and a bigger effort level starts the pressure earlier. It drives the **By weight** order in Up Next and **Top by Weight**. Team Capacity and Pace show the load on the project and how fast its work moves.
 - **Comments:** comments support @-mentions and reactions.
 
 ## Milestones, sprints and views

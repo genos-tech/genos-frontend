@@ -4154,8 +4154,8 @@ export const es: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "No se pudo cargar el gráfico de velocidad",
-                title: "Velocidad",
+                loadFailed: "No se pudo cargar el gráfico de ritmo",
+                title: "Ritmo",
                 subtitle:
                     "Tareas creadas, iniciadas, cerradas y actualizadas a lo largo del tiempo.",
                 day: "Día",

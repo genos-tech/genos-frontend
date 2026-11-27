@@ -56,7 +56,7 @@ const mergeVelocity = (parts: VelocityPoint[][]): VelocityPoint[] => {
 
 /**
  * Fetch the per-bucket velocity series for a set of tasks across a
- * window. Powers the dashboard "Velocity" section. Returns `null` on
+ * window. Powers the dashboard "Pace" section. Returns `null` on
  * auth failure, network error, or empty input — the caller renders an
  * empty state rather than a partial chart. Mirrors `loadMilestoneBurndown`.
  */

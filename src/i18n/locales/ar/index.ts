@@ -4079,8 +4079,8 @@ export const ar: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "تعذّر تحميل مخطط السرعة",
-                title: "سرعة",
+                loadFailed: "تعذّر تحميل مخطط الوتيرة",
+                title: "الوتيرة",
                 subtitle: "المهام التي تم إنشاؤها وبدأت وإغلاقها وتحديثها بمرور الوقت",
                 day: "يوم",
                 week: "أسبوع",

@@ -4355,8 +4355,8 @@ export const hi: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "वेलोसिटी चार्ट लोड नहीं हो सका",
-                title: "वेग",
+                loadFailed: "रफ़्तार का चार्ट लोड नहीं हो सका",
+                title: "रफ़्तार",
                 subtitle: "समय के साथ कार्य बनाए गए, प्रारंभ किए गए, बंद किए गए और अद्यतन किए गए",
                 day: "दिन",
                 week: "सप्ताह",
