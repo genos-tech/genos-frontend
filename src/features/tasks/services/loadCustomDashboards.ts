@@ -14,6 +14,9 @@ export type DashboardNote = {
     /** Always "personal" today: the HTML note viewer's `noteType` for it is 1. */
     noteType: string;
     title: string;
+    /** The page sits in a team folder the member can open, so Notes shows it under Team Notes
+     *  (MIP-2408). Absent from an API without it, which reads as false. */
+    inTeamFolder?: boolean;
 };
 
 export type OwnDashboard = {
