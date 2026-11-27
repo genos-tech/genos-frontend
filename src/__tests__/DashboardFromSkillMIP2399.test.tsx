@@ -80,7 +80,7 @@ const SKILLS = [
         group: "mine",
         ownerName: "",
         publishedVersionNo: 2,
-        tagChips: [],
+        tagChips: [{ name: "dashboard", color: "#808080", textColor: "white" }],
     },
 ];
 

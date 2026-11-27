@@ -5183,6 +5183,9 @@ export const fr: DeepPartial<Messages> = {
                 "Vous n'avez pas encore de compétence à exécuter. Écrivez-en une d'abord dans Compétences.",
             skillTagFilter: "Filtrer les compétences par balise",
             skillNoMatch: "Aucune compétence n'a toutes ces balises.",
+            skillDashboardNone: "Aucune compétence n'a encore la balise dashboard.",
+            skillDashboardHint:
+                "Ajoutez la balise dashboard à une compétence pour l'afficher ici.",
             skillNotPublished:
                 "{name} (partagez-la d'abord avec votre équipe pour publier une version)",
             errorSkill: "Choisissez une compétence.",
