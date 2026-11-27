@@ -188,6 +188,26 @@ describe("the lists and the viewer", () => {
         expect(screen.getByTestId("where").textContent).toBe("/workspace/notes/shared/21");
     });
 
+    it("sends Open note of a team folder page to Team Notes, own or shared (MIP-2408)", async () => {
+        if (READY.status !== "ready") throw new Error("fixture");
+        const [first, ...rest] = READY.data.own;
+        load.mockResolvedValue({
+            status: "ready",
+            data: {
+                own: [{ ...first, note: { ...first.note!, inTeamFolder: true } }, ...rest],
+                shared: [{ ...READY.data.shared[0], inTeamFolder: true }],
+            },
+        });
+        const own = renderTab();
+        fireEvent.click(await screen.findByRole("button", { name: c().openNote }));
+        expect(screen.getByTestId("where").textContent).toBe("/workspace/notes/team/11");
+        own.unmount();
+        renderTab();
+        fireEvent.click(await screen.findByText("Team progress"));
+        fireEvent.click(screen.getByRole("button", { name: c().openNote }));
+        expect(screen.getByTestId("where").textContent).toBe("/workspace/notes/team/21");
+    });
+
     it("keeps the dashboard open that was run for the first time", async () => {
         run.mockResolvedValue({
             ok: true,

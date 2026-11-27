@@ -14,12 +14,18 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { toast } from "../components/ui/feedback/toastStore";
 import { buildCreate, validateForm } from "../features/schedules/scheduleForm";
 import { paramApplies, paramRequiredNow } from "../features/schedules/scheduleParams";
 import { CustomDashboardsTab } from "../features/tasks/components/dashboard/customDashboards/CustomDashboardsTab";
 import { loadCustomDashboards } from "../features/tasks/services/loadCustomDashboards";
-import { getMessages } from "../i18n";
-import { createSchedule, listSchedules, type ScheduleJob } from "../services/schedules";
+import { fmt, getMessages } from "../i18n";
+import {
+    createSchedule,
+    listSchedules,
+    runScheduleNow,
+    type ScheduleJob,
+} from "../services/schedules";
 
 vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/tasks/services/loadCustomDashboards", () => ({
@@ -32,6 +38,10 @@ vi.mock("../services/schedules", () => ({
 }));
 vi.mock("../components/ui/feedback/toastStore", () => ({
     toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn() },
+}));
+const requestInboxResync = vi.fn(async (_reason: string) => undefined);
+vi.mock("../features/inbox/inboxResyncEvent", () => ({
+    requestInboxResync: (reason: string) => requestInboxResync(reason),
 }));
 vi.mock("../components/layout/schedules/scheduleParamHooks", () => ({
     useJoinedProjects: () => [],
@@ -191,6 +201,58 @@ describe("New dashboard", () => {
         fireEvent.submit(form);
         await waitFor(() => expect(screen.queryByTestId("schedule-form")).toBeNull());
         await waitFor(() => expect(load.mock.calls.length).toBeGreaterThan(before));
+    });
+
+    // MIP-2425: the create already ran it, so "Run it now" would be a second (billed) run.
+    const runRightAway = async (deliverChannel: unknown) => {
+        create.mockResolvedValue({
+            ok: true,
+            schedule: { id: "new1", deliverChannel },
+            outcome: { status: "ok", error: "", title: "My progress", items: 3 },
+        } as unknown as CreateResult);
+        const form = await openDialog();
+        const params = within(form).getByTestId("schedule-params");
+        fireEvent.click(within(params).getAllByRole("combobox")[0]);
+        fireEvent.click(await screen.findByRole("option", { name: s().kindMine }));
+        fireEvent.click(within(form).getByRole("combobox", { name: s().frequency }));
+        fireEvent.click(await screen.findByRole("option", { name: s().frequencyOnce }));
+        fireEvent.click(within(form).getByRole("radio", { name: s().onceRightAway }));
+        fireEvent.submit(form);
+        await waitFor(() => expect(toast.success).toHaveBeenCalled());
+        expect(create).toHaveBeenCalledTimes(1);
+        expect(create.mock.calls[0][2]).toMatchObject({ runNow: true });
+        expect(runScheduleNow).not.toHaveBeenCalled();
+        expect(toast.success).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(screen.queryByTestId("schedule-form")).toBeNull());
+        return vi.mocked(toast.success).mock.calls[0][0];
+    };
+
+    it("announces the run of Run right away instead of asking to run it", async () => {
+        const said = await runRightAway(null);
+        expect(said).toBe(fmt(s().reportReadyTitled, { title: "My progress" }));
+        expect(said).not.toBe(c().newDashboardSaved);
+        expect(requestInboxResync).toHaveBeenCalledWith("schedule-run");
+    });
+
+    it("says which chat a Run right away posted to", async () => {
+        const said = await runRightAway({ id: "c1", title: "Team room", kind: "group" });
+        expect(said).toBe(fmt(s().reportPosted, { chat: "Team room" }));
+        expect(requestInboxResync).not.toHaveBeenCalled();
+    });
+
+    it("keeps the usual toast for a create that did not run", async () => {
+        create.mockResolvedValue({
+            ok: true,
+            schedule: { id: "new2" },
+        } as unknown as CreateResult);
+        const form = await openDialog();
+        const params = within(form).getByTestId("schedule-params");
+        fireEvent.click(within(params).getAllByRole("combobox")[0]);
+        fireEvent.click(await screen.findByRole("option", { name: s().kindMine }));
+        fireEvent.submit(form);
+        await waitFor(() => expect(toast.success).toHaveBeenCalledTimes(1));
+        expect(vi.mocked(toast.success).mock.calls[0][0]).toBe(c().newDashboardSaved);
+        expect(requestInboxResync).not.toHaveBeenCalled();
     });
 
     it("says so when the server has no dashboard job", async () => {

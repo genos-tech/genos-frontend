@@ -45,6 +45,7 @@ type Entry = {
     scheduleId: string | null;
     paused: boolean;
     shared: boolean;
+    inTeamFolder: boolean;
 };
 
 const ownEntry = (
@@ -62,6 +63,7 @@ const ownEntry = (
         scheduleId: row.scheduleId,
         paused: !row.enabled,
         shared: false,
+        inTeamFolder: !!row.note?.inTeamFolder,
     };
 };
 
@@ -73,7 +75,15 @@ const sharedEntry = (row: SharedDashboard, by: string): Entry => ({
     scheduleId: null,
     paused: false,
     shared: true,
+    inTeamFolder: !!row.inTeamFolder,
 });
+
+/** The Notes address of a dashboard's page, by the sidebar section that holds it (MIP-2408): a
+ *  team folder's page is under Team Notes, whoever it belongs to. */
+const notePath = (entry: Entry) => {
+    const section = entry.inTeamFolder ? "team" : entry.shared ? "shared" : "my";
+    return `/workspace/notes/${section}/${entry.noteId}`;
+};
 
 // An own row's two icon buttons sit over its end edge. The room kept for them is worked out from
 // the same sizes that draw them, so a title never runs under them. It is `paddingInlineEnd`: `sx`
@@ -651,11 +661,7 @@ export const CustomDashboardsTab = ({ teamId, share }: Props) => {
                                         size="sm"
                                         startDecorator={<OpenInNewRoundedIcon />}
                                         variant="plain"
-                                        onClick={() =>
-                                            navigate(
-                                                `/workspace/notes/${selected.shared ? "shared" : "my"}/${selected.noteId}`
-                                            )
-                                        }
+                                        onClick={() => navigate(notePath(selected))}
                                     >
                                         {c.openNote}
                                     </Button>
