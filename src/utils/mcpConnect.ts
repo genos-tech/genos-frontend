@@ -17,7 +17,7 @@
 export const MCP_PATH = "/api/public/v1/mcp";
 
 /**
- * The CORE endpoint (MIP-1594, MIP-1877): the 34 tools for day-to-day work. It is what a
+ * The CORE endpoint (MIP-1594, MIP-1877): the tools for day-to-day work. It is what a
  * person is told to paste into Claude, and what the Genos Claude plugin connects. The full
  * `MCP_PATH` (every tool) stays valid and is what API-key scripts use.
  */
