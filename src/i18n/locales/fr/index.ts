@@ -4944,7 +4944,7 @@ export const fr: DeepPartial<Messages> = {
             ruleDaily: "Tous les jours à {time}",
             ruleWeekdays: "Du lundi au vendredi à {time}",
             ruleWeekly: "Chaque {days} à {time}",
-            ruleMonthly: "Chaque mois, le {day}, à {time}",
+            ruleMonthly: "Chaque mois, le jour {day}, à {time}",
             ruleOnce: "Une seule fois, le {date} à {time}",
             upgradeTitle: "Des rapports qui arrivent tout seuls",
             upgradeChip: "Core et supérieur",
