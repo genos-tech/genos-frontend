@@ -535,14 +535,14 @@ export const SkillParamSelect = ({
                 slotProps={{ listbox: { sx: { zIndex: popupZIndex, maxHeight: 280 } } }}
                 sx={{ minWidth: 0 }}
                 value={value || null}
-                onChange={(_, next) => {
-                    if (next) onChange(next);
-                }}
                 renderValue={(option) => (
                     <Box component="bdi" sx={CLOSED_VALUE_SX}>
                         {option?.label}
                     </Box>
                 )}
+                onChange={(_, next) => {
+                    if (next) onChange(next);
+                }}
             >
                 {stray && (
                     <Option value={value} disabled>
