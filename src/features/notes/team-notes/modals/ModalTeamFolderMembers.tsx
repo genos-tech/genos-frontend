@@ -122,10 +122,16 @@ export const ModalTeamFolderMembers = (props: Props) => {
         resolveMyRole(myself.userId, useTEM.currentTeam.teamOwnerId, useTEM.teamMembers)
     );
 
+    // The dialog stays mounted between openings, so a roster can arrive after another folder is
+    // shown. It must not be listed there: "Remove" would act on that folder with this one's users.
+    const shownFolderRef = useLatestRef(folder?.folderId);
+
     const reload = async () => {
-        if (!folder) return;
+        if (!folder || shownFolderRef.current !== folder.folderId) return;
         setLoading(true);
-        setMembers(await loadTeamFolderMembers(myself, folder.folderId, accessToken));
+        const roster = await loadTeamFolderMembers(myself, folder.folderId, accessToken);
+        if (shownFolderRef.current !== folder.folderId) return;
+        setMembers(roster);
         setLoading(false);
     };
 
@@ -135,6 +141,7 @@ export const ModalTeamFolderMembers = (props: Props) => {
 
     useEffect(() => {
         if (!open || folder?.folderId === undefined) return;
+        setMembers([]);
         setPendingUserIds([]);
         setPendingGroups([]);
         setInviteRole(ROLE_EDITOR);
