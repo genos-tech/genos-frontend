@@ -503,6 +503,48 @@ const LineRow = ({
     );
 };
 
+/** A section with neither a heading nor a key is only its lines (MIP-2419: the one link of a
+ *  dashboard run's item). It gets no header, count or fold, which would be an empty box title. */
+const isBare = (section: ReportSectionV2): boolean =>
+    section.heading === "" && section.key === null;
+
+const BareSection = ({
+    section,
+    onOpen,
+    chatMarks,
+}: {
+    section: ReportSectionV2;
+    onOpen: Open;
+    chatMarks: ReadonlyMap<string, ReportChatMark>;
+}) => (
+    <Box
+        component="ul"
+        data-report-bare=""
+        sx={{
+            m: 0,
+            p: 0.5,
+            listStyle: "none",
+            border: "1px solid",
+            borderColor: g.border.subtle,
+            borderRadius: g.radius.md,
+            background: g.surface.default,
+            minWidth: 0,
+        }}
+    >
+        {section.items.map((item, i) => (
+            <li key={`${i}-${item.text}`}>
+                <LineRow
+                    chatMarks={chatMarks}
+                    iconSlotWidth={CHAT_ICON_SLOT}
+                    item={item}
+                    sectionKey={null}
+                    onOpen={onOpen}
+                />
+            </li>
+        ))}
+    </Box>
+);
+
 const isTaskLine = (item: ReportItemV2): boolean =>
     item.kind === "task" && (item.displayId !== "" || item.title !== "");
 
@@ -546,7 +588,8 @@ const Section = ({
     const [showAll, setShowAll] = useState(false);
     const uid = useId();
     const tone = toneOf(section.key);
-    // A section always has a heading from the server; if one is ever missing, the key reads better than a bare count.
+    // A titled section: if the heading is ever missing, the key reads better than a bare count
+    // (a section with neither is drawn by `BareSection` and never gets here).
     const heading =
         section.heading !== "" ? section.heading : (section.key ?? "").replace(/_/g, " ");
     const css = toneCss(tone);
@@ -874,6 +917,10 @@ export const GenosReportCard = memo(
             () => new Map(report.stats.map((s) => [s.key, s.count])),
             [report.stats]
         );
+        // A summary that only repeats a bare line below it would say the same words twice.
+        const summaryIsALine = report.sections.some(
+            (s) => isBare(s) && s.items.some((i) => i.text === report.summary)
+        );
         const answerer = useMemo<Answerer | undefined>(
             () => (userId && teamId ? { userId, teamId } : undefined),
             [userId, teamId]
@@ -899,7 +946,7 @@ export const GenosReportCard = memo(
                             {report.title}
                         </Typography>
                     )}
-                    {report.summary !== "" && (
+                    {report.summary !== "" && !summaryIsALine && (
                         <Typography
                             dir="auto"
                             sx={{
@@ -941,23 +988,33 @@ export const GenosReportCard = memo(
                     </Box>
                 ) : (
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                        {report.sections.map((section, index) => (
-                            <Section
-                                key={`${index}-${section.key ?? section.heading}`}
-                                answerer={answerer}
-                                avatars={avatars}
-                                chatMarks={chatMarks}
-                                index={index}
-                                section={section}
-                                todayIso={todayIso}
-                                count={Math.max(
-                                    (section.key !== null ? counts.get(section.key) : undefined) ??
-                                        0,
-                                    section.items.filter((i) => i.kind !== "more").length
-                                )}
-                                onOpen={onOpen}
-                            />
-                        ))}
+                        {report.sections.map((section, index) =>
+                            isBare(section) ? (
+                                <BareSection
+                                    key={index}
+                                    chatMarks={chatMarks}
+                                    section={section}
+                                    onOpen={onOpen}
+                                />
+                            ) : (
+                                <Section
+                                    key={`${index}-${section.key ?? section.heading}`}
+                                    answerer={answerer}
+                                    avatars={avatars}
+                                    chatMarks={chatMarks}
+                                    index={index}
+                                    section={section}
+                                    todayIso={todayIso}
+                                    count={Math.max(
+                                        (section.key !== null
+                                            ? counts.get(section.key)
+                                            : undefined) ?? 0,
+                                        section.items.filter((i) => i.kind !== "more").length
+                                    )}
+                                    onOpen={onOpen}
+                                />
+                            )
+                        )}
                     </Box>
                 )}
                 {footer != null && (
