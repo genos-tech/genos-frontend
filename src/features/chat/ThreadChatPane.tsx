@@ -254,6 +254,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     // MainChatPane's `chatType !== 3` editor gate).
                     // Virtuoso flexes to fill the freed bottom space.
                     <MessageListRenderer
+                        isModalHosted={hostZIndex != null}
                         chat={useCM.currentThreadChat as ThreadProps}
                         currentChatId={currentThreadChatId}
                         firstUnreadIndex={firstUnreadIndex}
@@ -287,6 +288,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                     // min/max-height caps from App.css.
                     <>
                         <MessageListRenderer
+                            isModalHosted={hostZIndex != null}
                             chat={useCM.currentThreadChat as ThreadProps}
                             currentChatId={currentThreadChatId}
                             firstUnreadIndex={firstUnreadIndex}
