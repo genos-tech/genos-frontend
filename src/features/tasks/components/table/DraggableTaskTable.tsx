@@ -124,7 +124,8 @@ export const defaultColumns: ColumnDef[] = [
         field: "status",
         headerName: "Status",
         headerLabelKey: "status",
-        width: 105,
+        // Wide enough for "Rejected" with its icon (it was cut at 105).
+        width: 118,
         minWidth: 80,
         align: "center",
         editable: true,

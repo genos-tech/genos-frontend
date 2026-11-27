@@ -15,7 +15,7 @@ export const REJECTED_SWATCH = {
 };
 
 export const REJECTED_CSS = {
-    text: "color-mix(in srgb, #8d6e63 55%, var(--g-text))",
+    text: "color-mix(in srgb, #a1705c 80%, var(--g-text))",
     subtle: "rgba(141, 110, 99, 0.14)",
     border: "rgba(141, 110, 99, 0.45)",
 };
