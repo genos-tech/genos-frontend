@@ -1,7 +1,7 @@
 ---
 id: genos-ai
 title: Genos AI: 質問し、作業を任せ、先回りする
-settings: [spotlight, spotlight.provider, spotlight.effort, spotlight.model, spotlight.aiAnswers, spotlight.webSearch, spotlight.contentLength, spotlight.sharedAnswers, spotlight.noteActivity, spotlight.scheduleMode, spotlight.scheduleEffort, spotlight.scheduleDeliver, spotlight.scheduleDashboardKind, spotlight.scheduleDashboardPeriod, spotlight.scheduleDashboardFocus]
+settings: [spotlight, spotlight.provider, spotlight.effort, spotlight.model, spotlight.aiAnswers, spotlight.webSearch, spotlight.contentLength, spotlight.sharedAnswers, spotlight.noteActivity, spotlight.scheduleMode, spotlight.scheduleEffort, spotlight.scheduleDeliver, spotlight.scheduleDashboardKind, spotlight.scheduleDashboardPeriod, spotlight.scheduleDashboardFocus, spotlight.scheduleDashboardSource, spotlight.scheduleDashboardSaveTo, spotlight.scheduleRunRightAway]
 ---
 
 ## Genos に質問できる場所
@@ -44,7 +44,9 @@ Genos にできることは、プランによって異なります。
 
 スケジュール(設定 → Genos → スケジュール、Core 以上)は、決めた時刻にレポートを用意します。ほとんどのレポートは通常のレポートで、あなたのデータから作られ、AI もクレジットも使いません。
 
-**Genos AI によるスケジュールジョブ。** 6 つのレポートには、通常モードと AI モードを選ぶ**モード**があります。What to do today、What is left from last week、Project updates、Milestone updates、Team activity、ダッシュボードページです。初期状態は通常モードです。Group chat catch-up と What you did には AI モードがありません。スキルの実行は、常に AI を使います。
+**今すぐ実行(1回のみ)。** **1回のみ**のスケジュールを新しく作るときは、日時の代わりに**今すぐ実行**を選んでから、**今すぐ実行**ボタンを押せます。レポートはすぐに受信箱か選んだチャットに届きます。実行に失敗するとスケジュールは保存されず、フォームの入力内容は残ります。実行が終わったものは一覧に残り、削除するまで同じ名前は使えません。
+
+**Genos AI によるスケジュールジョブ。** 6 つのレポートには、通常モードと AI モードを選ぶ**モード**があります。What to do today、What is left from last week、Project updates、Milestone updates、Team activity、ダッシュボードページです。初期状態は通常モードです。Group chat catch-up と What you did には AI モードがありません。スキルの実行と、スキルで作るダッシュボードページは常に AI を使うため、モードの選択はありません。
 
 - What to do today では、タスクのコメントから状況が分かるとき、AI がタスクの下に短い一文を添えます。ほかのレポートでは、レポートがすでに載せている内容から書いた短い要約(2〜4 文)を、AI が先頭に添えます。
 - **AI の Effort**(Low、Medium、High)は、AI モードのときだけ表示されます。フォームには 1 回の実行で使うクレジットの目安が表示され、各レポートには実際の数値が表示されます。保存済みのスケジュールが求めるレベルをプランで使えない場合は、プランがどのレベルで実行するかがフォームに表示されます。
@@ -66,6 +68,9 @@ Genos にできることは、プランによって異なります。
 - **AI の要約。** AI モードでは、ページに短い要約も 1 つ付きます。前回の AI 実行から、ページに表示される内容(数字、リスト、フォーカス)が変わっていなければ(8 日以内)、Genos はその要約を再利用し、クレジットを消費しません。Genos で AI のダッシュボード要約がオフの場合は、通常のページになります。クレジットが残っていない場合も通常のページになりますが、直近 8 日以内の変わっていない要約を再利用できるときは除きます。
 - **チャットでは。** チャットに投稿するダッシュボードのスケジュールは、レポート全文ではなく、タイトル、1 行、ページへのリンクを含む短いお知らせを送ります。チャットを読むすべての人がそのページを開けなければなりません。開けない人がいる場合、実行は失敗し、何も投稿されません。
 - **見つける場所。** 「ダッシュボード」ページ(英語では Task Stats)に**AIのカスタムダッシュボード**タブがあります。スケジュールが最新に保っているダッシュボード(自分の)と、チームメイトが共有したダッシュボード(共有されたもの)が並びます。すでに開けるページだけが表示されます。ここからページを開いたり、**今すぐ実行**を押したり、同じスケジュールフォームが開く**新しいダッシュボード**を追加したりできます。
+- **保存先。** ページは、マイノート、自分のフォルダ、チームフォルダのいずれかに保存できます。それぞれの選択肢に、誰が開けるかが表示されます。最初の実行のあとは、スケジュールで保存先を変えられません。移すときは、ノートを移動します。
+- **スキルで作るページ。** **作成方法**で**選んだスキル**を選び、スキルを指定して、必要なら**スキルに渡す内容**を入力します。**AI の Effort** が表示されます。保存できるのは、あなただけが読める場所です。実行に失敗したときや AI クレジットがないときは、前のページが残ります。
+- **共有、編集、削除。** 自分のダッシュボードには、**AIのカスタムダッシュボード**タブに共有、編集、削除があります。**共有**は、ページができたあとに、そのページの共有画面を開きます。実行のたびに、ページを開ける全員がそのデータを見られるかを確認します。スキルで作ったページでは、あなただけである必要があります。見られない人がいると実行は失敗し、3 回失敗するとスケジュールは一時停止します。**編集**はスケジュールのフォームを開きます。**削除**は更新を止め、ページは普通のノートとして残ります。
 - **AI アプリから。** 連携した AI アプリ(Claude、ChatGPT)は、投稿先のチャットやページの保存場所を含めて、ダッシュボードのスケジュールを代わりに作成・変更できます。先にあなたの承認を求め、同じルールが適用されます。
 
 ## AI の利用とクレジット
