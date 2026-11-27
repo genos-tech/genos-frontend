@@ -119,6 +119,11 @@ export const settings = {
         suggestEveningName: "Evening recap",
         suggestEveningBlurb: "What you did today",
         suggestDaily: "Every day at {time}",
+        ruleDaily: "Every day at {time}",
+        ruleWeekdays: "Every Monday to Friday at {time}",
+        ruleWeekly: "Every {days} at {time}",
+        ruleMonthly: "Every month on day {day} at {time}",
+        ruleOnce: "Once, on {date} at {time}",
         upgradeTitle: "Reports that arrive on their own",
         upgradeChip: "Core and up",
         upgradeBody:

@@ -1044,6 +1044,11 @@ export const ar: DeepPartial<Messages> = {
             suggestEveningName: "ملخص المساء",
             suggestEveningBlurb: "ما أنجزته اليوم",
             suggestDaily: "كل يوم في {time}",
+            ruleDaily: "كل يوم في {time}",
+            ruleWeekdays: "من الاثنين إلى الجمعة في {time}",
+            ruleWeekly: "كل {days} في {time}",
+            ruleMonthly: "كل شهر في اليوم {day} الساعة {time}",
+            ruleOnce: "مرة واحدة، في {date} الساعة {time}",
             upgradeTitle: "تقارير تصلك من تلقاء نفسها",
             upgradeChip: "Core وما فوقها",
             upgradeBody:

@@ -98,7 +98,7 @@ describe("SchedulesSection list", () => {
         ).toBeTruthy();
         expect(within(r).getByText("Morning plan")).toBeTruthy();
         expect(within(r).getByText("What to do today")).toBeTruthy();
-        expect(within(r).getByText("every Monday and Wednesday at 09:00")).toBeTruthy();
+        expect(within(r).getByText("Every Monday and Wednesday at 09:00")).toBeTruthy();
         expect(within(r).getByText(/Next run: /)).toBeTruthy();
         expect(within(r).getByText(/Last run: /)).toBeTruthy();
         expect(within(r).getByText("Ran")).toBeTruthy();

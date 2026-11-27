@@ -4667,6 +4667,11 @@ export const zh: DeepPartial<Messages> = {
             suggestEveningName: "晚间回顾",
             suggestEveningBlurb: "你今天做了什么",
             suggestDaily: "每天 {time}",
+            ruleDaily: "每天 {time}",
+            ruleWeekdays: "每周一至周五 {time}",
+            ruleWeekly: "每{days} {time}",
+            ruleMonthly: "每月{day}日 {time}",
+            ruleOnce: "仅一次：{date} {time}",
             upgradeTitle: "自动送达的报告",
             upgradeChip: "Core 及以上",
             upgradeBody:
