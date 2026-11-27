@@ -103,14 +103,14 @@ type World = {
     currentMyNote: { noteId: number };
     // Read by other parts of the page, never by the sidebar.
     openingNote: { n: number } | null;
-    noteResyncNonce: number;
+    noteResync: Record<string, number>;
 };
 
 const initialWorld = (): World => ({
     activeTab: TAB_A,
     currentMyNote: CURRENT_A,
     openingNote: null,
-    noteResyncNonce: 0,
+    noteResync: {},
 });
 
 // Functions the real hook does not memoize: a new one for every render of the world.
@@ -243,7 +243,7 @@ describe("NoteSidebar render boundary (MIP-2379)", () => {
         for (let i = 0; i < 5; i += 1) {
             await act(async () => {
                 // New managers every time; a member the sidebar never reads moves.
-                setWorld((w) => ({ ...w, openingNote: { n: i }, noteResyncNonce: i }));
+                setWorld((w) => ({ ...w, openingNote: { n: i }, noteResync: { [`1-${i}`]: i } }));
             });
         }
         expect(counts).toEqual(before);
