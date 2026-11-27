@@ -4579,7 +4579,7 @@ export const ja: DeepPartial<Messages> = {
             unlimited: "無制限",
             todaySuffix: "（本日）",
             monthSuffix: "（今月）",
-            quotaRemaining: "{remaining} / {limit} が {window} を離れました",
+            quotaRemaining: "残り {remaining} / {limit}{window}",
             aiAsks: "AI への質問",
             webSearches: "ウェブ検索",
             tasksCreated: "作成したタスク",
