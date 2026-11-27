@@ -19,6 +19,7 @@ import {
 } from "../../../features/schedules/scheduleFormat";
 import { localizeJob } from "../../../features/schedules/scheduleParams";
 import { rowTargets } from "../../../features/schedules/scheduleRowParams";
+import { describeRule } from "../../../features/schedules/scheduleRule";
 import { useRunningPoll } from "../../../features/schedules/useRunningPoll";
 import { fmt, useTranslation } from "../../../i18n";
 import {
@@ -618,7 +619,7 @@ export const SchedulesSection = ({
                             </Stack>
 
                             <Typography level="body-sm" sx={{ overflowWrap: "anywhere" }}>
-                                {sch.when}
+                                {describeRule(sch, s, locale)}
                             </Typography>
                             {target && (
                                 <Typography

@@ -1426,6 +1426,11 @@ export const hi: DeepPartial<Messages> = {
             suggestEveningName: "शाम का सार",
             suggestEveningBlurb: "आज आपने क्या किया",
             suggestDaily: "हर दिन {time} बजे",
+            ruleDaily: "हर दिन {time} बजे",
+            ruleWeekdays: "सोमवार से शुक्रवार, {time} बजे",
+            ruleWeekly: "हर {days} को {time} बजे",
+            ruleMonthly: "हर महीने की {day} तारीख को {time} बजे",
+            ruleOnce: "सिर्फ़ एक बार, {date} को {time} बजे",
             upgradeTitle: "अपने आप पहुँचने वाली रिपोर्ट",
             upgradeChip: "Core और उससे ऊपर",
             upgradeBody:

@@ -1063,6 +1063,11 @@ export const es: DeepPartial<Messages> = {
             suggestEveningName: "Resumen de la tarde",
             suggestEveningBlurb: "Lo que hiciste hoy",
             suggestDaily: "Todos los días a las {time}",
+            ruleDaily: "Todos los días a las {time}",
+            ruleWeekdays: "De lunes a viernes a las {time}",
+            ruleWeekly: "Cada {days} a las {time}",
+            ruleMonthly: "Cada mes, el día {day}, a las {time}",
+            ruleOnce: "Una sola vez, el {date} a las {time}",
             upgradeTitle: "Informes que llegan solos",
             upgradeChip: "Core y superior",
             upgradeBody:

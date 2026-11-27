@@ -4856,6 +4856,11 @@ export const ja: DeepPartial<Messages> = {
             suggestEveningName: "夕方の振り返り",
             suggestEveningBlurb: "今日やったこと",
             suggestDaily: "毎日 {time}",
+            ruleDaily: "毎日 {time}",
+            ruleWeekdays: "毎週月曜〜金曜 {time}",
+            ruleWeekly: "毎週{days} {time}",
+            ruleMonthly: "毎月{day}日 {time}",
+            ruleOnce: "1回のみ: {date} {time}",
             upgradeTitle: "自動で届くレポート",
             upgradeChip: "Core 以上",
             upgradeBody:
