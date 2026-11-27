@@ -448,6 +448,15 @@ const SKILL_SUMMARY_SX = {
     whiteSpace: "normal",
 } as const;
 
+// The closed field's value is its own bidi island (MIP-2444): a long name ends with an ellipsis, and
+// in an RTL app a name in another direction keeps its start. Joy's button is a flex row, so the text
+// has to be an element of its own for the ellipsis to apply.
+const CLOSED_VALUE_SX = {
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+} as const;
+
 /** The skill a "Run a skill" schedule runs (MIP-2045), by name: what the member may run in this
  *  team (the `/` menu's own list: theirs, a teammate's team skill, an installed one). A skill that
  *  was never published is listed but cannot be chosen, with the reason: a schedule runs a
@@ -523,6 +532,11 @@ export const SkillParamSelect = ({
             )}
             <Select
                 placeholder={rows === undefined ? s.skillLoading : s.skillPlaceholder}
+                renderValue={(option) => (
+                    <Box component="bdi" sx={CLOSED_VALUE_SX}>
+                        {option?.label}
+                    </Box>
+                )}
                 slotProps={{ listbox: { sx: { zIndex: popupZIndex, maxHeight: 280 } } }}
                 sx={{ minWidth: 0 }}
                 value={value || null}
