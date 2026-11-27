@@ -19,6 +19,7 @@ import {
     type ScheduleResult,
 } from "../../../../../services/schedules";
 import { g } from "../../../../../theme/tokens";
+import { announceRunResult } from "../../../../schedules/runScheduleAndAnnounce";
 import { withoutAi } from "../../../../schedules/scheduleEffort";
 import { localizeJob } from "../../../../schedules/scheduleParams";
 
@@ -109,7 +110,19 @@ export const DashboardScheduleDialog = ({ open, teamId, editing, onClose, onSave
         }
         const res = await createSchedule(accessToken, teamId, body as ScheduleFields);
         if (res.ok) {
-            toast.success(c.newDashboardSaved, { id: "custom-dashboard-created" });
+            // "Run right away" (MIP-2402): the create already ran it, so say how that went, as
+            // Settings > Schedules does. "Run it now" would run (and charge) it twice (MIP-2425).
+            if (res.outcome) {
+                const chat = res.schedule.deliverChannel;
+                void announceRunResult(
+                    { ok: true, outcome: res.outcome },
+                    res.schedule.id,
+                    () => false,
+                    chat ? chat.title || s.unavailable : null
+                );
+            } else {
+                toast.success(c.newDashboardSaved, { id: "custom-dashboard-created" });
+            }
             onSaved();
             onClose();
         } else if (res.planRequired) {
