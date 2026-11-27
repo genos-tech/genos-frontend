@@ -208,15 +208,16 @@ export interface PlanLimits {
     mcp_list_page_max?: number | null;
     /**
      * HTML pages (MIP-2362), read off the api's `HTML_NOTE_LIMITS`, the one table the save path
-     * enforces. `null` = the plan has no HTML pages (Free). Never unlimited: the count is per
-     * person, `max_bytes` is one page's UTF-8 size, `saves_per_hour` counts saves across all of
-     * the person's HTML pages. Absent on a server that predates it: the rows are left out.
+     * enforces. `null` = the plan has no HTML pages (Free). The number of pages is not limited
+     * (MIP-2453). The rest never is: `max_storage_bytes` is the per-person quota over every kept
+     * version of the person's pages, `max_bytes` one page's UTF-8 size, `saves_per_hour` counts
+     * saves across all of them. Absent on a server that predates it: the rows are left out.
      */
-    html_notes?: HtmlNoteLimits | null;
+    html_pages?: HtmlPageLimits | null;
 }
 
-export interface HtmlNoteLimits {
-    max_notes: number;
+export interface HtmlPageLimits {
+    max_storage_bytes: number;
     max_bytes: number;
     saves_per_hour: number;
 }

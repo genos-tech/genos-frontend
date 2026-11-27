@@ -1,5 +1,5 @@
 {
-    "_comment": "Copy of the `limits` the public GET /api/v2/billing/plans/ serves for each tier, as of tier plan v2 (MIP-1614, Ken 2026-11-22). SOURCE OF TRUTH: genos-api apis/settings.py SEARCH_ENGINE['TIER_QUOTAS'] (keys listed in origin/views/common/billing_views.py _PLAN_LIMIT_KEYS) and apis/credit_policy.yaml `entitlements` (monthly_ai_credits). The api test `test_plans_payload_carries_the_plan_v2_counts_and_mcp_limits` pins the payload to TIER_QUOTAS and genos-docs operations/SUBSCRIPTION_TIERS.md lists the same numbers. When a number there changes, change it here and in planMatrixPlanV2.test.ts in the same step; the test fails if a shown number no longer matches this copy. `html_notes` (MIP-2362) is a copy of genos-api origin/services/html_note_limits.HTML_NOTE_LIMITS, pinned by the api test test_plans_payload_html_notes_come_from_the_one_html_note_table.",
+    "_comment": "Copy of the `limits` the public GET /api/v2/billing/plans/ serves for each tier, as of tier plan v2 (MIP-1614, Ken 2026-11-22). SOURCE OF TRUTH: genos-api apis/settings.py SEARCH_ENGINE['TIER_QUOTAS'] (keys listed in origin/views/common/billing_views.py _PLAN_LIMIT_KEYS) and apis/credit_policy.yaml `entitlements` (monthly_ai_credits). The api test `test_plans_payload_carries_the_plan_v2_counts_and_mcp_limits` pins the payload to TIER_QUOTAS and genos-docs operations/SUBSCRIPTION_TIERS.md lists the same numbers. When a number there changes, change it here and in planMatrixPlanV2.test.ts in the same step; the test fails if a shown number no longer matches this copy. `html_pages` (MIP-2362, MIP-2453) is a copy of genos-api origin/services/html_note_limits.HTML_NOTE_LIMITS, pinned by the api test test_plans_payload_html_notes_come_from_the_one_html_note_table.",
     "tiers": [
         {
             "tier": "free",
@@ -28,7 +28,7 @@
                 "mcp_bulk_max_tasks": null,
                 "mcp_bulk_max_plan_tasks": null,
                 "mcp_list_page_max": null,
-                "html_notes": null
+                "html_pages": null
             }
         },
         {
@@ -58,8 +58,8 @@
                 "mcp_bulk_max_tasks": 10,
                 "mcp_bulk_max_plan_tasks": 10,
                 "mcp_list_page_max": 50,
-                "html_notes": {
-                    "max_notes": 100,
+                "html_pages": {
+                    "max_storage_bytes": 209715200,
                     "max_bytes": 524288,
                     "saves_per_hour": 30
                 }
@@ -92,8 +92,8 @@
                 "mcp_bulk_max_tasks": 30,
                 "mcp_bulk_max_plan_tasks": 20,
                 "mcp_list_page_max": 100,
-                "html_notes": {
-                    "max_notes": 500,
+                "html_pages": {
+                    "max_storage_bytes": 1073741824,
                     "max_bytes": 1048576,
                     "saves_per_hour": 60
                 }
@@ -126,8 +126,8 @@
                 "mcp_bulk_max_tasks": 30,
                 "mcp_bulk_max_plan_tasks": 20,
                 "mcp_list_page_max": 100,
-                "html_notes": {
-                    "max_notes": 500,
+                "html_pages": {
+                    "max_storage_bytes": 1073741824,
                     "max_bytes": 1048576,
                     "saves_per_hour": 60
                 }
@@ -160,8 +160,8 @@
                 "mcp_bulk_max_tasks": null,
                 "mcp_bulk_max_plan_tasks": null,
                 "mcp_list_page_max": null,
-                "html_notes": {
-                    "max_notes": 500,
+                "html_pages": {
+                    "max_storage_bytes": 1073741824,
                     "max_bytes": 1048576,
                     "saves_per_hour": 60
                 }
