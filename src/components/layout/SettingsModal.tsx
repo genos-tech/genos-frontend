@@ -2058,8 +2058,8 @@ export const SettingsModal = ({
                             jump to General because this dialog owns the
                             tab state. */}
                         <GenosSettingsPanel
-                            teamId={genosTeamId}
                             skillsHost={editorHost}
+                            teamId={genosTeamId}
                             onOpenLanguageSettings={() => setTab("general")}
                         >
                             <LlmModelSection />
