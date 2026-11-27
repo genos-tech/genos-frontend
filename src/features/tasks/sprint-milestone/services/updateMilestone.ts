@@ -2,6 +2,7 @@ import axios from "axios";
 import { Socket } from "socket.io-client";
 
 import { authApi } from "../../../../services/api";
+import { isRetryableSaveError } from "../../services/isRetryableSaveError";
 import { showMoveNotice } from "../../services/moveNotice";
 import { MilestoneResponse } from "../types";
 import { MilestoneRefusalHooks, reportMilestoneRefusal } from "./milestoneRefusal";
@@ -120,7 +121,9 @@ export const updateMilestone = async (
             return res.data;
         }
         console.error("Unauthorized. Auth token is not found.");
+        refusal?.onNotSaved?.(true);
     } catch (error: unknown) {
+        refusal?.onNotSaved?.(isRetryableSaveError(error));
         if (axios.isAxiosError(error)) {
             console.error("API error:", error.response?.status, error.response?.data);
             reportMilestoneRefusal(error, refusal);

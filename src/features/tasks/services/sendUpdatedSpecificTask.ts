@@ -14,6 +14,7 @@ import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 import { collaboratorsAfterMove } from "./collaboratorsAfterMove";
 import { forgetCachedSubtree } from "./forgetCachedSubtree";
+import { isRetryableSaveError } from "./isRetryableSaveError";
 import { showMoveNotice } from "./moveNotice";
 import { emitTaskMetadataSaved, emitTasksBulkChanged } from "./taskEvents";
 import { forgetInFlightTask } from "./taskLoadInFlight";
@@ -98,14 +99,20 @@ export const sendUpdatedSpecificTask = async (
         // written without them; the caller's working copy is not, and the
         // next save would send them again and be refused.
         onCollaboratorsPruned?: (kept: UserProps[]) => void;
+        // Called when the PUT stored NOTHING and no `TaskSaveRefusedError` is thrown: this
+        // function swallows those failures, and a caller that cannot tell would count the words
+        // in the body as saved (MIP-2443). `retry` is false when sending it again cannot help.
+        onNotSaved?: (retry: boolean) => void;
     }
 ) => {
     const errMsgs = getMessages().tasks.errors;
+    let stored = false;
     try {
         if (!updatedTask.project?.projectName) {
             if (setErrorMessage) {
                 setErrorMessage(errMsgs.projectIdNotSpecified);
             }
+            options?.onNotSaved?.(false);
             return [];
         }
 
@@ -182,6 +189,7 @@ export const sendUpdatedSpecificTask = async (
                     : {}),
             };
             const res = await putTask(api, taskBody, setErrorMessage, updatedTask.collaborators);
+            stored = true;
 
             // The save's own updated time, in the form the caches use. The
             // working copy's `updatedAt` is from BEFORE the save, so it is
@@ -425,6 +433,7 @@ export const sendUpdatedSpecificTask = async (
                 return uploadAttachments;
             }
         } else {
+            options?.onNotSaved?.(true);
             console.error("Unauthorized. Auth toke is not found.");
             if (setErrorMessage) {
                 setErrorMessage(errMsgs.unauthorizedNoToken);
@@ -434,6 +443,8 @@ export const sendUpdatedSpecificTask = async (
         // The refusal has been reported (see `putTask`); callers put their
         // own state back.
         if (error instanceof TaskSaveRefusedError) throw error;
+        // A failure AFTER the PUT (an attachment upload) leaves the task itself stored.
+        if (!stored) options?.onNotSaved?.(isRetryableSaveError(error));
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 400) {
                 console.error("HTTP 400 error:", error.response?.data);
