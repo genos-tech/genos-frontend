@@ -54,6 +54,7 @@ import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { afterTaskDeleted } from "../../../services/deleteTaskCommit";
 import { emitTasksBulkChanged } from "../../../services/taskEvents";
 import { shouldFallBackToTable } from "../../../utils/mainPanelVisibility";
+import { keptCustomStatusId } from "../../../utils/projectStatus";
 import { canConvertTaskToMilestone } from "../../../utils/taskMilestoneConversion";
 import { StatusLabel } from "../../meta/StatusLabel";
 import { ModalConvertTaskMilestone } from "../../modals/ModalConvertTaskMilestone";
@@ -339,6 +340,12 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         if (setTaskContent) {
             setTaskContent({
                 ...taskContent,
+                customStatusId: keptCustomStatusId(
+                    taskContent.status.status,
+                    newStatus,
+                    taskContent.customStatusId
+                ),
+                customStatusPick: undefined,
                 status: {
                     code: 0,
                     status: newStatus,
@@ -443,6 +450,8 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                         {/* The same icon + word as the task table (MIP-1157). */}
                         <StatusLabel
                             key={`task-title-block-status-${taskContent.status.status}`}
+                            customStatusId={taskContent.customStatusId}
+                            projectId={taskContent.project?.projectId}
                             status={taskContent.status.status || "Open"}
                         />
                     </Box>

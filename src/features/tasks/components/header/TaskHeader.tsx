@@ -3,6 +3,7 @@ import AddIcon from "@mui/icons-material/Add";
 import ArchiveOutlinedIcon from "@mui/icons-material/ArchiveOutlined";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
+import DonutLargeRoundedIcon from "@mui/icons-material/DonutLargeRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import LockOutlineIcon from "@mui/icons-material/LockOutline";
@@ -33,6 +34,7 @@ import { useArchiveState } from "../../../archive/archiveState";
 import { canCustomizeTaskFields, isOwnerOfProject } from "../../../archive/projectOwner";
 import { ModalCustomizeTaskFields } from "../modals/ModalCustomizeTaskFields";
 import { ModalImportTasksCsv } from "../modals/ModalImportTasksCsv";
+import { ModalProjectStatuses } from "../statuses/ModalProjectStatuses";
 import { TaskRefreshButton } from "./TaskRefreshButton";
 import { TaskSearchBar } from "./TaskSearchBar";
 
@@ -90,6 +92,7 @@ export const TaskHeader = ({
     );
     const [openCustomizeFields, setOpenCustomizeFields] = useState(false);
     const [openImportCsv, setOpenImportCsv] = useState(false);
+    const [openStatuses, setOpenStatuses] = useState(false);
 
     // Archive state (MIP-1693). The open project is archived when the archived set lists it.
     const archiveState = useArchiveState();
@@ -182,6 +185,16 @@ export const TaskHeader = ({
             icon: <TuneRoundedIcon sx={{ fontSize: 18 }} />,
             visible: canCustomizeFields,
             onClick: () => setOpenCustomizeFields(true),
+        },
+        {
+            // MIP-2493: owners and editors, like the custom fields beside it. An archived
+            // project refuses the writes, so it is not offered there.
+            id: "projectStatuses",
+            kind: "statuses",
+            label: t.tasks.projectStatuses.menuItem,
+            icon: <DonutLargeRoundedIcon sx={{ fontSize: 18 }} />,
+            visible: canCustomizeFields && !archived && currentProjectId != null,
+            onClick: () => setOpenStatuses(true),
         },
         {
             // MIP-1835: not offered on an archived project (the server refuses it too).
@@ -339,6 +352,13 @@ export const TaskHeader = ({
                     open
                     onChanged={() => void usePM.refreshProjectTasks(currentProjectId)}
                     onClose={() => setOpenImportCsv(false)}
+                />
+            )}
+            {currentProjectId != null && openStatuses && (
+                <ModalProjectStatuses
+                    projectId={currentProjectId}
+                    open
+                    onClose={() => setOpenStatuses(false)}
                 />
             )}
             <ModalCustomizeTaskFields

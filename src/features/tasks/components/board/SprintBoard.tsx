@@ -29,6 +29,7 @@ import { milestonesByTaskIdWithLiveProgress } from "../../utils/boardMilestonePr
 import { pickScopedMilestoneId, quickAddParentFor } from "../../utils/boardQuickAdd";
 import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
 import { PREVIEW_SWITCH_DEBOUNCE_MS } from "../../utils/previewSwitchDebounce";
+import { keptCustomStatusId } from "../../utils/projectStatus";
 import { QuickAddDraft } from "../../utils/quickAddDraft";
 import { buildComparator } from "../../utils/sortTask";
 import { bucketBoardColumns, buildBoardDisplaySet } from "../../utils/sprintBoardDisplay";
@@ -232,6 +233,11 @@ export const SprintBoard = (props: SprintBoardProps) => {
             const statusObj = statuses.find((s) => s.status === newStatus) ?? preview.status;
             useTM.setCurrentPreviewTask({
                 ...preview,
+                customStatusId: keptCustomStatusId(
+                    preview.status?.status,
+                    newStatus,
+                    preview.customStatusId
+                ),
                 status: statusObj,
             });
         },
@@ -274,7 +280,15 @@ export const SprintBoard = (props: SprintBoardProps) => {
         const destTasks = [...boardTasks[destColumn]];
         const [movedTask] = sourceTasks.splice(source.index, 1);
         const newStatus = COLUMNS.find((col) => col.id === destColumn)?.status || movedTask.status;
-        const updatedMovedTask = { ...movedTask, status: newStatus };
+        const updatedMovedTask = {
+            ...movedTask,
+            status: newStatus,
+            customStatusId: keptCustomStatusId(
+                movedTask.status,
+                newStatus,
+                movedTask.customStatusId
+            ),
+        };
         destTasks.splice(destination.index, 0, updatedMovedTask);
 
         setBoardTasks({
@@ -316,6 +330,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     tags.length > 0 ? "/" + tags.map((tg) => tg.tagName).join("/") + "/" : null;
                 const mirrored: TaskTableProps = {
                     ...updatedMovedTask,
+                    customStatusId: updated.customStatusId ?? null,
                     title: updated.title ?? updatedMovedTask.title,
                     status: (updated.status as string) ?? newStatus,
                     priority: updated.priority ?? updatedMovedTask.priority,
@@ -356,7 +371,18 @@ export const SprintBoard = (props: SprintBoardProps) => {
 
             useTM.setAllTasks((prev) =>
                 prev.map((task: TaskTableProps) =>
-                    String(task.id) === idStr ? { ...task, status: newStatus } : task
+                    // The server drops a custom status when the column changes.
+                    String(task.id) === idStr
+                        ? {
+                              ...task,
+                              status: newStatus,
+                              customStatusId: keptCustomStatusId(
+                                  task.status,
+                                  newStatus,
+                                  task.customStatusId
+                              ),
+                          }
+                        : task
                 )
             );
 
