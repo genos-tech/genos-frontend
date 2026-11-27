@@ -97,6 +97,7 @@ export const inbox = {
         unmeasured: "Genos used AI for this. The amount wasn't measured.",
         noAiUsed: "No AI used",
         noAiNoCredits: "No AI used: you have no AI credits left this month",
+        noAiMonthlyLimit: "No AI used: Genos AI has reached its monthly limit",
         deductedNone: "None deducted from your balance",
         deducted: "{credits} deducted from your balance",
         scheduleFallback: "This schedule",
