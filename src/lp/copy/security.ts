@@ -85,7 +85,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                     // Evidence: genos-api/apis/settings.py (HSTS, SESSION_COOKIE_SECURE, CSRF_COOKIE_SECURE, SECURE_PROXY_SSL_HEADER);
                     // origin/services/crypto.py (Fernet, FIELD_ENCRYPTION_KEYS); origin/services/blind_index.py (HMAC keyed by BLIND_INDEX_KEYS).
                     "In transit: connections to Genos use HTTPS. The Genos service sends HTTP Strict Transport Security, and its session and CSRF cookies are marked Secure.",
-                    "In the database: personal details are encrypted before they are saved. These are your email address, phone number, location and profile text; the email addresses on team invitations and on connected accounts, and the generated email address of each team; the access and refresh tokens of connected Google and GitHub accounts; the keys of push subscriptions; and the secrets of outgoing webhooks. The encryption keys are kept apart from the data.",
+                    "In the database: personal details are encrypted before they are saved. These are your email address, location and profile text; the email addresses on team invitations and on connected accounts, and the generated email address of each team; the access and refresh tokens of connected Google and GitHub accounts; the keys of push subscriptions; and the secrets of outgoing webhooks. The encryption keys are kept apart from the data.",
                     "To find an account by email address without decrypting every address, we store a keyed hash of it (a blind index).",
                 ],
             },
@@ -130,7 +130,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                     // origin/services/account_deletion.py. Contradicted statements of note 194 are narrowed (see file header).
                     "You can delete your account in Settings. To confirm, type DELETE and, if you have a password, enter it. Deletion runs at once.",
                     "Deletion removes your personal notes and folders, your to-dos, your connections to Google and GitHub (removed from Genos; to end the access at Google or GitHub, revoke Genos there yourself), your connected AI apps, your personal tags and your first-month trial record. It revokes your API keys.",
-                    "Your profile is cleared: your email address is replaced by a placeholder, your name is shown as Deleted user, and your phone, location, profile text and avatar are removed. Your password can no longer be used.",
+                    "Your profile is cleared: your email address is replaced by a placeholder, your name is shown as Deleted user, and your location, profile text and avatar are removed. Your password can no longer be used.",
                     "Messages and comments you wrote stay in the chats and tasks they belong to, shown as from Deleted user. A name you typed inside a message, a note or a task can remain in that text.",
                     "Stripe, our payment provider, keeps the billing record it holds for you. Genos does not delete it there.",
                 ],
@@ -239,7 +239,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                 heading: "暗号化",
                 body: [
                     "通信中：Genos への接続は HTTPS を使います。Genos は HTTP Strict Transport Security を送り、セッションと CSRF の Cookie には Secure 属性を付けています。",
-                    "データベース内：個人情報は保存される前に暗号化されます。メールアドレス、電話番号、所在地、プロフィールの文章、チームへの招待と接続したアカウントのメールアドレス、チームごとに生成されるメールアドレス、接続した Google と GitHub のアクセストークンとリフレッシュトークン、プッシュ通知の鍵、送信 Webhook の秘密情報が対象です。暗号化の鍵はデータとは別に保管しています。",
+                    "データベース内：個人情報は保存される前に暗号化されます。メールアドレス、所在地、プロフィールの文章、チームへの招待と接続したアカウントのメールアドレス、チームごとに生成されるメールアドレス、接続した Google と GitHub のアクセストークンとリフレッシュトークン、プッシュ通知の鍵、送信 Webhook の秘密情報が対象です。暗号化の鍵はデータとは別に保管しています。",
                     "メールアドレスで利用者を探すときは、全件を復号せず、鍵つきのハッシュ（ブラインドインデックス）で照合しています。",
                 ],
             },
@@ -275,7 +275,7 @@ export const SECURITY_COPY: Record<Lang, SecurityCopy> = {
                 body: [
                     "アカウントは設定から削除できます。確認のため DELETE と入力し、パスワードを設定している場合はパスワードも入力します。削除はすぐに実行されます。",
                     "削除すると、個人のノートとフォルダ、ToDo、Google と GitHub との接続（Genos からは削除されます。Google や GitHub 側でのアクセスを止めるには、それぞれでご自身で取り消してください）、接続した AI アプリ、個人のタグ、最初の 1 か月の特典の記録が削除されます。API キーは無効になります。",
-                    "プロフィールは消去されます。メールアドレスは仮の値に置き換えられ、名前は「Deleted user」と表示され、電話番号、所在地、プロフィールの文章、アバターは削除されます。パスワードは使えなくなります。",
+                    "プロフィールは消去されます。メールアドレスは仮の値に置き換えられ、名前は「Deleted user」と表示され、所在地、プロフィールの文章、アバターは削除されます。パスワードは使えなくなります。",
                     "あなたが書いたメッセージとコメントは、属していたチャットやタスクに残り、「Deleted user」の投稿として表示されます。メッセージ、ノート、タスクの本文に入力した名前は、その本文に残る場合があります。",
                     "支払いの事業者である Stripe は、あなたの請求記録を保持します。Genos は Stripe 側の記録を削除しません。",
                 ],
