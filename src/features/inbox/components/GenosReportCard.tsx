@@ -890,6 +890,8 @@ type CardProps = {
      *  are strings, not an object, so a parent that re-renders does not redraw the card. */
     userId?: string;
     teamId?: string;
+    /** A cost-only record: no "All clear" box under what a chat post cost (MIP-2434). */
+    costOnly?: boolean;
 };
 
 export const GenosReportCard = memo(
@@ -900,6 +902,7 @@ export const GenosReportCard = memo(
         footer,
         userId,
         teamId,
+        costOnly = false,
     }: CardProps) => {
         const { t } = useTranslation();
         const navigate = useNavigate();
@@ -962,30 +965,32 @@ export const GenosReportCard = memo(
                 </Box>
                 <StatStrip report={report} />
                 {report.sections.length === 0 && report.stats.length === 0 ? (
-                    <Box
-                        data-report-empty=""
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1.5,
-                            px: 1.5,
-                            py: 1.5,
-                            borderRadius: g.radius.md,
-                            background: g.success.subtle,
-                            border: "1px solid",
-                            borderColor: g.success.border,
-                        }}
-                    >
-                        <Emoji size={24} value="🎉" />
-                        <Box sx={{ minWidth: 0 }}>
-                            <Typography sx={{ ...type("title-sm"), color: g.text.primary }}>
-                                {t.inbox.report.emptyTitle}
-                            </Typography>
-                            <Typography sx={{ ...type("body-sm"), color: g.text.secondary }}>
-                                {t.inbox.report.emptyBody}
-                            </Typography>
+                    costOnly ? null : (
+                        <Box
+                            data-report-empty=""
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1.5,
+                                px: 1.5,
+                                py: 1.5,
+                                borderRadius: g.radius.md,
+                                background: g.success.subtle,
+                                border: "1px solid",
+                                borderColor: g.success.border,
+                            }}
+                        >
+                            <Emoji size={24} value="🎉" />
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography sx={{ ...type("title-sm"), color: g.text.primary }}>
+                                    {t.inbox.report.emptyTitle}
+                                </Typography>
+                                <Typography sx={{ ...type("body-sm"), color: g.text.secondary }}>
+                                    {t.inbox.report.emptyBody}
+                                </Typography>
+                            </Box>
                         </Box>
-                    </Box>
+                    )
                 ) : (
                     <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                         {report.sections.map((section, index) =>

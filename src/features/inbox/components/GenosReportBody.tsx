@@ -158,6 +158,9 @@ type GenosReportBodyProps = {
      *  redrawn by a parent that re-renders. */
     userId?: string;
     teamId?: string;
+    /** The item only records what a run posted in a chat cost (`item_optionals.posted_in_chat`):
+     *  it has no sections by design, so the card draws no "All clear" box (MIP-2434). */
+    costOnly?: boolean;
 };
 
 const NO_AVATARS: ReadonlyMap<number, string> = new Map();
@@ -217,6 +220,7 @@ export const GenosReportBody = ({
     footer,
     userId,
     teamId,
+    costOnly,
 }: GenosReportBodyProps) => {
     // Parsed once per body object: `typed` for a version-2 body, `plain` for any other.
     const { typed, plain } = useMemo(
@@ -233,6 +237,7 @@ export const GenosReportBody = ({
             <GenosReportCard
                 avatars={avatars}
                 chatMarks={chatMarks}
+                costOnly={costOnly}
                 footer={footer}
                 report={typed}
                 teamId={teamId}
