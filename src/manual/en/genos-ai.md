@@ -1,7 +1,7 @@
 ---
 id: genos-ai
 title: Genos AI: ask, act, and stay ahead
-settings: [spotlight, spotlight.provider, spotlight.effort, spotlight.model, spotlight.aiAnswers, spotlight.webSearch, spotlight.contentLength, spotlight.sharedAnswers, spotlight.noteActivity, spotlight.scheduleMode, spotlight.scheduleEffort, spotlight.scheduleDeliver, spotlight.scheduleDashboardKind, spotlight.scheduleDashboardPeriod, spotlight.scheduleDashboardFocus, spotlight.scheduleDashboardSource, spotlight.scheduleDashboardSaveTo, spotlight.scheduleRunRightAway]
+settings: [spotlight, spotlight.provider, spotlight.effort, spotlight.model, spotlight.aiAnswers, spotlight.webSearch, spotlight.contentLength, spotlight.sharedAnswers, spotlight.noteActivity, spotlight.scheduleMode, spotlight.scheduleEffort, spotlight.scheduleDeliver, spotlight.scheduleMessage, spotlight.scheduleDashboardKind, spotlight.scheduleDashboardPeriod, spotlight.scheduleDashboardFocus, spotlight.scheduleDashboardSource, spotlight.scheduleDashboardSaveTo, spotlight.scheduleRunRightAway]
 ---
 
 ## Where you ask Genos
@@ -43,6 +43,15 @@ A skill is a note of written steps with a name. In the box, type / at the start 
 ## Scheduled reports by Genos AI, and dashboard pages
 
 A schedule (Settings > Genos > Schedules, Core and above) prepares a report at times you choose. Most reports are plain: built from your data, with no AI and no credits.
+
+**Scheduled message.** One job is not a report: **Scheduled message** sends a message you wrote to a chat, as you, at the time you pick. No AI is used and no credits are spent.
+
+- Write the message in the same editor as the chat page, with formatting, @ mentions and # links. Images and files cannot be added, and a very long message is refused.
+- Pick a group chat (public ones too) or a project chat you are a member of. Direct messages cannot be picked, and the message never goes to your Inbox.
+- When it runs, the message appears in the chat from you, like one you sent yourself: mentioned members of the chat are notified, and others in the chat see it as unread. A mentioned person who is no longer in the chat is not notified.
+- Genos checks the chat again before every run. If you have left it, or it is archived, nothing is sent; after 3 failed runs the schedule pauses. A run more than 3 hours late is skipped.
+- **Run now** sends the message to the chat at once, every time you press it.
+- A connected AI app (Claude, ChatGPT) cannot create, change or run a scheduled message. It can only list, pause or delete one.
 
 **Run right away.** When you make a new schedule that runs **One time only**, you can choose **Run right away** instead of a date and time, then click **Run now**. The report goes to your Inbox or the chosen chat at once. If the run fails, no schedule is saved and the form keeps what you typed. A finished one stays in your list, and its name cannot be used again until you delete it.
 
@@ -96,5 +105,5 @@ All of these are in Settings > Genos. The gear in Spotlight and on the Genos pag
 - **AI model:** which model answers you. On some Genoses this shows an Effort choice (Low, Medium or High) instead. Free can use Low, Core can go up to Medium, and Pro and above can use High. Providers marked "Available soon" cannot be chosen yet.
 - **Genos answers:** AI answers lets the Ask button send your question to Genos. When it is off, Spotlight shows search results only. Web search lets Genos use the web when it answers. It is off until you turn it on, needs AI answers to be on, and is included from Core up.
 - **How much Genos writes:** Short, Standard or Long. This sets the length of the tasks, milestones, notes and plans Genos writes for you. Chat answers stay short at every level.
-- **Genos Assist Schedules (Core and above):** Genos prepares a report at times you choose and puts it in your Inbox, or posts it in a chat. The reports are Group chat catch-up, Project updates, Milestone updates, Team activity, What is left from last week, What you did, What to do today, Dashboard page, and Run a skill (where Skills are on). Some can run in AI mode, and Dashboard page keeps a living page: see "Scheduled reports by Genos AI, and dashboard pages" above. Core can have 5 schedules, Pro and Max 20. Click Run now to get a report straight away. A schedule pauses itself after 3 failed runs in a row.
+- **Genos Assist Schedules (Core and above):** Genos prepares a report at times you choose and puts it in your Inbox, or posts it in a chat. The reports are Group chat catch-up, Project updates, Milestone updates, Team activity, What is left from last week, What you did, What to do today, Dashboard page, and Run a skill (where Skills are on). Scheduled message is not a report: it sends a message you wrote to a group or project chat, as you. Some can run in AI mode, and Dashboard page keeps a living page: see "Scheduled reports by Genos AI, and dashboard pages" above. Core can have 5 schedules, Pro and Max 20. Click Run now to get a report straight away. A schedule pauses itself after 3 failed runs in a row.
 - **What Genos remembers:** see and delete your Genos conversations. Here you also choose whether your answers may help teammates ("Let my answers help teammates", off by default for new accounts) and whether Genos notes what your connected AI apps do ("Note my activity", kept 180 days). You can see and delete what Genos stored, and set how Genos weighs things when it ranks your tasks.

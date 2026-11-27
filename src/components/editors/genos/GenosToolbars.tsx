@@ -135,7 +135,8 @@ export const GenosChatToolbar = ({
     editor: EditorForItems;
     isMobile: boolean;
     setShowEmojiPicker: (value: boolean) => void;
-    setShowGifPicker: (value: boolean) => void;
+    /** Omit for a surface that cannot carry a GIF: the button is left out. */
+    setShowGifPicker?: (value: boolean) => void;
     onAttach?: () => void;
     wrapToggles?: {
         unwrapAll: boolean;
@@ -168,7 +169,9 @@ export const GenosChatToolbar = ({
         <FileRenameButton key={"fileRenameButton"} />
 
         <CustomEmojiToolbar key={"customButton"} setShowEmojiPicker={setShowEmojiPicker} />
-        <GifToolbarButton key={"gifButton"} setShowGifPicker={setShowGifPicker} />
+        {setShowGifPicker && (
+            <GifToolbarButton key={"gifButton"} setShowGifPicker={setShowGifPicker} />
+        )}
         {isMobile && onAttach && (
             <AttachFileToolbarButton key={"attachFileButton"} onClick={onAttach} />
         )}

@@ -5,6 +5,7 @@ import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import { Alert, Box, Button, Chip, Sheet, Stack, Switch, Typography } from "@mui/joy";
 
 import { useAuth } from "../../../context/authState";
+import type { SkillsHost } from "../../../features/genos/skills/skillsHost";
 import {
     announceRunResult,
     runScheduleAndAnnounce,
@@ -35,6 +36,7 @@ import {
 } from "../../../services/schedules";
 import { g } from "../../../theme/tokens";
 import { EmptyState } from "../../ui/feedback/EmptyState";
+import { messagePreview } from "./messagePreview";
 import { ScheduleFormPanel } from "./ScheduleFormPanel";
 import { useJoinedProjects, useProjectMilestones } from "./scheduleParamHooks";
 import { SchedulesUpgradePrompt } from "./SchedulesUpgradePrompt";
@@ -48,6 +50,9 @@ type Props = {
     /** Called just before the upgrade call navigates to the plans page, so a host that is a
      *  dialog can close itself instead of staying open on top of it. */
     onNavigateAway?: () => void;
+    /** What the message editor reads from the app (MIP-2482). Without it the job that sends a
+     *  message is not offered. */
+    editorHost?: SkillsHost;
 };
 
 type Mode = { kind: "new" } | { kind: "edit"; id: string } | null;
@@ -89,7 +94,12 @@ type RunNotice =
  * Deleting asks first, in the page, because a browser confirm dialog is not
  * available inside every host this runs in.
  */
-export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }: Props) => {
+export const SchedulesSection = ({
+    teamId,
+    showHeading = true,
+    onNavigateAway,
+    editorHost,
+}: Props) => {
     const { t, locale } = useTranslation();
     const { accessToken } = useAuth();
     const s = t.settings.schedules;
@@ -194,6 +204,10 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
         if (res.gone) await refresh();
     };
 
+    /** Whether a schedule of this job sends a message (MIP-2482), not a report. */
+    const postsAsOwner = (jobKey: string) =>
+        data?.jobs.some((j) => j.job === jobKey && j.postsAsOwner) === true;
+
     const submitForm = async (
         body: ScheduleFields | ScheduleChange
     ): Promise<ScheduleResult<object>> => {
@@ -224,7 +238,8 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                     res.schedule.id,
                     () => false,
                     chat ? chat.title || s.unavailable : null,
-                    { accessToken, teamId }
+                    { accessToken, teamId },
+                    postsAsOwner(res.schedule.job)
                 );
             }
             await refresh();
@@ -264,7 +279,8 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
             teamId,
             sch.id,
             () => mounted.current,
-            sch.deliverChannel ? sch.deliverChannel.title || s.unavailable : null
+            sch.deliverChannel ? sch.deliverChannel.title || s.unavailable : null,
+            postsAsOwner(sch.job)
         );
         let notice: RunNotice;
         if (!res.ok && res.planRequired) {
@@ -321,7 +337,14 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
         await refresh();
     };
 
-    const jobs = useMemo(() => (data?.jobs ?? []).map((j) => localizeJob(j, s)), [data, s]);
+    const canWriteMessages = editorHost !== undefined;
+    const jobs = useMemo(
+        () =>
+            (data?.jobs ?? [])
+                .filter((j) => !j.postsAsOwner || canWriteMessages)
+                .map((j) => localizeJob(j, s)),
+        [data, s, canWriteMessages]
+    );
     const schedules = data?.schedules ?? [];
     // The row names the project or milestone a schedule reports on. Projects come from the list
     // the app already holds; a milestone's name needs each project's milestone list, which is
@@ -378,8 +401,10 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
         <ScheduleFormPanel
             aiCreditsOut={data?.aiCreditsOut === true}
             chatTargets={data?.chatTargets ?? []}
+            editorHost={editorHost}
             existing={schedules}
             jobs={jobs}
+            messageChatTargets={data?.messageChatTargets ?? []}
             schedule={existing}
             timeZone={zone}
             onCancel={() => setMode(null)}
@@ -555,6 +580,8 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                 // The server's word (MIP-2457), so a run started elsewhere shows too.
                 const inRun = sch.running === true;
                 const target = paramLine(sch);
+                const isMessage = postsAsOwner(sch.job);
+                const preview = isMessage ? messagePreview(sch.params?.body) : "";
                 return (
                     <Sheet
                         key={sch.id}
@@ -602,13 +629,28 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                     {target}
                                 </Typography>
                             )}
+                            {preview && (
+                                <Typography
+                                    data-testid="schedule-row-message"
+                                    level="body-sm"
+                                    sx={{
+                                        display: "-webkit-box",
+                                        WebkitBoxOrient: "vertical",
+                                        WebkitLineClamp: 2,
+                                        overflow: "hidden",
+                                        overflowWrap: "anywhere",
+                                    }}
+                                >
+                                    {fmt(s.rowMessage, { text: preview })}
+                                </Typography>
+                            )}
                             {sch.deliverChannel && (
                                 <Typography
                                     data-testid="schedule-row-deliver"
                                     level="body-sm"
                                     sx={{ overflowWrap: "anywhere" }}
                                 >
-                                    {fmt(s.rowDeliver, {
+                                    {fmt(isMessage ? s.rowSendTo : s.rowDeliver, {
                                         name: sch.deliverChannel.title || s.unavailable,
                                     })}
                                 </Typography>
@@ -662,7 +704,7 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                     </Typography>
                                 )}
                             </Stack>
-                            {sch.lastResult && sch.lastStatus === "ok" && (
+                            {sch.lastResult && sch.lastStatus === "ok" && !isMessage && (
                                 <Typography
                                     level="body-xs"
                                     sx={{ color: g.text.secondary, overflowWrap: "anywhere" }}
@@ -688,6 +730,10 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                             )}
                             {notice && (notice.kind !== "started" || inRun) && (
                                 <Alert
+                                    data-testid="run-notice"
+                                    role="status"
+                                    size="sm"
+                                    variant="soft"
                                     color={
                                         notice.kind === "ok"
                                             ? "success"
@@ -695,27 +741,27 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                               ? "neutral"
                                               : "danger"
                                     }
-                                    data-testid="run-notice"
-                                    role="status"
-                                    size="sm"
-                                    variant="soft"
                                 >
-                                    {notice.kind === "ok"
-                                        ? fmt(s.ranOk, {
-                                              title: notice.title,
-                                              count: notice.items,
+                                    {notice.kind === "ok" && isMessage
+                                        ? fmt(s.messageSent, {
+                                              chat: sch.deliverChannel?.title || s.unavailable,
                                           })
-                                        : notice.kind === "failed"
-                                          ? fmt(s.ranFailed, { error: notice.error })
-                                          : notice.kind === "started"
-                                            ? sch.deliverChannel
-                                                ? fmt(s.runStartedChat, {
-                                                      chat:
-                                                          sch.deliverChannel.title ||
-                                                          s.unavailable,
-                                                  })
-                                                : s.runStarted
-                                            : notice.error}
+                                        : notice.kind === "ok"
+                                          ? fmt(s.ranOk, {
+                                                title: notice.title,
+                                                count: notice.items,
+                                            })
+                                          : notice.kind === "failed"
+                                            ? fmt(s.ranFailed, { error: notice.error })
+                                            : notice.kind === "started"
+                                              ? sch.deliverChannel
+                                                  ? fmt(s.runStartedChat, {
+                                                        chat:
+                                                            sch.deliverChannel.title ||
+                                                            s.unavailable,
+                                                    })
+                                                  : s.runStarted
+                                              : notice.error}
                                 </Alert>
                             )}
 

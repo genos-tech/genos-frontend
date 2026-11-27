@@ -2,6 +2,7 @@ import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import { Typography } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 
+import type { SkillsHost } from "../../../features/genos/skills/skillsHost";
 import { useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import { ModalFrame } from "../../ui/modal/ModalFrame";
@@ -12,6 +13,8 @@ type Props = {
     onClose: () => void;
     /** The team on screen; the schedules are listed and edited within it. */
     teamId: string | null | undefined;
+    /** What the message editor reads from the app (MIP-2482). */
+    editorHost?: SkillsHost;
 };
 
 /**
@@ -23,7 +26,7 @@ type Props = {
  * popups (the report, the days) that Joy pins just above that layer; a higher dialog
  * would hide them behind itself.
  */
-export const SchedulesModal = ({ open, onClose, teamId }: Props) => {
+export const SchedulesModal = ({ open, onClose, teamId, editorHost }: Props) => {
     const { t } = useTranslation();
     const theme = useTheme();
     return (
@@ -38,7 +41,12 @@ export const SchedulesModal = ({ open, onClose, teamId }: Props) => {
             onClose={onClose}
         >
             {teamId ? (
-                <SchedulesSection showHeading={false} teamId={teamId} onNavigateAway={onClose} />
+                <SchedulesSection
+                    editorHost={editorHost}
+                    showHeading={false}
+                    teamId={teamId}
+                    onNavigateAway={onClose}
+                />
             ) : (
                 // The team has not resolved yet: say so rather than open an empty dialog.
                 <Typography level="body-sm" role="status" sx={{ color: g.text.secondary }}>

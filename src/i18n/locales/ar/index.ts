@@ -1108,6 +1108,11 @@ export const ar: DeepPartial<Messages> = {
             job: "التقرير",
             jobPlaceholder: "اختر تقريرًا",
             jobCatalog: {
+                scheduled_message: {
+                    title: "رسالة مجدولة",
+                    description:
+                        "ترسل رسالة تكتبها إلى محادثة مجموعة أو محادثة مشروع، باسمك، في الوقت الذي تختاره. لا يُستخدم الذكاء الاصطناعي.",
+                },
                 ai_dashboard: {
                     title: "صفحة لوحة معلومات",
                     description:
@@ -1234,6 +1239,18 @@ export const ar: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "يُنشر التقرير في هذه المحادثة كرسالة مع جمله المكتوبة بالذكاء الاصطناعي. يستطيع الجميع في المحادثة قراءته، لكن تكلفته تظهر لك وحدك في صندوق الوارد. لا يُرسل أي إشعار.",
             rowDeliver: "يُنشر في: {name}",
+            messageLabel: "الرسالة",
+            messageHint:
+                "تُرسل باسمك كما لو ضغطت على إرسال. يصل إشعار إلى أعضاء المحادثة الذين تشير إليهم. لا يمكن إضافة صور أو ملفات.",
+            messageChatLabel: "إرسال الرسالة إلى",
+            messageChatPlaceholder: "اختر محادثة",
+            errorMessage: "اكتب الرسالة المراد إرسالها.",
+            errorMessageFiles: "أزل الصور والملفات من الرسالة.",
+            errorMessageChat: "اختر محادثة مجموعة أو محادثة مشروع.",
+            rowMessage: "الرسالة: {text}",
+            rowSendTo: "تُرسل إلى: {name}",
+            messageSent: "أُرسلت الرسالة إلى {chat}",
+            runRightAwayHintMessage: "تُرسل إلى {chat} بمجرد الضغط على «تشغيل الآن».",
             reportPosted: "تم نشر التقرير في {chat}",
             rowProject: "المشروع: {name}",
             rowMilestone: "المعلم: {name}",

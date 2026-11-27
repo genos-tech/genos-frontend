@@ -8,6 +8,7 @@
 //   - an edit sends only what changed, so renaming a schedule whose job has
 //     since been removed never re-sends the dead job.
 
+import { hasSendableContent } from "../../components/editors/utils/messageBlocks";
 import type {
     JobParam,
     ParamValue,
@@ -46,6 +47,9 @@ export interface ScheduleForm {
     aiEffort: string;
     /** "" = the Inbox; else the id of the chat the report is posted in (MIP-1420). */
     deliverChannelId: string;
+    /** The message of a job that sends one (MIP-2482), as a chat message stores it. Kept apart
+     *  from `params`, which holds what is typed in inputs. */
+    messageBody: unknown[];
 }
 
 export const emptyForm = (jobs: ScheduleJob[]): ScheduleForm => ({
@@ -62,6 +66,7 @@ export const emptyForm = (jobs: ScheduleJob[]): ScheduleForm => ({
     deliverPush: true,
     aiEffort: "",
     deliverChannelId: "",
+    messageBody: [],
 });
 
 /** Only the keys the job declares, as text for the inputs. */
@@ -93,6 +98,7 @@ export const formFromSchedule = (s: Schedule, jobs: ScheduleJob[]): ScheduleForm
     deliverPush: s.deliverPush,
     aiEffort: asEffortLevel(s.aiEffort) ?? "",
     deliverChannelId: s.deliverChannelId ?? "",
+    messageBody: Array.isArray(s.params?.body) ? (s.params.body as unknown[]) : [],
 });
 
 /** "9:30" -> "09:30"; anything that is not a 24-hour time -> null. */
@@ -133,6 +139,14 @@ const wireValue = (p: JobParam, raw: string): ParamValue | null | undefined => {
     return text;
 };
 
+/** The parameters of the whole form: a job that sends a message (MIP-2482) has the message,
+ *  every other one what is typed in its declared inputs. */
+const formParams = (
+    job: ScheduleJob | undefined,
+    form: ScheduleForm
+): Record<string, ParamValue> =>
+    job?.postsAsOwner ? { body: form.messageBody } : paramsFromForm(job, form.params);
+
 /** The parameters to send: declared by `job`, set, and valid. */
 export const paramsFromForm = (
     job: ScheduleJob | undefined,
@@ -157,7 +171,21 @@ export interface FormProblems {
     weekdays?: FieldProblem;
     monthDay?: FieldProblem;
     runDate?: FieldProblem;
+    /** A scheduled message with nothing to send, or with an image or file. */
+    message?: "required" | "files";
+    /** A scheduled message with no chat: it cannot go to the Inbox. */
+    chat?: FieldProblem;
 }
+
+const FILE_TYPES = new Set(["image", "file", "video", "audio"]);
+
+/** An image or file block anywhere (pasted HTML can make one): the server refuses it. */
+const hasFileBlock = (blocks: unknown): boolean =>
+    Array.isArray(blocks) &&
+    blocks.some((b) => {
+        const block = b as { type?: string; children?: unknown };
+        return FILE_TYPES.has(block?.type ?? "") || hasFileBlock(block?.children);
+    });
 
 /** True when the form is a one-time schedule set to run as soon as it is saved. The choice is
  *  kept when the member flips the frequency away and back, but means nothing for any other one. */
@@ -165,8 +193,16 @@ export const runsRightAway = (form: ScheduleForm): boolean =>
     form.frequency === "once" && form.runRightAway;
 
 export const hasProblems = (p: FormProblems): boolean =>
-    Boolean(p.name || p.job || p.timeOfDay || p.weekdays || p.monthDay || p.runDate) ||
-    Object.keys(p.params).length > 0;
+    Boolean(
+        p.name ||
+            p.job ||
+            p.timeOfDay ||
+            p.weekdays ||
+            p.monthDay ||
+            p.runDate ||
+            p.message ||
+            p.chat
+    ) || Object.keys(p.params).length > 0;
 
 /** `keepsUnknownJob`: editing a schedule whose job was removed, with the job
  *  left alone. It can still be renamed or moved to another time. */
@@ -211,6 +247,12 @@ export const validateForm = (
         }
     }
 
+    if (job?.postsAsOwner) {
+        if (hasFileBlock(form.messageBody)) problems.message = "files";
+        else if (!hasSendableContent(form.messageBody)) problems.message = "required";
+        if (!form.deliverChannelId) problems.chat = "required";
+    }
+
     // "Run right away" has no date and no time to ask (the server uses now).
     if (runsRightAway(form)) return problems;
     if (normalizeTime(form.timeOfDay) === null) {
@@ -252,7 +294,7 @@ export const buildCreate = (form: ScheduleForm, job: ScheduleJob | undefined): S
     return {
         name: form.name.trim(),
         job: form.job,
-        params: paramsFromForm(job, form.params),
+        params: formParams(job, form),
         deliverPush: form.deliverPush,
         ...(form.deliverChannelId ? { deliverChannelId: form.deliverChannelId } : {}),
         ...(effort ? { aiEffort: effort } : {}),
@@ -281,8 +323,8 @@ export const buildPatch = (
     const jobChanged = form.job !== original.job;
     if (jobChanged) patch.job = form.job;
     if (job) {
-        const params = paramsFromForm(job, form.params);
-        const before = paramsFromForm(job, declaredAsText(job, original.params ?? {}));
+        const params = formParams(job, form);
+        const before = formParams(job, formFromSchedule(original, [job]));
         if (jobChanged || !same(params, before)) patch.params = params;
     }
 

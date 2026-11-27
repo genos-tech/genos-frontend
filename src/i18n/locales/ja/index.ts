@@ -4924,6 +4924,11 @@ export const ja: DeepPartial<Messages> = {
             job: "レポート",
             jobPlaceholder: "レポートを選択",
             jobCatalog: {
+                scheduled_message: {
+                    title: "予約メッセージ",
+                    description:
+                        "自分で書いたメッセージを、指定した時刻にあなたの名前でグループチャットまたはプロジェクトチャットに送ります。AIは使いません。",
+                },
                 ai_dashboard: {
                     title: "ダッシュボードページ",
                     description:
@@ -5055,6 +5060,18 @@ export const ja: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "レポートは AI の文章付きのメッセージとしてこのチャットに投稿されます。チャットの全員が読めますが、その費用はあなたの受信箱にだけ表示されます。通知は送りません。",
             rowDeliver: "投稿先: {name}",
+            messageLabel: "メッセージ",
+            messageHint:
+                "自分で「送信」を押したときと同じように、あなたの名前で送られます。メンションしたチャットのメンバーには通知されます。画像やファイルは追加できません。",
+            messageChatLabel: "メッセージの送信先",
+            messageChatPlaceholder: "チャットを選択",
+            errorMessage: "送るメッセージを入力してください。",
+            errorMessageFiles: "メッセージから画像とファイルを削除してください。",
+            errorMessageChat: "グループチャットかプロジェクトチャットを選択してください。",
+            rowMessage: "メッセージ: {text}",
+            rowSendTo: "送信先: {name}",
+            messageSent: "{chat}にメッセージを送信しました",
+            runRightAwayHintMessage: "「今すぐ実行」を押すとすぐに{chat}へ送信されます。",
             reportPosted: "{chat} にレポートを投稿しました",
             rowProject: "プロジェクト: {name}",
             rowMilestone: "マイルストーン: {name}",

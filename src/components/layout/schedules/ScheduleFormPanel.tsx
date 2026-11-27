@@ -1,4 +1,14 @@
-import { FormEvent, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+    FormEvent,
+    lazy,
+    Suspense,
+    useCallback,
+    useEffect,
+    useId,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import {
     Alert,
     Box,
@@ -18,6 +28,7 @@ import {
 } from "@mui/joy";
 
 import { CREDIT_PACKS_PATH, PLANS_PATH } from "../../../features/billing/billingPaths";
+import type { SkillsHost } from "../../../features/genos/skills/skillsHost";
 import { findDuplicate } from "../../../features/schedules/scheduleDuplicates";
 import {
     asEffortLevel,
@@ -77,12 +88,20 @@ import {
     SkillParamSelect,
 } from "./ScheduleParamPickers";
 
+// The chat editor, loaded only when a message is being written (MIP-2482).
+const ScheduleMessageEditor = lazy(() => import("./ScheduleMessageEditor"));
+
 type Props = {
     /** The schedule being edited; null to create one. */
     schedule: Schedule | null;
     jobs: ScheduleJob[];
     /** The chats a report can be posted in (MIP-1420). With none, the form offers no choice. */
     chatTargets?: ChatTarget[];
+    /** The chats a scheduled message can be sent to (MIP-2482). */
+    messageChatTargets?: ChatTarget[];
+    /** What the message editor reads from the app. Without it a job that sends a message is not
+     *  offered by the host. */
+    editorHost?: SkillsHost;
     /** No AI credits left (MIP-1967): the AI switch is drawn off and disabled, with the reason. */
     aiCreditsOut?: boolean;
     /** The member's schedules on screen, for the instant "you already have this" check. */
@@ -118,7 +137,9 @@ const FREQUENCY_KEYS = {
 export const ScheduleFormPanel = ({
     schedule,
     jobs,
-    chatTargets = [],
+    chatTargets: reportChatTargets = [],
+    messageChatTargets = [],
+    editorHost,
     aiCreditsOut = false,
     existing = [],
     lockedParams,
@@ -134,6 +155,7 @@ export const ScheduleFormPanel = ({
         high: t.settings.llmModel.effortHigh,
     };
     const effortLabelId = useId();
+    const messageLabelId = useId();
     const onceWhenLabelId = useId();
 
     const [form, setForm] = useState<ScheduleForm>(() => {
@@ -150,6 +172,9 @@ export const ScheduleFormPanel = ({
     const [failure, setFailure] = useState<string | null>(null);
 
     const job = jobs.find((j) => j.job === form.job);
+    // A message is sent as the member (MIP-2482): its own chats, and never the Inbox.
+    const isMessage = job?.postsAsOwner === true;
+    const chatTargets = isMessage ? messageChatTargets : reportChatTargets;
     // Editing a schedule whose job was removed: renaming or re-timing it is
     // still fine as long as the job field is left alone.
     const keepsUnknownJob = !!schedule && !job && form.job === schedule.job;
@@ -205,6 +230,11 @@ export const ScheduleFormPanel = ({
         setFailure(null);
         setForm((cur) => ({ ...cur, [key]: value }));
     };
+    // Stable, so typing in the message does not re-render the editor.
+    const setMessageBody = useCallback((messageBody: unknown[]) => {
+        setFailure(null);
+        setForm((cur) => ({ ...cur, messageBody }));
+    }, []);
 
     const pickJob = (next: string) => {
         setFailure(null);
@@ -213,10 +243,17 @@ export const ScheduleFormPanel = ({
             const nextJob = jobs.find((j) => j.job === next);
             // A name still showing the previous report's title follows the pick.
             const follows = cur.name.trim() === "" || cur.name === prev?.title;
+            // A chat the next report cannot be sent to (a public group chat, picked for a
+            // message) is not carried over.
+            const offered = nextJob?.postsAsOwner ? messageChatTargets : reportChatTargets;
+            const keepsChat =
+                offered.some((c) => c.id === cur.deliverChannelId) ||
+                cur.deliverChannelId === schedule?.deliverChannelId;
             return {
                 ...cur,
                 job: next,
                 params: {},
+                deliverChannelId: keepsChat ? cur.deliverChannelId : "",
                 // A level chosen for the old report says nothing about the new one.
                 aiEffort: "",
                 name: follows ? (nextJob?.title ?? cur.name) : cur.name,
@@ -253,7 +290,7 @@ export const ScheduleFormPanel = ({
     useEffect(() => {
         if (refused === 0) return;
         const first = formRef.current?.querySelector<HTMLElement>(
-            ".Mui-error input, .Mui-error [role='combobox'], [data-invalid-group]"
+            ".Mui-error input, .Mui-error [role='combobox'], .Mui-error [contenteditable='true'], [data-invalid-group]"
         );
         first?.focus();
     }, [refused]);
@@ -694,24 +731,72 @@ export const ScheduleFormPanel = ({
                     </FormControl>
                 )}
 
-                {deliverOptions.length > 0 && (
+                {isMessage && editorHost && (
+                    // Not a FormControl: it would hand its id and label to every control the
+                    // editor draws.
+                    <Box
+                        className={show && problems.message ? "Mui-error" : undefined}
+                        data-guide-id="spotlight.scheduleMessage"
+                        data-testid="schedule-message"
+                        sx={{ minWidth: 0 }}
+                    >
+                        <FormLabel id={messageLabelId} sx={{ mb: 0.5 }}>
+                            {s.messageLabel}
+                        </FormLabel>
+                        <Suspense
+                            fallback={
+                                <Typography level="body-sm" role="status">
+                                    {s.loading}
+                                </Typography>
+                            }
+                        >
+                            <ScheduleMessageEditor
+                                host={editorHost}
+                                initialBody={form.messageBody}
+                                labelledBy={messageLabelId}
+                                onChange={setMessageBody}
+                            />
+                        </Suspense>
+                        <Typography level="body-xs" sx={{ color: g.text.secondary, mt: 0.5 }}>
+                            {s.messageHint}
+                        </Typography>
+                        {show && problems.message && (
+                            <Typography
+                                level="body-xs"
+                                role="alert"
+                                sx={{ color: g.danger.text, mt: 0.5 }}
+                            >
+                                {problems.message === "files"
+                                    ? s.errorMessageFiles
+                                    : s.errorMessage}
+                            </Typography>
+                        )}
+                    </Box>
+                )}
+
+                {(deliverOptions.length > 0 || isMessage) && (
                     <FormControl
                         data-guide-id="spotlight.scheduleDeliver"
                         data-testid="schedule-deliver"
+                        error={show && !!problems.chat}
                         sx={{ minWidth: 0 }}
                     >
-                        <FormLabel>{s.deliverLabel}</FormLabel>
+                        <FormLabel>{isMessage ? s.messageChatLabel : s.deliverLabel}</FormLabel>
                         <ChatTargetSelect
                             chats={deliverOptions}
                             label={chatLabel}
+                            noInbox={isMessage ? s.messageChatPlaceholder : undefined}
                             stray={strayChatId}
                             value={form.deliverChannelId}
                             onChange={(id) => set("deliverChannelId", id)}
                         />
-                        {chosenChat && (
+                        {chosenChat && !isMessage && (
                             <FormHelperText sx={{ color: g.text.secondary }}>
                                 {s[chatHintKey(job, form.params)]}
                             </FormHelperText>
+                        )}
+                        {show && problems.chat && (
+                            <FormHelperText>{s.errorMessageChat}</FormHelperText>
                         )}
                     </FormControl>
                 )}
@@ -823,9 +908,13 @@ export const ScheduleFormPanel = ({
 
                 {runsRightAway(form) && (
                     <Typography level="body-sm" role="status" sx={{ color: g.text.secondary }}>
-                        {chosenChat
-                            ? fmt(s.runRightAwayHintChat, { chat: chatLabel(chosenChat) })
-                            : s.runRightAwayHintInbox}
+                        {isMessage
+                            ? chosenChat
+                                ? fmt(s.runRightAwayHintMessage, { chat: chatLabel(chosenChat) })
+                                : s.errorMessageChat
+                            : chosenChat
+                              ? fmt(s.runRightAwayHintChat, { chat: chatLabel(chosenChat) })
+                              : s.runRightAwayHintInbox}
                     </Typography>
                 )}
 
@@ -878,7 +967,7 @@ export const ScheduleFormPanel = ({
                 )}
 
                 {/* A report in a chat sends no push: it is a message the chat's members read. */}
-                {!form.deliverChannelId && (
+                {!form.deliverChannelId && !isMessage && (
                     <FormControl orientation="horizontal" sx={{ gap: 1, alignItems: "center" }}>
                         <Switch
                             checked={form.deliverPush}

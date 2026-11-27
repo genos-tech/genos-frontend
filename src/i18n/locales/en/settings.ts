@@ -185,6 +185,11 @@ export const settings = {
         job: "Report",
         jobPlaceholder: "Choose a report",
         jobCatalog: {
+            scheduled_message: {
+                title: "Scheduled message",
+                description:
+                    "Sends a message you write to a group chat or a project chat, as you, at the time you pick. No AI is used.",
+            },
             ai_dashboard: {
                 title: "Dashboard page",
                 description:
@@ -313,6 +318,18 @@ export const settings = {
         deliverChatHintAiShared:
             "The report is posted in this chat as a message, with its AI sentences. Everyone in the chat can read it, but what it cost is shown only to you, in your Inbox. No notification is sent.",
         rowDeliver: "Posts in: {name}",
+        messageLabel: "Message",
+        messageHint:
+            "Sent as you, as if you pressed Send. Mentioned members of the chat are notified. Images and files cannot be added.",
+        messageChatLabel: "Send the message to",
+        messageChatPlaceholder: "Choose a chat",
+        errorMessage: "Write the message to send.",
+        errorMessageFiles: "Remove the images and files from the message.",
+        errorMessageChat: "Choose a group chat or project chat.",
+        rowMessage: "Message: {text}",
+        rowSendTo: "Sends to: {name}",
+        messageSent: "Message sent to {chat}",
+        runRightAwayHintMessage: "Sent as soon as you press Run now, to {chat}.",
         reportPosted: "Report posted in {chat}",
         rowProject: "Project: {name}",
         rowMilestone: "Milestone: {name}",
