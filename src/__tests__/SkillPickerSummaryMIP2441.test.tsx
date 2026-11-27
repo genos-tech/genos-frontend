@@ -110,6 +110,8 @@ describe("the skill picker", () => {
         const under = screen.getByTestId("skill-chosen-summary");
         expect(under.textContent).toBe("Show what publishes this week.");
         expect(box).toHaveTextContent("Content week");
+        // MIP-2444: the closed value is its own bidi island, which is what takes the ellipsis.
+        expect(box.querySelector("bdi")).toHaveTextContent("Content week");
         expect(box).not.toHaveTextContent("Show what");
 
         await user.click(box);
