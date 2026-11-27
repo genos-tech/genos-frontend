@@ -5608,6 +5608,7 @@ export const hi: DeepPartial<Messages> = {
             noAiUsed: "AI का उपयोग नहीं हुआ",
             // TODO(copy): MIP-1960 draft wording for a native reader.
             noAiNoCredits: "AI का उपयोग नहीं हुआ: इस महीने आपके AI क्रेडिट बचे नहीं हैं",
+            noAiMonthlyLimit: "AI का उपयोग नहीं हुआ: Genos AI अपनी मासिक सीमा तक पहुँच गया है",
             deductedNone: "आपके बैलेंस से कुछ नहीं काटा गया",
             deducted: "आपके बैलेंस से {credits} काटे गए",
             scheduleFallback: "यह शेड्यूल",
@@ -6335,6 +6336,8 @@ export const hi: DeepPartial<Messages> = {
             outOfCredits: "आपके सभी AI क्रेडिट खत्म हो गए हैं, इसलिए Genos अभी जवाब नहीं दे सकता।",
             outOfCreditsBuy: "क्रेडिट खरीदें",
             outOfCreditsUpgrade: "प्लान अपग्रेड करें",
+            monthlyLimit:
+                "Genos AI अपनी मासिक सीमा तक पहुँच गया है, इसलिए अभी यह नहीं कर सकता। यह अगले महीने की शुरुआत में फिर चालू होगा। खोज और बाकी सब काम करता रहेगा।",
             taskSessionLoadFailed: "इस टास्क के बारे में आपकी पिछली बातचीत लोड नहीं हो सकी।",
         },
         pwaInstall: {

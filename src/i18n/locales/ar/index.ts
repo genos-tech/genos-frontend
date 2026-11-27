@@ -5555,6 +5555,7 @@ export const ar: DeepPartial<Messages> = {
             // TODO(copy): MIP-1960 draft wording for a native reader.
             noAiNoCredits:
                 "لم يُستخدم الذكاء الاصطناعي: لا يوجد لديك رصيد ذكاء اصطناعي متبقٍ هذا الشهر",
+            noAiMonthlyLimit: "لم يُستخدم الذكاء الاصطناعي: بلغ Genos AI حدّه الشهري",
             deductedNone: "لم يُخصم شيء من رصيدك",
             deducted: "خُصم {credits} من رصيدك",
             scheduleFallback: "هذا الجدول",
@@ -5818,6 +5819,8 @@ export const ar: DeepPartial<Messages> = {
             outOfCredits: "استنفدت كل رصيد الذكاء الاصطناعي، لذا لا يستطيع Genos الإجابة الآن.",
             outOfCreditsBuy: "شراء رصيد",
             outOfCreditsUpgrade: "ترقية الخطة",
+            monthlyLimit:
+                "بلغ Genos AI حدّه الشهري، لذا لا يمكنه تنفيذ هذا الآن. سيعود في بداية الشهر المقبل. يظل البحث وكل ما سواه يعمل.",
             taskSessionLoadFailed: "تعذّر تحميل محادثتك السابقة حول هذه المهمة.",
         },
         pwaInstall: {
