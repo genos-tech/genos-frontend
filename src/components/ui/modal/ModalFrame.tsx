@@ -112,6 +112,12 @@ export type ModalFrameProps = {
     /** Footer buttons. Placed at the end of the row (the left in RTL). */
     actions?: ReactNode;
     size?: ModalFrameSize;
+    /**
+     * A fixed height in px, for a tabbed panel that must not resize as its content changes
+     * (Settings). Never taller than the screen allows; the body scrolls inside it. Not for
+     * `fullScreenOnMobile` or `canvas`, which set their own.
+     */
+    height?: number;
     /** A header-bottom hairline, for a panel whose body is its own surface (tabs). */
     headerDivider?: boolean;
     /** Something to show between the title and the close button (a chip, say). */
@@ -165,6 +171,7 @@ export const ModalFrame = ({
     children,
     actions,
     size = "md",
+    height,
     headerDivider = false,
     headerAccessory,
     flush = false,
@@ -191,6 +198,14 @@ export const ModalFrame = ({
     // what is taken off the top is taken off the bottom as well.
     const inner = "calc(100dvh - 32px - 2 * var(--app-top-inset))";
     const width = WIDTH[size];
+    // The most the inset card may stand, and its height when the caller fixes one.
+    const insetMax = clearBottomBar
+        ? {
+              xs: "calc(100dvh - max(var(--mobile-bottom-inset, 60px) + 24px, 2 * var(--app-top-inset) + 24px))",
+              sm: inner,
+          }
+        : { xs: inner, sm: inner };
+    const fixed = (max: string) => `min(${height}px, ${max})`;
     const sizing = fullScreenOnMobile
         ? {
               // Below `md` the card IS the screen; from `md` up it is the
@@ -204,12 +219,10 @@ export const ModalFrame = ({
         : {
               width: { xs: inset, ...(typeof width === "number" ? { sm: width } : width) },
               maxWidth: inset,
-              maxHeight: clearBottomBar
-                  ? {
-                        xs: "calc(100dvh - max(var(--mobile-bottom-inset, 60px) + 24px, 2 * var(--app-top-inset) + 24px))",
-                        sm: inner,
-                    }
-                  : inner,
+              maxHeight: clearBottomBar ? insetMax : inner,
+              ...(height != null && {
+                  height: { xs: fixed(insetMax.xs), sm: fixed(insetMax.sm) },
+              }),
           };
 
     const layer =
@@ -380,6 +393,9 @@ export const ModalFrame = ({
                             ...(fillBody
                                 ? { display: "flex", flexDirection: "column", overflow: "hidden" }
                                 : { overflowY: "auto", overscrollBehavior: "contain" }),
+                            // Tall and short tabs share one width: the scrollbar's room is
+                            // kept whether it shows or not.
+                            ...(height != null && !fillBody && { scrollbarGutter: "stable" }),
                         }}
                     >
                         {children}
