@@ -25,7 +25,7 @@ type Mounted = { editor: BlockNoteEditor; doc: Y.Doc };
 
 const world = vi.hoisted(() => ({ mounted: [] as unknown[] }));
 
-const paragraph = (text: string) => [{ id: "p1", type: "paragraph", content: text }];
+const paragraph = (text: string) => [{ id: "p1", type: "paragraph" as const, content: text }];
 
 vi.mock("../services/api", async (importOriginal) => ({
     ...(await importOriginal<typeof import("../services/api")>()),
