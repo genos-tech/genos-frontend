@@ -4671,7 +4671,7 @@ export const fr: DeepPartial<Messages> = {
             unlimited: "Illimité",
             todaySuffix: "aujourd'hui",
             monthSuffix: "ce mois-ci",
-            quotaRemaining: "{remaining} de {limit} gauche {window}",
+            quotaRemaining: "Restant : {remaining} sur {limit} {window}",
             aiAsks: "Questions à l'IA",
             webSearches: "Recherches web",
             tasksCreated: "Tâches créées",

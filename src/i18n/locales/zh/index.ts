@@ -4416,7 +4416,7 @@ export const zh: DeepPartial<Messages> = {
             unlimited: "无限制",
             todaySuffix: "（今日）",
             monthSuffix: "（本月）",
-            quotaRemaining: "{limit}的{remaining}左{window}",
+            quotaRemaining: "剩余 {remaining} / {limit}{window}",
             aiAsks: "AI 提问",
             webSearches: "网络搜索",
             tasksCreated: "已创建任务",

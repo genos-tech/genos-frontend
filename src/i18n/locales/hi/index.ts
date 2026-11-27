@@ -1151,7 +1151,7 @@ export const hi: DeepPartial<Messages> = {
             unlimited: "असीमित",
             todaySuffix: "आज",
             monthSuffix: "इस महीने",
-            quotaRemaining: "{limit} में से {remaining} ने {window} को छोड़ दिया",
+            quotaRemaining: "{window} {limit} में से {remaining} बाकी",
             aiAsks: "AI से प्रश्न",
             webSearches: "वेब खोजें",
             tasksCreated: "बनाए गए कार्य",
