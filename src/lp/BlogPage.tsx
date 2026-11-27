@@ -23,7 +23,7 @@ function Cover({ article }: { article: BlogArticle }) {
         );
     }
     return (
-        <div aria-hidden className="lp-post__cover lp-post__cover--flow">
+        <div className="lp-post__cover lp-post__cover--flow" aria-hidden>
             <Flow steps={article.coverFlow ?? []} />
         </div>
     );
