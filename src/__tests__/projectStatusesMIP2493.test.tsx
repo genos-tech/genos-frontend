@@ -26,12 +26,13 @@ import { ProjectStatusDef } from "../types/tasks";
 vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 const reorder = vi.fn();
 const remove = vi.fn();
+const update = vi.fn();
 vi.mock("../features/tasks/services/projectStatuses", () => ({
     loadProjectStatuses: vi.fn().mockResolvedValue(null),
     reorderProjectStatuses: (...args: unknown[]) => reorder(...args),
     deleteProjectStatus: (...args: unknown[]) => remove(...args),
     createProjectStatus: vi.fn(),
-    updateProjectStatus: vi.fn(),
+    updateProjectStatus: (...args: unknown[]) => update(...args),
 }));
 
 const row = (
@@ -68,6 +69,7 @@ beforeEach(() => {
     __resetProjectStatusesStore();
     reorder.mockReset();
     remove.mockReset();
+    update.mockReset();
 });
 afterEach(cleanup);
 
@@ -137,10 +139,10 @@ describe("the grouped picker", () => {
         const onPick = vi.fn();
         wrap(
             <GroupedStatusPicker
-                offerDelete
                 customStatusId={null}
                 rows={ROWS}
                 status="WIP"
+                offerDelete
                 onPick={onPick}
             />
         );
@@ -156,10 +158,10 @@ describe("the editor", () => {
     it("says nothing changes until set up, and sets up with an empty reorder", async () => {
         setProjectStatuses(7, { statuses: [], canManage: true });
         reorder.mockResolvedValue({ ok: true, data: { statuses: ROWS, canManage: true } });
-        wrap(<ModalProjectStatuses open projectId={7} onClose={vi.fn()} />);
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
         expect(screen.getByText(en.tasks.projectStatuses.introBody)).toBeTruthy();
         fireEvent.click(screen.getByRole("button", { name: en.tasks.projectStatuses.setUp }));
-        expect(reorder).toHaveBeenCalledWith(7, [], "t");
+        await vi.waitFor(() => expect(reorder).toHaveBeenCalledWith(7, [], "t"));
         expect(await screen.findByText("Code review")).toBeTruthy();
     });
 
@@ -168,7 +170,7 @@ describe("the editor", () => {
         remove
             .mockResolvedValueOnce({ ok: false, code: "status_in_use", inUse: 3 })
             .mockResolvedValueOnce({ ok: true, data: { statuses: ROWS, canManage: true } });
-        wrap(<ModalProjectStatuses open projectId={7} onClose={vi.fn()} />);
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
         fireEvent.click(screen.getByRole("button", { name: "More actions for Code review" }));
         fireEvent.click(await screen.findByRole("menuitem", { name: "Delete" }));
         const dialog = await screen.findByRole("alertdialog");
@@ -177,5 +179,20 @@ describe("the editor", () => {
         fireEvent.click(within(dialog).getByRole("button", { name: "Delete and move" }));
         // The category's default is preselected.
         await vi.waitFor(() => expect(remove).toHaveBeenLastCalledWith(7, 4, 3, "t"));
+    });
+
+    it("keeps the typed name in the field when the save is refused", async () => {
+        setProjectStatuses(7, { statuses: ROWS, canManage: true });
+        update.mockResolvedValue({ ok: false, code: "name_taken", inUse: 0 });
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
+        fireEvent.click(screen.getByRole("button", { name: "Code review" }));
+        const field = screen.getByRole("textbox", { name: en.tasks.projectStatuses.nameLabel });
+        fireEvent.change(field, { target: { value: "WIP too" } });
+        fireEvent.keyDown(field, { key: "Enter" });
+        expect(await screen.findByText(en.tasks.projectStatuses.nameTaken)).toBeTruthy();
+        expect((field as HTMLInputElement).value).toBe("WIP too");
+        // Leaving the refused name does not send it again.
+        fireEvent.blur(field);
+        expect(update).toHaveBeenCalledTimes(1);
     });
 });

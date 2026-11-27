@@ -1,4 +1,4 @@
-import { KeyboardEvent, useEffect, useId, useState } from "react";
+import { KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ArrowDownwardRoundedIcon from "@mui/icons-material/ArrowDownwardRounded";
 import ArrowUpwardRoundedIcon from "@mui/icons-material/ArrowUpwardRounded";
@@ -44,8 +44,9 @@ import {
     statusRowName,
 } from "../../utils/projectStatus";
 import { StatusLabel } from "../meta/StatusLabel";
-import { CategoryHeading, useCategoryName } from "./statusChoices";
+import { CategoryHeading } from "./statusChoices";
 import { StatusColorMenu } from "./StatusColorMenu";
+import { useCategoryName } from "./useCategoryName";
 
 type Props = {
     projectId: number;
@@ -102,57 +103,75 @@ const NameInput = ({
     initial,
     label,
     describedBy,
+    savingLabel,
     onSave,
     onCancel,
 }: {
+    savingLabel: string;
     initial: string;
     label: string;
     describedBy?: string;
-    onSave: (name: string) => void;
+    /** Resolves false when the save was refused: the field stays, with what was typed. */
+    onSave: (name: string) => Promise<boolean>;
     onCancel: () => void;
 }) => {
     const [value, setValue] = useState(initial);
-    const [done, setDone] = useState(false);
-    const finish = (save: boolean) => {
-        if (done) return;
-        setDone(true);
+    const [saving, setSaving] = useState(false);
+    const done = useRef(false);
+    const refused = useRef<string | null>(null);
+    const finish = async (how: "enter" | "blur" | "escape") => {
+        if (done.current) return;
         const name = value.trim();
-        if (save && name && name !== initial) onSave(name);
-        else onCancel();
+        if (how === "escape" || !name || name === initial) {
+            done.current = true;
+            onCancel();
+            return;
+        }
+        // Leaving a refused name alone does not send it again; Enter does.
+        if (how === "blur" && name === refused.current) return;
+        done.current = true;
+        setSaving(true);
+        if (await onSave(name)) return;
+        refused.current = name;
+        done.current = false;
+        setSaving(false);
     };
     return (
         <Input
-            autoFocus
+            placeholder={label}
+            size="sm"
+            sx={{ flex: 1, minWidth: 0 }}
+            value={value}
             endDecorator={
-                value.length >= MAX_STATUS_NAME - 4 ? (
+                saving ? (
+                    <Spinner label={savingLabel} />
+                ) : value.length >= MAX_STATUS_NAME - 4 ? (
                     <Box component="span" sx={{ ...type("body-xs"), color: g.text.tertiary }}>
                         {`${value.length}/${MAX_STATUS_NAME}`}
                     </Box>
                 ) : null
             }
-            placeholder={label}
-            size="sm"
             slotProps={{
                 input: {
                     "aria-label": label,
                     "aria-describedby": describedBy,
                     maxLength: MAX_STATUS_NAME,
                     enterKeyHint: "done",
+                    readOnly: saving,
                 },
             }}
-            sx={{ flex: 1, minWidth: 0 }}
-            value={value}
-            onBlur={() => finish(true)}
+            autoFocus
+            onBlur={() => void finish("blur")}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.nativeEvent.isComposing) {
                     e.preventDefault();
-                    finish(true);
+                    void finish("enter");
                 } else if (e.key === "Escape") {
                     // The dialog must not close with it.
                     e.preventDefault();
                     e.stopPropagation();
-                    finish(false);
+                    void finish("escape");
                 }
             }}
         />
@@ -202,18 +221,46 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
                   ? words.nameEmpty
                   : words.saveFailed;
 
+    // One write at a time, in the order asked for: every answer is the whole list, so an
+    // earlier one arriving late must not win.
+    const queue = useRef<Promise<unknown>>(Promise.resolve());
+    const queued = useRef(0);
+    const enqueue = (
+        at: number | string,
+        write: () => Promise<StatusWriteResult>
+    ): Promise<StatusWriteResult> => {
+        queued.current += 1;
+        setBusyId(at);
+        const run = queue.current.then(write).then((result) => {
+            queued.current -= 1;
+            if (queued.current === 0) setBusyId(null);
+            if (result.ok) setProjectStatuses(projectId, result.data);
+            return result;
+        });
+        queue.current = run.catch(() => undefined);
+        return run;
+    };
+
     const save = async (
         at: number | string,
         write: () => Promise<StatusWriteResult>
     ): Promise<StatusWriteResult> => {
-        setBusyId(at);
         setError(null);
-        const result = await write();
-        setBusyId(null);
-        if (result.ok) setProjectStatuses(projectId, result.data);
-        else setError({ at, text: errorText(result.code) });
+        const result = await enqueue(at, write);
+        if (!result.ok) setError({ at, text: errorText(result.code) });
         return result;
     };
+
+    // The row or button that had the focus was moved or removed: give it somewhere to be.
+    const body = useRef<HTMLDivElement>(null);
+    const focusLater = (selector: string) =>
+        window.setTimeout(() => {
+            const active = document.activeElement;
+            const lost = !active || active === document.body || active.matches('[role="dialog"]');
+            if (lost) body.current?.querySelector<HTMLElement>(selector)?.focus();
+        }, 100);
+    const nameSelector = (id: number) => `[data-status-id="${id}"] [data-testid="status-name"]`;
+    const menuSelector = (id: number) => `[data-status-menu="${id}"] button`;
 
     const nameOf = (row: ProjectStatusDef) => statusRowName(row, t.tasks);
 
@@ -230,6 +277,7 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
             reorderProjectStatuses(projectId, ids, accessToken)
         );
         if (result.ok) {
+            focusLater(menuSelector(row.statusId));
             setAnnouncement(
                 fmt(words.moved, {
                     name: nameOf(row),
@@ -306,12 +354,15 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
             <Box
                 key={row.statusId}
                 component="li"
+                data-status-id={row.statusId}
                 sx={{ "&:not(:first-of-type)": rowSx["&:not(:first-of-type)"] }}
             >
                 <Box
                     sx={{ ...rowSx, "&:not(:first-of-type)": undefined }}
                     onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
                         if (!e.altKey || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+                        // In the name field the arrows are the field's.
+                        if ((e.target as HTMLElement).tagName === "INPUT") return;
                         e.preventDefault();
                         void move(row, e.key === "ArrowUp" ? -1 : 1);
                     }}
@@ -329,22 +380,30 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
                             describedBy={failed ? errorId : undefined}
                             initial={name}
                             label={words.nameLabel}
-                            onCancel={() => setEditingId(null)}
-                            onSave={(next) => {
+                            savingLabel={words.saving}
+                            onCancel={() => {
                                 setEditingId(null);
-                                void patch(row, { name: next });
+                                setError(null);
+                                focusLater(nameSelector(row.statusId));
+                            }}
+                            onSave={async (next) => {
+                                const result = await patch(row, { name: next });
+                                if (!result.ok) return false;
+                                setEditingId(null);
+                                focusLater(nameSelector(row.statusId));
+                                return true;
                             }}
                         />
                     ) : (
                         <Box
                             component="button"
                             data-testid="status-name"
+                            title={name}
+                            type="button"
                             sx={{
                                 ...nameButtonSx,
                                 color: row.isArchived ? g.text.tertiary : g.text.primary,
                             }}
-                            title={name}
-                            type="button"
                             onClick={() => setEditingId(row.statusId)}
                         >
                             {name}
@@ -370,17 +429,18 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
                         aria-hidden={row.canDelete}
                         aria-label={row.canDelete ? undefined : words.builtinHint}
                         role={row.canDelete ? undefined : "img"}
+                        title={row.canDelete ? undefined : words.builtinHint}
                         sx={{
                             display: "inline-flex",
                             width: 14,
                             flexShrink: 0,
                             color: g.text.tertiary,
                         }}
-                        title={row.canDelete ? undefined : words.builtinHint}
                     >
                         {!row.canDelete && <LockOutlinedIcon sx={{ fontSize: 14 }} />}
                     </Box>
                     <Box
+                        data-status-menu={row.statusId}
                         sx={{
                             "@media (pointer: coarse)": { "& button": { width: 44, height: 44 } },
                         }}
@@ -435,15 +495,16 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
                                 <CategoryHeading category={category} />
                             </Box>
                             <Button
-                                aria-label={fmt(words.addTo, {
-                                    category: categoryName(category),
-                                })}
                                 color="neutral"
-                                disabled={atLimit || busyId != null}
+                                data-add-category={category}
+                                disabled={atLimit}
                                 size="sm"
                                 startDecorator={<AddRoundedIcon sx={{ fontSize: 16 }} />}
                                 sx={{ "@media (pointer: coarse)": { minHeight: 44 } }}
                                 variant="plain"
+                                aria-label={fmt(words.addTo, {
+                                    category: categoryName(category),
+                                })}
                                 onClick={() => {
                                     setError(null);
                                     setAddingTo(category);
@@ -453,10 +514,10 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
                             </Button>
                         </Box>
                         <Box
+                            component="ul"
                             aria-label={fmt(words.groupLabel, {
                                 category: categoryName(category),
                             })}
-                            component="ul"
                             sx={{
                                 listStyle: "none",
                                 m: 0,
@@ -466,27 +527,31 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
                             }}
                         >
                             {group.map((row, index) => rowView(row, index, group.length))}
-                            {(addingTo === category || busyId === `add:${category}`) && (
+                            {addingTo === category && (
                                 <Box component="li" sx={{ ...rowSx, paddingInlineStart: 6 }}>
-                                    {busyId === `add:${category}` ? (
-                                        <Spinner label={words.saving} />
-                                    ) : (
-                                        <NameInput
-                                            initial=""
-                                            label={words.nameLabel}
-                                            onCancel={() => setAddingTo(null)}
-                                            onSave={(name) => {
-                                                setAddingTo(null);
-                                                void save(`add:${category}`, () =>
-                                                    createProjectStatus(
-                                                        projectId,
-                                                        { name, category },
-                                                        accessToken
-                                                    )
-                                                );
-                                            }}
-                                        />
-                                    )}
+                                    <NameInput
+                                        initial=""
+                                        label={words.nameLabel}
+                                        savingLabel={words.saving}
+                                        onCancel={() => {
+                                            setAddingTo(null);
+                                            setError(null);
+                                            focusLater(`[data-add-category="${category}"]`);
+                                        }}
+                                        onSave={async (name) => {
+                                            const result = await save(`add:${category}`, () =>
+                                                createProjectStatus(
+                                                    projectId,
+                                                    { name, category },
+                                                    accessToken
+                                                )
+                                            );
+                                            if (!result.ok) return false;
+                                            setAddingTo(null);
+                                            focusLater(`[data-add-category="${category}"]`);
+                                            return true;
+                                        }}
+                                    />
                                 </Box>
                             )}
                         </Box>
@@ -566,17 +631,25 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
     const confirmDelete = async () => {
         if (!deleting) return;
         const { row, inUse, replacementId } = deleting;
-        setBusyId(row.statusId);
-        const result = await deleteProjectStatus(
-            projectId,
-            row.statusId,
-            inUse == null ? null : replacementId,
-            accessToken
+        // Where the focus goes once the row is gone: its neighbour, else the group's Add.
+        const group = rows.filter((r) => r.category === row.category);
+        const at = group.findIndex((r) => r.statusId === row.statusId);
+        const neighbour = group[at + 1] ?? group[at - 1];
+        const result = await enqueue(row.statusId, () =>
+            deleteProjectStatus(
+                projectId,
+                row.statusId,
+                inUse == null ? null : replacementId,
+                accessToken
+            )
         );
-        setBusyId(null);
         if (result.ok) {
-            setProjectStatuses(projectId, result.data);
             setDeleting(null);
+            focusLater(
+                neighbour
+                    ? menuSelector(neighbour.statusId)
+                    : `[data-add-category="${row.category}"]`
+            );
             return;
         }
         if (result.code === "status_in_use") {
@@ -593,16 +666,16 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
     return (
         <>
             <ModalFrame
-                fullScreenOnMobile
                 description={words.description}
                 hostZIndex={hostZIndex}
                 icon={<DonutLargeRoundedIcon sx={{ color: g.accent.text }} />}
                 open={open}
                 size="lg"
                 title={words.title}
+                fullScreenOnMobile
                 onClose={onClose}
             >
-                <Box aria-busy={busyId != null} data-testid="project-statuses">
+                <Box ref={body} aria-busy={busyId != null} data-testid="project-statuses">
                     {!entry.loaded ? (
                         <SkeletonRows count={6} label={words.title} />
                     ) : entry.failed ? (
@@ -622,10 +695,12 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
                 </Box>
             </ModalFrame>
             <ConfirmDialog
-                destructive
                 cancelLabel={t.common.actions.cancel}
                 confirmDisabled={deleting?.inUse != null && deleting.replacementId == null}
                 confirmLabel={deleting?.inUse != null ? words.deleteAndMove : words.delete}
+                hostZIndex={layer}
+                open={deleting != null}
+                title={deleting ? fmt(words.deleteTitle, { name: nameOf(deleting.row) }) : ""}
                 description={
                     deleting?.inUse != null
                         ? replacements.length
@@ -633,18 +708,13 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
                             : words.noReplacement
                         : words.deleteBody
                 }
-                hostZIndex={layer}
-                open={deleting != null}
-                title={deleting ? fmt(words.deleteTitle, { name: nameOf(deleting.row) }) : ""}
+                destructive
                 onClose={() => setDeleting(null)}
                 onConfirm={confirmDelete}
             >
                 {deleting?.inUse != null && replacements.length > 0 && (
                     <Select
-                        slotProps={{
-                            button: { "aria-label": words.replacementLabel },
-                            listbox: { sx: { zIndex: layer + 20 } },
-                        }}
+                        value={deleting.replacementId}
                         renderValue={() => {
                             const picked = replacements.find(
                                 (r) => r.statusId === deleting.replacementId
@@ -653,7 +723,10 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
                                 <StatusLabel row={picked} status={picked.category} />
                             ) : null;
                         }}
-                        value={deleting.replacementId}
+                        slotProps={{
+                            button: { "aria-label": words.replacementLabel },
+                            listbox: { sx: { zIndex: layer + 20 } },
+                        }}
                         onChange={(_e, value) =>
                             setDeleting((prev) =>
                                 prev ? { ...prev, replacementId: value } : prev

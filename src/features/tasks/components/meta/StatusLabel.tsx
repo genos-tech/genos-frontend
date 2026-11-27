@@ -86,7 +86,7 @@ export const StatusLabel = ({
                 <span
                     style={{ overflow: "hidden", textOverflow: "ellipsis" }}
                     // A team's name can be cut off in a narrow column.
-                    title={row && !row.builtinKey ? label : undefined}
+                    title={row && row.name !== row.builtinKey ? label : undefined}
                     data-status-word
                 >
                     {label}

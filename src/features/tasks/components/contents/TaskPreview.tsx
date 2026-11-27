@@ -2019,13 +2019,6 @@ const MilestonePreviewInner = ({
         ) {
             patch.customStatusId = next.customStatusPick;
         }
-        // One of the project's statuses picked in the picker (MIP-2493).
-        if (
-            next.customStatusPick != null &&
-            next.customStatusPick !== (milestone.customStatusId ?? null)
-        ) {
-            patch.customStatusId = next.customStatusPick;
-        }
         // Status update from ACTaskStatus picker.
         if ((next.status?.status ?? null) !== (milestone.status ?? null)) {
             patch.status = next.status?.status || undefined;

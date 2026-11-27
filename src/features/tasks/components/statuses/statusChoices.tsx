@@ -5,17 +5,10 @@
 import type { CSSProperties } from "react";
 import { Box } from "@mui/joy";
 
-import { useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import { statusTone, toneCss } from "../../meta/taskTone";
-import { taskMetaLabel } from "../../utils/taskMeta";
 import { getStatusIcon } from "../meta/statusIcons";
-
-/** The category's name, as the built-in statuses are translated. */
-export const useCategoryName = (): ((category: string) => string) => {
-    const { t } = useTranslation();
-    return (category) => taskMetaLabel(category, t.tasks.filters) || category;
-};
+import { useCategoryName } from "./useCategoryName";
 
 /** A group heading: the category's glyph and name, quiet. */
 export const CategoryHeading = ({ category }: { category: string }) => {

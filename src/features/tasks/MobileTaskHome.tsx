@@ -234,8 +234,8 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
         >
             {openStatuses && openProjectId != null && (
                 <ModalProjectStatuses
-                    open
                     projectId={openProjectId}
+                    open
                     onClose={() => setOpenStatuses(false)}
                 />
             )}

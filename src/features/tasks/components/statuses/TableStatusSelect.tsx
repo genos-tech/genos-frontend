@@ -1,10 +1,11 @@
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import { Box } from "@mui/joy";
 
 import { useProjectStatuses } from "../../../../hooks/tasks/useProjectStatuses";
 import { useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import { STATUS_DELETED, STATUS_NAMES } from "../../meta/taskStatuses";
-import { pickableStatuses, resolveStatusRow } from "../../utils/projectStatus";
+import { pickableStatuses, resolveStatusRow, statusRowName } from "../../utils/projectStatus";
 import { StatusLabel } from "../meta/StatusLabel";
 import { ChipSelect, ChipSelectOption, statusSelectNode } from "../table/cellEditors";
 import { CategoryHeading } from "./statusChoices";
@@ -35,6 +36,7 @@ export const TableStatusSelect = ({
         ? [
               ...pickableStatuses(statuses, current?.statusId).map((row, i, all) => ({
                   value: `st:${row.statusId}`,
+                  label: statusRowName(row, t.tasks),
                   header:
                       all[i - 1]?.category !== row.category ? (
                           <CategoryHeading category={row.category} />
@@ -42,6 +44,9 @@ export const TableStatusSelect = ({
                   node: (
                       <Box sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
                           <StatusLabel row={row} status={row.category} />
+                          {row.statusId === current?.statusId && (
+                              <CheckRoundedIcon aria-hidden="true" sx={{ fontSize: 16 }} />
+                          )}
                           {row.isArchived && (
                               <Box
                                   component="span"
@@ -69,12 +74,13 @@ export const TableStatusSelect = ({
 
     return (
         <ChipSelect
-            autoFocus
             fullWidth={false}
             minWidth={110}
-            open
             options={options}
             value={value}
+            autoFocus
+            open
+            onClose={onClose}
             onChange={(next) => {
                 if (next.startsWith("st:")) {
                     const row = statuses.find((r) => `st:${r.statusId}` === next);
@@ -82,7 +88,6 @@ export const TableStatusSelect = ({
                 } else onPick(next);
                 onClose();
             }}
-            onClose={onClose}
         />
     );
 };

@@ -271,6 +271,8 @@ export const effortSelectNode = (level: string) => <EffortLabel level={level} />
 export type ChipSelectOption = {
     value: string;
     node: ReactNode;
+    /** What typing in the open list matches; the value when absent. */
+    label?: string;
     /** A group heading written above this option (not itself an option). */
     header?: ReactNode;
 };
@@ -360,7 +362,7 @@ export const ChipSelect = ({
                 const option = (
                     <Option
                         key={opt.value || "__empty"}
-                        label={opt.value}
+                        label={opt.label ?? opt.value}
                         sx={optionSx}
                         value={opt.value}
                     >

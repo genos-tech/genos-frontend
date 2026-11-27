@@ -23,6 +23,7 @@ export const ActivityStatusChip = ({
 }) => (
     <StatusLabel
         projectId={label ? null : projectId}
+        status={category}
         row={
             label
                 ? {
@@ -33,6 +34,5 @@ export const ActivityStatusChip = ({
                   }
                 : null
         }
-        status={category}
     />
 );

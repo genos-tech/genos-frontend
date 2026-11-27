@@ -56,12 +56,14 @@ export const GroupedStatusPicker = ({
 
     return (
         <Autocomplete
-            multiple
             getOptionLabel={name}
             groupBy={(choice) => (choice.category === STATUS_DELETED ? "" : choice.category)}
             isOptionEqualToValue={(option, selected) => option.key === selected.key}
             options={options}
             placeholder={t.tasks.autocomplete.statusPlaceholder}
+            size="sm"
+            sx={{ width: "100%" }}
+            value={value ? [value] : []}
             renderGroup={(params) => (
                 <Fragment key={params.key}>
                     {params.group ? (
@@ -109,9 +111,7 @@ export const GroupedStatusPicker = ({
                     return <StatusLabel key={key} row={item.row} status={item.category} />;
                 })
             }
-            size="sm"
-            sx={{ width: "100%" }}
-            value={value ? [value] : []}
+            multiple
             onChange={(_event, next) => {
                 const picked = next?.slice(-1)[0];
                 if (picked) onPick(picked.category, picked.row?.statusId);

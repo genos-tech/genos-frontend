@@ -126,10 +126,10 @@ export const StatusColorMenu = ({
                 >
                     {choices.map((choice) => (
                         <MenuRow
-                            mark="none"
                             key={choice.color || "category"}
                             aria-checked={row.color === choice.color}
                             aria-label={choice.label}
+                            mark="none"
                             role="menuitemradio"
                             sx={cellSx}
                             title={choice.label}
