@@ -913,7 +913,7 @@ export const es: DeepPartial<Messages> = {
             benefitNotesUnlimited: "Notas ilimitadas",
             benefitUpload: "Archivos de hasta {mb} MB",
             billingReturnCancelled: "Pago cancelado — tu plan no ha cambiado.",
-            quotaRemaining: "{remaining} de {limit} izquierda {window}",
+            quotaRemaining: "Restante: {remaining} de {limit} {window}",
             currencyLabel: "Mostrar precios en",
             startForFree: "Empieza gratis",
             benefitAiCredits: "Créditos de IA {n} cada mes",
