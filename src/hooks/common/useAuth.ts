@@ -9,7 +9,7 @@ import { getLocalCurrentTimestamp } from "../../utils/dateUtils";
 // `null`, meaning a full `localStorage.clear()`) changed — every other
 // write is noise (PostHog, draft caches, history bucket, etc.).
 //
-// The email, phone, country, location and bio aren't here: they come
+// The email, country, location and bio aren't here: they come
 // from the in-memory `privateProfileStore` (MIP-619), not localStorage.
 const WATCHED_STORAGE_KEYS = new Set<string>([
     "teamId",
@@ -75,7 +75,6 @@ export const useMyself = (accessToken: string | null) => {
                 isOfflineForced: localStorage.getItem("isOfflineForced") || "false",
                 role: localStorage.getItem("role") || "",
                 baseCountry: profile.baseCountry,
-                phoneNumber: profile.phoneNumber,
                 currentLocation: profile.currentLocation,
                 // Stored as the string "false" only when the user opted out;
                 // absent (pre-feature) or "true" both mean shared, matching
@@ -158,7 +157,6 @@ export const useMyself = (accessToken: string | null) => {
             setMyself((prev) => ({
                 ...prev,
                 userEmail: profile.userEmail,
-                phoneNumber: profile.phoneNumber,
                 baseCountry: profile.baseCountry,
                 currentLocation: profile.currentLocation,
                 aboutMe: profile.aboutMe,

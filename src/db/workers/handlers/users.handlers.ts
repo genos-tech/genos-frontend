@@ -62,11 +62,10 @@ const checkIsOnline = (
 // The beat is laid OVER the stored row, never in place of it. The socket
 // layer no longer relays the sender's `myself` (MIP-715): it sends the card
 // genos-api builds for the widest room a beat reaches (`presence_profile`)
-// plus the presence state, and that card has no `phoneNumber` or
-// `userEmail`, because the far side of a cross-team share was reading
-// both. A key the card leaves out is the card not saying, not the person
+// plus the presence state, and that card has no `userEmail`, because
+// the far side of a cross-team share was reading it. A key the card leaves out is the card not saying, not the person
 // clearing it, so the roster's value stands. Replacing the row would blank
-// a teammate's email and phone on their profile card within one beat.
+// a teammate's email on their profile card within one beat.
 //
 // When genos-api can't be asked, the socket layer sends just the `userId`
 // its connect check verified. Over a stored row that is a plain "online";
@@ -98,8 +97,8 @@ export const usersHandlers: HandlerMap<UsersRequests> = {
     },
 
     loadTeamMembers: async ({ myself, accessToken }) => {
-        // Rows stored before the roster stopped keeping phone numbers (MIP-768)
-        // still hold them, and an incremental sync only rewrites the people who
+        // Rows stored before the roster stopped keeping phone numbers (MIP-768,
+        // and MIP-2464 which removed them altogether) may still hold them, and an incremental sync only rewrites the people who
         // changed. Sweep them out first: it is a no-op once none are left, and
         // it runs before the network, so it happens even when the sync fails.
         try {

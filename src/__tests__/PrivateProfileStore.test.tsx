@@ -57,6 +57,7 @@ vi.mock("../features/admin/services/teamInvite", () => ({
 
 const PROFILE_WIRE = {
     email: "alice@example.com",
+    // A server that still sends one (MIP-2464): the store must not keep it.
     phone_number: "+81 90-1234-5678",
     base_country: "JP",
     current_location: "Asia/Tokyo",
@@ -65,7 +66,6 @@ const PROFILE_WIRE = {
 
 const PROFILE = {
     userEmail: "alice@example.com",
-    phoneNumber: "+81 90-1234-5678",
     baseCountry: "JP",
     currentLocation: "Asia/Tokyo",
     aboutMe: "Ships things.",

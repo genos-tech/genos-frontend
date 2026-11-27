@@ -49,7 +49,6 @@ const PROFILE_PARTS = [
     "features/admin/components/modals/sub/UserProfileLocalTime.tsx",
     "features/admin/components/modals/sub/UserProfileLocation.tsx",
     "features/admin/components/modals/sub/UserProfileLocationShare.tsx",
-    "features/admin/components/modals/sub/UserProfilePhone.tsx",
     "features/admin/components/modals/sub/UserProfileRole.tsx",
 ];
 
