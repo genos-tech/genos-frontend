@@ -29,7 +29,6 @@ interface MeResponse {
     is_offline_forced: boolean;
     custom_status: string | null;
     role: string | null;
-    base_country: string | null;
     current_location: string | null;
     // Opt-out for showing location to others; optional so an older server
     // that omits it doesn't break parsing (treated as shared).

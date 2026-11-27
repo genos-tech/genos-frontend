@@ -33,7 +33,6 @@ export type UserProps = {
     // owner id, so an owner's row reads "viewer". Always render through
     // `resolveDisplayRole` (utils/memberRoles.ts), never raw.
     memberRole?: string;
-    baseCountry?: string;
     /** IANA zone the user PICKED as their location ("Asia/Tokyo"). Its
      *  city component is the location label, and it wins over `timezone`
      *  for local time — see `resolveDisplayZone` in utils/userTimezone. */
@@ -104,7 +103,6 @@ export type SignInResponse = {
     is_offline_forced: string;
     custom_status: string;
     role: string;
-    base_country: string;
     current_location: string;
     // Opt-out for showing location to others; hydrates the profile toggle.
     // Optional so a server that predates the field doesn't break parsing.

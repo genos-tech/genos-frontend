@@ -39,7 +39,6 @@ const makeUser = (over: Partial<UserProps> = {}): UserProps => ({
     avatarImgPath: "",
     isOfflineForced: "false",
     role: "",
-    baseCountry: "",
     ...over,
 });
 
