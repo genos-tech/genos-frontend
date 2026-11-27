@@ -751,11 +751,14 @@ export const CustomDashboardsTab = ({ teamId, share }: Props) => {
                             />
                         ) : (
                             <EmptyState
-                                body={c.notRunBody}
+                                // A first run in progress: no "run it now" while it runs (MIP-2457).
+                                body={selected.running ? c.runStarted : c.notRunBody}
                                 data-empty="custom-dashboard-not-run"
                                 icon={<DashboardCustomizeRoundedIcon />}
                                 size="sm"
-                                title={c.notRunTitle}
+                                title={
+                                    selected.running ? t.settings.schedules.running : c.notRunTitle
+                                }
                             />
                         )}
                     </Box>
