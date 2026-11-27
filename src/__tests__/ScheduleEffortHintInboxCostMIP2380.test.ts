@@ -13,7 +13,11 @@ import { hi } from "../i18n/locales/hi";
 import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
 
-type Hints = { effortHint?: string; effortHintNoEstimate?: string };
+type Hints = {
+    effortHint?: string;
+    effortHintSummary?: string;
+    effortHintNoEstimate?: string;
+};
 
 const hintsOf = (messages: unknown): Hints =>
     (messages as { settings?: { schedules?: Hints } }).settings?.schedules ?? {};
@@ -30,7 +34,11 @@ const locales: Record<string, Hints> = {
 
 describe("effort hints", () => {
     it("says in English that the real cost is shown to you in your Inbox", () => {
-        for (const text of [en.schedules.effortHint, en.schedules.effortHintNoEstimate]) {
+        for (const text of [
+            en.schedules.effortHint,
+            en.schedules.effortHintSummary,
+            en.schedules.effortHintNoEstimate,
+        ]) {
             expect(text).toMatch(/real cost is shown only to you, in your Inbox/);
             expect(text).not.toMatch(/on each report/);
         }
@@ -47,7 +55,11 @@ describe("effort hints", () => {
             "في كل تقرير",
         ];
         for (const [code, hints] of Object.entries(locales)) {
-            for (const text of [hints.effortHint, hints.effortHintNoEstimate]) {
+            for (const text of [
+                hints.effortHint,
+                hints.effortHintSummary,
+                hints.effortHintNoEstimate,
+            ]) {
                 expect(text, code).toBeTruthy();
                 for (const o of old) expect(text, code).not.toContain(o);
             }
