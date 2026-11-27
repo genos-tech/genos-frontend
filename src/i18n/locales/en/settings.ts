@@ -103,7 +103,7 @@ export const settings = {
     // Settings → Genos → Genos Assist Schedules: reports Genos prepares at the member's chosen times (MIP-1150).
     schedules: {
         title: "Genos Assist Schedules",
-        blurb: "Genos prepares a report for you at the times you choose; it arrives in your Inbox.",
+        blurb: "Genos runs these at the times you choose. A report goes to your Inbox or a chat, and a message you wrote is sent to a chat.",
         loading: "Loading your schedules…",
         loadFailed: "Couldn't load your schedules.",
         retry: "Try again",

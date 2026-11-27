@@ -4652,7 +4652,7 @@ export const zh: DeepPartial<Messages> = {
         },
         schedules: {
             title: "Genos Assist 定时任务",
-            blurb: "Genos 会在你选择的时间为你准备报告,报告会送到你的收件箱。",
+            blurb: "Genos 会在你选择的时间运行这些任务：报告送到收件箱或聊天，你写好的消息发送到聊天。",
             loading: "正在加载你的定时任务…",
             loadFailed: "无法加载你的定时任务。",
             retry: "重试",

@@ -4840,7 +4840,7 @@ export const ja: DeepPartial<Messages> = {
         },
         schedules: {
             title: "Genos Assist スケジュール",
-            blurb: "Genos は、あなたが決めた時刻にレポートを用意します。レポートは受信箱に届きます。",
+            blurb: "Genos は、あなたが決めた時刻に実行します。レポートは受信箱かチャットに届き、あなたが書いたメッセージはチャットに送られます。",
             loading: "スケジュールを読み込み中…",
             loadFailed: "スケジュールを読み込めませんでした。",
             retry: "もう一度試す",

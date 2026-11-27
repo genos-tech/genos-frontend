@@ -1047,7 +1047,7 @@ export const es: DeepPartial<Messages> = {
         },
         schedules: {
             title: "Programaciones de Genos Assist",
-            blurb: "Genos te prepara un informe a las horas que elijas; llega a tu bandeja de entrada.",
+            blurb: "Genos las ejecuta a las horas que elijas: un informe llega a tu bandeja de entrada o a un chat, y un mensaje tuyo se envía a un chat.",
             loading: "Cargando tus programaciones…",
             loadFailed: "No se pudieron cargar tus programaciones.",
             retry: "Reintentar",
