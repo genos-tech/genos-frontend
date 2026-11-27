@@ -1068,12 +1068,12 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
 
     return (
         <TaskPreviewSwitchGate
-            // Chat swaps the editor for its loader: what it had not synced would go with it.
-            onTaskViewRemoved={flushBody}
             holdOutgoing={!!holdSwitchWithLoader}
             isDark={isDark}
             loadingLabel={t.tasks.preview.loadingTask}
             state={paneState}
+            // Chat swaps the editor for its loader: what it had not synced would go with it.
+            onTaskViewRemoved={flushBody}
         >
             {() => (
                 <TaskPreviewLayout
