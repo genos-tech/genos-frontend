@@ -475,12 +475,9 @@ export const zh: DeepPartial<Messages> = {
             role: "角色",
             location: "所在地",
             localTime: "当地时间",
-            phone: "电话",
             about: "简介",
             joinedDate: "加入日期",
             notAvailable: "无",
-            phonePlaceholder: "+86 138 0000 0000",
-            phoneNotSet: "添加电话号码",
             locationPlaceholder: "搜索城市",
             locationNotSet: "添加所在地",
             locationAuto: "自动",
@@ -5661,6 +5658,28 @@ export const zh: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "键盘快捷键",
+            edit: {
+                introMac:
+                    "要修改快捷键，请选中它的按键，再按下新的按键。修改会保存到你的账号，并在你使用的所有 Mac 上生效。",
+                introOther:
+                    "要修改快捷键，请选中它的按键，再按下新的按键。修改会保存到你的账号，并在你使用的所有 Windows 或 Linux 电脑上生效。",
+                change: "修改“{label}”的快捷键（当前为 {keys}）",
+                recording: "请按下新的按键…",
+                started:
+                    "正在录制“{label}”的快捷键。按住 {keys}，再按一个字母或数字。按 Escape 取消。",
+                hint: "按住 {keys}，再按一个字母或数字。按 Esc 取消。",
+                cancel: "取消",
+                cancelled: "已取消录制。",
+                custom: "自定义",
+                reset: "将“{label}”恢复默认",
+                resetAll: "全部恢复默认",
+                saved: "“{label}”现在是 {keys}。",
+                resetDone: "“{label}”已恢复为 {keys}。",
+                resetAllDone: "所有快捷键已恢复默认。",
+                needsKeys: "请按住 {keys}，再按一个字母或数字。",
+                reserved: "{keys} 已被系统占用。请选择其他按键。",
+                conflict: "{keys} 已用于“{label}”。请先修改或恢复该项。",
+            },
             table: {
                 title: "任务表格",
                 description:
@@ -7068,8 +7087,8 @@ export const zh: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "无法加载速度图表",
-                title: "速度",
+                loadFailed: "无法加载节奏图表",
+                title: "节奏",
                 subtitle: "随着时间的推移创建、启动、关闭和更新的任务",
                 day: "天",
                 week: "星期",

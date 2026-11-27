@@ -6,6 +6,7 @@ import {
     currentPlatform,
     editablePolicy,
     isEditableTarget,
+    isRecording,
     matchesShortcut,
     type ShortcutId,
 } from "../../shortcuts";
@@ -179,7 +180,7 @@ export type GlobalServiceShortcutOptions = {
  *   - `M` -> generate a Meet link and copy to clipboard (via `onQuickMeetClipboard`).
  *   - `H` -> toggle the global History modal (via `onOpenHistory`).
  *   - `G` -> open the task graph for the current preview task (via `onOpenTaskDiagram`).
- *   - `O` -> toggle the to-do modal (via `onOpenTodo`).
+ *   - `X` -> toggle the to-do modal (via `onOpenTodo`).
  *   - If a letter shortcut fires while a cycle preview is in progress, the
  *     preview is canceled and the letter target wins.
  *   - Each letter is wired through a callback so this hook stays free of
@@ -314,7 +315,8 @@ export const useGlobalServiceShortcut = (
             // Disallow the "wrong" modifier (e.g. Alt held on mac) so we
             // never collide with system shortcuts.
             const wrongModifierHeld = mac ? e.altKey : e.metaKey;
-            if (holdHeld && isCycleTap && !wrongModifierHeld) {
+            // Not while Settings records a chord: Cmd then Ctrl is how a Mac one starts.
+            if (holdHeld && isCycleTap && !wrongModifierHeld && !isRecording()) {
                 e.preventDefault();
                 const len = mruOrderRef.current.length;
                 if (len === 0) return;

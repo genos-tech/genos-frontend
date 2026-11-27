@@ -1234,8 +1234,8 @@ export const tasks = {
             },
         },
         velocity: {
-            loadFailed: "Couldn't load the velocity chart",
-            title: "Velocity",
+            loadFailed: "Couldn't load the pace chart",
+            title: "Pace",
             subtitle: "Tasks created, started, closed & updated over time",
             day: "Day",
             week: "Week",

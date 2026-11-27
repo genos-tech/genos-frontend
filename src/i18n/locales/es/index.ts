@@ -2039,6 +2039,28 @@ export const es: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "Atajos de teclado",
+            edit: {
+                introMac:
+                    "Para cambiar un atajo, selecciona sus teclas y pulsa las nuevas. Los cambios se guardan en tu cuenta y se aplican en todos los Mac que uses.",
+                introOther:
+                    "Para cambiar un atajo, selecciona sus teclas y pulsa las nuevas. Los cambios se guardan en tu cuenta y se aplican en todos los equipos con Windows o Linux que uses.",
+                change: "Cambiar el atajo de {label} (ahora {keys})",
+                recording: "Pulsa las teclas nuevas…",
+                started:
+                    "Grabando un atajo para {label}. Mantén {keys} y pulsa una letra o un número. Pulsa Escape para cancelar.",
+                hint: "Mantén {keys} y pulsa una letra o un número. Esc cancela.",
+                cancel: "Cancelar",
+                cancelled: "Grabación cancelada.",
+                custom: "Personalizado",
+                reset: "Restablecer {label} al atajo predeterminado",
+                resetAll: "Restablecer todo",
+                saved: "{label} ahora es {keys}.",
+                resetDone: "{label} vuelve a ser {keys}.",
+                resetAllDone: "Todos los atajos vuelven a las teclas predeterminadas.",
+                needsKeys: "Mantén {keys} y pulsa una letra o un número.",
+                reserved: "Tu sistema usa {keys}. Elige otras teclas.",
+                conflict: "«{label}» ya usa {keys}. Cambia o restablece ese atajo primero.",
+            },
             table: {
                 title: "Tabla de tareas",
                 description:
@@ -4132,8 +4154,8 @@ export const es: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "No se pudo cargar el gráfico de velocidad",
-                title: "Velocidad",
+                loadFailed: "No se pudo cargar el gráfico de ritmo",
+                title: "Ritmo",
                 subtitle:
                     "Tareas creadas, iniciadas, cerradas y actualizadas a lo largo del tiempo.",
                 day: "Día",
@@ -6536,12 +6558,9 @@ export const es: DeepPartial<Messages> = {
             role: "Rol",
             location: "Ubicación",
             localTime: "Hora local",
-            phone: "Teléfono",
             about: "Acerca de",
             joinedDate: "Fecha de unión",
             notAvailable: "N/D",
-            phonePlaceholder: "+34 600 000 000",
-            phoneNotSet: "Añade un teléfono",
             locationPlaceholder: "Busca una ciudad",
             locationNotSet: "Añade tu ubicación",
             locationAuto: "auto",

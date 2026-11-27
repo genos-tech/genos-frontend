@@ -1992,6 +1992,29 @@ export const ar: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "اختصارات لوحة المفاتيح",
+            edit: {
+                introMac:
+                    "لتغيير اختصار، حدّد مفاتيحه ثم اضغط المفاتيح الجديدة. تُحفظ التغييرات في حسابك وتنطبق على كل جهاز Mac تستخدمه.",
+                introOther:
+                    "لتغيير اختصار، حدّد مفاتيحه ثم اضغط المفاتيح الجديدة. تُحفظ التغييرات في حسابك وتنطبق على كل جهاز Windows أو Linux تستخدمه.",
+                change: "تغيير اختصار {label} (حاليًا {keys})",
+                recording: "اضغط المفاتيح الجديدة…",
+                started:
+                    "يجري تسجيل اختصار لـ {label}. اضغط مع الاستمرار على {keys} ثم اضغط حرفًا أو رقمًا. اضغط Escape للإلغاء.",
+                hint: "اضغط مع الاستمرار على {keys} ثم اضغط حرفًا أو رقمًا. ‏Esc للإلغاء.",
+                cancel: "إلغاء",
+                cancelled: "أُلغي التسجيل.",
+                custom: "مخصص",
+                reset: "إعادة {label} إلى الافتراضي",
+                resetAll: "إعادة تعيين الكل",
+                saved: "أصبح {label} الآن {keys}.",
+                resetDone: "عاد {label} إلى {keys}.",
+                resetAllDone: "عادت كل الاختصارات إلى المفاتيح الافتراضية.",
+                needsKeys: "اضغط مع الاستمرار على {keys} ثم اضغط حرفًا أو رقمًا.",
+                reserved: "يستخدم نظامك {keys}. اختر مفاتيح أخرى.",
+                conflict:
+                    "{keys} مستخدم بالفعل في «{label}». غيّر ذلك الاختصار أو أعد تعيينه أولًا.",
+            },
             table: {
                 title: "جدول المهام",
                 description:
@@ -4056,8 +4079,8 @@ export const ar: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "تعذّر تحميل مخطط السرعة",
-                title: "سرعة",
+                loadFailed: "تعذّر تحميل مخطط الوتيرة",
+                title: "الوتيرة",
                 subtitle: "المهام التي تم إنشاؤها وبدأت وإغلاقها وتحديثها بمرور الوقت",
                 day: "يوم",
                 week: "أسبوع",
@@ -6408,12 +6431,9 @@ export const ar: DeepPartial<Messages> = {
             role: "الدور",
             location: "الموقع",
             localTime: "التوقيت المحلي",
-            phone: "الهاتف",
             about: "نبذة",
             joinedDate: "تاريخ الانضمام",
             notAvailable: "غير متوفر",
-            phonePlaceholder: "‎+971 50 000 0000",
-            phoneNotSet: "أضف رقم هاتف",
             locationPlaceholder: "ابحث عن مدينة",
             locationNotSet: "أضف موقعك",
             locationAuto: "تلقائي",

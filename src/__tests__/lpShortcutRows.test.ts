@@ -12,7 +12,7 @@ import { hi } from "../i18n/locales/hi";
 import { ja } from "../i18n/locales/ja";
 import { zh } from "../i18n/locales/zh";
 import { LP_SHORTCUT_ORDER, shortcutRows } from "../lp/shortcutRows";
-import { SHORTCUT_IDS, SHORTCUTS } from "../shortcuts";
+import { applyOverrides, customChord, SHORTCUT_IDS, SHORTCUTS } from "../shortcuts";
 
 const CYCLE = en.settings.shortcuts.global.cycleCombo;
 const rows = (platform: "mac" | "other") =>
@@ -41,6 +41,15 @@ describe("landing page shortcut rows", () => {
         expect(keys[1]).toBe("Hold Alt + Tap Ctrl to cycle");
         expect(keys[2]).toBe("Ctrl + Alt + T");
         expect(keys.slice(2, 9).every((k) => k.startsWith("Ctrl + Alt + "))).toBe(true);
+    });
+
+    it("shows the built-in keys even when the visitor has changed theirs (MIP-2413)", () => {
+        applyOverrides("other", { "global.history": customChord("j", "other") });
+        try {
+            expect(rows("other")[6].keys).toBe("Ctrl + Alt + H");
+        } finally {
+            applyOverrides("other", {});
+        }
     });
 
     it("the To-Do row is the key the app really binds (X), not the stale O", () => {

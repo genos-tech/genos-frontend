@@ -8,6 +8,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { UserProps } from "../../../../types/admin";
 import { MyNoteProps } from "../../../../types/notes";
+import { noteResyncSignal } from "../utils/noteResync";
 import { NoteTitleField } from "./NoteTitleField";
 
 interface NoteEditorProps {
@@ -74,7 +75,7 @@ export const NoteEditor = ({
                 currentNoteMembers={useNM.currentNoteMembers}
                 myself={myself}
                 noteBodySaved={noteBodySaved}
-                resyncSignal={useNM.noteResyncNonce}
+                resyncSignal={noteResyncSignal(useNM.noteResync, currentMyNote)}
                 setBody={onBodyChange}
                 setMyself={setMyself}
                 setNoteBodyEdited={setNoteBodyEdited}

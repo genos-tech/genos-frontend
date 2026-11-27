@@ -1675,7 +1675,7 @@ const AutoSyncCalendarSection = () => {
  *   4. Privacy          – analytics consent (off until accepted, MIP-1781).
  *   5. Language         – locale switcher (English / 日本語).
  *   6. Notifications    – delegates to `NotificationSettingsPanel`.
- *   7. Keyboard shortcuts – read-only reference for the global service shortcuts.
+ *   7. Keyboard shortcuts – the list; Spotlight and the letter ones can be rebound.
  *   8. Account          – data export, leaving a team, account deletion (GDPR).
  *
  * Notification state is read from `NotificationsContext` provided at the

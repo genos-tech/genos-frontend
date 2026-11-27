@@ -37,7 +37,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { useNotificationsContext } from "../../../../services/notifications/notificationsContextState";
-import { shortcutText } from "../../../../shortcuts";
+import { shortcutText, useShortcutsVersion } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
@@ -107,6 +107,8 @@ export const NoteHeaderActions = ({
     hostZIndex,
 }: NoteHeaderActionsProps) => {
     const { mode } = useColorScheme();
+    // Re-render when the member rebinds the shortcut printed below (MIP-2413).
+    useShortcutsVersion();
     const isDark = mode === "dark";
     const styles = isDark ? NoteHeaderActionsStyles.dark : NoteHeaderActionsStyles.light;
     const navigate = useNavigate();

@@ -41,7 +41,7 @@ import {
     MuteMenuItem,
     MuteToggleButton,
 } from "../../../../services/notifications/MuteToggleButton";
-import { shortcutText } from "../../../../shortcuts";
+import { shortcutText, useShortcutsVersion } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps, ChatProps } from "../../../../types/chat";
@@ -70,6 +70,8 @@ type MainChatPaneHeaderProps = {
 };
 
 export const MainChatPaneHeader = (props: MainChatPaneHeaderProps) => {
+    // Re-render when the member rebinds the shortcut printed below (MIP-2413).
+    useShortcutsVersion();
     const {
         chat,
         incompleteTodoCount,

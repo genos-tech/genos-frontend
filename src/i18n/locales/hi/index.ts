@@ -2461,6 +2461,29 @@ export const hi: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "कीबोर्ड शॉर्टकट",
+            edit: {
+                introMac:
+                    "शॉर्टकट बदलने के लिए उसकी कुंजियाँ चुनें और नई कुंजियाँ दबाएँ। बदलाव आपके खाते में सहेजे जाते हैं और आपके हर Mac पर लागू होते हैं।",
+                introOther:
+                    "शॉर्टकट बदलने के लिए उसकी कुंजियाँ चुनें और नई कुंजियाँ दबाएँ। बदलाव आपके खाते में सहेजे जाते हैं और आपके हर Windows या Linux कंप्यूटर पर लागू होते हैं।",
+                change: "{label} का शॉर्टकट बदलें (अभी {keys})",
+                recording: "नई कुंजियाँ दबाएँ…",
+                started:
+                    "{label} के लिए शॉर्टकट रिकॉर्ड हो रहा है। {keys} दबाए रखें और कोई अक्षर या अंक दबाएँ। रद्द करने के लिए Escape दबाएँ।",
+                hint: "{keys} दबाए रखें और कोई अक्षर या अंक दबाएँ। Esc से रद्द होता है।",
+                cancel: "रद्द करें",
+                cancelled: "रिकॉर्डिंग रद्द की गई।",
+                custom: "कस्टम",
+                reset: "{label} को डिफ़ॉल्ट पर रीसेट करें",
+                resetAll: "सभी रीसेट करें",
+                saved: "{label} अब {keys} है।",
+                resetDone: "{label} फिर से {keys} है।",
+                resetAllDone: "सभी शॉर्टकट डिफ़ॉल्ट कुंजियों पर लौट आए हैं।",
+                needsKeys: "{keys} दबाए रखें और कोई अक्षर या अंक दबाएँ।",
+                reserved: "{keys} का उपयोग आपका सिस्टम करता है। दूसरी कुंजियाँ चुनें।",
+                conflict:
+                    "{keys} पहले से “{label}” में उपयोग हो रहा है। पहले उसे बदलें या रीसेट करें।",
+            },
             table: {
                 title: "टास्क टेबल",
                 description:
@@ -4332,8 +4355,8 @@ export const hi: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "वेलोसिटी चार्ट लोड नहीं हो सका",
-                title: "वेग",
+                loadFailed: "रफ़्तार का चार्ट लोड नहीं हो सका",
+                title: "रफ़्तार",
                 subtitle: "समय के साथ कार्य बनाए गए, प्रारंभ किए गए, बंद किए गए और अद्यतन किए गए",
                 day: "दिन",
                 week: "सप्ताह",
@@ -7039,12 +7062,9 @@ export const hi: DeepPartial<Messages> = {
             role: "भूमिका",
             location: "स्थान",
             localTime: "स्थानीय समय",
-            phone: "फ़ोन",
             about: "परिचय",
             joinedDate: "जॉइन की तारीख",
             notAvailable: "लागू नहीं",
-            phonePlaceholder: "+91 98765 43210",
-            phoneNotSet: "फ़ोन नंबर जोड़ें",
             locationPlaceholder: "शहर खोजें",
             locationNotSet: "अपना स्थान जोड़ें",
             locationAuto: "स्वतः",

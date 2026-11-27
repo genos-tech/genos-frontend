@@ -160,7 +160,7 @@ const Harness = ({ mountNotesPanel }: { mountNotesPanel: boolean }) => {
         currentTaskNote,
         setCurrentTaskNote,
         bumpNoteVersionsHead: () => {},
-        noteResyncNonce: 0,
+        noteResync: {},
         currentNoteMembers: [],
     } as never;
 

@@ -57,7 +57,6 @@ const ME = {
     custom_status: null,
     role: null,
     base_country: null,
-    phone_number: null,
     current_location: null,
     about_me: null,
     ts_created_at: "2020-01-01T00:00:00Z",
