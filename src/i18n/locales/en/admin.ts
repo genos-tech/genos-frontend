@@ -510,15 +510,9 @@ export const admin = {
         role: "Role",
         location: "Location",
         localTime: "Local Time",
-        phone: "Phone",
         about: "About",
         joinedDate: "Joined Date",
         notAvailable: "N/A",
-        phonePlaceholder: "+81 90-1234-5678",
-        // Only ever shown to the owner of the profile — for anyone else an
-        // unset field renders nothing at all, so this doubles as the
-        // affordance that the row is editable.
-        phoneNotSet: "Add a phone number",
         locationPlaceholder: "Search for a city",
         locationNotSet: "Add your location",
         locationAuto: "auto",

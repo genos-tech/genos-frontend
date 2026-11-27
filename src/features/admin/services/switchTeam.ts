@@ -40,7 +40,6 @@ export const switchTeam = ({
         isOfflineForced: myself.isOfflineForced,
         role: myself.role,
         baseCountry: myself.baseCountry,
-        phoneNumber: myself.phoneNumber,
         currentLocation: myself.currentLocation,
         aboutMe: myself.aboutMe,
         customStatus: myself.customStatus,
