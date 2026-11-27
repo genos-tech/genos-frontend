@@ -95,13 +95,13 @@ const mention = (): HashMentionData => ({
     refresh: () => {},
 });
 
-const renderForm = () => {
+const renderForm = (job: ScheduleJob = DASHBOARD) => {
     const onSubmit = vi.fn(async () => ({ ok: true as const }));
     rtlRender(
         <CssVarsProvider>
             <HashMentionDataProvider value={mention()}>
                 <ScheduleFormPanel
-                    jobs={[DASHBOARD]}
+                    jobs={[job]}
                     schedule={null}
                     timeZone="Asia/Tokyo"
                     onCancel={() => {}}
@@ -204,6 +204,34 @@ describe("the form", () => {
         expect(within(p).getByRole("combobox", { name: s().paramSaveTo })).toBeTruthy();
         // Every run spends credits: the control that says how much shows.
         expect(screen.getByTestId("schedule-effort")).toBeTruthy();
+    });
+
+    // MIP-2423: the server's figures are for the report sentences, not a skill's run.
+    it("shows no cost estimate for a skill page, and keeps it for a built-in one", async () => {
+        const levels = {
+            low: { creditsMilli: [100, 200] },
+            medium: { creditsMilli: [300, 400] },
+            high: { creditsMilli: [900, 1000] },
+        };
+        renderForm({
+            ...DASHBOARD,
+            effortCost: { levels } as unknown as ScheduleJob["effortCost"],
+        });
+        const user = userEvent.setup();
+        await useSkill(user);
+        const effort = () => within(screen.getByTestId("schedule-effort"));
+        expect(effort().getByText(s().effortHintNoEstimate)).toBeTruthy();
+        expect(effort().queryByText(s().effortHint)).toBeNull();
+        expect(effort().queryByText(/0\.1/)).toBeNull();
+
+        await pick(user, sourceBox(), s().sourceTemplate);
+        await pick(
+            user,
+            within(screen.getByTestId("schedule-mode")).getByRole("combobox"),
+            s().scheduleModeAi
+        );
+        expect(effort().getByText(s().effortHint)).toBeTruthy();
+        expect(effort().getByText(/0\.1/)).toBeTruthy();
     });
 
     it("sends the skill and its input and nothing of the built-in kinds", async () => {
