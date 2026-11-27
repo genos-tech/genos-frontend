@@ -36,6 +36,17 @@ export const withoutAi = (job: ScheduleJob): ScheduleJob => {
 export const aiSwitchKey = (job: ScheduleJob | undefined): string | undefined =>
     Object.keys(job?.params ?? {}).find((key) => knownParam(key)?.aiSwitch === true);
 
+/** A dashboard page made by a skill (MIP-2399): the job has a `source` and it says so. */
+const madeBySkill = (job: ScheduleJob | undefined, typed: Record<string, string>): boolean =>
+    Object.prototype.hasOwnProperty.call(job?.params ?? {}, "source") && typed.source === "skill";
+
+/** The server's estimate, when it describes this run. Its figures are for the report sentences:
+ *  a dashboard made by a skill is a multi-step skill run, so it has none (MIP-2423). */
+export const effortCostFor = (
+    job: ScheduleJob | undefined,
+    typed: Record<string, string>
+): EffortCost | null => (madeBySkill(job, typed) ? null : (job?.effortCost ?? null));
+
 /** The control is drawn only while the AI step can run: the job uses AI and the member has not
  *  left its AI parameter off, which is the default (then the report is plain and the level means nothing). */
 export const showsEffort = (
@@ -44,11 +55,7 @@ export const showsEffort = (
 ): boolean => {
     if (!jobUsesAi(job)) return false;
     // A dashboard made by a skill always uses the model (MIP-2399): no switch to leave off.
-    if (
-        Object.prototype.hasOwnProperty.call(job?.params ?? {}, "source") &&
-        typed.source === "skill"
-    )
-        return true;
+    if (madeBySkill(job, typed)) return true;
     const key = aiSwitchKey(job);
     return key === undefined || typed[key] === "true";
 };

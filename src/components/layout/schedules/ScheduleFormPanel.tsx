@@ -25,6 +25,7 @@ import {
     chosenEffort,
     costText,
     EFFORT_LEVELS,
+    effortCostFor,
     showsEffort,
 } from "../../../features/schedules/scheduleEffort";
 import {
@@ -285,7 +286,8 @@ export const ScheduleFormPanel = ({
         schedule.aiEffortEffective !== chosen
             ? schedule.aiEffortEffective
             : null;
-    const estimate = chosen ? costText(job?.effortCost, held ?? chosen) : null;
+    const cost = effortCostFor(job, form.params);
+    const estimate = chosen ? costText(cost, held ?? chosen) : null;
     const costNote = !estimate
         ? null
         : estimate.kind === "tiny"
@@ -680,8 +682,8 @@ export const ScheduleFormPanel = ({
                         )}
                         <FormHelperText sx={{ color: g.text.secondary }}>
                             {/* "The estimate is for a report of about 10 tasks" is about the
-                                report sentences: a job with no estimate (a skill run) has none. */}
-                            {job?.effortCost ? s.effortHint : s.effortHintNoEstimate}
+                                report sentences: a run with no estimate (a skill run) has none. */}
+                            {cost ? s.effortHint : s.effortHintNoEstimate}
                         </FormHelperText>
                         {held && (
                             <FormHelperText data-testid="schedule-effort-held">
