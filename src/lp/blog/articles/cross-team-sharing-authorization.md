@@ -7,6 +7,6 @@ They accept
 Stop any time
 ```
 
-Your client sees what you shared, not your other chats, projects or notes, and never your member list.
+Your client sees what you shared, not your other chats, projects or notes, and never your team's member list.
 
 **View only** is selected until you choose otherwise. Owners and editors can share. Stop, and their access ends at once.

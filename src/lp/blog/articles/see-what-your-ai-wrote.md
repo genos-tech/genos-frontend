@@ -4,7 +4,7 @@
 
 Connect Claude, then work with it as usual. Genos asks it to record tasks, decisions and progress.
 
-- Writes from a connected app carry its mark in task history, comments and note history.
+- Writes from a connected app are marked in task history, comments and note history (Claude with its own mark).
 - What you type in Genos has no mark.
 - You can edit or delete what it wrote.
 

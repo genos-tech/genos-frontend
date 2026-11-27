@@ -7,7 +7,7 @@ A skill is a note of written steps with a name: your weekly update, your meeting
 ```flow
 Write the steps once
 Type / and pick it
-Approve any change
+Approve any change (Core+)
 ```
 
 Write and share skills in **Settings → Genos → Skills**. Running one uses AI.

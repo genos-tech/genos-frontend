@@ -1,6 +1,6 @@
 <!-- Generated from genos-docs/marketing/blog/ai-answers-need-receipts.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-![A Genos answer with its sources shown as links to a chat, a note and a task](/lp/shots/en/ask.webp)
+![A Genos answer with its sources shown as links to a milestone, tasks and a project](/lp/shots/en/ask.webp)
 
 A confident answer can still be wrong.
 
