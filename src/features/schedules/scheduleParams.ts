@@ -28,6 +28,9 @@ export interface KnownParam {
     /** The hint when the job REQUIRES the parameter, if the optional one's wording would
      *  mislead (the project hint tells the member to leave it on "All projects"). */
     requiredHint?: TextKey;
+    /** The hint in the dashboard job's form, where what happens with the value differs from the
+     *  other job that uses this name (a skill dashboard saves a page, "Run a skill" does not). */
+    dashboardHint?: TextKey;
     picker?: ParamPicker;
     /** A true/false parameter, drawn as a switch. `defaultOn`: what "not set" means, because the
      *  catalog states no default (`ai_sentences` is OFF unless turned on, MIP-1969). */
@@ -108,6 +111,7 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
     skill_id: {
         label: "paramSkill",
         hint: "paramSkillHint",
+        dashboardHint: "paramDashboardSkillHint",
         picker: "skill",
         onlyWhen: SKILL_SOURCE,
     },
@@ -176,10 +180,12 @@ export const knownParam = (key: string): KnownParam | undefined =>
  *  job added on the server needs no change here. */
 export const isRequiredParam = (spec: JobParam): boolean => spec.required === true;
 
-/** The hint's string key for a known parameter: the required wording when the job requires it
- *  and there is one, else the plain one. */
-export const paramHintKey = (known: KnownParam, required: boolean): TextKey =>
-    required && known.requiredHint ? known.requiredHint : known.hint;
+/** The hint's string key for a known parameter: the dashboard job's own wording if there is one,
+ *  else the required wording when the job requires it and there is one, else the plain one. */
+export const paramHintKey = (known: KnownParam, required: boolean, jobKey?: string): TextKey => {
+    if (jobKey === "ai_dashboard" && known.dashboardHint) return known.dashboardHint;
+    return required && known.requiredHint ? known.requiredHint : known.hint;
+};
 
 /** Whether a parameter applies to the form as it is now: false only for a gated parameter
  *  (`onlyWhen`) of a job that declares the gating one, while that one has another value. */
