@@ -93,6 +93,18 @@ const ACTIONS_GAP = "2px";
 const ACTIONS_INSET = "6px";
 const ACTIONS_ROOM = `calc(2 * ${ACTION_SIZE} + ${ACTIONS_GAP} + 2 * ${ACTIONS_INSET})`;
 
+// A title is its own bidi island (MIP-2424): it reads in its own direction and is cut at its own
+// end, whichever way the app reads. With the row doing the cutting, a long English or Japanese
+// title in Arabic (or an Arabic one in English) lost its start. `inline-block` keeps a short title
+// at the row's start. Not `.g-bidi-island`, which only applies in an RTL app.
+const TITLE_ISLAND_SX = {
+    display: "inline-block",
+    maxWidth: "100%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    verticalAlign: "bottom",
+} as const;
+
 const DashboardRow = ({
     entry,
     selected,
@@ -177,11 +189,12 @@ const DashboardRow = ({
                     sx={{
                         color: g.text.primary,
                         overflow: "hidden",
-                        textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
                     }}
                 >
-                    {entry.title}
+                    <Box component="bdi" sx={TITLE_ISLAND_SX}>
+                        {entry.title}
+                    </Box>
                 </Typography>
                 <Typography
                     level="body-xs"

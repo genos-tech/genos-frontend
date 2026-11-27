@@ -144,6 +144,25 @@ describe("the lists and the viewer", () => {
         expect(viewer.getAttribute("data-type")).toBe("1");
     });
 
+    // MIP-2424. jsdom has no bidi algorithm, so this pins the markup; which end is cut was
+    // checked in Chromium in `ar` and `en` at 1440 and 390 (see the PR).
+    it("isolates each row's title so it is cut at its own end, own and shared", async () => {
+        renderTab();
+        const rows = await screen.findAllByTestId("custom-dashboard-row");
+        const islands = rows.map((row) => row.querySelector("bdi")!);
+        expect(islands.map((el) => el.textContent)).toEqual([
+            "Milestone X dashboard",
+            "Brand new dashboard",
+            "Team progress",
+        ]);
+        for (const el of islands) {
+            const style = getComputedStyle(el);
+            expect(style.display).toBe("inline-block");
+            expect(style.maxWidth).toBe("100%");
+            expect(style.textOverflow).toBe("ellipsis");
+        }
+    });
+
     it("says a dashboard has not run yet instead of a time", async () => {
         renderTab();
         await screen.findAllByTestId("custom-dashboard-row");
