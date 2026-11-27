@@ -400,6 +400,7 @@ export const InboxBubble = (props: InboxBubbleProps) => {
                 <Box sx={{ mt: 0.75 }}>
                     <GenosReportBody
                         allChats={useCM.allChats}
+                        costOnly={itemOptionals?.posted_in_chat === true}
                         itemBody={itemBody}
                         teamId={myself.teamId}
                         userId={myself.userId}
