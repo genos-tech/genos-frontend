@@ -522,12 +522,9 @@ export const fr: DeepPartial<Messages> = {
             role: "Rôle",
             location: "Localisation",
             localTime: "Heure locale",
-            phone: "Téléphone",
             about: "À propos",
             joinedDate: "Date d'adhésion",
             notAvailable: "N/A",
-            phonePlaceholder: "+33 6 00 00 00 00",
-            phoneNotSet: "Ajouter un téléphone",
             locationPlaceholder: "Rechercher une ville",
             locationNotSet: "Ajouter votre localisation",
             locationAuto: "auto",
@@ -4663,6 +4660,8 @@ export const fr: DeepPartial<Messages> = {
             webSearches: "Recherches web",
             tasksCreated: "Tâches créées",
             notesCreated: "Notes créées",
+            htmlStorage: "Stockage HTML",
+            htmlStorageLeft: "{remaining} restants sur {limit} · {used} utilisés",
             messageHistory: "Historique des messages",
             messageHistoryDays: "{days} derniers jours",
             maxFileSize: "Taille max. de fichier",
@@ -4805,8 +4804,11 @@ export const fr: DeepPartial<Messages> = {
             matrixRowUpload: "Taille du téléchargement du fichier",
             matrixRowHtmlPages: "Pages HTML",
             matrixRowHtmlSize: "Taille d'une page HTML",
+            matrixRowHtmlStorage: "Stockage des pages HTML",
+            matrixHintHtmlStorage: "Par personne ; toutes les versions conservées comptent",
             matrixRowHtmlSaves: "Enregistrements de pages HTML par heure",
             matrixKb: "{kb} Ko",
+            matrixGb: "{gb} Go",
             matrixRowWeb: "Recherche sur le Web",
             matrixRowCalendar: "Google Calendar",
             matrixRowGithub: "GitHub",
@@ -4981,6 +4983,11 @@ export const fr: DeepPartial<Messages> = {
             lastResult: "{title}, {count, plural, one {# élément} other {# éléments}}",
             runNow: "Exécuter maintenant",
             running: "Exécution…",
+            runStarted:
+                "Lancé. Le rapport arrivera dans votre boîte de réception une fois terminé.",
+            runStartedChat: "Lancé. Le rapport sera publié dans {chat} une fois terminé.",
+            runStopped:
+                "Cette exécution n'a enregistré aucun résultat. Si le rapport n'est pas arrivé, relancez-la.",
             ranOk: "Exécutée : {title}, {count, plural, one {# élément} other {# éléments}}. Le rapport est dans votre boîte de réception.",
             ranFailed: "L'exécution a échoué : {error}",
             reportReady: "Rapport prêt",
@@ -5990,6 +5997,29 @@ export const fr: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "Raccourcis clavier",
+            edit: {
+                introMac:
+                    "Pour modifier un raccourci, sélectionnez ses touches puis appuyez sur les nouvelles. Les changements sont enregistrés dans votre compte et s’appliquent sur tous vos Mac.",
+                introOther:
+                    "Pour modifier un raccourci, sélectionnez ses touches puis appuyez sur les nouvelles. Les changements sont enregistrés dans votre compte et s’appliquent sur tous vos ordinateurs Windows ou Linux.",
+                change: "Modifier le raccourci de {label} (actuellement {keys})",
+                recording: "Appuyez sur les nouvelles touches…",
+                started:
+                    "Enregistrement d’un raccourci pour {label}. Maintenez {keys} et appuyez sur une lettre ou un chiffre. Échap pour annuler.",
+                hint: "Maintenez {keys} et appuyez sur une lettre ou un chiffre. Échap annule.",
+                cancel: "Annuler",
+                cancelled: "Enregistrement annulé.",
+                custom: "Personnalisé",
+                reset: "Rétablir le raccourci par défaut de {label}",
+                resetAll: "Tout rétablir",
+                saved: "{label} utilise maintenant {keys}.",
+                resetDone: "{label} utilise de nouveau {keys}.",
+                resetAllDone: "Tous les raccourcis ont retrouvé leurs touches par défaut.",
+                needsKeys: "Maintenez {keys} et appuyez sur une lettre ou un chiffre.",
+                reserved: "{keys} est utilisé par votre système. Choisissez d’autres touches.",
+                conflict:
+                    "{keys} est déjà utilisé par « {label} ». Modifiez ou rétablissez d’abord ce raccourci.",
+            },
             table: {
                 title: "Tableau des tâches",
                 description:
@@ -7576,6 +7606,7 @@ export const fr: DeepPartial<Messages> = {
                 runNow: "Exécuter maintenant",
                 openNote: "Ouvrir la note",
                 runDone: "Tableau de bord mis à jour.",
+                runStarted: "Lancé. Le tableau de bord sera mis à jour à la fin de l’exécution.",
                 runFailed: "Le tableau de bord n’a pas pu être mis à jour.",
                 notRunTitle: "Ce tableau de bord n’a pas encore été exécuté",
                 notRunBody: "Exécutez-le maintenant pour créer la page.",

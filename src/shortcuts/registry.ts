@@ -13,9 +13,13 @@
  * rest (the letter shortcuts have always ignored Shift; Cmd+K has always
  * ignored everything but its own modifier). `src/__tests__/shortcutRegistry`
  * pins that over every modifier combination on both platforms.
+ *
+ * A `rebindable` shortcut can be changed by the member in Settings -> Shortcuts (MIP-2413):
+ * `keys` is then only its default. Matching and printing read the member's chord first.
  */
 import type { DeepPartial, Messages } from "../i18n/types";
 import { isMac } from "../utils/platform";
+import { getOverrides, isRecording } from "./overrides";
 
 export type Platform = "mac" | "other";
 export type Modifier = "ctrl" | "meta" | "alt" | "shift";
@@ -27,11 +31,18 @@ export type Chord = {
     mods: readonly Modifier[];
     /** Must NOT be held. A modifier in neither list is ignored. */
     forbid?: readonly Modifier[];
+    /**
+     * A member's own chord (MIP-2413): also match the physical key when the layout types a
+     * non-Latin character there. The built-in chords match `event.key` only.
+     */
+    physical?: true;
 };
 
 /** The part of an event the matcher reads (a `KeyboardEvent`, or a test's plain object). */
 export type KeyLike = {
     key: string;
+    /** `KeyboardEvent.code`, the physical key. Read for custom chords only. */
+    code?: string;
     ctrlKey?: boolean;
     metaKey?: boolean;
     altKey?: boolean;
@@ -101,6 +112,12 @@ export type ShortcutDef = {
      * contained shortcut share keys with one in another scope.
      */
     contained?: true;
+    /**
+     * The member can give this shortcut another chord (MIP-2413). Only global, single-chord
+     * app commands: grid and roving keys follow the ARIA patterns, a gesture or a click is
+     * not a chord, and send / undo mirror keys the editor binds itself.
+     */
+    rebindable?: true;
 };
 
 const NONE: Record<Platform, readonly Chord[]> = { mac: [], other: [] };
@@ -134,6 +151,7 @@ const holdShift = (key: readonly string[]): Record<Platform, readonly Chord[]> =
 export const SHORTCUTS = {
     "global.spotlight": {
         kind: "chord",
+        rebindable: true,
         scope: "global",
         group: "global",
         keys: {
@@ -146,6 +164,7 @@ export const SHORTCUTS = {
     },
     "global.tasksNew": {
         kind: "chord",
+        rebindable: true,
         scope: "global",
         group: "global",
         keys: letter("t"),
@@ -154,6 +173,7 @@ export const SHORTCUTS = {
     },
     "global.notesNew": {
         kind: "chord",
+        rebindable: true,
         scope: "global",
         group: "global",
         keys: letter("n"),
@@ -175,6 +195,7 @@ export const SHORTCUTS = {
     },
     "global.calendar": {
         kind: "chord",
+        rebindable: true,
         scope: "global",
         group: "global",
         keys: letter("c"),
@@ -183,6 +204,7 @@ export const SHORTCUTS = {
     },
     "global.meetClipboard": {
         kind: "chord",
+        rebindable: true,
         scope: "global",
         group: "global",
         keys: letter("m"),
@@ -191,6 +213,7 @@ export const SHORTCUTS = {
     },
     "global.history": {
         kind: "chord",
+        rebindable: true,
         scope: "global",
         group: "global",
         keys: letter("h"),
@@ -199,6 +222,7 @@ export const SHORTCUTS = {
     },
     "global.taskGraph": {
         kind: "chord",
+        rebindable: true,
         scope: "global",
         group: "global",
         keys: letter("g"),
@@ -207,6 +231,7 @@ export const SHORTCUTS = {
     },
     "global.todo": {
         kind: "chord",
+        rebindable: true,
         scope: "global",
         group: "global",
         keys: letter("x"),
@@ -469,6 +494,11 @@ export const EDITOR_CHORDS: ReadonlyArray<{ id: string; platform: Platform; chor
 
 export const SHORTCUT_IDS = Object.keys(SHORTCUTS) as ShortcutId[];
 
+/** The shortcuts a member can change, in registry order. */
+export const REBINDABLE_IDS: readonly ShortcutId[] = SHORTCUT_IDS.filter(
+    (id) => "rebindable" in SHORTCUTS[id]
+);
+
 export const currentPlatform = (): Platform => (isMac() ? "mac" : "other");
 
 const HELD: Record<Modifier, keyof KeyLike> = {
@@ -478,20 +508,46 @@ const HELD: Record<Modifier, keyof KeyLike> = {
     shift: "shiftKey",
 };
 
-const keyMatches = (chord: Chord, eventKey: string): boolean => {
+/**
+ * The Latin letter or digit a key press stands for: what it typed, else the physical key.
+ * The fallback covers Mac Option and AltGr typing symbols, non-Latin layouts (Russian,
+ * Arabic, Devanagari) and a digit row that types punctuation (AZERTY). A letter key that
+ * types ASCII punctuation (Dvorak) is that punctuation, not the letter printed on it.
+ */
+export const keyToken = (event: Pick<KeyLike, "key" | "code">): string | null => {
+    if (/^[a-z0-9]$/i.test(event.key)) return event.key.toLowerCase();
+    const physical = /^(Key([A-Z])|Digit([0-9]))$/.exec(event.code ?? "");
+    if (!physical) return null;
+    if (physical[3]) return physical[3];
+    const asciiTyped = /^[\x20-\x7e]$/.test(event.key);
+    return asciiTyped ? null : physical[2].toLowerCase();
+};
+
+const keyMatches = (chord: Chord, event: KeyLike): boolean => {
     const keys = typeof chord.key === "string" ? [chord.key] : chord.key;
     // A letter matches in either case (Caps Lock, Shift); a named key ("Enter",
     // "ArrowLeft") is matched exactly, as the old handlers did.
-    const folded = eventKey.length === 1 ? eventKey.toLowerCase() : eventKey;
-    return keys.some((k) => (k.length === 1 ? k.toLowerCase() : k) === folded);
+    const folded = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+    const typed = chord.physical ? (keyToken(event) ?? folded) : folded;
+    return keys.some((k) => (k.length === 1 ? k.toLowerCase() : k) === typed);
 };
 
 /** Does `event` match this one chord? Exposed for the table test. */
 export const chordMatches = (chord: Chord, event: KeyLike): boolean => {
-    if (!keyMatches(chord, event.key)) return false;
+    if (!keyMatches(chord, event)) return false;
     for (const m of chord.mods) if (!event[HELD[m]]) return false;
     for (const m of chord.forbid ?? []) if (event[HELD[m]]) return false;
     return true;
+};
+
+/** The chords that fire `id` now: the member's own one, else the defaults. */
+export const effectiveChords = (
+    id: ShortcutId,
+    platform: Platform = currentPlatform()
+): readonly Chord[] => {
+    const own = getOverrides(platform)[id];
+    const def: ShortcutDef = SHORTCUTS[id];
+    return own ? [own] : def.keys[platform];
 };
 
 /** Does `event` trigger shortcut `id` on `platform` (default: the current one)? */
@@ -499,16 +555,16 @@ export const matchesShortcut = (
     id: ShortcutId,
     event: KeyLike,
     platform: Platform = currentPlatform()
-): boolean => {
-    const def: ShortcutDef = SHORTCUTS[id];
-    return def.keys[platform].some((chord) => chordMatches(chord, event));
-};
+): boolean =>
+    !isRecording() && effectiveChords(id, platform).some((chord) => chordMatches(chord, event));
 
 /** What a shortcut does inside a text field on `platform`. */
 export const editablePolicy = (
     id: ShortcutId,
     platform: Platform = currentPlatform()
 ): EditablePolicy => {
+    // A custom chord is a Ctrl+Cmd / Ctrl+Alt letter and follows the letter shortcuts' rule.
+    if (getOverrides(platform)[id]) return LETTER_EDITABLE[platform];
     const policy: ShortcutDef["editable"] = SHORTCUTS[id].editable;
     return typeof policy === "string" ? policy : policy[platform];
 };
@@ -540,6 +596,12 @@ const keyLabel = (key: string | readonly string[]): string => {
     return keys.map((k) => KEY_LABEL[k] ?? (k.length === 1 ? k.toUpperCase() : k)).join(" / ");
 };
 
+/** The key caps of one chord, in the registry's modifier order. */
+export const chordParts = (chord: Chord, platform: Platform = currentPlatform()): string[] => [
+    ...chord.mods.map((m) => MOD_LABEL[platform][m]),
+    keyLabel(chord.key),
+];
+
 /**
  * The printed parts of a chord shortcut, one per key cap: `["Ctrl", "⌘", "T"]`.
  * A gesture or pointer entry prints its `parts` when it has them; otherwise its text is
@@ -550,9 +612,18 @@ export const shortcutParts = (
     platform: Platform = currentPlatform()
 ): string[] => {
     const def: ShortcutDef = SHORTCUTS[id];
+    const chord = effectiveChords(id, platform)[0];
+    return chord ? chordParts(chord, platform) : [...(def.parts ?? [])];
+};
+
+/** `shortcutParts` of the built-in keys, whatever the member chose (the landing page). */
+export const defaultShortcutParts = (
+    id: ShortcutId,
+    platform: Platform = currentPlatform()
+): string[] => {
+    const def: ShortcutDef = SHORTCUTS[id];
     const chord = def.keys[platform][0];
-    if (!chord) return [...(def.parts ?? [])];
-    return [...chord.mods.map((m) => MOD_LABEL[platform][m]), keyLabel(chord.key)];
+    return chord ? chordParts(chord, platform) : [...(def.parts ?? [])];
 };
 
 /** The parts joined for a tooltip: `Ctrl+⌘+T`. */

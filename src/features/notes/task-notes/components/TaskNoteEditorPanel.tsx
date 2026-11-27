@@ -17,6 +17,7 @@ import { NoteLoadState } from "../../common/components/NoteLoadState";
 import { NoteTitleField } from "../../common/components/NoteTitleField";
 import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
 import { isHtmlNote } from "../../common/utils/htmlNote";
+import { noteResyncSignal } from "../../common/utils/noteResync";
 
 interface TaskNoteEditorPanelProps {
     tab: NoteTab & { kind: "task" };
@@ -70,17 +71,20 @@ export const TaskNoteEditorPanel = ({
         currentTaskNoteTitle,
         handleTitleChange,
         handleTitleBlur,
+        bodyReadRef,
     } = useNoteAutoSave({
         currentTaskNote: note,
         myself,
         accessToken: accessToken || "",
         socket,
-        resyncSignal: useNM.noteResyncNonce,
+        resyncSignal: noteResyncSignal(useNM.noteResync, note),
         onNoteUpdate: (updatedNote: TaskNoteProps) => {
             useNM.tabsApi.updateTabTitle(updatedNote.noteId, "task", updatedNote.title);
 
-            useNM.setTaskNoteMeta(
-                useNM.taskNoteMeta.map((item) =>
+            // From the list as it is NOW: a save can land long after this render
+            // (MIP-2454).
+            useNM.setTaskNoteMeta((rows) =>
+                rows.map((item) =>
                     item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
                         ? { ...item, title: updatedNote.title }
                         : item
@@ -91,12 +95,12 @@ export const TaskNoteEditorPanel = ({
             // Only mirror into the legacy `currentTaskNote` when this
             // panel's note is the active one — protects against hidden
             // panels overwriting active state via socket-driven updates.
-            if (
-                useNM.currentTaskNote?.noteType === updatedNote.noteType &&
-                useNM.currentTaskNote?.noteId === updatedNote.noteId
-            ) {
-                useNM.setCurrentTaskNote(updatedNote);
-            }
+            useNM.setCurrentTaskNote((current) =>
+                current?.noteType === updatedNote.noteType &&
+                current?.noteId === updatedNote.noteId
+                    ? updatedNote
+                    : current
+            );
 
             useNM.bumpNoteVersionsHead(updatedNote.noteType, updatedNote.noteId);
         },
@@ -162,11 +166,12 @@ export const TaskNoteEditorPanel = ({
                 opens — see `noteBodySaved` prop below. */}
             <BnTaskNoteEditor
                 body={body || []}
+                bodyReadRef={bodyReadRef}
                 currentNoteMembers={useNM.currentNoteMembers}
                 currentTaskNote={note}
                 myself={myself}
                 noteBodySaved={noteBodySaved}
-                resyncSignal={useNM.noteResyncNonce}
+                resyncSignal={noteResyncSignal(useNM.noteResync, note)}
                 setBody={setBody}
                 setMyself={setMyself}
                 setNoteBodyEdited={setNoteBodyEdited}

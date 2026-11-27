@@ -12,15 +12,30 @@
  * debounce) or a flush. The PUT is answered by the test.
  */
 import { act, useState } from "react";
+import type { PartialBlock } from "@blocknote/core";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskPreview } from "../features/tasks/components/contents/TaskPreview";
+import { loadSpecificTask } from "../features/tasks/services/loadSpecificTask";
+import {
+    forgetTaskBodySaves,
+    keepUnsavedBody,
+    resumeKeepingUnsavedBodies,
+    settleUnsavedBody,
+    trackTaskBodySave,
+    UNSAVED_TASK_BODY_PREFIX,
+} from "../features/tasks/services/unsavedTaskBody";
 import type { TaskProps } from "../types/tasks";
+import { clearSignOutLocalStorage } from "../utils/signOutLeftovers";
 
 type Put = { id: number; text: string; ok: () => void; fail: (retry: boolean) => void };
 const net = vi.hoisted(() => ({ puts: [] as Put[] }));
+/** The unsaved-body repair's own PUT. */
+const repairs = vi.hoisted(
+    () => [] as { sent: string[]; id: number; text: string; ok: () => void }[]
+);
 /** What the preview hands the body block. */
 type BodyProps = {
     setBody: (body: unknown[]) => void;
@@ -60,7 +75,18 @@ vi.mock("../features/tasks/services/sendUpdatedSpecificTask", () => ({
 
 vi.mock("../services/api", async (importOriginal) => ({
     ...(await importOriginal<typeof import("../services/api")>()),
-    authApi: () => ({ get: () => new Promise(() => undefined) }),
+    authApi: () => ({
+        get: () => new Promise(() => undefined),
+        put: (_url: string, data: { task_id: number; content: { text: string }[] }) =>
+            new Promise((resolve) => {
+                repairs.push({
+                    sent: Object.keys(data).sort(),
+                    id: data.task_id,
+                    text: data.content[0].text,
+                    ok: () => resolve({ data: {} }),
+                });
+            }),
+    }),
 }));
 vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
@@ -82,14 +108,24 @@ const sync = (props = editor.props as BodyProps) => {
     editor.pending = false;
     props.setBody(doc(editor.text));
 };
-vi.mock("../features/tasks/components/contents/base/TaskBodyBlock", () => ({
-    TaskBodyBlock: (p: BodyProps) => {
-        editor.props = p;
-        // Bound to this instance, as the real editor's flush is.
-        if (p.flushRef) p.flushRef.current = () => sync(p);
-        return null;
-    },
-}));
+vi.mock("../features/tasks/components/contents/base/TaskBodyBlock", async () => {
+    const { useEffect } = await import("react");
+    return {
+        TaskBodyBlock: function BodyStub(p: BodyProps) {
+            editor.props = p;
+            // Bound to this instance and gone with it, as the real editor's flush is.
+            useEffect(() => {
+                const ref = p.flushRef;
+                if (!ref) return;
+                ref.current = () => sync(p);
+                return () => {
+                    ref.current = null;
+                };
+            });
+            return null;
+        },
+    };
+});
 
 // -------------------------------------------------------- stubbed leaves --
 
@@ -234,9 +270,19 @@ const makeMilestone = (milestoneId: number) => ({
 
 const host: {
     open: (task: TaskProps) => void;
+    /** The chat pane: another task is asked for, its data not here yet. */
+    request: (id: number) => void;
+    /** The milestone preview takes over the pane. */
+    showMilestone: () => void;
     openMilestone: (id: number) => void;
     renew: () => void;
-} = { open: () => undefined, openMilestone: () => undefined, renew: () => undefined };
+} = {
+    open: () => undefined,
+    request: () => undefined,
+    showMilestone: () => undefined,
+    openMilestone: () => undefined,
+    renew: () => undefined,
+};
 let renewed = 0;
 
 const patches: { milestoneId: number; text: string; ok: () => void; fail: () => void }[] = [];
@@ -259,7 +305,11 @@ const updateExistingMilestone = (
         });
     });
 
-const Host = ({ milestone }: { milestone: boolean }) => {
+const Host = ({ milestone, chat }: { milestone: boolean; chat: boolean }) => {
+    const [requested, setRequested] = useState<number | null>(null);
+    const [asMilestone, setAsMilestone] = useState(false);
+    host.showMilestone = () => setAsMilestone(true);
+    host.request = setRequested;
     const [task, setTask] = useState<TaskProps | undefined>(
         milestone ? undefined : makeTask(1, "loaded")
     );
@@ -270,10 +320,10 @@ const Host = ({ milestone }: { milestone: boolean }) => {
     host.openMilestone = setMilestoneId;
     const useTM = stubBag({
         currentPreviewTask: task,
-        currentPreviewTaskId: task ? Number(task.id) : -1,
+        currentPreviewTaskId: requested ?? (task ? Number(task.id) : -1),
         setCurrentPreviewTask: setTask,
-        currentPreviewKind: milestone ? "milestone" : "task",
-        currentPreviewMilestoneId: milestone ? milestoneId : -1,
+        currentPreviewKind: milestone || asMilestone ? "milestone" : "task",
+        currentPreviewMilestoneId: milestone || asMilestone ? milestoneId : -1,
         previewLoadFailedTaskId: null,
         allTasks: [],
         taskComments: [],
@@ -293,6 +343,7 @@ const Host = ({ milestone }: { milestone: boolean }) => {
     });
     return (
         <TaskPreview
+            guardStaleTaskId={chat}
             myself={ME as never}
             setMyself={vi.fn()}
             socket={null}
@@ -308,10 +359,10 @@ const Host = ({ milestone }: { milestone: boolean }) => {
 };
 
 const pass = (ms: number) => act(async () => void (await vi.advanceTimersByTimeAsync(ms)));
-const mount = async ({ milestone = false } = {}) => {
+const mount = async ({ milestone = false, chat = false } = {}) => {
     const view = render(
         <CssVarsProvider>
-            <Host milestone={milestone} />
+            <Host chat={chat} milestone={milestone} />
         </CssVarsProvider>
     );
     await pass(200); // the baseline of the loaded body is taken
@@ -333,6 +384,12 @@ const patched = () => patches.map((p) => [p.milestoneId, p.text]);
 
 beforeEach(() => {
     vi.useFakeTimers();
+    localStorage.clear();
+    repairs.length = 0;
+    resumeKeepingUnsavedBodies();
+    forgetTaskBodySaves();
+    vi.mocked(loadSpecificTask).mockReset();
+    vi.mocked(loadSpecificTask).mockImplementation(() => new Promise(() => undefined));
     net.puts.length = 0;
     patches.length = 0;
     renewed = 0;
@@ -474,5 +531,226 @@ describe("milestone description autosave", () => {
         await act(async () => host.openMilestone(2));
         await pass(6000);
         expect(patched()).toEqual([[1, "typed just before switching"]]);
+    });
+});
+
+/** The stub editor's documents, as the helpers type them. */
+const blocks = (text: string) => doc(text) as unknown as PartialBlock[];
+
+describe("words that may not have been saved (MIP-2455)", () => {
+    const kept = () =>
+        Object.keys(localStorage).filter((key) => key.startsWith(UNSAVED_TASK_BODY_PREFIX));
+    /** What the server answers when the repair asks for the task. */
+    const serverHas = (text: string) =>
+        vi.mocked(loadSpecificTask).mockImplementation(async () => [makeTask(1, text)]);
+
+    const reload = async () => {
+        const view = await mount();
+        await type("typed before the reload");
+        await act(async () => void window.dispatchEvent(new Event("pagehide")));
+        expect(kept()).toHaveLength(1);
+        // The page is gone: nothing it had on the way arrives.
+        const record = localStorage.getItem(kept()[0])!;
+        const key = kept()[0];
+        view.unmount();
+        localStorage.setItem(key, record);
+        net.puts.length = 0;
+        forgetTaskBodySaves();
+    };
+
+    it("are saved when the task is opened after a reload", async () => {
+        await reload();
+        serverHas("loaded");
+        await mount();
+        expect(repairs.map((r) => [r.id, r.text])).toEqual([[1, "typed before the reload"]]);
+        // The body alone: nothing a person changes meanwhile can be put back by it.
+        expect(repairs[0].sent).toEqual(["content", "project", "task_id", "team"]);
+        await answer(repairs[0].ok);
+        expect(kept()).toHaveLength(0);
+        expect(net.puts).toHaveLength(0);
+    });
+
+    it("never overwrite what someone wrote since", async () => {
+        await reload();
+        serverHas("written through the API meanwhile");
+        await mount();
+        await pass(6000);
+        expect(repairs).toHaveLength(0);
+        expect(net.puts).toHaveLength(0);
+        expect(kept()).toHaveLength(0);
+    });
+
+    it("are kept while the server cannot be asked", async () => {
+        await reload();
+        vi.mocked(loadSpecificTask).mockImplementation(async () => []);
+        await mount();
+        expect(repairs).toHaveLength(0);
+        expect(kept()).toHaveLength(1);
+    });
+
+    it("are saved on the next visit when the save made while switching failed", async () => {
+        await mount();
+        await type("typed just before switching");
+        await act(async () => host.open(makeTask(2, "other")));
+        await answer(() => net.puts[0].fail(true));
+        expect(kept()).toHaveLength(1);
+
+        serverHas("loaded");
+        await act(async () => host.open(makeTask(1, "loaded")));
+        await pass(200);
+        expect(repairs.map((r) => [r.id, r.text])).toEqual([[1, "typed just before switching"]]);
+        await answer(repairs[0].ok);
+        expect(kept()).toHaveLength(0);
+    });
+
+    it("are forgotten once the save made while leaving has stored them", async () => {
+        const view = await mount();
+        await type("typed just before leaving");
+        view.unmount();
+        expect(kept()).toHaveLength(1);
+        await answer(net.puts[0].ok);
+        expect(kept()).toHaveLength(0);
+    });
+
+    it("do not survive a later save, which has something newer", () => {
+        keepUnsavedBody("u1", 1, blocks("older"), "base");
+        settleUnsavedBody("u1", 1, blocks("newer"), { stored: true, startedAt: Date.now() + 1 });
+        expect(kept()).toHaveLength(0);
+    });
+
+    it("stay, on top of it, when an earlier save lands after they were kept", () => {
+        keepUnsavedBody("u1", 1, blocks("older and more"), "base");
+        settleUnsavedBody("u1", 1, blocks("older"), {
+            stored: true,
+            startedAt: Date.now() - 1000,
+        });
+        expect(JSON.parse(localStorage.getItem(kept()[0])!).bases[0]).toContain("older");
+    });
+
+    it("stay when a later save only restates the stored body", () => {
+        keepUnsavedBody(
+            "u1",
+            1,
+            blocks("typed"),
+            JSON.stringify([{ text: "old", type: "paragraph" }])
+        );
+        settleUnsavedBody("u1", 1, blocks("old"), { stored: true, startedAt: Date.now() + 1 });
+        expect(kept()).toHaveLength(1);
+    });
+
+    it("are saved when a save that was still in flight did arrive", async () => {
+        const end = trackTaskBodySave(1, blocks("half"));
+        keepUnsavedBody("u1", 1, blocks("half and the rest"), "[]");
+        end();
+        serverHas("half");
+        await mount();
+        expect(repairs.map((r) => r.text)).toEqual(["half and the rest"]);
+        await answer(repairs[0].ok);
+    });
+
+    it("give way to what is typed while the server is being asked", async () => {
+        await reload();
+        let arrive = (_: TaskProps[]) => {};
+        vi.mocked(loadSpecificTask).mockImplementation(
+            () => new Promise((resolve) => (arrive = resolve))
+        );
+        await mount();
+        await type("typed while loading");
+        await answer(() => arrive([makeTask(1, "loaded")]));
+        expect(repairs).toHaveLength(0);
+    });
+
+    it("go before a save made while they are on the way", async () => {
+        await reload();
+        serverHas("loaded");
+        await mount();
+        await type("newer words");
+        await pause();
+        await pass(3000);
+        expect(net.puts).toHaveLength(0);
+        await answer(repairs[0].ok);
+        expect(sent()).toEqual([[1, "newer words"]]);
+    });
+
+    it("never hand the next task's body to a save that waited for them", async () => {
+        await reload();
+        serverHas("loaded");
+        await mount();
+        await type("newer words");
+        await act(async () => host.open(makeTask(2, "other task's body")));
+        expect(net.puts).toHaveLength(0);
+        await answer(repairs[0].ok);
+        expect(sent()).toEqual([[1, "newer words"]]);
+    });
+
+    it("stay when the save that carried them was refused", () => {
+        keepUnsavedBody("u1", 1, blocks("typed"), "[]");
+        settleUnsavedBody("u1", 1, blocks("typed"), { stored: false, startedAt: Date.now() + 1 });
+        expect(kept()).toHaveLength(1);
+    });
+
+    it("go when the person typed them away again, even back to the old text", () => {
+        keepUnsavedBody(
+            "u1",
+            1,
+            blocks("typed"),
+            JSON.stringify([{ text: "old", type: "paragraph" }])
+        );
+        settleUnsavedBody("u1", 1, blocks("old"), {
+            stored: true,
+            startedAt: Date.now() + 1,
+            typed: true,
+        });
+        expect(kept()).toHaveLength(0);
+    });
+
+    it("count the repair on its way for words kept meanwhile", async () => {
+        await reload();
+        serverHas("loaded");
+        await mount();
+        await type("newer words");
+        await act(async () => void window.dispatchEvent(new Event("pagehide")));
+        expect(JSON.parse(localStorage.getItem(kept()[0])!).bases.join()).toContain(
+            "typed before the reload"
+        );
+        await answer(repairs[0].ok);
+    });
+
+    it("are sent once for two previews of the same task", async () => {
+        await reload();
+        serverHas("loaded");
+        await mount();
+        await mount();
+        expect(repairs).toHaveLength(1);
+        await answer(repairs[0].ok);
+    });
+
+    it("include what was typed when the milestone preview takes the pane", async () => {
+        await mount();
+        await type("typed just before the milestone");
+        await act(async () => host.showMilestone());
+        await act(async () => host.open(makeTask(2, "other")));
+        await pass(3000);
+        const record = kept().map((key) => localStorage.getItem(key)!);
+        expect([...record, ...net.puts.map((p) => p.text)].join()).toContain(
+            "typed just before the milestone"
+        );
+    });
+
+    it("go with the sign-out", () => {
+        keepUnsavedBody("u1", 1, blocks("private"), "base");
+        clearSignOutLocalStorage();
+        expect(kept()).toHaveLength(0);
+        // The preview unmounts after the sweep: nothing may be written back.
+        keepUnsavedBody("u1", 1, blocks("private"), "base");
+        expect(kept()).toHaveLength(0);
+    });
+
+    it("reach the save when the chat pane swaps the editor for its loader", async () => {
+        await mount({ chat: true });
+        await type("typed just before the loader");
+        await act(async () => host.request(2));
+        await act(async () => host.open(makeTask(2, "other")));
+        expect(sent()).toEqual([[1, "typed just before the loader"]]);
     });
 });

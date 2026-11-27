@@ -1,10 +1,21 @@
-import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from "react";
+import {
+    Dispatch,
+    RefObject,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState,
+} from "react";
 import { PartialBlock } from "@blocknote/core";
 import { Socket } from "socket.io-client";
 
 import { getCachedNote, noteCacheKind } from "../../../../hooks/notes/useNoteData";
 import { UserProps } from "../../../../types/admin";
-import { EditableNote, saveNote } from "../services/saveNote";
+import { isRetryableSaveError } from "../../../tasks/services/isRetryableSaveError";
+import { EditableNote } from "../services/saveNote";
+import { createNoteSaveSession, NoteSaveSession, sendNoteSave } from "./noteSaveSession";
 
 // Debounce delay between the user's last body edit and the auto-save firing.
 const AUTO_SAVE_DELAY_MS = 3000;
@@ -41,6 +52,9 @@ export interface UseNoteEditorCoreReturn {
     handleTitleBlur: () => void;
     handleBodyChange: (newBody: PartialBlock[]) => void;
     updateNote: () => Promise<void>;
+    /** Hand this to the editor (`GenosNoteEditor`'s `bodyReadRef`): it lets a save read the
+     *  words the editor has not yet synced into `body` (MIP-2454). */
+    bodyReadRef: RefObject<(() => PartialBlock[]) | null>;
 }
 
 const identityOf = (
@@ -59,22 +73,20 @@ const identityOf = (
  * currently active note, debounces saves while the user types, and dispatches
  * the persistence call through the shared `saveNote` service.
  *
- * ## Tab-switch race protection
+ * ## One save session per note
  *
- * Re-syncs `title`/`body` from `currentNote` synchronously inside render
- * (using React's "adjust state during render" idiom) whenever the note's
- * identity (`noteType-noteId`) changes. This prevents the "previous note's
- * title flashes onto the new note" rendering glitch that would otherwise
- * occur for one render after a tab switch.
+ * Everything a save needs (the note, its body, the unsent title, what the server has confirmed)
+ * lives in a `NoteSaveSession` that belongs to ONE `noteType-noteId`. A new identity gets a new
+ * session during render (React's "adjust state during render" idiom), so a late timer or a late
+ * response can never write one note's text or title onto another.
  *
- * The same identity stamp guards `updateNote`: a stale debounced save fired
- * while a tab switch is mid-flight (e.g. `currentNote` already flipped to
- * the new tab but local `title`/`body` haven't been re-synced yet) is
- * short-circuited so it can't corrupt the new note with the previous note's
- * title or body. This was the root cause of the "title of note A is
- * overwritten by the title of note C after switching tabs" bug for huge
- * notes, where the resync window was long enough for the timer to land in
- * an inconsistent state.
+ * ## What the editor shows is what gets stored (MIP-2454)
+ *
+ * A save carries the body as it was when it went out. When it returns, the editor is read again
+ * and the note stays "edited" if anything differs. Saves of one note go out one at a time, a save
+ * that stored nothing is not counted as saved, and leaving the note (unmount, or another note in
+ * the same panel) sends what the timers had not. A save made while leaving that FAILS is not
+ * retried (MIP-2463).
  */
 export function useNoteEditorCore<T extends EditableNote>({
     currentNote,
@@ -84,11 +96,15 @@ export function useNoteEditorCore<T extends EditableNote>({
     onNoteUpdate,
     resyncSignal,
 }: UseNoteEditorCoreProps<T>): UseNoteEditorCoreReturn {
-    const [body, setBody] = useState<PartialBlock[] | undefined>(
-        currentNote?.body as PartialBlock[] | undefined
+    const identityKey = identityOf(currentNote, resyncSignal);
+    const [session, setSession] = useState<NoteSaveSession<T>>(() =>
+        createNoteSaveSession(identityKey, currentNote)
     );
-    const [noteBodyEdited, setNoteBodyEdited] = useState(false);
+    const [body, setBodyState] = useState<PartialBlock[] | undefined>(session.body);
+    const [noteBodyEdited, setNoteBodyEditedState] = useState(false);
     const [noteBodySaved, setNoteBodySaved] = useState(false);
+    // Bumped to arm the autosave again when a save left something unsent.
+    const [saveRound, setSaveRound] = useState(0);
     const titleInputRef = useRef<HTMLInputElement | null>(null);
 
     // ## Title: one authority, plus an overlay while renaming
@@ -110,102 +126,157 @@ export function useNoteEditorCore<T extends EditableNote>({
     // panels at once (the task/chat-page inline editor plus the
     // notes-home LRU pool panel, which stays mounted because NoteHome is
     // kept-alive). Deriving the value makes that state unreachable.
-    const [pendingTitle, setPendingTitle] = useState<string | null>(null);
+    const [pendingTitle, setPendingTitleState] = useState<string | null>(null);
     const title = pendingTitle ?? currentNote?.title ?? "";
 
-    const identityKey = identityOf(currentNote, resyncSignal);
-    const [syncedIdentityKey, setSyncedIdentityKey] = useState<string>(identityKey);
-
-    if (syncedIdentityKey !== identityKey) {
-        // Note identity changed (tab switch / restore): abandon any
-        // in-progress rename and re-seed the body from the new note. The
-        // title needs no re-seeding — it is derived from `currentNote`.
-        setSyncedIdentityKey(identityKey);
-        setPendingTitle(null);
-        setBody(currentNote ? (currentNote.body as PartialBlock[]) : undefined);
-        setNoteBodyEdited(false);
+    if (session.key !== identityKey) {
+        // Note identity changed (tab switch / restore): abandon the local state and re-seed the
+        // body from the new note. The title needs no re-seeding, it is derived from
+        // `currentNote`. What the old note had not saved is sent by the layout effect below.
+        const next = createNoteSaveSession(identityKey, currentNote);
+        setSession(next);
+        setPendingTitleState(null);
+        setBodyState(next.body);
+        setNoteBodyEditedState(false);
         setNoteBodySaved(false);
+    } else {
+        session.note = currentNote;
+        session.onNoteUpdate = onNoteUpdate;
     }
+
+    const sessionRef = useRef(session);
+    sessionRef.current = session;
+    const senderRef = useRef({ myself, accessToken, socket });
+    senderRef.current = { myself, accessToken, socket };
+
+    // The setters write the session first: a save reads it, not the state of the last render.
+    // A setter an outgoing editor still holds only updates its own session.
+    const setBody = useCallback<Dispatch<SetStateAction<PartialBlock[] | undefined>>>(
+        (value) => {
+            session.body = typeof value === "function" ? value(session.body) : value;
+            if (sessionRef.current === session) setBodyState(session.body);
+        },
+        [session]
+    );
+    const setNoteBodyEdited = useCallback<Dispatch<SetStateAction<boolean>>>(
+        (value) => {
+            session.edited = typeof value === "function" ? value(session.edited) : value;
+            if (sessionRef.current === session) setNoteBodyEditedState(session.edited);
+        },
+        [session]
+    );
+    const setPendingTitle = useCallback<Dispatch<SetStateAction<string | null>>>(
+        (value) => {
+            session.pendingTitle =
+                typeof value === "function" ? value(session.pendingTitle) : value;
+            if (sessionRef.current === session) setPendingTitleState(session.pendingTitle);
+        },
+        [session]
+    );
 
     // Kept so the editor hooks can keep exposing a `setCurrentXxxNoteTitle`
     // setter. Writing the title directly counts as a local rename, exactly
     // like typing in the input.
     const titleRef = useRef(title);
     titleRef.current = title;
-    const setTitle = useCallback<Dispatch<SetStateAction<string>>>((value) => {
-        setPendingTitle((prev) =>
-            typeof value === "function" ? value(prev ?? titleRef.current) : value
-        );
-    }, []);
+    const setTitle = useCallback<Dispatch<SetStateAction<string>>>(
+        (value) => {
+            setPendingTitle((prev) =>
+                typeof value === "function" ? value(prev ?? titleRef.current) : value
+            );
+        },
+        [setPendingTitle]
+    );
 
-    const updateNote = useCallback(async () => {
-        if (!currentNote || !accessToken) return;
+    /** `onlyIfChanged`: do not send a body the server has already confirmed. */
+    const save = useCallback(async (target: NoteSaveSession<T>, onlyIfChanged: boolean) => {
+        // Read the editor NOW: its sync into `body` is debounced, and it may be gone by
+        // the time an earlier save of this note lets this one go.
+        const typed = target.edited ? target.bodyReadRef.current?.() : undefined;
+        if (typed) target.body = typed;
 
-        // Owner check: short-circuit if `title`/`body` don't yet correspond
-        // to `currentNote`. This is the window (one render) right after a
-        // tab switch where a pending debounce timer would otherwise persist
-        // the previous note's content onto the new note.
-        if (syncedIdentityKey !== identityOf(currentNote, resyncSignal)) {
-            return;
-        }
-
-        // Resolve the title from the freshest source at SAVE time. A save
-        // triggered by a BODY edit must never carry this panel's snapshot
-        // of the title: the note may have been renamed on another surface
-        // since the snapshot was taken, and re-sending the old value would
-        // revert that rename. The shared cache is written by every
-        // persisted edit, so it outranks `currentNote`; only an
-        // in-progress local rename outranks the cache.
-        //
-        // An empty `pendingTitle` (the user cleared the input) is treated
-        // as "no rename" rather than persisted as a blank title.
-        const persisted = getCachedNote(noteCacheKind(currentNote.noteType), currentNote.noteId);
-        const newNoteTitle = pendingTitle || persisted?.title || currentNote.title;
-
-        const newNote = {
-            ...currentNote,
-            title: newNoteTitle,
-            body: body || [],
-        } as T;
-
+        const isShown = () => sessionRef.current === target;
+        let sentTitle: string | null = null;
+        let sent: T | null = null;
         try {
-            await saveNote(newNote, myself, accessToken, socket);
-            setNoteBodyEdited(false);
-            setNoteBodySaved(true);
-            onNoteUpdate?.(newNote);
+            const stored = await sendNoteSave(target, () => {
+                const { myself, accessToken, socket } = senderRef.current;
+                const note = target.note;
+                if (target.dropped || !note || !accessToken) return null;
+                // An earlier save may have taken a while: read the editor again.
+                if (target.edited) target.body = target.bodyReadRef.current?.() ?? target.body;
+                if (
+                    onlyIfChanged &&
+                    !target.pendingTitle &&
+                    JSON.stringify(target.body ?? []) === target.confirmedBody
+                ) {
+                    // Typed and then undone, or already carried by the save before this one.
+                    target.edited = false;
+                    if (isShown()) setNoteBodyEditedState(false);
+                    return null;
+                }
+                // Resolve the title from the freshest source at SAVE time. A save
+                // triggered by a BODY edit must never carry this panel's snapshot of the
+                // title: the note may have been renamed on another surface since. The
+                // shared cache is written by every persisted edit, so it outranks the
+                // note; only an in-progress local rename outranks the cache. An empty
+                // rename (the input was cleared) is not persisted as a blank title.
+                sentTitle = target.pendingTitle;
+                const persisted = getCachedNote(noteCacheKind(note.noteType), note.noteId);
+                const payload = {
+                    ...note,
+                    title: sentTitle || persisted?.title || note.title,
+                    body: target.body || [],
+                } as T;
+                sent = payload;
+                return { note: payload, myself, accessToken, socket };
+            });
+            if (!stored || !sent) return;
         } catch (error) {
             console.error("Failed to update note:", error);
+            // Nothing was stored. Stay "edited" and send it again when that can help.
+            const retry = isRetryableSaveError(error);
+            // A lost answer does not say what the server holds now.
+            target.confirmedBody = null;
+            if (retry) target.backoff.failed();
+            // A refusal of a rename says nothing about the body: it goes again without
+            // the title, and is dropped only if that is refused too.
+            else if (!sentTitle) target.edited = false;
+            if (isShown()) {
+                setNoteBodyEditedState(target.edited);
+                setNoteBodySaved(false);
+                setSaveRound((n) => n + 1);
+            }
+            return;
         } finally {
-            // The rename attempt is over either way, so stop overriding the
-            // note's own title. Holding the overlay after a FAILURE is what
-            // made this bug so persistent: the panel went on displaying —
-            // and, on its next body autosave, PUTting — a title the note
-            // did not have, clobbering renames made on other surfaces. On
-            // success the note now carries this title anyway (`saveNote`
-            // published it to the cache), so the derived value is
-            // unchanged; on failure the input snaps back to the note's real
-            // title, which is honest feedback that nothing was saved.
-            setPendingTitle(null);
+            // The rename attempt is over either way, so stop overriding the note's own
+            // title: holding it after a failure made this panel PUT a title the note did
+            // not have. A title typed since the save went out is a new attempt and stays.
+            if (target.pendingTitle === sentTitle) {
+                target.pendingTitle = null;
+                if (isShown()) setPendingTitleState(null);
+            }
         }
-    }, [
-        currentNote,
-        pendingTitle,
-        body,
-        myself,
-        accessToken,
-        socket,
-        onNoteUpdate,
-        syncedIdentityKey,
-        resyncSignal,
-    ]);
 
-    // Keep the latest save fn and edited flag in refs so the debounce timer
-    // and unmount flush always read fresh values without resetting themselves.
-    const updateNoteRef = useRef(updateNote);
-    updateNoteRef.current = updateNote;
+        const saved = sent as T;
+        target.backoff.reset();
+        target.confirmedBody = JSON.stringify(saved.body);
+        // Words typed while the save was in flight (or still waiting in the editor's
+        // debounce) are not in what was sent.
+        const now = isShown() && target.edited ? target.bodyReadRef.current?.() : undefined;
+        if (now) target.body = now;
+        const unsent = target.edited && JSON.stringify(target.body ?? []) !== target.confirmedBody;
+        target.edited = unsent;
+        if (isShown()) {
+            setBodyState(target.body);
+            setNoteBodyEditedState(unsent);
+            setNoteBodySaved(!unsent);
+            if (unsent) setSaveRound((n) => n + 1);
+        }
+        target.onNoteUpdate?.(saved);
+    }, []);
 
-    const noteBodyEditedRef = useRef(noteBodyEdited);
-    noteBodyEditedRef.current = noteBodyEdited;
+    const updateNote = useCallback(() => save(session, false), [save, session]);
 
     // Debounced auto-save: fires AUTO_SAVE_DELAY_MS after the user's last body
     // edit. Each new edit resets the timer, so a continuously typing user is
@@ -214,21 +285,32 @@ export function useNoteEditorCore<T extends EditableNote>({
         if (!noteBodyEdited) return;
 
         const timerId = setTimeout(() => {
-            updateNoteRef.current();
+            if (!session.backoff.ready()) {
+                setSaveRound((n) => n + 1);
+                return;
+            }
+            void save(session, true);
         }, AUTO_SAVE_DELAY_MS);
 
         return () => clearTimeout(timerId);
-    }, [body, noteBodyEdited]);
+    }, [body, noteBodyEdited, saveRound, session, save]);
 
-    // Best-effort flush on unmount so navigation while a debounce is pending
-    // still persists the latest edit.
-    useEffect(() => {
-        return () => {
-            if (noteBodyEditedRef.current) {
-                updateNoteRef.current();
+    // Leaving the note (the panel unmounts, or shows another note) drops the editor's pending
+    // sync and the timer above, so what they had not sent goes now. A LAYOUT effect: its
+    // cleanup runs while the outgoing editor can still be read.
+    useLayoutEffect(
+        () => () => {
+            const next = sessionRef.current;
+            if (next !== session && next.noteKey === session.noteKey) {
+                // The same note re-seeded (a restore from history): the old text must not
+                // be written over it.
+                session.dropped = true;
+                return;
             }
-        };
-    }, []);
+            if (session.edited) void save(session, true);
+        },
+        [session, save]
+    );
 
     // Auto-clear the "saved" indicator after a short delay so it behaves
     // like a transient confirmation rather than a sticky badge.
@@ -242,30 +324,36 @@ export function useNoteEditorCore<T extends EditableNote>({
         return () => clearTimeout(timerId);
     }, [noteBodySaved]);
 
-    const handleTitleChange = useCallback((value: string) => {
-        // The overlay is itself the "the user is renaming in this panel"
-        // signal: while it is set, a title change arriving from another
-        // surface can't overwrite what is being typed. `updateNote` clears
-        // it once the rename is persisted.
-        setPendingTitle(value);
-    }, []);
+    const handleTitleChange = useCallback(
+        (value: string) => {
+            // The overlay is itself the "the user is renaming in this panel"
+            // signal: while it is set, a title change arriving from another
+            // surface can't overwrite what is being typed. `save` clears
+            // it once the rename is persisted.
+            setPendingTitle(value);
+        },
+        [setPendingTitle]
+    );
 
     const handleTitleBlur = useCallback(() => {
-        updateNote();
+        void updateNote();
     }, [updateNote]);
 
-    const handleBodyChange = useCallback((newBody: PartialBlock[]) => {
-        // Pure body sync. The edited / saved flags are intentionally
-        // NOT flipped here — `BlockNoteView.onChange` fires whenever
-        // the document changes for ANY reason (initial body load,
-        // Yjs sync, remote collaborator typing) and auto-setting
-        // `noteBodyEdited` from this path triggered spurious
-        // auto-saves the moment a note opened. The note editors flip
-        // those flags themselves, gated on `userInteractedRef` so
-        // only real local keystrokes / paste / drop / IME input
-        // count as edits.
-        setBody(newBody);
-    }, []);
+    const handleBodyChange = useCallback(
+        (newBody: PartialBlock[]) => {
+            // Pure body sync. The edited / saved flags are intentionally
+            // NOT flipped here — `BlockNoteView.onChange` fires whenever
+            // the document changes for ANY reason (initial body load,
+            // Yjs sync, remote collaborator typing) and auto-setting
+            // `noteBodyEdited` from this path triggered spurious
+            // auto-saves the moment a note opened. The note editors flip
+            // those flags themselves, gated on `userInteractedRef` so
+            // only real local keystrokes / paste / drop / IME input
+            // count as edits.
+            setBody(newBody);
+        },
+        [setBody]
+    );
 
     return {
         title,
@@ -281,5 +369,6 @@ export function useNoteEditorCore<T extends EditableNote>({
         handleTitleBlur,
         handleBodyChange,
         updateNote,
+        bodyReadRef: session.bodyReadRef,
     };
 }

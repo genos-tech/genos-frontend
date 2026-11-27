@@ -10,6 +10,7 @@ import {
     useRef,
     useState,
     type ReactNode,
+    type RefObject,
 } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { CommentsExtension } from "@blocknote/core/comments";
@@ -118,7 +119,7 @@ export type GenosNoteEditorProps = {
      *  caller passes `useNM.currentNoteMembers` directly. */
     currentNoteMembers: NoteRoleMember[];
     // Bumped by `useNoteManagement.restoreNoteVersion` after a successful
-    // restore. On change, we push `body` into the live Yjs doc via
+    // restore OF THIS NOTE (`noteResyncSignal`, MIP-2462). On change, we push `body` into the live Yjs doc via
     // `editor.replaceBlocks`, which syncs the restored content to
     // Hocuspocus / IDB persistence / all collaborators. Without this the
     // editor keeps rendering Yjs's existing CRDT state (the pre-restore
@@ -129,6 +130,9 @@ export type GenosNoteEditorProps = {
      *  default, so every note editor keeps them; the Skills editor turns it on (MIP-2209), where
      *  the body is instructions for a model and none of it has a use. */
     hideViewControls?: boolean;
+    /** Filled with "the document as it is now", so a host that saves or goes away can read the
+     *  words `setBody` has not been given yet (MIP-2454). */
+    bodyReadRef?: RefObject<(() => PartialBlock[]) | null>;
 };
 export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
     const {
@@ -148,6 +152,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
         currentNoteMembers,
         resyncSignal,
         hideViewControls = false,
+        bodyReadRef,
     } = props;
 
     // Editor vs. viewer toggle, decided below once the collab scope is
@@ -320,13 +325,15 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
     };
 
     // Push the restored body into the live Yjs doc when the parent bumps
-    // `resyncSignal`. The first render is skipped so we don't clobber the
+    // `resyncSignal`. The signal counts per note, so an instance that is handed
+    // another note only takes that note's count: a different number then is not
+    // a restore (MIP-2462). The first render is skipped so we don't clobber the
     // initial seed on mount; subsequent changes correspond to a restore
     // and trigger a Yjs replace (which syncs to Hocuspocus + IDB + all
     // other collaborators).
     const restoredBodyRef = useRef(body);
     restoredBodyRef.current = body;
-    const lastSeenResyncRef = useRef(resyncSignal);
+    const lastSeenResyncRef = useRef({ noteId: note.noteId, signal: resyncSignal });
 
     // Distinguish "real user input" from "initial sync" / "collab
     // remote update" so opening a note doesn't trigger an auto-save.
@@ -344,8 +351,9 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
         userInteractedRef.current = false;
     }, [note.noteId]);
     useEffect(() => {
-        if (lastSeenResyncRef.current === resyncSignal) return;
-        lastSeenResyncRef.current = resyncSignal;
+        const seen = lastSeenResyncRef.current;
+        lastSeenResyncRef.current = { noteId: note.noteId, signal: resyncSignal };
+        if (seen.noteId !== note.noteId || seen.signal === resyncSignal) return;
         if (!editor) return;
         const next = restoredBodyRef.current;
         // BlockNote requires at least one block; if the restored body is
@@ -364,7 +372,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
             // will pick up the seeded body via useCollaborativeBlockNote's
             // retry effect.
         }
-    }, [resyncSignal, editor]);
+    }, [resyncSignal, editor, note.noteId]);
 
     // Debounced document→parent sync. `onChange` fires on every keystroke;
     // serializing the whole document (`editor.document`) and re-rendering
@@ -385,6 +393,14 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
             startTransition(() => setBody(doc));
         }
     }, EDITOR_BODY_SYNC_DEBOUNCE_MS);
+
+    useEffect(() => {
+        if (!bodyReadRef || !editor) return;
+        bodyReadRef.current = () => editor.document as unknown as PartialBlock[];
+        return () => {
+            bodyReadRef.current = null;
+        };
+    }, [bodyReadRef, editor]);
 
     // State for modal
     const [opened, setOpened] = useState(false);

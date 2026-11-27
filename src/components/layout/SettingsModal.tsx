@@ -154,6 +154,9 @@ type Props = {
 // token focus ring. It cannot be a `NavItem` (that is a list row), so it takes
 // the same style from `navRowSx`; nothing here restates a colour or a size.
 const NAV_ROW = navRowSx();
+/** The Settings card's height on a screen tall enough for it; shorter screens fill. */
+const SETTINGS_HEIGHT = 760;
+
 const SIDEBAR_TAB_SX = {
     ...NAV_ROW,
     ...navFocusSx,
@@ -1672,7 +1675,7 @@ const AutoSyncCalendarSection = () => {
  *   4. Privacy          – analytics consent (off until accepted, MIP-1781).
  *   5. Language         – locale switcher (English / 日本語).
  *   6. Notifications    – delegates to `NotificationSettingsPanel`.
- *   7. Keyboard shortcuts – read-only reference for the global service shortcuts.
+ *   7. Keyboard shortcuts – the list; Spotlight and the letter ones can be rebound.
  *   8. Account          – data export, leaving a team, account deletion (GDPR).
  *
  * Notification state is read from `NotificationsContext` provided at the
@@ -1943,6 +1946,8 @@ export const SettingsModal = ({
         useTEM?.currentTeamId || myself?.teamId || localStorage.getItem("teamId") || "";
     return (
         <ModalFrame
+            // One height for every tab (MIP-2414): the card must not resize on a switch.
+            height={SETTINGS_HEIGHT}
             icon={<SettingsRoundedIcon />}
             open={open}
             size="xl"

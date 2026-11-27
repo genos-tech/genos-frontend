@@ -30,6 +30,7 @@ interface ChatNoteEditorProps {
      *  editor and viewer modes based on the current user's role. */
     currentNoteMembers: NoteRoleMember[];
     resyncSignal?: number | string;
+    bodyReadRef?: React.RefObject<(() => PartialBlock[]) | null>;
 }
 
 export const ChatNoteEditor = ({
@@ -51,6 +52,7 @@ export const ChatNoteEditor = ({
     useUISM,
     currentNoteMembers,
     resyncSignal,
+    bodyReadRef,
 }: ChatNoteEditorProps) => {
     return (
         <>
@@ -60,6 +62,7 @@ export const ChatNoteEditor = ({
 
             <BnChatNoteEditor
                 body={body}
+                bodyReadRef={bodyReadRef}
                 currentChatNote={currentChatNote}
                 currentNoteMembers={currentNoteMembers}
                 myself={myself}

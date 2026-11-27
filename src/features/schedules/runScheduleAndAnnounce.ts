@@ -3,6 +3,7 @@ import { fmt, getMessages } from "../../i18n";
 import { requestAppNavigate } from "../../services/appNavigate";
 import { runScheduleNow } from "../../services/schedules";
 import { requestInboxResync } from "../inbox/inboxResyncEvent";
+import { followRun } from "./followRun";
 
 type RunResult = Awaited<ReturnType<typeof runScheduleNow>>;
 
@@ -33,6 +34,9 @@ type RunResult = Awaited<ReturnType<typeof runScheduleNow>>;
  * went instead of offering the Inbox.
  *
  * Returns the raw result so the dialog can still draw its own notice.
+ *
+ * A slow run is answered `started` (MIP-2457): the toast says so, and `followRun` waits for the
+ * run and announces how it went through this same path.
  */
 export const runScheduleAndAnnounce = async (
     accessToken: string | null,
@@ -41,7 +45,10 @@ export const runScheduleAndAnnounce = async (
     stillShown: () => boolean = () => false,
     postedIn: string | null = null
 ): Promise<RunResult> =>
-    announceRunResult(await runScheduleNow(accessToken, teamId, id), id, stillShown, postedIn);
+    announceRunResult(await runScheduleNow(accessToken, teamId, id), id, stillShown, postedIn, {
+        accessToken,
+        teamId,
+    });
 
 /**
  * The announcing half of `runScheduleAndAnnounce`, for a run that already happened: "Run right
@@ -52,10 +59,29 @@ export const announceRunResult = async (
     res: RunResult,
     id: string,
     stillShown: () => boolean = () => false,
-    postedIn: string | null = null
+    postedIn: string | null = null,
+    /** Whose run it is, so a `started` one can be followed to its end. */
+    from?: { accessToken: string | null; teamId: string }
 ): Promise<RunResult> => {
     const s = getMessages().settings.schedules;
     const toastId = `schedule-run-${id}`;
+
+    if (res.ok && res.outcome.status === "started") {
+        toast.neutral(postedIn ? fmt(s.runStartedChat, { chat: postedIn }) : s.runStarted, {
+            id: toastId,
+        });
+        if (from) {
+            followRun({
+                ...from,
+                id,
+                startedAt: res.outcome.startedAt,
+                // The dialog that started it may be long gone: always say how it ended.
+                onEnd: (outcome) =>
+                    void announceRunResult({ ok: true, outcome }, id, () => false, postedIn),
+            });
+        }
+        return res;
+    }
 
     if (res.ok && res.outcome.status === "ok" && postedIn) {
         toast.success(fmt(s.reportPosted, { chat: postedIn }), { id: toastId });

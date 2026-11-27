@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    Dispatch,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 
 import { toast } from "../../components/ui/feedback/toastStore";
 import { NoteService } from "../../db/services/note.service";
@@ -39,6 +47,7 @@ import { updateNoteRole } from "../../features/notes/common/services/updateNoteR
 import { folderChain } from "../../features/notes/common/utils/folderChain";
 import { emitNoteDeleted } from "../../features/notes/common/utils/noteDeleted";
 import { isNotePaneVisible } from "../../features/notes/common/utils/notePaneVisibility";
+import { bumpNoteResync, NoteResyncCounts } from "../../features/notes/common/utils/noteResync";
 import {
     bucketFromNoteType,
     noteTypeFromBucket,
@@ -201,18 +210,18 @@ export interface NoteManagementState {
 
     // Chat notes
     currentChatNote: ChatNoteProps | null;
-    setCurrentChatNote: (note: ChatNoteProps | null) => void;
+    setCurrentChatNote: Dispatch<SetStateAction<ChatNoteProps | null>>;
     chatNoteMeta: ChatNoteMetaProps[];
-    setChatNoteMeta: (meta: ChatNoteMetaProps[]) => void;
+    setChatNoteMeta: Dispatch<SetStateAction<ChatNoteMetaProps[]>>;
     currentChatNoteChain: ChatNoteMetaTreeNode[] | undefined;
     setCurrentChatNoteChain: (chain: ChatNoteMetaTreeNode[]) => void;
     getChatNoteMeta: () => Promise<boolean>;
 
     // Task notes
     currentTaskNote: TaskNoteProps | null;
-    setCurrentTaskNote: (note: TaskNoteProps | null) => void;
+    setCurrentTaskNote: Dispatch<SetStateAction<TaskNoteProps | null>>;
     taskNoteMeta: TaskNoteMetaProps[];
-    setTaskNoteMeta: (meta: TaskNoteMetaProps[]) => void;
+    setTaskNoteMeta: Dispatch<SetStateAction<TaskNoteMetaProps[]>>;
     currentTaskNoteChain: TaskNoteMetaTreeNode[] | undefined;
     setCurrentTaskNoteChain: (chain: TaskNoteMetaTreeNode[]) => void;
     getTaskNoteMeta: () => Promise<boolean>;
@@ -310,9 +319,10 @@ export interface NoteManagementState {
     restoreNoteVersion: (noteType: number, noteId: number, versionNo: number) => Promise<boolean>;
     // Bumped by `restoreNoteVersion` to force `useNoteEditorCore`'s
     // identity-based resync branch to fire even though the note's
-    // noteType/noteId didn't change. Consumers pass this through as the
-    // `resyncSignal` prop on the editor hook.
-    noteResyncNonce: number;
+    // noteType/noteId didn't change. Counted PER NOTE: consumers pass
+    // `noteResyncSignal(noteResync, note)` as the `resyncSignal` prop of
+    // that note's editor hook and editor.
+    noteResync: NoteResyncCounts;
 
     // Shared-with-me personal notes (drives the noteType=4 sidebar bucket)
     // Team Notes — the shared "general" space. Notes here are personal
@@ -561,11 +571,11 @@ export const useNoteManagement = (
     // Which note `currentNoteVersions` belongs to, so a failed refresh never keeps another note's list.
     const versionsOfRef = useRef<string | null>(null);
 
-    // Monotonic counter that forces `useNoteEditorCore` to re-seed local
-    // `title`/`body` from `currentNote` even when the note identity hasn't
-    // changed — used after a restore, where noteType/noteId stay the same
-    // but the body is rewritten under us.
-    const [noteResyncNonce, setNoteResyncNonce] = useState<number>(0);
+    // Monotonic per-note counters that force `useNoteEditorCore` to re-seed
+    // local `title`/`body` from `currentNote` even when the note identity
+    // hasn't changed — used after a restore, where noteType/noteId stay the
+    // same but the body is rewritten under us.
+    const [noteResync, setNoteResync] = useState<NoteResyncCounts>({});
 
     // Shared-with-me personal notes (drives the noteType=4 sidebar bucket)
     const [teamNoteFolders, setTeamNoteFolders] = useState<TeamNoteFolderProps[]>([]);
@@ -1279,7 +1289,7 @@ export const useNoteManagement = (
     // bypassing, same as the version-restore flow), write it through the
     // caches, and push it into the Yjs doc via a short headless collab
     // session. If that push fails (collab down) and the note is the one
-    // currently open, fall back to the restore flow's resync nonce so the
+    // currently open, fall back to the restore flow's resync signal so the
     // open editor writes the fresh body into Yjs itself on reconnect.
     //
     // The ref never carries the body, only the id: the note is ALWAYS
@@ -1338,7 +1348,7 @@ export const useNoteManagement = (
         });
         if (status !== "applied") {
             if (isCurrent) {
-                setNoteResyncNonce((n) => n + 1);
+                setNoteResync((counts) => bumpNoteResync(counts, typeCode, ref.note_id));
             } else {
                 console.warn(
                     "noteChanged: Yjs apply failed for closed note; REST body saved, " +
@@ -2015,11 +2025,11 @@ export const useNoteManagement = (
                 }
             }
 
-            // Only bump the resync nonce when we have fresh body data to
+            // Only bump the resync signal when we have fresh body data to
             // push into Yjs. Bumping on a fetch failure would replay the
             // stale pre-restore `currentNote.body` into the collab doc
             // and desync the client from the master row.
-            setNoteResyncNonce((n) => n + 1);
+            setNoteResync((counts) => bumpNoteResync(counts, backendNoteType, noteId));
         }
 
         // Refresh the version list so the new restore marker shows up.
@@ -2849,7 +2859,7 @@ export const useNoteManagement = (
         loadNoteVersionsFor,
         bumpNoteVersionsHead,
         restoreNoteVersion,
-        noteResyncNonce,
+        noteResync,
 
         // Shared-with-me personal notes
         patchPersonalNoteMeta,

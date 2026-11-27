@@ -42,7 +42,6 @@ import { UserProfileAbout } from "./sub/UserProfileAbout";
 import { UserProfileLocalTime } from "./sub/UserProfileLocalTime";
 import { UserProfileLocation } from "./sub/UserProfileLocation";
 import { UserProfileLocationShare } from "./sub/UserProfileLocationShare";
-import { UserProfilePhone } from "./sub/UserProfilePhone";
 import { UserProfileRole } from "./sub/UserProfileRole";
 import { UserProfileStatus } from "./sub/UserProfileStatus";
 
@@ -497,11 +496,6 @@ export const UserProfile = (props: UserProfileProps) => {
                                     >
                                         {profileUser?.userEmail}
                                     </Typography>
-                                    <UserProfilePhone
-                                        myself={myself}
-                                        setMyself={setMyself}
-                                        user={profileUser}
-                                    />
                                 </Stack>
 
                                 {/* Where they are, what time it is

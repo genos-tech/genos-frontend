@@ -21,6 +21,7 @@ export interface NoteEditorActions {
     handleTitleBlur: () => void;
     handleBodyChange: (newBody: PartialBlock[]) => void;
     updateNote: () => Promise<void>;
+    bodyReadRef: React.RefObject<(() => PartialBlock[]) | null>;
 }
 
 export interface NoteEditorProps {

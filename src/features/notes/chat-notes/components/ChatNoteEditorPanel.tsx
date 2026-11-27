@@ -15,6 +15,7 @@ import { HtmlNoteView } from "../../common/components/HtmlNoteView";
 import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
 import { NoteLoadState } from "../../common/components/NoteLoadState";
 import { isHtmlNote } from "../../common/utils/htmlNote";
+import { noteResyncSignal } from "../../common/utils/noteResync";
 import { ChatNoteEditor } from "./ChatNoteEditor";
 
 interface ChatNoteEditorPanelProps {
@@ -63,18 +64,18 @@ export const ChatNoteEditorPanel = ({
         myself,
         accessToken,
         socket,
-        resyncSignal: useNM.noteResyncNonce,
+        resyncSignal: noteResyncSignal(useNM.noteResync, note),
         onNoteUpdate: (updatedNote: ChatNoteProps) => {
             upsertNoteCache(updatedNote);
             // Only sync the legacy `currentChatNote` mirror when the
             // updated note is the active one — guards against a hidden
             // panel's socket-driven update clobbering the active state.
-            if (
-                useNM.currentChatNote?.noteType === updatedNote.noteType &&
-                useNM.currentChatNote?.noteId === updatedNote.noteId
-            ) {
-                useNM.setCurrentChatNote(updatedNote);
-            }
+            useNM.setCurrentChatNote((current) =>
+                current?.noteType === updatedNote.noteType &&
+                current?.noteId === updatedNote.noteId
+                    ? updatedNote
+                    : current
+            );
 
             useNM.tabsApi.updateTabTitle(updatedNote.noteId, "chat", updatedNote.title);
 
@@ -85,8 +86,10 @@ export const ChatNoteEditorPanel = ({
             // chat anchoring) after a sidebar move. Structural fields
             // stay authoritative from the meta list. (Same pattern as
             // TaskNoteEditorPanel.)
-            useNM.setChatNoteMeta(
-                useNM.chatNoteMeta.map((item) =>
+            // From the list as it is NOW: a save can land long after this render
+            // (MIP-2454).
+            useNM.setChatNoteMeta((rows) =>
+                rows.map((item) =>
                     item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
                         ? {
                               ...item,
@@ -157,12 +160,13 @@ export const ChatNoteEditorPanel = ({
         >
             <ChatNoteEditor
                 body={chatNoteEditor.body}
+                bodyReadRef={chatNoteEditor.bodyReadRef}
                 currentChatNote={note}
                 currentChatNoteTitle={chatNoteEditor.currentChatNoteTitle}
                 currentNoteMembers={useNM.currentNoteMembers}
                 myself={myself}
                 noteBodySaved={chatNoteEditor.noteBodySaved}
-                resyncSignal={useNM.noteResyncNonce}
+                resyncSignal={noteResyncSignal(useNM.noteResync, note)}
                 setMyself={setMyself}
                 setNoteBodyEdited={chatNoteEditor.setNoteBodyEdited}
                 setNoteBodySaved={chatNoteEditor.setNoteBodySaved}

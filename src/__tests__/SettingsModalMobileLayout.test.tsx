@@ -151,6 +151,21 @@ describe("SettingsModal frame (MIP-1126 batch 1)", () => {
         expect(css).not.toContain("--Card-radius: var(--joy-radius-xl");
     });
 
+    it("has one fixed height, within the screen, for every tab (MIP-2414)", () => {
+        renderModal();
+        const dialog = screen.getByRole("dialog");
+        const css = cssOf(dialog);
+        // `height`, not only `max-height`: a short tab must not shrink the card.
+        expect(css).toMatch(/[{;]\s*height: min\(760px, calc\(100dvh/);
+        // On a phone it stops above the bottom tab bar.
+        expect(css).toMatch(
+            /[{;]\s*height: min\(760px, calc\(100dvh - max\(var\(--mobile-bottom-inset/
+        );
+        const before = dialog.className;
+        for (const tab of screen.getAllByRole("tab").slice(0, 3)) fireEvent.click(tab);
+        expect(screen.getByRole("dialog").className).toBe(before);
+    });
+
     it("does not leak a click inside to the component that opened it", () => {
         const onClick = vi.fn();
         render(
