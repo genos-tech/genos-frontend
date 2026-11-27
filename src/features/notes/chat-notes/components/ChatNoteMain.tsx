@@ -100,7 +100,9 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
             // Only fires from the chat-page editor — notes-home update
             // logic lives in `ChatNoteEditorPanel.onNoteUpdate`.
             upsertNoteCache(updatedNote);
-            useNM.chatPanelApi.setNote(updatedNote);
+            // `updateNote`, not `setNote`: a save can land after the panel moved on to
+            // another note or closed this one (MIP-2454).
+            useNM.chatPanelApi.updateNote(updatedNote);
             // MERGE into the existing meta row — never rebuild it, so
             // stale structural fields from this panel's note snapshot
             // (parentNoteId / chat anchoring) can't clobber a sidebar
@@ -377,6 +379,7 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                             >
                                 <ChatNoteEditor
                                     body={chatNoteEditor.body}
+                                    bodyReadRef={chatNoteEditor.bodyReadRef}
                                     currentChatNote={activeChatNote}
                                     currentChatNoteTitle={chatNoteEditor.currentChatNoteTitle}
                                     currentNoteMembers={useNM.currentNoteMembers}

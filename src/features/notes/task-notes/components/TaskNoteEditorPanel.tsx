@@ -70,6 +70,7 @@ export const TaskNoteEditorPanel = ({
         currentTaskNoteTitle,
         handleTitleChange,
         handleTitleBlur,
+        bodyReadRef,
     } = useNoteAutoSave({
         currentTaskNote: note,
         myself,
@@ -162,6 +163,7 @@ export const TaskNoteEditorPanel = ({
                 opens — see `noteBodySaved` prop below. */}
             <BnTaskNoteEditor
                 body={body || []}
+                bodyReadRef={bodyReadRef}
                 currentNoteMembers={useNM.currentNoteMembers}
                 currentTaskNote={note}
                 myself={myself}

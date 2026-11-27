@@ -22,6 +22,7 @@ export interface ChatNoteEditorActions {
     handleTitleBlur: () => void;
     handleBodyChange: (newBody: PartialBlock[]) => void;
     updateNote: () => Promise<void>;
+    bodyReadRef: React.RefObject<(() => PartialBlock[]) | null>;
 }
 
 export interface ChatNoteEditorProps {
@@ -71,5 +72,6 @@ export const useChatNoteEditor = ({
         setNoteBodyEdited: core.setNoteBodyEdited,
         setNoteBodySaved: core.setNoteBodySaved,
         updateNote: core.updateNote,
+        bodyReadRef: core.bodyReadRef,
     };
 };

@@ -28,6 +28,7 @@ interface UseNoteAutoSaveReturn {
     handleTitleBlur: () => void;
     handleBodyChange: (newBody: PartialBlock[]) => void;
     updateNote: () => Promise<void>;
+    bodyReadRef: React.RefObject<(() => PartialBlock[]) | null>;
 }
 
 /**
@@ -72,5 +73,6 @@ export const useNoteAutoSave = ({
         handleTitleBlur: core.handleTitleBlur,
         handleBodyChange: core.handleBodyChange,
         updateNote: core.updateNote,
+        bodyReadRef: core.bodyReadRef,
     };
 };

@@ -157,6 +157,7 @@ export const ChatNoteEditorPanel = ({
         >
             <ChatNoteEditor
                 body={chatNoteEditor.body}
+                bodyReadRef={chatNoteEditor.bodyReadRef}
                 currentChatNote={note}
                 currentChatNoteTitle={chatNoteEditor.currentChatNoteTitle}
                 currentNoteMembers={useNM.currentNoteMembers}
