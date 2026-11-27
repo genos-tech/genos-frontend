@@ -517,6 +517,7 @@ export const es: DeepPartial<Messages> = {
             limitReached:
                 "Has alcanzado un límite de tu plan. Consulta Configuración → Plan y uso.",
             messageSendFailed: "No se pudo enviar tu mensaje. Inténtalo de nuevo.",
+            noteNotSaved: "No se pudieron guardar tus últimos cambios en esta nota.",
             idleReload: "Actualizando tras un periodo de inactividad…",
         },
         features: {

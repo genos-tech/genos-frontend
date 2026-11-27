@@ -9,6 +9,7 @@
  * "remember my email" on the sign-in form, so keeping it is their opt-in.
  */
 import { DatabaseUtils } from "../db/utils/database";
+import { UNSAVED_NOTE_BODY_PREFIX } from "../features/notes/common/services/unsavedNoteBody";
 import {
     stopKeepingUnsavedBodies,
     UNSAVED_TASK_BODY_PREFIX,
@@ -20,7 +21,12 @@ const EXACT_KEYS = ["chatThreadMemory", "genos.deviceId"];
 
 // Prefixes: per-team history buckets, and the Spotlight conversation
 // ("spotlight:session:v1:<teamId>", up to 10 AI turns per team).
-const KEY_PREFIXES = ["genos.history.v1.", "spotlight:session:v1:", UNSAVED_TASK_BODY_PREFIX];
+const KEY_PREFIXES = [
+    "genos.history.v1.",
+    "spotlight:session:v1:",
+    UNSAVED_TASK_BODY_PREFIX,
+    UNSAVED_NOTE_BODY_PREFIX,
+];
 
 export const clearSignOutLocalStorage = (): void => {
     stopKeepingUnsavedBodies();

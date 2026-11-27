@@ -1019,6 +1019,7 @@ export const zh: DeepPartial<Messages> = {
             limitReached: "你已达到套餐限制。请前往“设置 → 套餐与用量”查看详情。",
             actionFailed: "操作无法完成，请重试。",
             messageSendFailed: "消息发送失败，请重试。",
+            noteNotSaved: "无法保存您对此笔记的最新更改。",
             idleReload: "长时间无操作，正在刷新页面…",
         },
         serviceSwitch: {

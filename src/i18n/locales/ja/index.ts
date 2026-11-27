@@ -1078,6 +1078,7 @@ export const ja: DeepPartial<Messages> = {
                 "プランの上限に達しました。詳細は 設定 → プランと使用状況 をご確認ください。",
             actionFailed: "操作を完了できませんでした。もう一度お試しください。",
             messageSendFailed: "メッセージを送信できませんでした。もう一度お試しください。",
+            noteNotSaved: "このノートの最新の変更を保存できませんでした。",
             idleReload: "一定時間操作がなかったため、ページを更新しています…",
         },
         serviceSwitch: {
