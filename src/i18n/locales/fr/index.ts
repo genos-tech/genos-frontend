@@ -4925,7 +4925,7 @@ export const fr: DeepPartial<Messages> = {
         },
         schedules: {
             title: "Planifications Genos Assist",
-            blurb: "Genos vous prépare un rapport aux heures que vous choisissez ; il arrive dans votre boîte de réception.",
+            blurb: "Genos les exécute aux heures que vous choisissez : un rapport arrive dans votre boîte de réception ou dans une discussion, et votre message est envoyé dans une discussion.",
             loading: "Chargement de vos planifications…",
             loadFailed: "Impossible de charger vos planifications.",
             retry: "Réessayer",

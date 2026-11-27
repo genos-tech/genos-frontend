@@ -93,7 +93,7 @@ describe("SchedulesSection list", () => {
         const r = await row();
         expect(
             screen.getByText(
-                "Genos prepares a report for you at the times you choose; it arrives in your Inbox."
+                "Genos runs these at the times you choose. A report goes to your Inbox or a chat, and a message you wrote is sent to a chat."
             )
         ).toBeTruthy();
         expect(within(r).getByText("Morning plan")).toBeTruthy();
