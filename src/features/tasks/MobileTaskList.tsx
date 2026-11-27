@@ -13,6 +13,7 @@ import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../i18n";
 import { useSyncFailure, useTasksSyncFailure } from "../../services/syncStatus";
 import { TaskTableProps } from "../../types/tasks";
+import { isFinishedStatus } from "./meta/taskStatuses";
 
 type MobileTaskListProps = {
     usePM: ProjectManagementState;
@@ -42,7 +43,7 @@ export const MobileTaskList = ({ usePM, useTM }: MobileTaskListProps) => {
                 t.projectId === projectId &&
                 t.parentTaskId == null &&
                 effectiveStatusOf(t, verdicts) !== "Deleted" &&
-                effectiveStatusOf(t, verdicts) !== "Closed"
+                !isFinishedStatus(effectiveStatusOf(t, verdicts))
         );
     }, [useTM.allTasks, projectId]);
 

@@ -1,5 +1,5 @@
 import { TaskTableProps } from "../../../types/tasks";
-import { WORKFLOW_STATUS_NAMES } from "../meta/taskStatuses";
+import { isUncountedStatus, WORKFLOW_STATUS_NAMES } from "../meta/taskStatuses";
 import { effectiveStatusOf, selectAncestorVerdicts } from "./closedByAncestor";
 
 /**
@@ -28,7 +28,7 @@ const isChipStatus = (s: string): s is MilestoneProgressStatus =>
     (MILESTONE_PROGRESS_ORDER as readonly string[]).includes(s);
 
 /**
- * `statuses` holds one status per task of the milestone. A Deleted task is not
+ * `statuses` holds one status per task of the milestone. A Deleted or Rejected task is not
  * counted at all (the sidebar's `tasksTotal` leaves it out too, so the two
  * numbers agree). An empty, missing or unknown status counts as `Other`.
  * Entries come in app order, `Other` last, and only for a count above zero.
@@ -42,11 +42,12 @@ export const countMilestoneTaskStatuses = (
         Blocked: 0,
         Pending: 0,
         Closed: 0,
+        Rejected: 0,
         Other: 0,
     };
     let total = 0;
     for (const status of statuses) {
-        if (status === "Deleted") continue;
+        if (isUncountedStatus(status)) continue;
         total += 1;
         counts[status && isChipStatus(status) ? status : "Other"] += 1;
     }

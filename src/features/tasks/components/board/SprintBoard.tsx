@@ -37,7 +37,7 @@ import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { SprintBoardColumn } from "./SprintBoardColumn";
-import { COLUMNS, getBoardContainerStyles } from "./sprintBoardHelpers";
+import { COLUMNS, getBoardContainerStyles, visibleColumns } from "./sprintBoardHelpers";
 import { SprintBoardQuickAddCard } from "./SprintBoardQuickAddCard";
 import { SprintBoardSkeleton } from "./SprintBoardSkeleton";
 import { useBoardDragScrollLock } from "./useBoardDragScrollLock";
@@ -175,7 +175,9 @@ export const SprintBoard = (props: SprintBoardProps) => {
         blocked: [],
         pending: [],
         closed: [],
+        rejected: [],
     });
+    const shownColumns = visibleColumns(boardTasks);
 
     // Organize the board's cards into status columns. The card SET is chosen
     // by the depth model in `buildBoardDisplaySet` (pure + unit-tested — see
@@ -205,6 +207,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
         organized.blocked = sortColumn(organized.blocked);
         organized.pending = sortColumn(organized.pending);
         organized.closed = sortColumn(organized.closed);
+        organized.rejected = sortColumn(organized.rejected);
 
         setBoardTasks(organized);
     }, [
@@ -699,9 +702,9 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     }
                     skeleton={
                         <SprintBoardSkeleton
-                            containerStyle={getBoardContainerStyles(mode)}
+                            containerStyle={getBoardContainerStyles(mode, shownColumns.length)}
                             label={t.tasks.table.loadingTasks}
-                            columns={COLUMNS.map((column) => ({
+                            columns={shownColumns.map((column) => ({
                                 id: column.id,
                                 title: t.tasks.board[column.titleKey],
                             }))}
@@ -720,9 +723,9 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         <div
                             ref={boardNavRef}
                             className={`custom-scrollbar-${mode === "dark" ? "dark" : "light"}`}
-                            style={getBoardContainerStyles(mode)}
+                            style={getBoardContainerStyles(mode, shownColumns.length)}
                         >
-                            {COLUMNS.map((column) => {
+                            {shownColumns.map((column) => {
                                 // Pending state lights up the just-clicked
                                 // card; the debounced setters catch the
                                 // real `useTM.currentPreview*` state up

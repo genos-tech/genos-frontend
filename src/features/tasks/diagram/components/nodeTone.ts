@@ -6,6 +6,7 @@
 import { fmt, useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import type { DueTone } from "../../components/card";
+import { isFinishedStatus } from "../../meta/taskStatuses";
 import type { ScheduleHealthTone, ScheduleStatus, ScheduleTone } from "../utils/scheduleStatus";
 
 /** A schedule tone as the family's due tone (so the node's date reads like the
@@ -24,7 +25,7 @@ export const useScheduleLabel = (
     const days = schedule.daysUntilDue;
     if (days == null) return null;
     const s = t.tasks.diagram.schedule;
-    if (status?.toLowerCase() === "closed") return s.closed;
+    if (isFinishedStatus(status)) return s.closed;
     if (days < 0) return fmt(s.overdueDays, { count: -days });
     if (days === 0) return s.dueToday;
     if (days === 1) return s.dueTomorrow;

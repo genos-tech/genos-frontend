@@ -8,6 +8,7 @@ import {
 } from "../../../../../components/ui/dashboard";
 import { fmt, useTranslation } from "../../../../../i18n";
 import { g, type } from "../../../../../theme/tokens";
+import { isFinishedStatus } from "../../../meta/taskStatuses";
 import { STATUS_TONE, StatusName } from "../../../meta/taskTone";
 import type { Milestone } from "../../../sprint-milestone/types";
 import type { EffectiveTask } from "../../../utils/effectiveTasks";
@@ -45,7 +46,7 @@ export const MilestonesAtRiskCard = ({
     const risky = useMemo(() => {
         const now = new Date();
         return milestones
-            .filter((m) => !m.isDeleted && m.status !== "Closed" && m.status !== "Deleted")
+            .filter((m) => !m.isDeleted && !isFinishedStatus(m.status) && m.status !== "Deleted")
             .map((milestone) => ({
                 milestone,
                 summary: summarizeMilestoneProgress(milestone, effectiveTasks, now),

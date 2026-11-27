@@ -117,7 +117,7 @@ export const buildBoardDisplaySet = ({
 };
 
 /** The board's status columns, in the order they are drawn. */
-export type BoardColumnKey = "open" | "wip" | "blocked" | "pending" | "closed";
+export type BoardColumnKey = "open" | "wip" | "blocked" | "pending" | "closed" | "rejected";
 
 /**
  * Sort the board's cards into its status columns by their EFFECTIVE status: a card under a
@@ -136,6 +136,7 @@ export const bucketBoardColumns = (
         blocked: [],
         pending: [],
         closed: [],
+        rejected: [],
     };
     const verdicts = selectAncestorVerdicts(allTasks);
     for (const task of display) {

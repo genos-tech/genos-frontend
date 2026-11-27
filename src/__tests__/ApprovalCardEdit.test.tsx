@@ -425,6 +425,7 @@ describe("a choice", () => {
             "Blocked",
             "Pending",
             "Closed",
+            "Rejected",
         ]);
         const effort = mount({
             tool: "create_task",

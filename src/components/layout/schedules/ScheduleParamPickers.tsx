@@ -46,6 +46,7 @@ import {
     ProjectIdentityRow,
 } from "../../../features/tasks/components/ProjectIdentityRow";
 import { ProjectTagChip } from "../../../features/tasks/components/ProjectTagChip";
+import { isFinishedStatus } from "../../../features/tasks/meta/taskStatuses";
 import { toneCss } from "../../../features/tasks/meta/taskTone";
 import type { Milestone } from "../../../features/tasks/sprint-milestone/types";
 import { isOverdueDate } from "../../../features/tasks/utils/dueWindow";
@@ -179,7 +180,7 @@ const MilestoneOptionRow = ({ milestone }: { milestone: Milestone }) => {
     const { t, locale } = useTranslation();
     const s = t.settings.schedules;
     const due = formatMonthDay(milestone.dueDate, locale);
-    const overdue = milestone.status !== "Closed" && isOverdueDate(milestone.dueDate);
+    const overdue = !isFinishedStatus(milestone.status) && isOverdueDate(milestone.dueDate);
     const total = milestone.tasksTotal ?? 0;
     const closed = milestone.tasksClosed ?? 0;
     const meta = {
@@ -246,7 +247,7 @@ export const MilestoneParamSelect = ({ value, onChange }: Props) => {
     // A finished milestone is not worth a report, but one that is already chosen stays listed.
     const options: MilestoneOption[] = groups.flatMap((g) =>
         g.milestones
-            .filter((m) => m.status !== "Closed" || String(m.milestoneId) === value)
+            .filter((m) => !isFinishedStatus(m.status) || String(m.milestoneId) === value)
             .map((m) => ({
                 id: String(m.milestoneId),
                 title: m.title,

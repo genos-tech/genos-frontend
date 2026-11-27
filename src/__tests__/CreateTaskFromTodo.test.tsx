@@ -266,6 +266,7 @@ describe("ModalCreateTaskFromTodo — milestone", () => {
             "Closed",
             "Open",
             "Pending",
+            "Rejected",
             "WIP",
         ]);
     });

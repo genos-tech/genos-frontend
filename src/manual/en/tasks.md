@@ -24,7 +24,8 @@ A project holds tasks, milestones and sprints, and it has its own chat. Create o
 
 ## Tasks
 
-- A task has a status (Open, WIP, Pending, Blocked or Closed), a priority, an effort level, an assignee, optional collaborators, start and due dates, tags and a description. Collaborators must be members of the project.
+- A task has a status (Open, WIP, Pending, Blocked, Closed or Rejected), a priority, an effort level, an assignee, optional collaborators, start and due dates, tags and a description. Collaborators must be members of the project.
+- **Rejected** means a task will not be done. It is finished but not completed: it leaves the progress bar, its sub-tasks read as rejected unless they are already closed, and it no longer blocks other tasks.
 - A task has four tabs: Comments, Notes, Attachments and Activity. Activity records every change to the task, and you can restore an earlier description from it.
 - **Sub-tasks:** break work down with sub-tasks. A task's page shows the sub-tasks under it.
 - **Dependencies:** under Dependencies, mark which tasks a task is **Blocked by** and which it is **Blocking**. Tasks in other projects of the same team can be linked too. While a task has an open blocker, Genos sets it to Blocked. When the last blocker closes, it returns to Open. This only happens if its status is still Blocked; if you set another status yourself, Genos leaves it alone.

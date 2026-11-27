@@ -1,9 +1,10 @@
 import { TaskTableProps } from "../../../../types/tasks";
+import { isFinishedStatus } from "../../meta/taskStatuses";
 import { isUnderDeletedAncestor, selectAncestorVerdicts } from "../../utils/closedByAncestor";
 
 const statusLower = (t: TaskTableProps): string => (t.status ?? "").toLowerCase();
 const isDeleted = (t: TaskTableProps): boolean => statusLower(t) === "deleted";
-const isClosed = (t: TaskTableProps): boolean => statusLower(t) === "closed";
+const isClosed = (t: TaskTableProps): boolean => isFinishedStatus(statusLower(t));
 
 /**
  * Which internal task ids the diagram should hide, given the `hideClosed`

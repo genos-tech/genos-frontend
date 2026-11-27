@@ -102,9 +102,10 @@ describe("countMilestoneTaskStatuses (MIP-1017)", () => {
             "Blocked",
             "Pending",
             "Closed",
+            "Rejected",
         ]);
         // The task status list (table, filters) is the same sequence with Deleted last.
-        expect(taskStatuses.map((s) => s.status).slice(0, 5)).toEqual([
+        expect(taskStatuses.map((s) => s.status).slice(0, 6)).toEqual([
             ...MILESTONE_PROGRESS_ORDER,
         ]);
         for (const s of MILESTONE_PROGRESS_ORDER) {

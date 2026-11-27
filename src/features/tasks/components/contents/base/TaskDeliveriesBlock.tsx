@@ -18,7 +18,7 @@ const stateColor = (state: TaskDeliveryState): string =>
 
 // Same rule as `get_my_focus_tasks(delivery="merged_pr")`: the work is
 // in, the task isn't done. Deleted tasks are out of scope there too.
-const INACTIVE_STATUSES = new Set(["Closed", "Deleted"]);
+const INACTIVE_STATUSES = new Set(["Closed", "Rejected", "Deleted"]);
 
 type Props = {
     deliveries: TaskDeliveryProps[];

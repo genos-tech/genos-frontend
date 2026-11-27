@@ -31,7 +31,7 @@ export type ProjectSprintsResponse = {
     today: string;
 };
 
-export type MilestoneStatus = "Open" | "WIP" | "Pending" | "Closed" | "Deleted";
+export type MilestoneStatus = "Open" | "WIP" | "Pending" | "Closed" | "Rejected" | "Deleted";
 
 export type MilestoneAssignee = {
     userId: number | string | null;

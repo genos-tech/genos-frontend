@@ -1,4 +1,5 @@
 import { calendarDaysUntil } from "../../../utils/calendarDate";
+import { isFinishedStatus } from "../meta/taskStatuses";
 import type { Sprint } from "../sprint-milestone/types";
 import { isDueWithin, isOverdueDate } from "./dueWindow";
 import { EffectiveTask } from "./effectiveTasks";
@@ -121,7 +122,7 @@ export const summarizeMilestoneProgress = (
     const idleDays =
         idleFrom == null ? null : Math.max(0, Math.floor((now.getTime() - idleFrom) / DAY_MS));
 
-    const isOpenMilestone = milestone.status !== "Closed" && milestone.status !== "Deleted";
+    const isOpenMilestone = !isFinishedStatus(milestone.status) && milestone.status !== "Deleted";
 
     return {
         milestoneId: milestone.milestoneId,

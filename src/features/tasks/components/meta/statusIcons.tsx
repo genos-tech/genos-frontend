@@ -1,6 +1,7 @@
 import BlockRoundedIcon from "@mui/icons-material/BlockRounded";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import DoNotDisturbOnOutlinedIcon from "@mui/icons-material/DoNotDisturbOnOutlined";
 import HorizontalRuleRoundedIcon from "@mui/icons-material/HorizontalRuleRounded";
 import PendingActionsRoundedIcon from "@mui/icons-material/PendingActionsRounded";
 import PlayCircleOutlineRoundedIcon from "@mui/icons-material/PlayCircleOutlineRounded";
@@ -21,6 +22,8 @@ export const getStatusIcon = (status: string, size = 14) => {
             return <PendingActionsRoundedIcon sx={sx} />;
         case "Closed":
             return <CheckCircleOutlineRoundedIcon sx={sx} />;
+        case "Rejected":
+            return <DoNotDisturbOnOutlinedIcon sx={sx} />;
         case "Deleted":
             return <DeleteOutlineRoundedIcon sx={sx} />;
         default:

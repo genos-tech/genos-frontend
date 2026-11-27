@@ -1,4 +1,5 @@
 import { TaskTableProps } from "../../../types/tasks";
+import { isUncountedStatus } from "../meta/taskStatuses";
 import { Milestone } from "../sprint-milestone/types";
 import { effectiveStatusOf, selectAncestorVerdicts } from "./closedByAncestor";
 
@@ -17,7 +18,7 @@ type CountedTask = Pick<
  * dragged to Closed, until a reload. The loaded task rows are always current,
  * so count those instead, the same way the milestone preview does for its
  * status chips: by `milestoneId`, never the milestone's own backing row, and
- * not Deleted tasks. A task under a Closed ancestor (a parent at any depth, or
+ * not Deleted or Rejected tasks. A task under a Closed ancestor (a parent at any depth, or
  * the milestone itself) counts as Closed and one under a Deleted ancestor is not
  * counted, whatever its own status says (MIP-1389): a Closed milestone reads N/N.
  *
@@ -35,7 +36,7 @@ export const milestonesByTaskIdWithLiveProgress = (
     for (const task of tasks) {
         if (task.isMilestone || task.milestoneId == null) continue;
         const status = effectiveStatusOf(task, verdicts);
-        if (status === "Deleted") continue;
+        if (isUncountedStatus(status)) continue;
         const id = Number(task.milestoneId);
         const c = counts.get(id) ?? { total: 0, closed: 0 };
         c.total += 1;
