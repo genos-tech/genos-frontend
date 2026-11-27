@@ -532,17 +532,17 @@ export const SkillParamSelect = ({
             )}
             <Select
                 placeholder={rows === undefined ? s.skillLoading : s.skillPlaceholder}
-                renderValue={(option) => (
-                    <Box component="bdi" sx={CLOSED_VALUE_SX}>
-                        {option?.label}
-                    </Box>
-                )}
                 slotProps={{ listbox: { sx: { zIndex: popupZIndex, maxHeight: 280 } } }}
                 sx={{ minWidth: 0 }}
                 value={value || null}
                 onChange={(_, next) => {
                     if (next) onChange(next);
                 }}
+                renderValue={(option) => (
+                    <Box component="bdi" sx={CLOSED_VALUE_SX}>
+                        {option?.label}
+                    </Box>
+                )}
             >
                 {stray && (
                     <Option value={value} disabled>
