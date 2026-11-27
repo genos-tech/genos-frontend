@@ -54,7 +54,7 @@ for (let n = 0; n < 16; n++) {
 }
 
 /** The predicates the handlers used before the registry, copied verbatim in meaning. */
-const LEGACY: Record<string, (e: Required<KeyLike>, mac: boolean) => boolean> = {
+const LEGACY: Record<string, (e: Required<Omit<KeyLike, "code">>, mac: boolean) => boolean> = {
     letter: (e, mac) => {
         // useGlobalServiceShortcut: lettersModifiersOk && key.toLowerCase() === x
         const ok = mac ? e.ctrlKey && e.metaKey && !e.altKey : e.ctrlKey && e.altKey && !e.metaKey;
@@ -81,7 +81,7 @@ const LETTERS: Array<[ShortcutId, string]> = [
     ["global.todo", "x"],
 ];
 
-const event = (key: string, mods: (typeof COMBOS)[number]): Required<KeyLike> => ({
+const event = (key: string, mods: (typeof COMBOS)[number]): Required<Omit<KeyLike, "code">> => ({
     key,
     ...mods,
 });

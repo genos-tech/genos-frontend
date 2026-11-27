@@ -326,12 +326,12 @@ export const KeyboardShortcutsSection = () => {
                                     <Box key={row.id} data-shortcut-id={row.id}>
                                         <Stack
                                             alignItems={{ xs: "flex-start", sm: "center" }}
+                                            justifyContent="space-between"
+                                            spacing={{ xs: row.rebindable ? 0.5 : 2, sm: 2 }}
                                             direction={{
                                                 xs: row.rebindable ? "column" : "row",
                                                 sm: "row",
                                             }}
-                                            justifyContent="space-between"
-                                            spacing={{ xs: row.rebindable ? 0.5 : 2, sm: 2 }}
                                         >
                                             <Typography level="body-sm">{row.label}</Typography>
                                             {row.rebindable ? (
@@ -349,6 +349,17 @@ export const KeyboardShortcutsSection = () => {
                                                         </Chip>
                                                     )}
                                                     <Button
+                                                        ref={(node: HTMLButtonElement | null) => {
+                                                            if (node) {
+                                                                buttons.current.set(row.id, node);
+                                                            } else {
+                                                                buttons.current.delete(row.id);
+                                                            }
+                                                        }}
+                                                        color={recording ? "primary" : "neutral"}
+                                                        disabled={!loaded}
+                                                        size="sm"
+                                                        variant={recording ? "soft" : "outlined"}
                                                         aria-label={
                                                             recording
                                                                 ? edit.recording
@@ -357,16 +368,6 @@ export const KeyboardShortcutsSection = () => {
                                                                       keys: textOf(row.combo),
                                                                   })
                                                         }
-                                                        color={recording ? "primary" : "neutral"}
-                                                        disabled={!loaded}
-                                                        ref={(node: HTMLButtonElement | null) => {
-                                                            if (node) {
-                                                                buttons.current.set(row.id, node);
-                                                            } else {
-                                                                buttons.current.delete(row.id);
-                                                            }
-                                                        }}
-                                                        size="sm"
                                                         sx={{
                                                             px: 0.75,
                                                             "@media (pointer: coarse)": {
@@ -374,7 +375,6 @@ export const KeyboardShortcutsSection = () => {
                                                                 minWidth: TOUCH_TARGET,
                                                             },
                                                         }}
-                                                        variant={recording ? "soft" : "outlined"}
                                                         onBlur={() => {
                                                             if (recording) stop();
                                                         }}
@@ -395,21 +395,21 @@ export const KeyboardShortcutsSection = () => {
                                                         <Button
                                                             color="neutral"
                                                             size="sm"
+                                                            variant="plain"
+                                                            // Keep focus on the recorder, or its
+                                                            // blur removes this button mid-click.
+                                                            onMouseDown={(e) => e.preventDefault()}
                                                             sx={{
                                                                 "@media (pointer: coarse)": {
                                                                     minHeight: TOUCH_TARGET,
                                                                 },
                                                             }}
-                                                            variant="plain"
                                                             onClick={() => {
                                                                 cancel();
                                                                 buttons.current
                                                                     .get(row.id)
                                                                     ?.focus();
                                                             }}
-                                                            // Keep focus on the recorder, or its
-                                                            // blur removes this button mid-click.
-                                                            onMouseDown={(e) => e.preventDefault()}
                                                         >
                                                             {edit.cancel}
                                                         </Button>
@@ -421,11 +421,11 @@ export const KeyboardShortcutsSection = () => {
                                                             })}
                                                         >
                                                             <IconButton
+                                                                disabled={!loaded}
+                                                                size="sm"
                                                                 aria-label={fmt(edit.reset, {
                                                                     label: row.label,
                                                                 })}
-                                                                disabled={!loaded}
-                                                                size="sm"
                                                                 sx={{
                                                                     "@media (pointer: coarse)": {
                                                                         minHeight: TOUCH_TARGET,

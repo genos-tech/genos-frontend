@@ -27,7 +27,7 @@ const tree = () => (
         <I18nProvider>
             <UiSettingsProvider>
                 <ShortcutOverridesBridge />
-                <ModalFrame open title="Settings" onClose={onClose}>
+                <ModalFrame title="Settings" open onClose={onClose}>
                     <KeyboardShortcutsSection />
                 </ModalFrame>
             </UiSettingsProvider>
