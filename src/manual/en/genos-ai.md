@@ -54,7 +54,13 @@ A schedule (Settings > Genos > Schedules, Core and above) prepares a report at t
 
 **AI reports in shared chats.** Turning AI on does not widen or narrow who may receive a report: a report goes only to the chats that would take its plain version. The post in the chat includes the AI sentences, but never what the run cost. The cost is shown only to you, in your Inbox. No notification is sent for the post. A scheduled skill is different: it runs on your own skills and data, so it can only be posted in a chat that only you are in.
 
-**Dashboard page.** This report keeps one dashboard page up to date: counts by status and what was closed and created. A milestone page also lists what is ready to start and what is blocked. My progress shows what you closed and created. Choose:
+**Dashboard page.** This report keeps one dashboard page up to date, mostly as pictures. Each kind has its own layout:
+
+- **A milestone:** how much is done, whether it looks likely to finish on time, what is overdue, blocked or without an owner, what is left by due date, and who holds the open work.
+- **A project:** its headline numbers, a progress bar for each milestone, the status of the work, the pace of closing and adding tasks, who holds the open work and what needs attention.
+- **My progress:** how many tasks you closed compared with the period before, what needs you, and what is next by due date.
+
+"On track", "Tight" or "At risk" is worked out from what was closed in the last 14 days and assumes no new tasks. With too little to go on, the page says nothing. The page's own words are in your app language. A page made by a skill shows the blocks that suit that skill. Choose:
 
 - **Dashboard of:** one milestone, one project, or My progress.
 - **Period:** Last week, Last month (the default), Last quarter or Last year. This is how far back the numbers go, not how often the schedule runs. A schedule runs on its own at most once a day (Run now is extra).
