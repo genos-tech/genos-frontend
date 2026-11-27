@@ -1395,10 +1395,9 @@ export class ChannelService {
             ...(threadsRes.data.messages ?? []),
         ]);
 
-        // Apply hard-deletes. `data.deletes` is reserved for rows
-        // that have been purged (not just soft-deleted) — usually
-        // empty, but wire the path so the day a purge job runs the
-        // client doesn't strand orphan rows.
+        // Apply hard-deletes. `data.deletes` is for rows that are no longer
+        // in this chat at all (purged, or moved with their task to another
+        // chat), not for soft-deletes, which arrive as tombstoned rows.
         for (const id of msgsRes.data.deletes ?? []) {
             this.handleMessageHardDelete(channelId, id);
         }
@@ -1492,8 +1491,13 @@ export class ChannelService {
 
     /**
      * Hard-delete a single message from the store + IDB. Used by the
-     * delta-sync `deletes` path (purge / GDPR scrubbing) — distinct
-     * from `handleMessageDeleted` which sets a tombstone via `deletedAt`.
+     * delta-sync `deletes` path (purged rows, and rows that moved to another
+     * chat with their task, MIP-2505) — distinct from `handleMessageDeleted`
+     * which sets a tombstone via `deletedAt`.
+     *
+     * `deletes` speaks for ONE chat. A moved message keeps its id and the
+     * store is keyed by id, so only a row still filed under `channelId` goes:
+     * the new chat's copy may already be there.
      */
     handleMessageHardDelete(channelId: string, messageId: string): void {
         const arr = this._messages.get(channelId);
@@ -1505,13 +1509,16 @@ export class ChannelService {
                 this._notify();
             }
         }
-        void this._persistHardDelete(messageId);
+        void this._persistHardDelete(channelId, messageId);
     }
 
-    private async _persistHardDelete(messageId: string) {
+    private async _persistHardDelete(channelId: string, messageId: string) {
         try {
             const db = await initDB();
-            await db.delete(STORES.MESSAGES_V3, messageId);
+            const tx = db.transaction(STORES.MESSAGES_V3, "readwrite");
+            const row = (await tx.store.get(messageId)) as Message | undefined;
+            if (row?.channelId === channelId) await tx.store.delete(messageId);
+            await tx.done;
         } catch (e) {
             this._recordIdbError("_persistHardDelete", e);
         }

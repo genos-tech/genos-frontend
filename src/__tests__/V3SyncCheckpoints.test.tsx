@@ -16,6 +16,7 @@
 
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
+import { initDB } from "../db/config/schema";
 import { channelService } from "../services/channel/channelService";
 import {
     ChannelKind,
@@ -306,5 +307,30 @@ describe("channelService.syncChannel", () => {
 
         msgsSpy.mockRestore();
         threadsSpy.mockRestore();
+    });
+
+    it("data.deletes leaves a stored row that has since moved to another chat", async () => {
+        // A task's thread moved: same message ids, new channel.
+        const stored = new Map<string, Message>([
+            ["m-moved", fakeMessage("m-moved", "c-new")],
+            ["m-here", fakeMessage("m-here", "c-1")],
+        ]);
+        const db = {
+            transaction: () => ({
+                store: {
+                    get: async (id: string) => stored.get(id),
+                    delete: async (id: string) => void stored.delete(id),
+                },
+                done: Promise.resolve(),
+            }),
+        };
+        vi.mocked(initDB).mockResolvedValue(db as unknown as Awaited<ReturnType<typeof initDB>>);
+
+        channelService.handleMessageHardDelete("c-1", "m-moved");
+        channelService.handleMessageHardDelete("c-1", "m-here");
+
+        await vi.waitFor(() => expect(stored.has("m-here")).toBe(false));
+        expect(stored.has("m-moved")).toBe(true);
+        vi.mocked(initDB).mockRejectedValue(new Error("IDB stubbed off in tests"));
     });
 });
