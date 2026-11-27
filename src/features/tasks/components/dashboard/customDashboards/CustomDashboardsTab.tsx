@@ -75,8 +75,13 @@ const sharedEntry = (row: SharedDashboard, by: string): Entry => ({
     shared: true,
 });
 
-/** Room kept at the end of an own row for its two icon buttons, so a title never runs under them. */
-const ACTIONS_ROOM = 76;
+// An own row's two icon buttons sit over its end edge. The room kept for them is worked out from
+// the same sizes that draw them, so a title never runs under them. It is `paddingInlineEnd`: `sx`
+// has no `pe` shorthand and silently drops it (MIP-2410).
+const ACTION_SIZE = "2rem";
+const ACTIONS_GAP = "2px";
+const ACTIONS_INSET = "6px";
+const ACTIONS_ROOM = `calc(2 * ${ACTION_SIZE} + ${ACTIONS_GAP} + 2 * ${ACTIONS_INSET})`;
 
 const DashboardRow = ({
     entry,
@@ -148,8 +153,9 @@ const DashboardRow = ({
                     minHeight: 52,
                     minWidth: 0,
                     px: 1.25,
-                    ...(actions ? { pe: `${ACTIONS_ROOM}px` } : {}),
                     py: 0.75,
+                    // After `px`: the later rule wins the end edge.
+                    ...(actions ? { paddingInlineEnd: ACTIONS_ROOM } : {}),
                     textAlign: "start",
                     width: "100%",
                     "&:focus-visible": focusRing,
@@ -184,10 +190,11 @@ const DashboardRow = ({
                     data-dashboard-actions=""
                     sx={{
                         alignItems: "center",
+                        "--IconButton-size": ACTION_SIZE,
                         display: "flex",
-                        gap: 0.25,
+                        gap: ACTIONS_GAP,
                         insetBlock: 0,
-                        insetInlineEnd: 6,
+                        insetInlineEnd: ACTIONS_INSET,
                         opacity: 0,
                         pointerEvents: "none",
                         position: "absolute",

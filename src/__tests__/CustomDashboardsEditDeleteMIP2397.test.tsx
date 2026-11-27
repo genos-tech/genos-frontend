@@ -211,6 +211,31 @@ describe("the row and header actions", () => {
     });
 });
 
+// MIP-2410: the room was written as `pe`, which `sx` does not know, so no rule was emitted and a
+// long title ran under the icons. jsdom lays nothing out, so this reads the emitted CSS; the
+// layout itself is checked in a real browser.
+describe("room for the row icons", () => {
+    const cssOf = (el: Element) =>
+        Array.from(document.styleSheets)
+            .flatMap((sheet) => Array.from(sheet.cssRules))
+            .filter((rule) =>
+                Array.from(el.classList).some((name) => rule.cssText.startsWith(`.${name} {`))
+            )
+            .map((rule) => rule.cssText)
+            .join("\n");
+
+    it("ends an own row's text before the icons, and leaves a shared row its full width", async () => {
+        renderTab();
+        const own = await screen.findByRole("region", { name: c().own });
+        const shared = screen.getByRole("region", { name: c().shared });
+        const [ownRow] = within(own).getAllByTestId("custom-dashboard-row");
+        const sharedRow = within(shared).getByTestId("custom-dashboard-row");
+        expect(cssOf(ownRow)).toMatch(/padding-inline-end:\s*calc\(.*4rem/);
+        expect(cssOf(sharedRow)).toContain("padding: 6px 10px");
+        expect(cssOf(sharedRow)).not.toContain("padding-inline-end");
+    });
+});
+
 describe("Edit", () => {
     const openEdit = async (name: string) => {
         renderTab();
