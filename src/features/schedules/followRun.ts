@@ -21,8 +21,9 @@ export type FollowOptions = {
  *
  * At APP level, like the rest of "Run now": it goes on when the member closes Settings or leaves
  * the page. It reads the member's schedules every few seconds while the tab is visible until no
- * run holds this one. A run that stopped without recording a result is reported as such. A
- * schedule that was deleted, or a run longer than the server allows, ends it quietly.
+ * run holds this one. A run that stopped without recording a result is reported as such, and so
+ * is one still unknown after longer than the server allows (the time is only up once a read in a
+ * visible tab could be made). A schedule that was deleted ends it quietly.
  */
 export const followRun = ({ accessToken, teamId, id, startedAt, onEnd }: FollowOptions) => {
     stopFollowing(id);
@@ -31,11 +32,13 @@ export const followRun = ({ accessToken, teamId, id, startedAt, onEnd }: FollowO
         const timer = window.setTimeout(() => void look(timer), FOLLOW_EVERY_MS);
         following.set(id, timer);
     };
+    const unknown = (): RunOutcome => ({
+        status: "failed",
+        error: getMessages().settings.schedules.runStopped,
+        title: "",
+        items: 0,
+    });
     const look = async (timer: number) => {
-        if (Date.now() > until) {
-            following.delete(id);
-            return;
-        }
         const list = document.hidden ? null : await listSchedules(accessToken, teamId);
         // A newer press took over while this one was reading.
         if (following.get(id) !== timer) return;
@@ -45,7 +48,12 @@ export const followRun = ({ accessToken, teamId, id, startedAt, onEnd }: FollowO
             return;
         }
         if (!row || row.running) {
-            next();
+            if (!document.hidden && Date.now() > until) {
+                following.delete(id);
+                onEnd(unknown());
+            } else {
+                next();
+            }
             return;
         }
         following.delete(id);
@@ -58,12 +66,7 @@ export const followRun = ({ accessToken, teamId, id, startedAt, onEnd }: FollowO
                       title: row.lastResult?.title ?? "",
                       items: row.lastResult?.items ?? 0,
                   }
-                : {
-                      status: "failed",
-                      error: getMessages().settings.schedules.runStopped,
-                      title: "",
-                      items: 0,
-                  }
+                : unknown()
         );
     };
     next();

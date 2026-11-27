@@ -412,7 +412,10 @@ export const CustomDashboardsTab = ({ teamId, share }: Props) => {
     useRunningPoll(onTasks && own.some((e) => e.running), view.refresh);
     // A background run that ends writes a new page: show it.
     const seen = useRef<Entry | null>(null);
+    // The dashboards seen running: their end is shown by the effect below, not twice.
+    const sawRunning = useRef(new Set<string>());
     useEffect(() => {
+        if (selected?.running && selected.scheduleId) sawRunning.current.add(selected.scheduleId);
         const before = seen.current;
         seen.current = selected;
         if (before && selected && before.key === selected.key && before.running) {
@@ -421,6 +424,8 @@ export const CustomDashboardsTab = ({ teamId, share }: Props) => {
     }, [selected]);
     const runNow = async () => {
         if (!selected?.scheduleId || running || selected.running) return;
+        sawRunning.current.delete(selected.scheduleId);
+        const scheduleId = selected.scheduleId;
         setRunning(true);
         const res = await runScheduleNow(accessToken, teamId, selected.scheduleId);
         if (res.ok && res.outcome.status === "started") {
@@ -435,7 +440,9 @@ export const CustomDashboardsTab = ({ teamId, share }: Props) => {
                     if (outcome.status === "ok") {
                         toast.success(c.runDone, { id: "custom-dashboard-run" });
                         // A run over before the list ever read "running" still shows its page.
-                        if (alive.current && !seen.current?.running) setFrameKey((n) => n + 1);
+                        if (alive.current && !sawRunning.current.has(scheduleId)) {
+                            setFrameKey((n) => n + 1);
+                        }
                     } else {
                         toast.error(outcome.error || c.runFailed, { id: "custom-dashboard-run" });
                     }
