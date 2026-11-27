@@ -468,6 +468,7 @@ export const MessageListRenderer = ({
                             <ThreadMessageBubble
                                 currentMessageIndex={index}
                                 isFocused={isFocused}
+                                isModalHosted={isModalHosted}
                                 isSimpleBubble={meta.isSimpleBubble}
                                 message={message as ThreadMessageProps}
                                 myself={myself}
@@ -479,10 +480,9 @@ export const MessageListRenderer = ({
                                 socket={socket}
                                 thread={chat as ThreadProps}
                                 useCM={useCM}
+                                usePM={usePM}
                                 useTEM={useTEM}
                                 useTM={useTM}
-                                usePM={usePM}
-                                isModalHosted={isModalHosted}
                                 useUISM={useUISM}
                                 variant={isYou ? "sent" : "received"}
                             />

@@ -6,8 +6,10 @@ import { g, type } from "../../../theme/tokens";
 import { PriorityIcon } from "../../tasks/components/meta/PriorityIcon";
 import { StatusLabel } from "../../tasks/components/meta/StatusLabel";
 import { taskMetaLabel } from "../../tasks/utils/taskMeta";
-import { Clip, Due, Excerpt, factSx, metaSx, Row } from "./cardParts";
-import { BAR_STATUSES, MilestoneStatusBar } from "./MilestoneStatusBar";
+import { BAR_STATUSES } from "./barStatuses";
+import { Clip, Due, Excerpt, Row } from "./cardParts";
+import { factSx, metaSx } from "./cardStyles";
+import { MilestoneStatusBar } from "./MilestoneStatusBar";
 import type { LiveMilestoneCard } from "./taskCardTypes";
 
 const SHOWN_ASSIGNEES = 3;
@@ -50,7 +52,7 @@ export const MilestoneCardContent = ({ card }: { card: LiveMilestoneCard }) => {
                                 key={status}
                                 sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}
                             >
-                                <StatusLabel iconOnly iconSize={12} status={status} />
+                                <StatusLabel iconSize={12} status={status} iconOnly />
                                 <Box component="span" sx={metaSx}>
                                     {byStatus[status]}
                                 </Box>
@@ -82,7 +84,7 @@ export const MilestoneCardContent = ({ card }: { card: LiveMilestoneCard }) => {
                         )}
                     </Box>
                 )}
-                {card.priority && <PriorityIcon priority={card.priority} showLabel size={14} />}
+                {card.priority && <PriorityIcon priority={card.priority} size={14} showLabel />}
                 <Due
                     done={card.status === "Closed" || card.status === "Deleted"}
                     dueDate={card.dueDate}

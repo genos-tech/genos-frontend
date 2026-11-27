@@ -112,8 +112,8 @@ const TaskMessageCardImpl = (props: TaskMessageCardProps) => {
                 ) : (
                     // The facts row's own height, so little moves when they arrive.
                     <Box
-                        title={t.chat.taskCard.loading}
                         sx={{ display: "flex", gap: 1.5, alignItems: "center", height: 24 }}
+                        title={t.chat.taskCard.loading}
                     >
                         {[96, 64, 80].map((width) => (
                             <Box

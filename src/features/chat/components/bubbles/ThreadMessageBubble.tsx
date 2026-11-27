@@ -418,12 +418,6 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
     const body = isTaskCard ? (
         <Box {...askMessageProps(message.messageIdWithChatIdAndThreadId)}>
             <TaskMessageCard
-                fallback={
-                    <>
-                        {isCardRoot ? userName(false) : null}
-                        {storedBody}
-                    </>
-                }
                 framed={isCompact || !isCardRoot}
                 messageUpdatedAt={message.tsUpdated}
                 seedDisplayId={message.displayId}
@@ -432,6 +426,12 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                 taskId={message.taskId as number}
                 viaApp={isCardRoot ? message.viaApp : undefined}
                 viewerId={myself.userId}
+                fallback={
+                    <>
+                        {isCardRoot ? userName(false) : null}
+                        {storedBody}
+                    </>
+                }
                 onOpen={openCardTask}
             />
         </Box>
@@ -474,17 +474,12 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
             footerOffset={0}
             grouped={isSimpleBubble && !isCardRoot}
             header={header}
-            tail={!isTaskCard}
             layout={isCompact ? "compact" : "bubble"}
             narrowBody="beside"
             rootRef={bubbleRef}
             side={isSent ? "sent" : "received"}
+            tail={!isTaskCard}
             toolbarRef={toolbarRef}
-            wrapperSx={
-                isTaskCard
-                    ? CARD_WRAPPER_SX
-                    : balloonWrapperSx(isSimpleBubble, uniqueReactionEmojiCount)
-            }
             footer={
                 <BubbleUnderBar
                     chatName={thread.chatName}
@@ -515,6 +510,11 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                         useFixedPosition={true}
                     />
                 )
+            }
+            wrapperSx={
+                isTaskCard
+                    ? CARD_WRAPPER_SX
+                    : balloonWrapperSx(isSimpleBubble, uniqueReactionEmojiCount)
             }
             interactive
             onClick={handleMessageClick}

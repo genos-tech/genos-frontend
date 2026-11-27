@@ -627,12 +627,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         >
             <Box {...askMessageProps(message.messageIdWithChatId)}>
                 <TaskMessageCard
-                    fallback={
-                        <>
-                            {userName(false)}
-                            {storedBody}
-                        </>
-                    }
                     framed={isCompact}
                     messageUpdatedAt={message.tsUpdated}
                     seedDisplayId={message.displayId}
@@ -642,6 +636,12 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                     taskId={cardTaskId as number}
                     viaApp={message.viaApp}
                     viewerId={myself.userId}
+                    fallback={
+                        <>
+                            {userName(false)}
+                            {storedBody}
+                        </>
+                    }
                     onOpen={(e) => handleMessageClick(e as unknown as React.MouseEvent)}
                 />
             </Box>
@@ -684,11 +684,11 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             footerOffset={0}
             grouped={isSimpleBubble && !isTaskCard}
             header={header}
-            tail={!isTaskCard}
             layout={isCompact ? "compact" : "bubble"}
             narrowBody="beside"
             rootRef={bubbleRef}
             side={isSent ? "sent" : "received"}
+            tail={!isTaskCard}
             toolbarRef={toolbarRef}
             footer={
                 <BubbleUnderBar

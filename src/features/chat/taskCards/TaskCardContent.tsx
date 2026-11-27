@@ -6,7 +6,8 @@ import { g, type } from "../../../theme/tokens";
 import { MilestoneFlag } from "../../tasks/components/card/parts";
 import { PriorityIcon } from "../../tasks/components/meta/PriorityIcon";
 import { Tag } from "../../tasks/components/meta/Tag";
-import { Clip, Due, Excerpt, factSx, metaSx, Person, Row } from "./cardParts";
+import { Clip, Due, Excerpt, Person, Row } from "./cardParts";
+import { factSx, metaSx } from "./cardStyles";
 import type { LiveTaskCard } from "./taskCardTypes";
 
 const SHOWN_TAGS = 3;
@@ -24,16 +25,10 @@ export const TaskCardContent = ({ card }: { card: LiveTaskCard }) => {
             <Excerpt text={card.excerpt} />
             <Row sx={{ minHeight: 24 }}>
                 <Person person={card.assignee} />
-                {card.priority && <PriorityIcon priority={card.priority} showLabel size={14} />}
+                {card.priority && <PriorityIcon priority={card.priority} size={14} showLabel />}
                 <Due done={isDone(card.status)} dueDate={card.dueDate} />
                 {place && (
                     <Box
-                        title={fmt(
-                            card.milestone
-                                ? t.chat.taskCard.inMilestone
-                                : t.chat.taskCard.subtaskOf,
-                            { title: place.title, task: place.title }
-                        )}
                         sx={{
                             ...factSx,
                             display: "inline-flex",
@@ -42,6 +37,12 @@ export const TaskCardContent = ({ card }: { card: LiveTaskCard }) => {
                             minWidth: 0,
                             maxWidth: "100%",
                         }}
+                        title={fmt(
+                            card.milestone
+                                ? t.chat.taskCard.inMilestone
+                                : t.chat.taskCard.subtaskOf,
+                            { title: place.title, task: place.title }
+                        )}
                     >
                         {card.milestone ? (
                             <>

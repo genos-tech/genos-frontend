@@ -11,10 +11,8 @@ import { AssigneeAvatar, DueText, MilestoneFlag } from "../../tasks/components/c
 import { StatusLabel } from "../../tasks/components/meta/StatusLabel";
 import { formatDueLabel } from "../../tasks/utils/dashboardRowFormat";
 import type { ViaApp } from "../../tasks/utils/viaSource";
+import { factSx, metaSx } from "./cardStyles";
 import type { CardPerson } from "./taskCardTypes";
-
-export const metaSx = { ...type("caption"), color: g.text.tertiary } as const;
-export const factSx = { ...type("body-xs"), color: g.text.secondary } as const;
 
 export const Row = ({ children, sx }: { children: ReactNode; sx?: object }) => (
     <Box
@@ -163,7 +161,7 @@ export const Due = ({ dueDate, done }: { dueDate: string | null; done: boolean }
               tone: "later" as const,
           }
         : formatDueLabel(dueDate, locale);
-    return <DueText icon text={label.text} tone={label.tone} />;
+    return <DueText text={label.text} tone={label.tone} icon />;
 };
 
 /** "Created by …", and when it changed since. */
