@@ -1,4 +1,4 @@
-import { ReactNode, useLayoutEffect } from "react";
+import { ReactNode, useLayoutEffect, useRef } from "react";
 import { Box } from "@mui/joy";
 
 import { TaskPreviewPaneState } from "../../../utils/taskPreviewPaneState";
@@ -59,6 +59,11 @@ export const TaskPreviewSwitchGate = ({
                 children()
             )
         ) : null;
+
+    // The gate itself can go with the view in it (the milestone preview takes the pane).
+    const removedRef = useRef(onTaskViewRemoved);
+    removedRef.current = onTaskViewRemoved;
+    useLayoutEffect(() => () => removedRef.current?.(), []);
 
     // A LAYOUT effect: the removed editor's own cleanup has not run yet.
     const removed = taskView === null;

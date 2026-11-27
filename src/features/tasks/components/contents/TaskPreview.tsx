@@ -81,6 +81,7 @@ import {
 import { createOpenLanding, OpenLanding } from "../../services/taskOpenLanding";
 import {
     bodyFingerprint,
+    forgetUnsavedBody,
     keepUnsavedBody,
     repairUnsavedTaskBody,
     resumeKeepingUnsavedBodies,
@@ -295,7 +296,9 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
             save: { stored: boolean; startedAt: number }
         ) => {
             // Also for a task already left: its kept words are settled by the same save.
-            settleUnsavedBody(myself.userId, taskId, settled, save);
+            const typed =
+                prevTaskIdRef.current === taskId && !!taskEditStateRef.current.taskBodyEdited;
+            settleUnsavedBody(myself.userId, taskId, settled, { ...save, typed });
             if (prevTaskIdRef.current !== taskId) return;
             lastLoadedBodyRef.current = JSON.stringify(settled);
             if (save.stored) serverBodyRef.current = bodyFingerprint(settled);
@@ -390,8 +393,18 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
      *  `hasUnsavedBody`, and keeps the words in this browser until a save is known to have
      *  stored them (MIP-2455). */
     const keepIfUnsaved = (): boolean => {
-        if (!hasUnsavedBody()) return false;
+        const unsaved = hasUnsavedBody();
         const taskId = prevTaskIdRef.current;
+        if (!unsaved) {
+            // Typed here and back to what is stored: words kept earlier were taken out.
+            if (
+                taskId != null &&
+                taskEditState.taskBodyEdited &&
+                bodyFingerprint(currentBodyRef.current) === serverBodyRef.current
+            )
+                forgetUnsavedBody(myself.userId, taskId);
+            return false;
+        }
         if (taskId != null)
             keepUnsavedBody(myself.userId, taskId, currentBodyRef.current, serverBodyRef.current);
         return true;
@@ -439,8 +452,9 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
             .then((repaired) => {
                 if (!repaired) return;
                 emitTaskTouched(taskId, "update");
-                if (prevTaskIdRef.current !== taskId || typedHere()) return;
+                if (prevTaskIdRef.current !== taskId) return;
                 serverBodyRef.current = bodyFingerprint(repaired.stored);
+                if (typedHere()) return;
                 // A later save from this preview (a status change) must not put the old body
                 // back. If the editor has already given us other text, that is what it sends.
                 if (repaired.bases.includes(bodyFingerprint(currentBodyRef.current))) {

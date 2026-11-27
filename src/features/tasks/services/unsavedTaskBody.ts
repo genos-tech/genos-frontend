@@ -42,13 +42,27 @@ export const bodyFingerprint = (body: unknown): string =>
 
 // ------------------------------------------------------------ the record --
 
-// Set by the sign-out sweep: the preview unmounts AFTER it, and must not write the text back.
-let signedOut = false;
+// Bumped by the sign-out sweep, in storage so that other tabs see it too. A preview that unmounts
+// (or a tab that closes) after a sign-out must not write the text back.
+const SIGN_OUT_MARK = "genos.unsavedTaskBody.signOuts";
+const signOutMark = (): string => {
+    try {
+        return localStorage.getItem(SIGN_OUT_MARK) ?? "";
+    } catch {
+        return "";
+    }
+};
+let sessionMark = signOutMark();
+const signedOut = () => signOutMark() !== sessionMark;
 export const stopKeepingUnsavedBodies = () => {
-    signedOut = true;
+    try {
+        localStorage.setItem(SIGN_OUT_MARK, String(Date.now() + Math.random()));
+    } catch {
+        // Without storage there is nothing to keep either.
+    }
 };
 export const resumeKeepingUnsavedBodies = () => {
-    signedOut = false;
+    sessionMark = signOutMark();
 };
 
 const read = (userId: string, taskId: number): UnsavedBody | null => {
@@ -112,33 +126,37 @@ export const keepUnsavedBody = (
     body: PartialBlock[],
     base: string
 ) => {
-    if (signedOut) return;
+    if (signedOut()) return;
     write(userId, taskId, { body, bases: [base, ...savesOf(taskId).inFlight], at: Date.now() });
 };
 
+/** The editor and the stored task are known to agree: nothing is left to repair. */
+export const forgetUnsavedBody = (userId: string, taskId: number) => write(userId, taskId, null);
+
 /**
  * A save of this task's body is over: `stored`, or refused for good. `startedAt` is when that save
- * took the text.
+ * took the text; `typed`, that the person had typed in the editor it came from.
  */
 export const settleUnsavedBody = (
     userId: string,
     taskId: number,
     sent: PartialBlock[],
-    { stored, startedAt }: { stored: boolean; startedAt: number }
+    { stored, startedAt, typed }: { stored: boolean; startedAt: number; typed?: boolean }
 ) => {
     const record = read(userId, taskId);
-    if (!record) return;
+    // A refusal stored nothing (and may be about another field): the words stay kept.
+    if (!record || !stored) return;
     const fingerprint = bodyFingerprint(sent);
     if (fingerprint === bodyFingerprint(record.body)) {
         write(userId, taskId, null);
         return;
     }
-    if (!stored) return;
     // Words kept after that save set out are newer than it: still unsaved, now on top of it.
     if (record.at > startedAt) write(userId, taskId, { ...record, bases: [fingerprint] });
     // A later save that only restates what was stored (a status change made before the editor
-    // had the words) says nothing about them. One with other text is newer than they are.
-    else if (!record.bases.includes(fingerprint)) write(userId, taskId, null);
+    // had the words) says nothing about them. One the person typed in, or with other text, is
+    // newer than they are: also when it goes back to the old text.
+    else if (typed || !record.bases.includes(fingerprint)) write(userId, taskId, null);
 };
 
 // ------------------------------------------------------------ the repair --
@@ -216,6 +234,10 @@ export const repairUnsavedTaskBody = async ({
         return null;
     }
 
+    // Another preview of this task may have got here while we were asking.
+    if (repairing.has(taskId)) return null;
+    // Counted as a save: words kept while it is on the way may end up on top of it.
+    const endBodySave = trackTaskBodySave(taskId, record.body);
     const put = api.put("/task/", {
         task_id: taskId,
         team: myself.teamId,
@@ -230,14 +252,16 @@ export const repairUnsavedTaskBody = async ({
         const response = await put;
         forget();
         emitMentions(socket, task, response?.data ?? {});
-        // The cached copy of the task still has the old body.
-        void loadSpecificTask(myself, projectId, taskId, accessToken, { forceRefresh: true });
+        // The cached copy of the task still has the old body. Not after a sign-out wiped it.
+        if (!signedOut())
+            void loadSpecificTask(myself, projectId, taskId, accessToken, { forceRefresh: true });
         return { stored: record.body, bases: record.bases };
     } catch (error) {
         console.error("Could not save the task description kept in this browser:", error);
         if (!isRetryableSaveError(error)) forget();
         return null;
     } finally {
+        endBodySave();
         repairing.delete(taskId);
     }
 };

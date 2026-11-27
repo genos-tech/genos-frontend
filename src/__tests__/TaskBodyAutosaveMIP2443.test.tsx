@@ -271,11 +271,14 @@ const host: {
     open: (task: TaskProps) => void;
     /** The chat pane: another task is asked for, its data not here yet. */
     request: (id: number) => void;
+    /** The milestone preview takes over the pane. */
+    showMilestone: () => void;
     openMilestone: (id: number) => void;
     renew: () => void;
 } = {
     open: () => undefined,
     request: () => undefined,
+    showMilestone: () => undefined,
     openMilestone: () => undefined,
     renew: () => undefined,
 };
@@ -303,6 +306,8 @@ const updateExistingMilestone = (
 
 const Host = ({ milestone, chat }: { milestone: boolean; chat: boolean }) => {
     const [requested, setRequested] = useState<number | null>(null);
+    const [asMilestone, setAsMilestone] = useState(false);
+    host.showMilestone = () => setAsMilestone(true);
     host.request = setRequested;
     const [task, setTask] = useState<TaskProps | undefined>(
         milestone ? undefined : makeTask(1, "loaded")
@@ -316,8 +321,8 @@ const Host = ({ milestone, chat }: { milestone: boolean; chat: boolean }) => {
         currentPreviewTask: task,
         currentPreviewTaskId: requested ?? (task ? Number(task.id) : -1),
         setCurrentPreviewTask: setTask,
-        currentPreviewKind: milestone ? "milestone" : "task",
-        currentPreviewMilestoneId: milestone ? milestoneId : -1,
+        currentPreviewKind: milestone || asMilestone ? "milestone" : "task",
+        currentPreviewMilestoneId: milestone || asMilestone ? milestoneId : -1,
         previewLoadFailedTaskId: null,
         allTasks: [],
         taskComments: [],
@@ -669,6 +674,60 @@ describe("words that may not have been saved (MIP-2455)", () => {
         expect(net.puts).toHaveLength(0);
         await answer(repairs[0].ok);
         expect(sent()).toEqual([[1, "newer words"]]);
+    });
+
+    it("stay when the save that carried them was refused", () => {
+        keepUnsavedBody("u1", 1, doc("typed"), "[]");
+        settleUnsavedBody("u1", 1, doc("typed"), { stored: false, startedAt: Date.now() + 1 });
+        expect(kept()).toHaveLength(1);
+    });
+
+    it("go when the person typed them away again, even back to the old text", () => {
+        keepUnsavedBody(
+            "u1",
+            1,
+            doc("typed"),
+            JSON.stringify([{ text: "old", type: "paragraph" }])
+        );
+        settleUnsavedBody("u1", 1, doc("old"), {
+            stored: true,
+            startedAt: Date.now() + 1,
+            typed: true,
+        });
+        expect(kept()).toHaveLength(0);
+    });
+
+    it("count the repair on its way for words kept meanwhile", async () => {
+        await reload();
+        serverHas("loaded");
+        await mount();
+        await type("newer words");
+        await act(async () => void window.dispatchEvent(new Event("pagehide")));
+        expect(JSON.parse(localStorage.getItem(kept()[0])!).bases.join()).toContain(
+            "typed before the reload"
+        );
+        await answer(repairs[0].ok);
+    });
+
+    it("are sent once for two previews of the same task", async () => {
+        await reload();
+        serverHas("loaded");
+        await mount();
+        await mount();
+        expect(repairs).toHaveLength(1);
+        await answer(repairs[0].ok);
+    });
+
+    it("include what was typed when the milestone preview takes the pane", async () => {
+        await mount();
+        await type("typed just before the milestone");
+        await act(async () => host.showMilestone());
+        await act(async () => host.open(makeTask(2, "other")));
+        await pass(3000);
+        const record = kept().map((key) => localStorage.getItem(key)!);
+        expect([...record, ...net.puts.map((p) => p.text)].join()).toContain(
+            "typed just before the milestone"
+        );
     });
 
     it("go with the sign-out", () => {
