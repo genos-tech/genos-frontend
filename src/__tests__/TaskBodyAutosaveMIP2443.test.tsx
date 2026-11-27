@@ -660,6 +660,17 @@ describe("words that may not have been saved (MIP-2455)", () => {
         expect(sent()).toEqual([[1, "newer words"]]);
     });
 
+    it("never hand the next task's body to a save that waited for them", async () => {
+        await reload();
+        serverHas("loaded");
+        await mount();
+        await type("newer words");
+        await act(async () => host.open(makeTask(2, "other task's body")));
+        expect(net.puts).toHaveLength(0);
+        await answer(repairs[0].ok);
+        expect(sent()).toEqual([[1, "newer words"]]);
+    });
+
     it("go with the sign-out", () => {
         keepUnsavedBody("u1", 1, doc("private"), "base");
         clearSignOutLocalStorage();

@@ -133,15 +133,17 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
         // `syncCard` note in `sendUpdatedSpecificTask`.
         async (taskSwitched: boolean, syncCard: boolean = false) => {
             flushBody?.();
-            // An unsaved-body repair of this task goes first: it carries older text (MIP-2455).
-            const repair = unsavedBodyRepairOf(Number(tmpCurrentTaskContent?.id));
-            if (repair) await repair;
             const startedAt = Date.now();
             const baseTaskContent: TaskProps = {
                 ...tmpCurrentTaskContent,
                 title: taskTitle === "" ? initTaskTitle : taskTitle,
                 body: bodyRef ? bodyRef.current : body,
             };
+            // An unsaved-body repair of this task goes first: it carries older text
+            // (MIP-2455). Only AFTER the body is read above: by the time the repair is over
+            // `bodyRef` may hold the next task's.
+            const repair = unsavedBodyRepairOf(Number(baseTaskContent.id));
+            if (repair) await repair;
             const uploadKey = (id: number) => `${baseTaskContent.id}:${id}`;
             if (baseTaskContent.attachments?.some((a) => a.attachment_id < 0)) {
                 baseTaskContent.attachments = baseTaskContent.attachments.filter(
