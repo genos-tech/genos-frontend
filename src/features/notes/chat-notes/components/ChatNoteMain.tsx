@@ -388,10 +388,6 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                     currentNoteMembers={useNM.currentNoteMembers}
                                     myself={myself}
                                     noteBodySaved={chatNoteEditor.noteBodySaved}
-                                    resyncSignal={noteResyncSignal(
-                                        useNM.noteResync,
-                                        activeChatNote
-                                    )}
                                     setMyself={setMyself}
                                     setNoteBodyEdited={chatNoteEditor.setNoteBodyEdited}
                                     setNoteBodySaved={chatNoteEditor.setNoteBodySaved}
@@ -400,6 +396,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
                                     useCM={useCM}
                                     useTEM={useTEM}
                                     useUISM={useUISM}
+                                    resyncSignal={noteResyncSignal(
+                                        useNM.noteResync,
+                                        activeChatNote
+                                    )}
                                     onBodyChange={chatNoteEditor.handleBodyChange}
                                     onTitleBlur={chatNoteEditor.handleTitleBlur}
                                     onTitleChange={chatNoteEditor.handleTitleChange}

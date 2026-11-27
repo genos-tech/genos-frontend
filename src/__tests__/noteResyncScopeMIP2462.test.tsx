@@ -140,8 +140,8 @@ const Harness = () => {
         <>
             <MyNoteEditorPanel
                 {...props}
-                isActive
                 tab={{ id: "my-5", kind: "my", noteId: 5 } as never}
+                isActive
             />
             <MyNoteEditorPanel
                 {...props}
