@@ -16,6 +16,7 @@ import { NoteAccessRequestPanel } from "../../common/components/NoteAccessReques
 import { NoteEditor } from "../../common/components/NoteEditor";
 import { NoteLoadState } from "../../common/components/NoteLoadState";
 import { isHtmlNote } from "../../common/utils/htmlNote";
+import { noteResyncSignal } from "../../common/utils/noteResync";
 
 interface MyNoteEditorPanelProps {
     tab: NoteTab & { kind: "my" };
@@ -64,7 +65,7 @@ export const MyNoteEditorPanel = ({
         myself,
         accessToken,
         socket,
-        resyncSignal: useNM.noteResyncNonce,
+        resyncSignal: noteResyncSignal(useNM.noteResync, note),
         onNoteUpdate: (updatedNote: MyNoteProps) => {
             // Tab strip title sync (no legacy `tabItems` round-trip).
             useNM.tabsApi.updateTabTitle(updatedNote.noteId, "my", updatedNote.title);

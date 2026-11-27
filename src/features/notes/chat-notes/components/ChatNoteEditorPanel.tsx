@@ -15,6 +15,7 @@ import { HtmlNoteView } from "../../common/components/HtmlNoteView";
 import { NoteAccessRequestPanel } from "../../common/components/NoteAccessRequestPanel";
 import { NoteLoadState } from "../../common/components/NoteLoadState";
 import { isHtmlNote } from "../../common/utils/htmlNote";
+import { noteResyncSignal } from "../../common/utils/noteResync";
 import { ChatNoteEditor } from "./ChatNoteEditor";
 
 interface ChatNoteEditorPanelProps {
@@ -63,7 +64,7 @@ export const ChatNoteEditorPanel = ({
         myself,
         accessToken,
         socket,
-        resyncSignal: useNM.noteResyncNonce,
+        resyncSignal: noteResyncSignal(useNM.noteResync, note),
         onNoteUpdate: (updatedNote: ChatNoteProps) => {
             upsertNoteCache(updatedNote);
             // Only sync the legacy `currentChatNote` mirror when the
@@ -165,7 +166,7 @@ export const ChatNoteEditorPanel = ({
                 currentNoteMembers={useNM.currentNoteMembers}
                 myself={myself}
                 noteBodySaved={chatNoteEditor.noteBodySaved}
-                resyncSignal={useNM.noteResyncNonce}
+                resyncSignal={noteResyncSignal(useNM.noteResync, note)}
                 setMyself={setMyself}
                 setNoteBodyEdited={chatNoteEditor.setNoteBodyEdited}
                 setNoteBodySaved={chatNoteEditor.setNoteBodySaved}

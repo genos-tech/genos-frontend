@@ -17,6 +17,7 @@ import { NoteLoadState } from "../../common/components/NoteLoadState";
 import { NoteTitleField } from "../../common/components/NoteTitleField";
 import { useNoteAutoSave } from "../../common/hooks/useNoteAutoSave";
 import { isHtmlNote } from "../../common/utils/htmlNote";
+import { noteResyncSignal } from "../../common/utils/noteResync";
 
 interface TaskNoteEditorPanelProps {
     tab: NoteTab & { kind: "task" };
@@ -76,7 +77,7 @@ export const TaskNoteEditorPanel = ({
         myself,
         accessToken: accessToken || "",
         socket,
-        resyncSignal: useNM.noteResyncNonce,
+        resyncSignal: noteResyncSignal(useNM.noteResync, note),
         onNoteUpdate: (updatedNote: TaskNoteProps) => {
             useNM.tabsApi.updateTabTitle(updatedNote.noteId, "task", updatedNote.title);
 
@@ -170,7 +171,7 @@ export const TaskNoteEditorPanel = ({
                 currentTaskNote={note}
                 myself={myself}
                 noteBodySaved={noteBodySaved}
-                resyncSignal={useNM.noteResyncNonce}
+                resyncSignal={noteResyncSignal(useNM.noteResync, note)}
                 setBody={setBody}
                 setMyself={setMyself}
                 setNoteBodyEdited={setNoteBodyEdited}
