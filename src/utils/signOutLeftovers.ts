@@ -9,7 +9,10 @@
  * "remember my email" on the sign-in form, so keeping it is their opt-in.
  */
 import { DatabaseUtils } from "../db/utils/database";
-import { UNSAVED_TASK_BODY_PREFIX } from "../features/tasks/services/unsavedTaskBody";
+import {
+    stopKeepingUnsavedBodies,
+    UNSAVED_TASK_BODY_PREFIX,
+} from "../features/tasks/services/unsavedTaskBody";
 
 // Exact keys: the chat thread memory (which thread the person had open), and
 // the per-browser device id that ties a push subscription to this device.
@@ -20,6 +23,7 @@ const EXACT_KEYS = ["chatThreadMemory", "genos.deviceId"];
 const KEY_PREFIXES = ["genos.history.v1.", "spotlight:session:v1:", UNSAVED_TASK_BODY_PREFIX];
 
 export const clearSignOutLocalStorage = (): void => {
+    stopKeepingUnsavedBodies();
     try {
         const doomed: string[] = [...EXACT_KEYS];
         for (let i = 0; i < localStorage.length; i++) {

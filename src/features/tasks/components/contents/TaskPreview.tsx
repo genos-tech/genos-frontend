@@ -83,6 +83,7 @@ import {
     bodyFingerprint,
     keepUnsavedBody,
     repairUnsavedTaskBody,
+    resumeKeepingUnsavedBodies,
     settleUnsavedBody,
 } from "../../services/unsavedTaskBody";
 import {
@@ -414,16 +415,19 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         return () => window.removeEventListener("pagehide", onPageHide);
     }, []);
 
+    useEffect(resumeKeepingUnsavedBodies, []);
+
     // Opening a task: save what an earlier visit could not.
     const repairingTask = taskEditState.tmpCurrentTaskContent;
     useEffect(() => {
         const taskId = Number(repairingTask?.id);
         const projectId = Number(repairingTask?.project?.projectId);
         if (!taskId || !projectId || !accessToken) return;
-        const typedHere = () =>
-            prevTaskIdRef.current === taskId &&
-            taskEditStateRef.current.taskBodyEdited === true &&
-            isBodyDirty();
+        const typedHere = () => {
+            if (prevTaskIdRef.current !== taskId) return false;
+            flushBody();
+            return taskEditStateRef.current.taskBodyEdited === true && isBodyDirty();
+        };
         void repairUnsavedTaskBody({
             myself,
             taskId,
@@ -432,14 +436,17 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
             socket,
             isSuperseded: typedHere,
         })
-            .then((stored) => {
-                if (!stored || prevTaskIdRef.current !== taskId || typedHere()) return;
-                // A later save from this preview (a status change) must carry these words.
-                serverBodyRef.current = bodyFingerprint(stored);
-                lastLoadedBodyRef.current = JSON.stringify(stored);
-                currentBodyRef.current = stored;
-                taskEditStateRef.current.setBody(stored);
+            .then((repaired) => {
+                if (!repaired) return;
                 emitTaskTouched(taskId, "update");
+                if (prevTaskIdRef.current !== taskId || typedHere()) return;
+                serverBodyRef.current = bodyFingerprint(repaired.stored);
+                // A later save from this preview (a status change) must not put the old body
+                // back. If the editor has already given us other text, that is what it sends.
+                if (repaired.bases.includes(bodyFingerprint(currentBodyRef.current))) {
+                    currentBodyRef.current = repaired.stored;
+                    lastLoadedBodyRef.current = JSON.stringify(repaired.stored);
+                }
             })
             .catch((error) => console.error("[TaskPreview] unsaved body repair failed:", error));
         // eslint-disable-next-line react-hooks/exhaustive-deps

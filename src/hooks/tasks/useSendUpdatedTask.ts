@@ -6,6 +6,10 @@ import { reloadStoredTask } from "../../features/tasks/services/reloadStoredTask
 import { sendUpdatedSpecificTask } from "../../features/tasks/services/sendUpdatedSpecificTask";
 import { emitTaskTouched } from "../../features/tasks/services/taskEvents";
 import { TaskSaveRefusedError } from "../../features/tasks/services/taskSaveRefusedError";
+import {
+    trackTaskBodySave,
+    unsavedBodyRepairOf,
+} from "../../features/tasks/services/unsavedTaskBody";
 import { ASSIGNEE_NOT_ON_DESTINATION } from "../../features/tasks/utils/moveRefusal";
 import { UserProps } from "../../types/admin";
 import { TaskEditStateManagement } from "../../types/taskEditState";
@@ -129,6 +133,9 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
         // `syncCard` note in `sendUpdatedSpecificTask`.
         async (taskSwitched: boolean, syncCard: boolean = false) => {
             flushBody?.();
+            // An unsaved-body repair of this task goes first: it carries older text (MIP-2455).
+            const repair = unsavedBodyRepairOf(Number(tmpCurrentTaskContent?.id));
+            if (repair) await repair;
             const startedAt = Date.now();
             const baseTaskContent: TaskProps = {
                 ...tmpCurrentTaskContent,
@@ -182,6 +189,10 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             // Set when the PUT stored nothing: whether it is worth sending again.
             let notSaved: { retry: boolean } | null = null;
             sentNegativeIds.forEach((id) => uploadingRef.current.add(uploadKey(id)));
+            const endBodySave = trackTaskBodySave(
+                Number(baseTaskContent.id),
+                baseTaskContent.body ?? []
+            );
             try {
                 uploadAttachments = await sendUpdatedSpecificTask(
                     socket,
@@ -377,6 +388,7 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 setStartIntervalUpdatingTask(false);
                 return;
             } finally {
+                endBodySave();
                 sentNegativeIds.forEach((id) => uploadingRef.current.delete(uploadKey(id)));
             }
 

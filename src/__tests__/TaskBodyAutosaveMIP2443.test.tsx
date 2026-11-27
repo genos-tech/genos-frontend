@@ -19,8 +19,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TaskPreview } from "../features/tasks/components/contents/TaskPreview";
 import { loadSpecificTask } from "../features/tasks/services/loadSpecificTask";
 import {
+    forgetTaskBodySaves,
     keepUnsavedBody,
+    resumeKeepingUnsavedBodies,
     settleUnsavedBody,
+    trackTaskBodySave,
     UNSAVED_TASK_BODY_PREFIX,
 } from "../features/tasks/services/unsavedTaskBody";
 import type { TaskProps } from "../types/tasks";
@@ -28,6 +31,10 @@ import { clearSignOutLocalStorage } from "../utils/signOutLeftovers";
 
 type Put = { id: number; text: string; ok: () => void; fail: (retry: boolean) => void };
 const net = vi.hoisted(() => ({ puts: [] as Put[] }));
+/** The unsaved-body repair's own PUT. */
+const repairs = vi.hoisted(
+    () => [] as { sent: string[]; id: number; text: string; ok: () => void }[]
+);
 /** What the preview hands the body block. */
 type BodyProps = {
     setBody: (body: unknown[]) => void;
@@ -67,7 +74,18 @@ vi.mock("../features/tasks/services/sendUpdatedSpecificTask", () => ({
 
 vi.mock("../services/api", async (importOriginal) => ({
     ...(await importOriginal<typeof import("../services/api")>()),
-    authApi: () => ({ get: () => new Promise(() => undefined) }),
+    authApi: () => ({
+        get: () => new Promise(() => undefined),
+        put: (_url: string, data: { task_id: number; content: { text: string }[] }) =>
+            new Promise((resolve) => {
+                repairs.push({
+                    sent: Object.keys(data).sort(),
+                    id: data.task_id,
+                    text: data.content[0].text,
+                    ok: () => resolve({ data: {} }),
+                });
+            }),
+    }),
 }));
 vi.mock("../context/authState", () => ({
     useAuth: () => ({ accessToken: "test-token" }),
@@ -361,6 +379,9 @@ const patched = () => patches.map((p) => [p.milestoneId, p.text]);
 beforeEach(() => {
     vi.useFakeTimers();
     localStorage.clear();
+    repairs.length = 0;
+    resumeKeepingUnsavedBodies();
+    forgetTaskBodySaves();
     vi.mocked(loadSpecificTask).mockReset();
     vi.mocked(loadSpecificTask).mockImplementation(() => new Promise(() => undefined));
     net.puts.length = 0;
@@ -525,15 +546,19 @@ describe("words that may not have been saved (MIP-2455)", () => {
         view.unmount();
         localStorage.setItem(key, record);
         net.puts.length = 0;
+        forgetTaskBodySaves();
     };
 
     it("are saved when the task is opened after a reload", async () => {
         await reload();
         serverHas("loaded");
         await mount();
-        expect(sent()).toEqual([[1, "typed before the reload"]]);
-        await answer(net.puts[0].ok);
+        expect(repairs.map((r) => [r.id, r.text])).toEqual([[1, "typed before the reload"]]);
+        // The body alone: nothing a person changes meanwhile can be put back by it.
+        expect(repairs[0].sent).toEqual(["content", "project", "task_id", "team"]);
+        await answer(repairs[0].ok);
         expect(kept()).toHaveLength(0);
+        expect(net.puts).toHaveLength(0);
     });
 
     it("never overwrite what someone wrote since", async () => {
@@ -541,6 +566,7 @@ describe("words that may not have been saved (MIP-2455)", () => {
         serverHas("written through the API meanwhile");
         await mount();
         await pass(6000);
+        expect(repairs).toHaveLength(0);
         expect(net.puts).toHaveLength(0);
         expect(kept()).toHaveLength(0);
     });
@@ -549,7 +575,7 @@ describe("words that may not have been saved (MIP-2455)", () => {
         await reload();
         vi.mocked(loadSpecificTask).mockImplementation(async () => []);
         await mount();
-        expect(net.puts).toHaveLength(0);
+        expect(repairs).toHaveLength(0);
         expect(kept()).toHaveLength(1);
     });
 
@@ -563,8 +589,8 @@ describe("words that may not have been saved (MIP-2455)", () => {
         serverHas("loaded");
         await act(async () => host.open(makeTask(1, "loaded")));
         await pass(200);
-        expect(sent()[1]).toEqual([1, "typed just before switching"]);
-        await answer(net.puts[1].ok);
+        expect(repairs.map((r) => [r.id, r.text])).toEqual([[1, "typed just before switching"]]);
+        await answer(repairs[0].ok);
         expect(kept()).toHaveLength(0);
     });
 
@@ -586,12 +612,60 @@ describe("words that may not have been saved (MIP-2455)", () => {
     it("stay, on top of it, when an earlier save lands after they were kept", () => {
         keepUnsavedBody("u1", 1, doc("older and more"), "base");
         settleUnsavedBody("u1", 1, doc("older"), { stored: true, startedAt: Date.now() - 1000 });
-        expect(JSON.parse(localStorage.getItem(kept()[0])!).base).toContain("older");
+        expect(JSON.parse(localStorage.getItem(kept()[0])!).bases[0]).toContain("older");
+    });
+
+    it("stay when a later save only restates the stored body", () => {
+        keepUnsavedBody(
+            "u1",
+            1,
+            doc("typed"),
+            JSON.stringify([{ text: "old", type: "paragraph" }])
+        );
+        settleUnsavedBody("u1", 1, doc("old"), { stored: true, startedAt: Date.now() + 1 });
+        expect(kept()).toHaveLength(1);
+    });
+
+    it("are saved when a save that was still in flight did arrive", async () => {
+        const end = trackTaskBodySave(1, doc("half"));
+        keepUnsavedBody("u1", 1, doc("half and the rest"), "[]");
+        end();
+        serverHas("half");
+        await mount();
+        expect(repairs.map((r) => r.text)).toEqual(["half and the rest"]);
+        await answer(repairs[0].ok);
+    });
+
+    it("give way to what is typed while the server is being asked", async () => {
+        await reload();
+        let arrive = (_: TaskProps[]) => {};
+        vi.mocked(loadSpecificTask).mockImplementation(
+            () => new Promise((resolve) => (arrive = resolve))
+        );
+        await mount();
+        await type("typed while loading");
+        await answer(() => arrive([makeTask(1, "loaded")]));
+        expect(repairs).toHaveLength(0);
+    });
+
+    it("go before a save made while they are on the way", async () => {
+        await reload();
+        serverHas("loaded");
+        await mount();
+        await type("newer words");
+        await pause();
+        await pass(3000);
+        expect(net.puts).toHaveLength(0);
+        await answer(repairs[0].ok);
+        expect(sent()).toEqual([[1, "newer words"]]);
     });
 
     it("go with the sign-out", () => {
         keepUnsavedBody("u1", 1, doc("private"), "base");
         clearSignOutLocalStorage();
+        expect(kept()).toHaveLength(0);
+        // The preview unmounts after the sweep: nothing may be written back.
+        keepUnsavedBody("u1", 1, doc("private"), "base");
         expect(kept()).toHaveLength(0);
     });
 
