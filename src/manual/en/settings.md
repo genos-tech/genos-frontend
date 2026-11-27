@@ -60,7 +60,7 @@ The main switch, Pause notifications, browser permission, notification groups, E
 
 ## Shortcuts
 
-A list of the keyboard shortcuts, for reading only. Shortcuts cannot be changed.
+A list of the keyboard shortcuts. You can change Spotlight and the seven letter shortcuts: select a shortcut's keys, press Ctrl and Cmd (Ctrl and Alt on Windows/Linux) with a letter or number, and reset it any time. The rest are fixed. See the Keyboard shortcuts page of this manual.
 
 ## Security
 

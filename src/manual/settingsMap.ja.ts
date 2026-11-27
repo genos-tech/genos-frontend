@@ -117,7 +117,7 @@ export const JA_SETTINGS_TEXT: Record<SettingGuideId, JaSettingText> = {
     customEmoji: {
         default: "チームの絵文字(誰でも追加でき、削除できるのはアップロードした本人)",
     },
-    shortcuts: { default: "閲覧のみの一覧" },
+    shortcuts: { default: "初期設定のキー(スポットライトと文字キーのショートカットは変更可能)" },
     security: { default: "2段階認証(オフ)" },
     account: { default: "エクスポート、セキュリティのアクティビティ、所属チーム、削除" },
     integrations: {

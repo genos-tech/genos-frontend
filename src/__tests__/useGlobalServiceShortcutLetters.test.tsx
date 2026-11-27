@@ -13,6 +13,7 @@ import {
     GlobalServiceShortcutOptions,
     useGlobalServiceShortcut,
 } from "../hooks/common/useGlobalServiceShortcut";
+import { applyOverrides, customChord, setRecording } from "../shortcuts";
 
 let mac = true;
 vi.mock("../services/serviceSwitch/serviceSwitchStore", () => ({ switchService: vi.fn() }));
@@ -47,6 +48,23 @@ beforeEach(() => {
 });
 
 describe("letter shortcuts", () => {
+    it("follow the member's own keys, and everything waits while one is recorded (MIP-2413)", () => {
+        const onOpenHistory = vi.fn();
+        const { result } = setup({ onOpenHistory });
+        applyOverrides("mac", { "global.history": customChord("j", "mac") });
+        press({ key: "h", ctrlKey: true, metaKey: true });
+        expect(onOpenHistory).not.toHaveBeenCalled();
+        press({ key: "j", ctrlKey: true, metaKey: true });
+        expect(onOpenHistory).toHaveBeenCalledTimes(1);
+        setRecording(true);
+        press({ key: "j", ctrlKey: true, metaKey: true });
+        press({ key: "Control", ctrlKey: true, metaKey: true });
+        expect(onOpenHistory).toHaveBeenCalledTimes(1);
+        expect(result.current.previewIndex).toBeNull();
+        setRecording(false);
+        applyOverrides("mac", {});
+    });
+
     it.each(CASES)("Ctrl+Cmd+%s runs %s and nothing else (Mac)", (letter, option) => {
         const fns = Object.fromEntries(CASES.map(([, o]) => [o, vi.fn()])) as Record<
             string,

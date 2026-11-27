@@ -46,7 +46,7 @@ import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTaskSaveTriggers } from "../../../../hooks/tasks/useTaskSaveTriggers";
 import { fmt, useTranslation } from "../../../../i18n";
 import { useNotificationsContext } from "../../../../services/notifications/notificationsContextState";
-import { shortcutText } from "../../../../shortcuts";
+import { shortcutText, useShortcutsVersion } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
@@ -1259,6 +1259,8 @@ const MilestonePreviewInner = ({
     useUISM,
     useNM,
 }: MilestonePreviewInnerProps) => {
+    // Re-render when the member rebinds the shortcut printed below (MIP-2413).
+    useShortcutsVersion();
     const { accessToken } = useAuth();
     // Milestone -> task (MIP-1042).
     const convert = useConvertTaskMilestone({ accessToken, useTM, useSM });

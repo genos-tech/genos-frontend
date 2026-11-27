@@ -263,11 +263,9 @@ export const SETTINGS_MAP = {
         items: {},
     },
     shortcuts: {
-        who: "readOnly",
-        plan: "all",
-        serverSwitch: null,
+        ...SELF,
         labelPath: "settings.tabs.shortcuts",
-        default: "Read-only list",
+        default: "Built-in keys (Spotlight and the letter shortcuts can be changed)",
         items: {},
     },
     security: {

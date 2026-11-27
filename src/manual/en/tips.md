@@ -23,7 +23,7 @@ settings: [shortcuts, notifications.master, notifications.quietHours]
 - **/** on the Notes page jumps to the filter box of the notes list.
 - **Cmd+Enter or Ctrl+Enter** sends a message or comment, and creates the task in the new-task form.
 - The task table, the sprint board and the calendar work from the keyboard. Tab moves into them, and the arrow keys move inside.
-- Settings → Shortcuts lists every shortcut. The list is read-only: shortcuts can't be changed.
+- Settings → Shortcuts lists every shortcut. You can change Spotlight and the letter shortcuts there.
 - Paste a Genos link into a message, and clicking it opens a preview over the page, so you never lose your place.
 - In a thread, **New task linked to this thread** turns a "we should do this" conversation into tracked work. A thread can have one task.
 - The sprint board, the task table and the task graph are three views of the same tasks. Use the one that fits the moment.

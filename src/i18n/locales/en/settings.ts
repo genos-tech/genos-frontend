@@ -1761,6 +1761,28 @@ export const settings = {
     },
     shortcuts: {
         heading: "Keyboard shortcuts",
+        edit: {
+            introMac:
+                "To change a shortcut, select its keys and press the new ones. Changes are saved to your account and apply on every Mac you use.",
+            introOther:
+                "To change a shortcut, select its keys and press the new ones. Changes are saved to your account and apply on every Windows or Linux computer you use.",
+            change: "Change the shortcut for {label} (now {keys})",
+            recording: "Press new keys…",
+            started:
+                "Recording a shortcut for {label}. Hold {keys} and press a letter or number. Press Escape to cancel.",
+            hint: "Hold {keys} and press a letter or number. Esc cancels.",
+            cancel: "Cancel",
+            cancelled: "Recording cancelled.",
+            custom: "Custom",
+            reset: "Reset {label} to the default",
+            resetAll: "Reset all",
+            saved: "{label} is now {keys}.",
+            resetDone: "{label} is back to {keys}.",
+            resetAllDone: "All shortcuts are back to the default keys.",
+            needsKeys: "Hold {keys} and press a letter or number.",
+            reserved: "{keys} is used by your system. Choose other keys.",
+            conflict: "{keys} is already used by “{label}”. Change or reset that one first.",
+        },
         table: {
             title: "Task table",
             description:

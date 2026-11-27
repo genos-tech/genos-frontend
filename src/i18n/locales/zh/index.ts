@@ -5653,6 +5653,28 @@ export const zh: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "键盘快捷键",
+            edit: {
+                introMac:
+                    "要修改快捷键，请选中它的按键，再按下新的按键。修改会保存到你的账号，并在你使用的所有 Mac 上生效。",
+                introOther:
+                    "要修改快捷键，请选中它的按键，再按下新的按键。修改会保存到你的账号，并在你使用的所有 Windows 或 Linux 电脑上生效。",
+                change: "修改“{label}”的快捷键（当前为 {keys}）",
+                recording: "请按下新的按键…",
+                started:
+                    "正在录制“{label}”的快捷键。按住 {keys}，再按一个字母或数字。按 Escape 取消。",
+                hint: "按住 {keys}，再按一个字母或数字。按 Esc 取消。",
+                cancel: "取消",
+                cancelled: "已取消录制。",
+                custom: "自定义",
+                reset: "将“{label}”恢复默认",
+                resetAll: "全部恢复默认",
+                saved: "“{label}”现在是 {keys}。",
+                resetDone: "“{label}”已恢复为 {keys}。",
+                resetAllDone: "所有快捷键已恢复默认。",
+                needsKeys: "请按住 {keys}，再按一个字母或数字。",
+                reserved: "{keys} 已被系统占用。请选择其他按键。",
+                conflict: "{keys} 已用于“{label}”。请先修改或恢复该项。",
+            },
             table: {
                 title: "任务表格",
                 description:
