@@ -187,7 +187,7 @@ describe("the row and header actions", () => {
         expect(screen.getAllByTestId("custom-dashboard-row-delete")).toHaveLength(2);
         const own = screen.getByRole("region", { name: c().own });
         expect(
-            within(own).getByRole("button", { name: editLabel("Milestone X dashboard") })
+            within(own).getByRole("button", { name: editLabel("Monday milestone") })
         ).toBeTruthy();
         expect(
             within(own).getByRole("button", { name: deleteLabel("Brand new dashboard") })
@@ -248,7 +248,7 @@ describe("Edit", () => {
     };
 
     it("opens the form for that dashboard with its saved values", async () => {
-        const { form } = await openEdit("Milestone X dashboard");
+        const { form } = await openEdit("Monday milestone");
         expect(screen.getByText(c().editTitle)).toBeTruthy();
         expect((within(form).getByLabelText(/^Name/) as HTMLInputElement).value).toBe(
             "Monday milestone"
@@ -270,7 +270,7 @@ describe("Edit", () => {
     });
 
     it("locks where the page is saved once the page exists, and says why once", async () => {
-        const { form } = await openEdit("Milestone X dashboard");
+        const { form } = await openEdit("Monday milestone");
         const params = within(form).getByTestId("schedule-params");
         // ONE picker for the place, showing the folder by name; it is the only thing locked.
         const place = within(params).getByRole("combobox", { name: /Save to/i });
@@ -290,7 +290,7 @@ describe("Edit", () => {
     });
 
     it("saves only the name when only the name changed, and tells the list to refresh", async () => {
-        const { user, form } = await openEdit("Milestone X dashboard");
+        const { user, form } = await openEdit("Monday milestone");
         const name = within(form).getByLabelText(/^Name/);
         await user.clear(name);
         await user.type(name, "Monday, renamed");
@@ -306,7 +306,7 @@ describe("Edit", () => {
     });
 
     it("sends ALL the options when one changes, so the saved place is not dropped", async () => {
-        const { user, form } = await openEdit("Milestone X dashboard");
+        const { user, form } = await openEdit("Monday milestone");
         await user.type(within(form).getByLabelText(/^Focus/i), "blockers");
         await user.click(within(form).getByRole("button", { name: "Save changes" }));
         await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
@@ -322,7 +322,7 @@ describe("Edit", () => {
     });
 
     it("asks the server nothing when nothing changed, and closes", async () => {
-        const { user, form } = await openEdit("Milestone X dashboard");
+        const { user, form } = await openEdit("Monday milestone");
         await user.click(within(form).getByRole("button", { name: "Save changes" }));
         await waitFor(() => expect(screen.queryByTestId("schedule-form")).toBeNull());
         expect(update).not.toHaveBeenCalled();
@@ -336,7 +336,7 @@ describe("Edit", () => {
             planRequired: false,
             limitReached: false,
         });
-        const { user, form } = await openEdit("Milestone X dashboard");
+        const { user, form } = await openEdit("Monday milestone");
         const name = within(form).getByLabelText(/^Name/);
         await user.clear(name);
         await user.type(name, "Other");
@@ -357,10 +357,10 @@ describe("Delete", () => {
     };
 
     it("asks first, says the page stays, and deletes nothing until yes", async () => {
-        const { user, dialog } = await askDelete("Milestone X dashboard");
+        const { user, dialog } = await askDelete("Monday milestone");
         expect(within(dialog).getByText(c().deleteTitle)).toBeTruthy();
         expect(
-            within(dialog).getByText(fmt(c().deleteBody, { name: "Milestone X dashboard" }))
+            within(dialog).getByText(fmt(c().deleteBody, { name: "Monday milestone" }))
         ).toBeTruthy();
         expect(remove).not.toHaveBeenCalled();
         await user.click(within(dialog).getByRole("button", { name: actions().cancel }));
