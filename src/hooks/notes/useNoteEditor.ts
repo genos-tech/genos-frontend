@@ -44,5 +44,6 @@ export const useNoteEditor = ({
         setNoteBodyEdited: core.setNoteBodyEdited,
         setNoteBodySaved: core.setNoteBodySaved,
         updateNote: core.updateNote,
+        bodyReadRef: core.bodyReadRef,
     };
 };

@@ -1347,6 +1347,7 @@ export const tasks = {
             runNow: "Run now",
             openNote: "Open note",
             runDone: "Dashboard updated.",
+            runStarted: "Started. The dashboard updates when the run is done.",
             runFailed: "The dashboard could not be updated.",
             notRunTitle: "This dashboard has not run yet",
             notRunBody: "Run it now to build the page.",

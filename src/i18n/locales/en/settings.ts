@@ -163,6 +163,9 @@ export const settings = {
         lastResult: "{title}, {count, plural, one {# item} other {# items}}",
         runNow: "Run now",
         running: "Running…",
+        runStarted: "Started. The report arrives in your Inbox when it is done.",
+        runStartedChat: "Started. The report is posted in {chat} when it is done.",
+        runStopped: "That run recorded no result. If the report did not arrive, run it again.",
         ranOk: "Ran: {title}, {count, plural, one {# item} other {# items}}. The report is in your Inbox.",
         ranFailed: "The run failed: {error}",
         // Said by a toast after "Run now", so it is heard with the dialog closed.
@@ -701,6 +704,8 @@ export const settings = {
         webSearches: "Web searches",
         tasksCreated: "Tasks created",
         notesCreated: "Notes created",
+        htmlStorage: "HTML storage",
+        htmlStorageLeft: "{remaining} of {limit} left · {used} used",
         messageHistory: "Message history",
         messageHistoryDays: "Last {days} days",
         maxFileSize: "Max file size",
@@ -857,8 +862,11 @@ export const settings = {
         matrixRowUpload: "File upload size",
         matrixRowHtmlPages: "HTML pages",
         matrixRowHtmlSize: "HTML page size",
+        matrixRowHtmlStorage: "HTML page storage",
+        matrixHintHtmlStorage: "Per person; counts every kept version",
         matrixRowHtmlSaves: "HTML page saves per hour",
         matrixKb: "{kb} KB",
+        matrixGb: "{gb} GB",
         // Short forms: inside a group already headed "What Genos can
         // reach", the word "integration" is noise in every row.
         matrixRowWeb: "Web search",

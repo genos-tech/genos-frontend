@@ -46,6 +46,8 @@ A schedule (Settings > Genos > Schedules, Core and above) prepares a report at t
 
 **Run right away.** When you make a new schedule that runs **One time only**, you can choose **Run right away** instead of a date and time, then click **Run now**. The report goes to your Inbox or the chosen chat at once. If the run fails, no schedule is saved and the form keeps what you typed. A finished one stays in your list, and its name cannot be used again until you delete it.
 
+**Slow reports run in the background.** A report that can take a while (Run a skill, a dashboard page, or a report with AI) does not keep you waiting, for Run now and Run right away alike. Genos says **Started**, the button shows **Running…**, and the report arrives when it is done. If such a run fails, the schedule stays in your list and shows what went wrong. A new Run right away with the same name replaces one that never made a report. A run that was cut off can be started again after about a minute.
+
 **Scheduled job by Genos AI.** Six reports have a **Mode** choice, plain or Scheduled job by Genos AI: What to do today, What is left from last week, Project updates, Milestone updates, Team activity and Dashboard page. Plain is the default. Group chat catch-up and What you did cannot use AI. Run a skill always uses AI, and so does a dashboard page made by a skill, so neither has a Mode choice.
 
 - In What to do today, AI adds one short sentence under a task when its comments explain where it stands. In the other reports, AI adds a short summary (2 to 4 sentences) at the top, written from what the report already lists.
@@ -67,6 +69,8 @@ A schedule (Settings > Genos > Schedules, Core and above) prepares a report at t
 - **Focus:** optional, a few words on what the page should look at.
 
 **Links.** The names on the page (the project or milestone in the title, and the tasks it lists) are links: click one to open it in Genos. A page made by a skill can link the tasks, milestones, projects and notes that its run read. Genos writes every link itself, and only to things the page's readers can open. A page you or an AI app saved by hand has no such links.
+
+**Working with the page.** In Genos you can open a "+N more" line to see the rest, sort the due-date list by due date, status or owner, filter the lists by status or person, click a column heading to sort a table, hover or tap a chart to read its numbers, and fold a section by its heading. Nothing you change there is saved. A page made before this gets these at its next run.
 
 The first run saves the page as one HTML page in your notes, and each run after replaces it with the new numbers. Dashboards need a plan that has HTML pages (Core and above). Each run counts toward your plan's HTML page saves per hour (30 on Core, 60 on Pro and above). You can keep up to 10 dashboard schedules.
 

@@ -46,6 +46,7 @@ export const sendUpdatedTaskNote = async (
             if (setErrorMessage) {
                 setErrorMessage(getMessages().notes.errors.unauthorizedToken);
             }
+            throw new Error("Note not saved: no auth token");
         }
     } catch (error: unknown) {
         if (axios.isAxiosError(error)) {
@@ -65,5 +66,7 @@ export const sendUpdatedTaskNote = async (
         } else {
             console.error("Unexpected error:", error);
         }
+        // Reported above, and rethrown: the caller must not count the note as saved (MIP-2454).
+        throw error;
     }
 };
