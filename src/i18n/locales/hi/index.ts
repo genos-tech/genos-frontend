@@ -1665,6 +1665,8 @@ export const hi: DeepPartial<Messages> = {
             skillNone: "अभी चलाने के लिए आपके पास कोई स्किल नहीं है। पहले स्किल में एक लिखें।",
             skillTagFilter: "टैग से स्किल फ़िल्टर करें",
             skillNoMatch: "किसी स्किल में ये सभी टैग नहीं हैं।",
+            skillDashboardNone: "अभी किसी स्किल पर dashboard टैग नहीं है।",
+            skillDashboardHint: "किसी स्किल को यहाँ दिखाने के लिए उस पर dashboard टैग जोड़ें।",
             skillNotPublished:
                 "{name} (पहले इसे अपनी टीम के साथ साझा करके एक संस्करण प्रकाशित करें)",
             errorSkill: "एक स्किल चुनें।",

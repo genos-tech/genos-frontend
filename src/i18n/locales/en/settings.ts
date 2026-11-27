@@ -361,6 +361,8 @@ export const settings = {
         skillNone: "You have no skill to run yet. Write one in Skills first.",
         skillTagFilter: "Filter skills by tag",
         skillNoMatch: "No skill has all of these tags.",
+        skillDashboardNone: "No skill has the dashboard tag yet.",
+        skillDashboardHint: "Add the dashboard tag to a skill to list it here.",
         skillNotPublished: "{name} (share it with your team to publish a version first)",
         errorSkill: "Choose a skill.",
         effortHintNoEstimate:

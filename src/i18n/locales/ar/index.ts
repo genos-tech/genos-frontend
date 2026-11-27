@@ -1273,6 +1273,8 @@ export const ar: DeepPartial<Messages> = {
             skillNone: "ليس لديك مهارة لتشغيلها بعد. اكتب واحدة أولاً في المهارات.",
             skillTagFilter: "تصفية المهارات حسب العلامة",
             skillNoMatch: "لا توجد مهارة تحمل كل هذه العلامات.",
+            skillDashboardNone: "لا توجد بعد مهارة تحمل العلامة dashboard.",
+            skillDashboardHint: "أضف العلامة dashboard إلى مهارة لتظهر هنا.",
             skillNotPublished: "{name} (شاركها مع فريقك أولاً لنشر نسخة)",
             errorSkill: "اختر مهارة.",
             effortHintNoEstimate:
