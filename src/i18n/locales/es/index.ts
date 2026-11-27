@@ -1322,6 +1322,8 @@ export const es: DeepPartial<Messages> = {
                 "Un informe sencillo hecho con tus datos. Sin IA, sin gastar créditos.",
             scheduleModeAiHint:
                 "Genos AI añade una frase corta bajo una tarea cuando sus comentarios explican cómo está. Esto gasta tus créditos de IA.",
+            scheduleModeAiSummaryHint:
+                "Genos AI añade un resumen breve, escrito a partir de lo que el informe ya recoge. Esto gasta tus créditos de IA.",
             scheduleModeOutOfCredits:
                 "Has usado todos tus créditos de IA, así que el modo Genos AI no puede ejecutarse. Compra créditos o mejora tu plan para activarlo.",
             aiOutOfCreditsBuy: "Comprar créditos",
@@ -1334,6 +1336,8 @@ export const es: DeepPartial<Messages> = {
             effortCostTiny: "Menos de 0.01 créditos por ejecución. Es una estimación.",
             effortHint:
                 "Cuánto se esfuerza la IA en este informe. La estimación es para un informe de unas 10 tareas; el coste real solo se muestra a ti, en tu bandeja de entrada.",
+            effortHintSummary:
+                "Cuánto se esfuerza la IA en este informe. La estimación es para resumir un informe de unas 24 líneas; el coste real solo se muestra a ti, en tu bandeja de entrada.",
             effortHeld: "Tu plan ejecuta esta programación con esfuerzo {level}.",
             rowEffort: "Esfuerzo de la IA: {level}",
             duplicateSame: "Ya tienes una programación que hace lo mismo a la misma hora: {name}.",

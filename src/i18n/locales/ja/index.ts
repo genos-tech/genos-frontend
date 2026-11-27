@@ -5113,6 +5113,8 @@ export const ja: DeepPartial<Messages> = {
                 "データから作る通常のレポートです。AI は使わず、クレジットも消費しません。",
             scheduleModeAiHint:
                 "タスクのコメントから状況が分かるとき、Genos AI がタスクの下に短い一文を添えます。AI クレジットを消費します。",
+            scheduleModeAiSummaryHint:
+                "Genos AI が、レポートに載っている内容から短い要約を添えます。AI クレジットを消費します。",
             scheduleModeOutOfCredits:
                 "AIクレジットを使い切ったため、Genos AI モードは実行できません。クレジットを購入するかプランをアップグレードすると使えます。",
             aiOutOfCreditsBuy: "クレジットを購入",
@@ -5124,6 +5126,8 @@ export const ja: DeepPartial<Messages> = {
             effortCostTiny: "1 回の実行あたり 0.01 クレジット未満。これは見積もりです。",
             effortHint:
                 "このレポートで AI がどれだけ深く考えるかです。見積もりはタスク約 10 件のレポートの場合で、実際の費用はあなたの受信箱にだけ表示されます。",
+            effortHintSummary:
+                "このレポートで AI がどれだけ深く考えるかです。見積もりは約 24 行のレポートを要約する場合で、実際の費用はあなたの受信箱にだけ表示されます。",
             effortHeld: "ご利用のプランでは、このスケジュールは「{level}」で実行されます。",
             rowEffort: "AI の Effort：{level}",
             duplicateSame: "同じ時刻に同じ内容を行うスケジュールがすでにあります：{name}。",

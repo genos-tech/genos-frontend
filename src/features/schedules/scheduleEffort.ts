@@ -72,6 +72,22 @@ export const chatHintKey = (
     return showsEffort(job, typed) ? "deliverChatHintAiShared" : "deliverChatHint";
 };
 
+/** The one job whose AI step writes a sentence under a task. Every other job with the Mode choice
+ *  writes a short summary of the report (genos-api `report_kit.add_narrative`), and its estimate
+ *  is for that (MIP-2436). */
+const SENTENCE_JOB = "what_to_do_today";
+
+/** What the "by Genos AI" mode does, in this job's form. */
+export const modeAiHintKey = (jobKey: string) =>
+    jobKey === SENTENCE_JOB ? "scheduleModeAiHint" : "scheduleModeAiSummaryHint";
+
+/** The hint under the AI effort. "The estimate is for ..." only where there is an estimate: a
+ *  skill run has none. */
+export const effortHintKey = (jobKey: string, hasCost: boolean) => {
+    if (!hasCost) return "effortHintNoEstimate";
+    return jobKey === SENTENCE_JOB ? "effortHint" : "effortHintSummary";
+};
+
 /** The level the form shows as chosen: the member's own, else the job's default. */
 export const chosenEffort = (job: ScheduleJob | undefined, aiEffort: string): EffortLevel | null =>
     asEffortLevel(aiEffort) ?? asEffortLevel(job?.effortDefault);

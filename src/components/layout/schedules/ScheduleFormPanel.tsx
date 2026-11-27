@@ -26,6 +26,8 @@ import {
     costText,
     EFFORT_LEVELS,
     effortCostFor,
+    effortHintKey,
+    modeAiHintKey,
     showsEffort,
 } from "../../../features/schedules/scheduleEffort";
 import {
@@ -478,7 +480,7 @@ export const ScheduleFormPanel = ({
                                                 {creditsOut
                                                     ? s.scheduleModeOutOfCredits
                                                     : on
-                                                      ? s.scheduleModeAiHint
+                                                      ? s[modeAiHintKey(job.job)]
                                                       : s.scheduleModePlainHint}
                                             </FormHelperText>
                                             {creditsOut && (
@@ -682,9 +684,7 @@ export const ScheduleFormPanel = ({
                             </FormHelperText>
                         )}
                         <FormHelperText sx={{ color: g.text.secondary }}>
-                            {/* "The estimate is for a report of about 10 tasks" is about the
-                                report sentences: a run with no estimate (a skill run) has none. */}
-                            {cost ? s.effortHint : s.effortHintNoEstimate}
+                            {s[effortHintKey(job?.job ?? "", !!cost)]}
                         </FormHelperText>
                         {held && (
                             <FormHelperText data-testid="schedule-effort-held">

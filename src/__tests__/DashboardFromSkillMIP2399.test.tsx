@@ -221,7 +221,7 @@ describe("the form", () => {
         await useSkill(user);
         const effort = () => within(screen.getByTestId("schedule-effort"));
         expect(effort().getByText(s().effortHintNoEstimate)).toBeTruthy();
-        expect(effort().queryByText(s().effortHint)).toBeNull();
+        expect(effort().queryByText(s().effortHintSummary)).toBeNull();
         expect(effort().queryByText(/0\.1/)).toBeNull();
 
         await pick(user, sourceBox(), s().sourceTemplate);
@@ -230,7 +230,11 @@ describe("the form", () => {
             within(screen.getByTestId("schedule-mode")).getByRole("combobox"),
             s().scheduleModeAi
         );
-        expect(effort().getByText(s().effortHint)).toBeTruthy();
+        expect(effort().getByText(s().effortHintSummary)).toBeTruthy();
+        // A dashboard page adds a summary, not a sentence under a task (MIP-2436).
+        expect(
+            within(screen.getByTestId("schedule-mode")).getByText(s().scheduleModeAiSummaryHint)
+        ).toBeTruthy();
         expect(effort().getByText(/0\.1/)).toBeTruthy();
     });
 
