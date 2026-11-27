@@ -615,7 +615,7 @@ export const SkillParamSelect = ({
                     data-testid="skill-chosen-summary"
                     dir="auto"
                     level="body-xs"
-                    sx={SKILL_SUMMARY_SX}
+                    sx={{ ...SKILL_SUMMARY_SX, mt: 0.5 }}
                 >
                     {chosenSummary}
                 </Typography>
