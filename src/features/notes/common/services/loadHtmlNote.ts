@@ -13,6 +13,9 @@ export type HtmlNoteFrame = {
     size: number;
     warnings: { code: string; message: string; fix: string; count?: number }[];
     savedAt: string;
+    /** True for a page the server drew itself: the viewer then opens the in-app link a click in it
+     *  posts (MIP-2417). Anything but a literal `true` is false. */
+    links: boolean;
 };
 
 /** The API's own page route: `/h/<signed token>`. Anything else is not a page this viewer may frame. */
@@ -39,6 +42,7 @@ export const loadHtmlNoteFrame = async (
         size: number;
         warnings?: HtmlNoteFrame["warnings"];
         saved_at: string;
+        links?: boolean;
     }>(`${base}/api/v3/notes/${htmlNoteFamily(noteType)}/${noteId}/html/frame`, {
         headers: { Authorization: `Bearer ${accessToken}` },
         withCredentials: true,
@@ -54,5 +58,6 @@ export const loadHtmlNoteFrame = async (
         size: res.data.size,
         warnings: res.data.warnings ?? [],
         savedAt: res.data.saved_at,
+        links: res.data.links === true,
     };
 };
