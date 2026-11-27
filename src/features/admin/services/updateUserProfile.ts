@@ -16,7 +16,6 @@ type updateUserProfileProps = {
     isOfflineForced?: string;
     role?: string;
     baseCountry?: string;
-    phoneNumber?: string;
     /** An IANA zone name, or `""` to clear it. The server rejects
      *  anything `zoneinfo` doesn't recognise. */
     currentLocation?: string;
@@ -36,7 +35,6 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
         isOfflineForced,
         role,
         baseCountry,
-        phoneNumber,
         currentLocation,
         locationShared,
         aboutMe,
@@ -65,7 +63,6 @@ export const updateUserProfile = async (props: updateUserProfileProps) => {
             }
             if (role !== undefined) payload.role = role;
             if (baseCountry !== undefined) payload.base_country = baseCountry;
-            if (phoneNumber !== undefined) payload.phone_number = phoneNumber;
             if (currentLocation !== undefined) payload.current_location = currentLocation;
             if (locationShared !== undefined) payload.location_shared = locationShared;
             if (aboutMe !== undefined) payload.about_me = aboutMe;

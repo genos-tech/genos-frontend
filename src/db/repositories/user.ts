@@ -3,20 +3,21 @@ import { INDEX_NAMES, STORES } from "../config";
 import { BatchOperationResult, OperationResult } from "../types";
 import { BaseRepository } from "./base";
 
+// A row as an earlier build wrote it, or as a server that has not been updated yet
+// still sends it. Genos no longer has phone numbers (MIP-2464): nothing reads this.
+type LegacyUserRow = UserProps & { phoneNumber?: string };
+
 /**
- * A teammate as the roster stores them: without their phone number.
+ * A teammate as the roster stores them: without a phone number.
  *
  * The roster sits in IndexedDB, which outlives sign-out until the next user
- * switch, so on a shared or lost device it would hold the whole team's phone
- * numbers (MIP-768). The profile card does not need them stored: opening it
- * re-fetches the member's authoritative row (`getTeamMemberInfo`, which carries
- * the phone) and overlays it on the roster row. Enforced here, at the one place
- * that writes the store, so no write path (the roster load, a presence beat,
- * anything added later) can put one back.
+ * switch, so a number cached by an earlier build would stay on the device.
+ * Enforced here, at the one place that writes the store, so no write path
+ * (the roster load, a presence beat, anything added later) can put one back.
  *
  * `userEmail` is NOT stripped: 61 files read it, several as an identity key.
  */
-export const withoutStoredPhone = (user: UserProps): UserProps => {
+export const withoutStoredPhone = (user: LegacyUserRow): UserProps => {
     if (!("phoneNumber" in user)) return user;
     const { phoneNumber: _dropped, ...rest } = user;
     return rest;
@@ -25,7 +26,7 @@ export const withoutStoredPhone = (user: UserProps): UserProps => {
 // Whether a stored row still has something to remove. A row that carries the
 // key with no value (`phoneNumber: undefined`, which IndexedDB keeps) holds no
 // phone number, so sweeping it would only rewrite it on every load.
-const holdsAPhone = (user: UserProps): boolean => Boolean(user.phoneNumber);
+const holdsAPhone = (user: LegacyUserRow): boolean => Boolean(user.phoneNumber);
 
 // User repository for managing user data
 export class UserRepository extends BaseRepository<UserProps> {

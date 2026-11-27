@@ -34,13 +34,6 @@ export type UserProps = {
     // `resolveDisplayRole` (utils/memberRoles.ts), never raw.
     memberRole?: string;
     baseCountry?: string;
-    /** Absent — not empty — on rows the server built for someone outside
-     *  the team. A guest reaches a roster through the one project they
-     *  were invited to and a cross-team collaborator through the one
-     *  object shared with them; neither is a colleague, so the server
-     *  omits the key entirely rather than blanking it. Treat "missing"
-     *  and "not set" the same: both mean don't render the row. */
-    phoneNumber?: string;
     /** IANA zone the user PICKED as their location ("Asia/Tokyo"). Its
      *  city component is the location label, and it wins over `timezone`
      *  for local time — see `resolveDisplayZone` in utils/userTimezone. */
@@ -112,7 +105,6 @@ export type SignInResponse = {
     custom_status: string;
     role: string;
     base_country: string;
-    phone_number: string;
     current_location: string;
     // Opt-out for showing location to others; hydrates the profile toggle.
     // Optional so a server that predates the field doesn't break parsing.

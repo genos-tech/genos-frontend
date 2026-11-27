@@ -15,7 +15,6 @@ import { authApi } from "./api";
 
 export type PrivateProfile = {
     userEmail: string;
-    phoneNumber: string;
     baseCountry: string;
     currentLocation: string;
     aboutMe: string;
@@ -25,7 +24,6 @@ export type PrivateProfile = {
  *  responses that this store keeps. */
 export type PrivateProfileWire = {
     email?: string | null;
-    phone_number?: string | null;
     base_country?: string | null;
     current_location?: string | null;
     about_me?: string | null;
@@ -46,7 +44,6 @@ export const PRIVATE_PROFILE_STORAGE_KEYS = [
 
 const EMPTY: PrivateProfile = {
     userEmail: "",
-    phoneNumber: "",
     baseCountry: "",
     currentLocation: "",
     aboutMe: "",
@@ -72,7 +69,6 @@ const write = (next: PrivateProfile, isLoaded: boolean): void => {
 
 export const privateProfileFromWire = (wire: PrivateProfileWire): PrivateProfile => ({
     userEmail: wire.email || "",
-    phoneNumber: wire.phone_number || "",
     baseCountry: wire.base_country || "",
     currentLocation: wire.current_location || "",
     aboutMe: wire.about_me || "",
