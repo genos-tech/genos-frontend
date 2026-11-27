@@ -163,6 +163,9 @@ export const settings = {
         lastResult: "{title}, {count, plural, one {# item} other {# items}}",
         runNow: "Run now",
         running: "Running…",
+        runStarted: "Started. The report arrives in your Inbox when it is done.",
+        runStartedChat: "Started. The report is posted in {chat} when it is done.",
+        runStopped: "That run recorded no result. If the report did not arrive, run it again.",
         ranOk: "Ran: {title}, {count, plural, one {# item} other {# items}}. The report is in your Inbox.",
         ranFailed: "The run failed: {error}",
         // Said by a toast after "Run now", so it is heard with the dialog closed.

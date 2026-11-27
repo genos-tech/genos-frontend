@@ -4896,6 +4896,10 @@ export const ja: DeepPartial<Messages> = {
             lastResult: "{title}、{count, plural, one {#件} other {#件}}",
             runNow: "今すぐ実行",
             running: "実行中…",
+            runStarted: "開始しました。完了するとレポートが受信箱に届きます。",
+            runStartedChat: "開始しました。完了するとレポートが{chat}に投稿されます。",
+            runStopped:
+                "この実行の結果は記録されていません。レポートが届いていない場合は、もう一度実行してください。",
             ranOk: "実行しました: {title}、{count, plural, one {#件} other {#件}}。レポートは受信箱にあります。",
             ranFailed: "実行に失敗しました: {error}",
             reportReady: "レポートの準備ができました",
@@ -7455,6 +7459,7 @@ export const ja: DeepPartial<Messages> = {
                 runNow: "今すぐ実行",
                 openNote: "ノートを開く",
                 runDone: "ダッシュボードを更新しました。",
+                runStarted: "開始しました。実行が完了するとダッシュボードが更新されます。",
                 runFailed: "ダッシュボードを更新できませんでした。",
                 notRunTitle: "このダッシュボードはまだ実行されていません",
                 notRunBody: "今すぐ実行してページを作成します。",

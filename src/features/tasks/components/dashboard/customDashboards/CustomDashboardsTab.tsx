@@ -26,6 +26,8 @@ import { focusRing, g } from "../../../../../theme/tokens";
 import type { UserProps } from "../../../../../types/admin";
 import { HtmlNoteView } from "../../../../notes/common/components/HtmlNoteView";
 import { ModalNoteSharing } from "../../../../notes/common/components/ModalNoteSharing";
+import { followRun } from "../../../../schedules/followRun";
+import { useRunningPoll } from "../../../../schedules/useRunningPoll";
 import { useCustomDashboards } from "../../../hooks/useCustomDashboards";
 import type { OwnDashboard, SharedDashboard } from "../../../services/loadCustomDashboards";
 import { formatAgentWhen } from "../agentActivity/agentActivityLinks";
@@ -49,6 +51,9 @@ type Entry = {
     paused: boolean;
     shared: boolean;
     inTeamFolder: boolean;
+    /** A run holds its schedule now (MIP-2457). */
+    running: boolean;
+    lastRun: string | null;
 };
 
 const ownEntry = (
@@ -70,6 +75,8 @@ const ownEntry = (
         paused: !row.enabled,
         shared: false,
         inTeamFolder: !!row.note?.inTeamFolder,
+        running: row.running === true,
+        lastRun: row.lastRun,
     };
 };
 
@@ -83,6 +90,8 @@ const sharedEntry = (row: SharedDashboard, by: string): Entry => ({
     paused: false,
     shared: true,
     inTeamFolder: !!row.inTeamFolder,
+    running: false,
+    lastRun: null,
 });
 
 /** The Notes address of a dashboard's page, by the sidebar section that holds it (MIP-2408): a
@@ -399,13 +408,46 @@ export const CustomDashboardsTab = ({ teamId, share }: Props) => {
             alive.current = false;
         };
     }, []);
+    // The server's word (MIP-2457): a slow run goes on after the answer, whoever started it.
+    useRunningPoll(onTasks && own.some((e) => e.running), view.refresh);
+    // A background run that ends writes a new page: show it.
+    const seen = useRef<Entry | null>(null);
+    useEffect(() => {
+        const before = seen.current;
+        seen.current = selected;
+        if (before && selected && before.key === selected.key && before.running) {
+            if (!selected.running) setFrameKey((n) => n + 1);
+        }
+    }, [selected]);
     const runNow = async () => {
-        if (!selected?.scheduleId || running) return;
+        if (!selected?.scheduleId || running || selected.running) return;
         setRunning(true);
         const res = await runScheduleNow(accessToken, teamId, selected.scheduleId);
+        if (res.ok && res.outcome.status === "started") {
+            toast.neutral(c.runStarted, { id: "custom-dashboard-run" });
+            // Followed even with the tab closed, so the member hears how it ended.
+            followRun({
+                accessToken,
+                teamId,
+                id: selected.scheduleId,
+                startedAt: res.outcome.startedAt,
+                onEnd: (outcome) => {
+                    if (outcome.status === "ok") {
+                        toast.success(c.runDone, { id: "custom-dashboard-run" });
+                        // A run over before the list ever read "running" still shows its page.
+                        if (alive.current && !seen.current?.running) setFrameKey((n) => n + 1);
+                    } else {
+                        toast.error(outcome.error || c.runFailed, { id: "custom-dashboard-run" });
+                    }
+                    if (alive.current) view.refresh();
+                },
+            });
+        }
         if (!alive.current) return;
         setRunning(false);
-        if (res.ok && res.outcome.status === "ok") {
+        if (res.ok && res.outcome.status === "started") {
+            view.refresh();
+        } else if (res.ok && res.outcome.status === "ok") {
             toast.success(c.runDone, { id: "custom-dashboard-run" });
             setFrameKey((n) => n + 1);
             view.refresh();
@@ -667,13 +709,16 @@ export const CustomDashboardsTab = ({ teamId, share }: Props) => {
                                 )}
                                 {selected.scheduleId && (
                                     <Button
+                                        disabled={selected.running}
                                         loading={running}
                                         size="sm"
                                         startDecorator={<PlayArrowRoundedIcon />}
                                         variant="outlined"
                                         onClick={runNow}
                                     >
-                                        {c.runNow}
+                                        {selected.running
+                                            ? t.settings.schedules.running
+                                            : c.runNow}
                                     </Button>
                                 )}
                                 {selected.noteId != null && (
