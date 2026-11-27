@@ -38,7 +38,7 @@ settings:
 - **A connected app shows "Paused"**: your plan does not include connected apps right now. It stays in the list and works again on Core or above.
 - **A schedule says it is paused because of your plan**: scheduled reports start at Core. Your schedules are kept and resume when you upgrade.
 - **"Webhooks aren't included in your team's plan"**: webhooks start at Core. The team's plan or the team owner's plan counts.
-- **An HTML page won't import**: HTML pages start at Core. A page over your plan's size limit is refused too.
+- **An HTML page won't import**: HTML pages start at Core. A page over your plan's size limit is refused too, and so is a page that would take you past your HTML storage.
 - **"Your plan keeps up to … skills"**: delete a skill or upgrade.
 - **An effort level says "Upgrade to unlock"**: Free goes up to Low, Core up to Medium, Pro and up to High.
 - **"You've created all … for this month"**: you reached the monthly task or note limit. It resets on the 1st (UTC).

@@ -65,9 +65,8 @@ export const uploadNoteAsset = async (args: {
 /**
  * Rewrite a freshly created note's body to point at uploaded copies.
  *
- * A direct PUT rather than `sendUpdatedMyNote`, which swallows its errors
- * and emits note-mention socket events — neither of which suits an
- * importer that has to report what failed and is writing bodies whose
+ * A direct PUT rather than `sendUpdatedMyNote`, which emits note-mention
+ * socket events: that does not suit an importer writing bodies whose
  * "mentions" are plain text from someone else's workspace.
  */
 export const putNoteBody = async (args: {

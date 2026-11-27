@@ -70,6 +70,8 @@ A schedule (Settings > Genos > Schedules, Core and above) prepares a report at t
 
 **Links.** The names on the page (the project or milestone in the title, and the tasks it lists) are links: click one to open it in Genos. A page made by a skill can link the tasks, milestones, projects and notes that its run read. Genos writes every link itself, and only to things the page's readers can open. A page you or an AI app saved by hand has no such links.
 
+**Working with the page.** In Genos you can open a "+N more" line to see the rest, sort the due-date list by due date, status or owner, filter the lists by status or person, click a column heading to sort a table, hover or tap a chart to read its numbers, and fold a section by its heading. Nothing you change there is saved. A page made before this gets these at its next run.
+
 The first run saves the page as one HTML page in your notes, and each run after replaces it with the new numbers. Dashboards need a plan that has HTML pages (Core and above). Each run counts toward your plan's HTML page saves per hour (30 on Core, 60 on Pro and above). You can keep up to 10 dashboard schedules.
 
 - **Who can read it.** The page names only tasks that everyone who can read the note may open. A project or milestone dashboard is refused when someone who can read the note is not on that project, and the message names nobody. My progress counts only the projects all of its readers are on, and, when others can read the page, says so on the page.

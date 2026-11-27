@@ -595,8 +595,13 @@ export interface AgentFeatures {
     integrations?: ("web" | "google_calendar" | "github")[];
     // Present ⇔ the server's HTML_NOTES switch is on (MIP-2215), so its presence is how the client
     // knows to offer `.html` import. `max_bytes` is the plan's page limit; null = the plan has no
-    // HTML notes (Free).
-    html_notes?: { max_bytes: number | null };
+    // HTML notes (Free). `max_storage_bytes` is the plan's HTML storage quota and `used_bytes`
+    // what the member's kept pages take of it (MIP-2453); absent on an older server.
+    html_notes?: {
+        max_bytes: number | null;
+        max_storage_bytes?: number | null;
+        used_bytes?: number | null;
+    };
 }
 
 export async function fetchAgentFeatures(accessToken: string): Promise<AgentFeatures | null> {

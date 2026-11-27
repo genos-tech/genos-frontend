@@ -35,6 +35,9 @@ export interface ChatPanelNoteApi {
         chatName?: string
     ) => Promise<void>;
     setNote: (note: ChatNoteProps | null) => void;
+    /** Refreshes a note the panel already holds. Never opens it, shows it or brings a closed
+     *  tab back. */
+    updateNote: (note: ChatNoteProps) => void;
     closeTab: (noteId: number) => void;
     clear: () => void;
 }
@@ -70,6 +73,15 @@ export const useChatPanelNote = ({
                 return merged;
             });
         }
+    }, []);
+
+    const updateNote = useCallback((updated: ChatNoteProps) => {
+        setNoteState((active) => (active?.noteId === updated.noteId ? updated : active));
+        setTabs((prev) =>
+            prev.some((t) => t.noteId === updated.noteId)
+                ? prev.map((t) => (t.noteId === updated.noteId ? updated : t))
+                : prev
+        );
     }, []);
 
     const closeTab = useCallback((noteId: number) => {
@@ -201,6 +213,7 @@ export const useChatPanelNote = ({
         tabs,
         openOrCreate,
         setNote,
+        updateNote,
         closeTab,
         clear,
     };

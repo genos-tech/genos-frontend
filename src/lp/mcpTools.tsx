@@ -445,7 +445,7 @@ export const MCP_TOOLS: McpTool[] = [
         type: "write",
         taskRef: true,
         meaning:
-            "Saves an HTML page as a read-only note: a dashboard, a report, a diagram, an explainer. It creates a note of any kind create_note does, or with note_id replaces the page of an HTML note you can edit (the earlier page is kept as a revision). HTML notes are a Core plan feature, and the save is refused with the numbers when the page is over the plan's size, the note count or the saves per hour.",
+            "Saves an HTML page as a read-only note: a dashboard, a report, a diagram, an explainer. It creates a note of any kind create_note does, or with note_id replaces the page of an HTML note you can edit (the earlier page is kept as a revision). HTML notes are a Core plan feature, and the number of them is not limited. The save is refused, saying why, when the page is over the plan's size, the owner's HTML storage is full or the saves per hour are used.",
     },
     { name: "update_note", type: "write", meaning: "A note's title or body, or its folder." },
     {

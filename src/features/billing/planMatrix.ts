@@ -28,7 +28,8 @@
 
 import { fmt } from "../../i18n";
 import type { Messages } from "../../i18n/types";
-import type { HtmlNoteLimits, PlanTier } from "../../services/billingApi";
+import type { HtmlPageLimits, PlanTier } from "../../services/billingApi";
+import { storageLabel } from "./storageLabel";
 
 type PlanStrings = Messages["settings"]["planUsage"];
 
@@ -63,12 +64,6 @@ export interface MatrixGroup {
 }
 
 const num = (v: number, locale: string) => v.toLocaleString(locale);
-
-/** A page size in bytes as "512 KB" or "1 MB" (binary units, as the server counts them). */
-const sizeLabel = (bytes: number, p: PlanStrings, locale: string) =>
-    bytes >= 1024 * 1024 && bytes % (1024 * 1024) === 0
-        ? fmt(p.matrixMb, { mb: num(bytes / (1024 * 1024), locale) })
-        : fmt(p.matrixKb, { kb: num(Math.round(bytes / 1024), locale) });
 
 /**
  * Build every comparison group for the tiers the server returned.
@@ -326,33 +321,37 @@ export const planMatrixGroups = (
             )
         );
     }
-    // HTML pages: three numbers off the api's one HTML table. A plan without them (Free, `null`) is a
-    // cross on every row, never "0" or "Unlimited". `has()` because a server that predates the key
-    // sends it for nobody and the rows should then not exist.
-    if (has("html_notes")) {
+    // HTML pages: the count (never limited), then three numbers off the api's one HTML table. A plan
+    // without them (Free, `null`) is a cross on every row, never "0" or "Unlimited". `has()` because
+    // a server that predates the key sends it for nobody and the rows should then not exist.
+    if (has("html_pages")) {
         const html = (
             key: string,
             label: string,
-            pick: (h: HtmlNoteLimits) => string,
+            cell: (h: HtmlPageLimits) => MatrixCell,
             hint?: string
         ) =>
             workspace.push({
-                ...row(key, label, (L) =>
-                    L.html_notes ? { kind: "value", label: pick(L.html_notes) } : { kind: "no" }
-                ),
+                ...row(key, label, (L) => (L.html_pages ? cell(L.html_pages) : { kind: "no" })),
                 hint,
             });
+        const value = (text: string): MatrixCell => ({ kind: "value", label: text });
+        html("html-pages", p.matrixRowHtmlPages, () => ({
+            kind: "value",
+            label: p.matrixUnlimited,
+            emphasis: true,
+        }));
+        html("html-size", p.matrixRowHtmlSize, (h) => value(storageLabel(h.max_bytes, p, locale)));
         html(
-            "html-pages",
-            p.matrixRowHtmlPages,
-            (h) => num(h.max_notes, locale),
-            p.matrixHintPerPerson
+            "html-storage",
+            p.matrixRowHtmlStorage,
+            (h) => value(storageLabel(h.max_storage_bytes, p, locale)),
+            p.matrixHintHtmlStorage
         );
-        html("html-size", p.matrixRowHtmlSize, (h) => sizeLabel(h.max_bytes, p, locale));
         html(
             "html-saves",
             p.matrixRowHtmlSaves,
-            (h) => num(h.saves_per_hour, locale),
+            (h) => value(num(h.saves_per_hour, locale)),
             p.matrixHintPerPerson
         );
     }

@@ -14,6 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../../context/authState";
+import { storageLabel } from "../../../features/billing/storageLabel";
 import { TrialEndNote } from "../../../features/billing/TrialEndNote";
 import { fmt, useTranslation } from "../../../i18n";
 import {
@@ -38,7 +39,7 @@ import { CreditBalance } from "./CreditBalance";
  * One `fetchAgentFeatures` call renders the user's effective tier
  * (personal tier, or a paying team's plan — shown as "via team X"),
  * a usage bar per metered dimension (AI asks + web searches per day,
- * task/note creations per month), and the plan's static limits
+ * task/note creations per month, HTML page storage), and the plan's static limits
  * (message-history window, per-file upload size).
  *
  * `limit: null` = unlimited for this plan → "Unlimited" text, no bar.
@@ -75,6 +76,39 @@ const UPGRADE_LABEL_KEY = {
     max: "upgradeToMax",
 } as const;
 
+/** A label, what is left in words, and (unless unlimited) a bar of what is left. */
+const MeterRow = ({
+    label,
+    text,
+    meter,
+}: {
+    label: string;
+    text: string;
+    /** `remaining` 0..1; null = unlimited, no bar. `atCap` colours it as refused. */
+    meter: { remaining: number; atCap: boolean } | null;
+}) => (
+    <Box>
+        <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={1}>
+            <Typography level="body-sm" sx={{ fontWeight: 600 }}>
+                {label}
+            </Typography>
+            <Typography level="body-sm" sx={{ color: "text.tertiary", textAlign: "end" }}>
+                {text}
+            </Typography>
+        </Stack>
+        {meter && (
+            <LinearProgress
+                aria-label={label}
+                color={meter.atCap ? "warning" : "primary"}
+                sx={{ mt: 0.5 }}
+                thickness={4}
+                value={meter.remaining * 100}
+                determinate
+            />
+        )}
+    </Box>
+);
+
 const UsageRow = ({
     label,
     windowLabel,
@@ -104,37 +138,24 @@ const UsageRow = ({
     // what the colour means.
     const atCap = !unlimited && block.limit !== 0 && block.used >= block.limit!;
     return (
-        <Box>
-            <Stack alignItems="center" direction="row" justifyContent="space-between" spacing={1}>
-                <Typography level="body-sm" sx={{ fontWeight: 600 }}>
-                    {label}
-                </Typography>
-                <Typography level="body-sm" sx={{ color: "text.tertiary" }}>
-                    {unlimited
-                        ? unlimitedLabel
-                        : fmt(remainingTemplate, {
-                              // Clamped: the server can report `used`
-                              // above `limit` (a quota lowered by a
-                              // downgrade, or a race at the boundary),
-                              // and "-3 of 50 left" is not a number to
-                              // show anyone.
-                              remaining: Math.max((block.limit ?? 0) - block.used, 0),
-                              limit: block.limit ?? 0,
-                              window: windowLabel,
-                          })}
-                </Typography>
-            </Stack>
-            {!unlimited && (
-                <LinearProgress
-                    aria-label={label}
-                    color={atCap ? "warning" : "primary"}
-                    sx={{ mt: 0.5 }}
-                    thickness={4}
-                    value={remaining * 100}
-                    determinate
-                />
-            )}
-        </Box>
+        <MeterRow
+            label={label}
+            meter={unlimited ? null : { remaining, atCap }}
+            text={
+                unlimited
+                    ? unlimitedLabel
+                    : fmt(remainingTemplate, {
+                          // Clamped: the server can report `used`
+                          // above `limit` (a quota lowered by a
+                          // downgrade, or a race at the boundary),
+                          // and "-3 of 50 left" is not a number to
+                          // show anyone.
+                          remaining: Math.max((block.limit ?? 0) - block.used, 0),
+                          limit: block.limit ?? 0,
+                          window: windowLabel,
+                      })
+            }
+        />
     );
 };
 
@@ -216,6 +237,27 @@ export const PlanUsageSection = ({
         max: p.tierMax,
         enterprise: p.tierEnterprise,
     }[data.tier];
+
+    // HTML page storage (MIP-2453): only when the server sends both numbers, i.e. HTML notes are
+    // on and the plan has them. Same direction as the rows above: the bar is what is left.
+    const htmlQuota = data.html_notes?.max_storage_bytes;
+    const htmlUsed = data.html_notes?.used_bytes;
+    // A size is one word: no line break between the number and its unit on a phone.
+    const size = (bytes: number) => storageLabel(bytes, p, locale).replace(/ /g, "\u00a0");
+    const htmlStorage =
+        htmlQuota != null && htmlUsed != null
+            ? {
+                  text: fmt(p.htmlStorageLeft, {
+                      remaining: size(Math.max(htmlQuota - htmlUsed, 0)),
+                      limit: size(htmlQuota),
+                      used: size(htmlUsed),
+                  }),
+                  meter: {
+                      remaining: 1 - Math.min(htmlUsed / htmlQuota, 1),
+                      atCap: htmlUsed >= htmlQuota,
+                  },
+              }
+            : null;
 
     return (
         <Sheet sx={{ p: 2, borderRadius: "lg" }} variant="outlined">
@@ -305,6 +347,7 @@ export const PlanUsageSection = ({
                         windowLabel={p.monthSuffix}
                     />
                 )}
+                {htmlStorage && <MeterRow label={p.htmlStorage} {...htmlStorage} />}
             </Stack>
 
             <Divider sx={{ my: 1.5 }} />
