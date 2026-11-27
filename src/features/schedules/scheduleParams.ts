@@ -129,11 +129,21 @@ export const KNOWN_PARAMS: Record<string, KnownParam> = {
         optionalWhenShown: true,
     },
     // What makes a dashboard page (MIP-2399): the built-in pages, or one of the member's skills.
-    source: { label: "paramSource", hint: "paramSourceHint", defaultValue: "template" },
+    source: {
+        label: "paramSource",
+        hint: "paramSourceHint",
+        guideId: "spotlight.scheduleDashboardSource",
+        defaultValue: "template",
+    },
     // Where the page is saved (MIP-2357): ONE picker draws `folder_id` and sets it together with
     // `save_to`, which is therefore never drawn on its own.
     save_to: { label: "paramSaveTo", hint: "paramSaveToHint", hidden: true },
-    folder_id: { label: "paramSaveTo", hint: "paramSaveToHint", picker: "folder" },
+    folder_id: {
+        label: "paramSaveTo",
+        hint: "paramSaveToHint",
+        picker: "folder",
+        guideId: "spotlight.scheduleDashboardSaveTo",
+    },
     // The dashboard page (MIP-2357): what it covers, over which window, and what to look at.
     kind: {
         label: "paramKind",

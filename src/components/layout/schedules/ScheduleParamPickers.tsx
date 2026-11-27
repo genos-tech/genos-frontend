@@ -18,6 +18,9 @@ import { useTheme } from "@mui/joy/styles";
 
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import {
+    carriesTag,
+    DASHBOARD_TAG,
+    dashboardSkills,
     filterByTags,
     tagChoices,
     toggleTag,
@@ -432,12 +435,22 @@ export const ChatParamSelect = ({ value, onChange }: Props) => {
     );
 };
 
+/** Fewer tagged skills than this and the dashboard picker says how to add one. */
+const SHORT_DASHBOARD_LIST = 5;
+
 /** The skill a "Run a skill" schedule runs (MIP-2045), by name: what the member may run in this
  *  team (the `/` menu's own list: theirs, a teammate's team skill, an installed one). A skill that
  *  was never published is listed but cannot be chosen, with the reason: a schedule runs a
  *  published version, never a draft. A stored skill that is no longer in the list stays selectable
- *  as "(unavailable)" so the form can show it, as the project picker does. */
-export const SkillParamSelect = ({ value, onChange }: Props) => {
+ *  as "(unavailable)" so the form can show it, as the project picker does.
+ *
+ *  `forDashboard` (MIP-2418): only skills with the `dashboard` tag are listed, and a short list says
+ *  how to add one. The skill the schedule already runs stays listed with or without the tag. */
+export const SkillParamSelect = ({
+    value,
+    onChange,
+    forDashboard = false,
+}: Props & { forDashboard?: boolean }) => {
     const { t } = useTranslation();
     const s = t.settings.schedules;
     const rows = useRunnableSkillRows();
@@ -445,8 +458,15 @@ export const SkillParamSelect = ({ value, onChange }: Props) => {
 
     // The tags the member ticked to narrow the list (MIP-2398): a skill must carry all of them.
     const [ticked, setTicked] = useState<string[]>([]);
-    const all = rows ?? [];
-    const choices = tagChoices(all);
+    // The skill stored when the form opened: picking another must not take it off the list.
+    const [stored] = useState(value);
+    const all = forDashboard ? dashboardSkills(rows ?? [], [stored, value]) : (rows ?? []);
+    // Every listed skill has the `dashboard` tag, so ticking it would narrow nothing.
+    const choices = tagChoices(all).filter((c) => !forDashboard || c.name !== DASHBOARD_TAG);
+    const showAddTagHint =
+        forDashboard &&
+        rows !== undefined &&
+        rows.filter((r) => carriesTag(r, DASHBOARD_TAG)).length < SHORT_DASHBOARD_LIST;
     const skills = filterByTags(all, ticked, value);
     const stray = value !== "" && rows !== undefined && !all.some((r) => r.id === value);
 
@@ -510,7 +530,7 @@ export const SkillParamSelect = ({ value, onChange }: Props) => {
                 )}
                 {rows !== undefined && rows.length > 0 && skills.length === 0 && (
                     <Option value="" disabled>
-                        {s.skillNoMatch}
+                        {all.length === 0 ? s.skillDashboardNone : s.skillNoMatch}
                     </Option>
                 )}
                 {skills.map((r) => {
@@ -551,6 +571,15 @@ export const SkillParamSelect = ({ value, onChange }: Props) => {
                     );
                 })}
             </Select>
+            {showAddTagHint && (
+                <Typography
+                    data-testid="skill-dashboard-hint"
+                    level="body-xs"
+                    sx={{ color: g.text.secondary }}
+                >
+                    {s.skillDashboardHint}
+                </Typography>
+            )}
         </>
     );
 };

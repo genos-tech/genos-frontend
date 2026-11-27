@@ -7,6 +7,10 @@ import type { RunnableSkill, SkillTagChip } from "./skillsApi";
 /** The built-in tag of the official skills (the server's `template`). */
 export const TEMPLATE_TAG = "template";
 
+/** The tag of a skill that can make a dashboard (MIP-2418). An ordinary tag: a member may put it
+ *  on their own skill. */
+export const DASHBOARD_TAG = "dashboard";
+
 /** Each tag the skills carry, once, with its colour: `template` first (it is the one a member looks
  *  for), then the rest by name in the app's language. */
 /** A row's chips. A row that was not made by `parseRunnableSkills` may lack them. */
@@ -37,6 +41,16 @@ export const filterByTags = (
                   r.id === keepId ||
                   ticked.every((name) => chipsOf(r).some((c) => c.name === name))
           );
+
+export const carriesTag = (row: RunnableSkill, name: string): boolean =>
+    chipsOf(row).some((c) => c.name === name);
+
+/** What the dashboard form lists (MIP-2418): the skills with the `dashboard` tag, plus the ones
+ *  named in `keepIds` (what the schedule already runs), tagged or not. */
+export const dashboardSkills = (
+    rows: readonly RunnableSkill[],
+    keepIds: readonly string[]
+): RunnableSkill[] => rows.filter((r) => carriesTag(r, DASHBOARD_TAG) || keepIds.includes(r.id));
 
 /** Tick or untick a tag. */
 export const toggleTag = (ticked: readonly string[], name: string): string[] =>
