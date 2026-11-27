@@ -380,13 +380,8 @@ export const ChatTargetSelect = ({
             isOptionEqualToValue={(o, v) => o.id === v.id}
             noOptionsText={t.common.empty.noResults}
             options={options}
-            slotProps={projectListboxSlotProps(popupZIndex)}
             placeholder={noInbox}
-            startDecorator={
-                selected ? (
-                    <ChatTargetDecorator allLabel={allLabel} target={selected} />
-                ) : undefined
-            }
+            slotProps={projectListboxSlotProps(popupZIndex)}
             sx={{ minWidth: 0 }}
             value={selected}
             getOptionLabel={(o) =>
@@ -405,6 +400,11 @@ export const ChatTargetSelect = ({
                     />
                 </AutocompleteOption>
             )}
+            startDecorator={
+                selected ? (
+                    <ChatTargetDecorator allLabel={allLabel} target={selected} />
+                ) : undefined
+            }
             disableClearable
             onChange={(_, option) => onChange(option ? option.id : "")}
         />

@@ -139,6 +139,7 @@ describe("which parameters apply", () => {
             deliverPush: true,
             aiEffort: "",
             deliverChannelId: "",
+            messageBody: [],
         };
         expect(validateForm(form, DASHBOARD).params).toEqual({});
         expect(buildCreate(form, DASHBOARD).params).toEqual({ kind: "mine", period: "quarter" });

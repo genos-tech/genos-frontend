@@ -730,6 +730,10 @@ export const SchedulesSection = ({
                             )}
                             {notice && (notice.kind !== "started" || inRun) && (
                                 <Alert
+                                    data-testid="run-notice"
+                                    role="status"
+                                    size="sm"
+                                    variant="soft"
                                     color={
                                         notice.kind === "ok"
                                             ? "success"
@@ -737,10 +741,6 @@ export const SchedulesSection = ({
                                               ? "neutral"
                                               : "danger"
                                     }
-                                    data-testid="run-notice"
-                                    role="status"
-                                    size="sm"
-                                    variant="soft"
                                 >
                                     {notice.kind === "ok" && isMessage
                                         ? fmt(s.messageSent, {

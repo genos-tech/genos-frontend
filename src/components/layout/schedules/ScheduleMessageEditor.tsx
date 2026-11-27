@@ -98,10 +98,10 @@ const ScheduleMessageEditor = ({ host, initialBody, onChange, labelledBy }: Prop
                 pickerBottomPosition="auto"
                 pickerLeftPosition="max(8px, calc(50vw - 176px))"
                 pickerTopPosition="12vh"
-                useFixedPosition
                 setSelectedEmoji={setSelectedEmoji}
                 setShowEmojiPicker={setShowEmojiPicker}
                 showEmojiPicker={showEmojiPicker}
+                useFixedPosition
             />
             <Box
                 ref={boxRef}
