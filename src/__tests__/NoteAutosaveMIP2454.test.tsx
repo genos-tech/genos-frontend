@@ -206,6 +206,36 @@ describe("a save that stored nothing", () => {
         expect(ed.result.current.noteBodySaved).toBe(true);
     });
 
+    it("does not drop the typed body when it was the rename that was refused", async () => {
+        const ed = mount(note(1));
+        await ed.keystroke("typed body");
+        await ed.sync();
+        act(() => ed.result.current.handleTitleChange("A refused title"));
+        act(() => ed.result.current.handleTitleBlur());
+        await wait(0);
+        await answer(() => net.puts[0].fail(400));
+        await wait(3000);
+
+        expect(net.puts.map((p) => [p.title, p.text])).toEqual([
+            ["A refused title", "typed body"],
+            ["Note 1", "typed body"],
+        ]);
+    });
+
+    it("does not trust what was confirmed before an answer got lost", async () => {
+        const ed = mount(note(1));
+        await typeAndSend(ed, "X");
+        await answer(net.puts[0].ok);
+        // The server stores Y, its answer never arrives, and the person undoes back to X.
+        await typeAndSend(ed, "Y");
+        await answer(() => net.puts[1].fail(503));
+        await ed.keystroke("X");
+        await ed.sync();
+        await wait(6000);
+
+        expect(texts()).toEqual(["X", "Y", "X"]);
+    });
+
     it("is not repeated when the server refused it", async () => {
         const ed = mount(note(1));
         await typeAndSend(ed, "not mine to write");

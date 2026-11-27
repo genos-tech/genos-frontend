@@ -69,12 +69,12 @@ export const ChatNoteEditorPanel = ({
             // Only sync the legacy `currentChatNote` mirror when the
             // updated note is the active one — guards against a hidden
             // panel's socket-driven update clobbering the active state.
-            if (
-                useNM.currentChatNote?.noteType === updatedNote.noteType &&
-                useNM.currentChatNote?.noteId === updatedNote.noteId
-            ) {
-                useNM.setCurrentChatNote(updatedNote);
-            }
+            useNM.setCurrentChatNote((current) =>
+                current?.noteType === updatedNote.noteType &&
+                current?.noteId === updatedNote.noteId
+                    ? updatedNote
+                    : current
+            );
 
             useNM.tabsApi.updateTabTitle(updatedNote.noteId, "chat", updatedNote.title);
 
@@ -85,8 +85,10 @@ export const ChatNoteEditorPanel = ({
             // chat anchoring) after a sidebar move. Structural fields
             // stay authoritative from the meta list. (Same pattern as
             // TaskNoteEditorPanel.)
-            useNM.setChatNoteMeta(
-                useNM.chatNoteMeta.map((item) =>
+            // From the list as it is NOW: a save can land long after this render
+            // (MIP-2454).
+            useNM.setChatNoteMeta((rows) =>
+                rows.map((item) =>
                     item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
                         ? {
                               ...item,

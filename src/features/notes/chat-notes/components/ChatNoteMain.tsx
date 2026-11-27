@@ -107,8 +107,10 @@ export const ChatNoteMain = (props: ChatNoteMainProps) => {
             // stale structural fields from this panel's note snapshot
             // (parentNoteId / chat anchoring) can't clobber a sidebar
             // move. See ChatNoteEditorPanel for the full rationale.
-            useNM.setChatNoteMeta(
-                useNM.chatNoteMeta.map((item) =>
+            // From the list as it is NOW: a save can land long after this render
+            // (MIP-2454).
+            useNM.setChatNoteMeta((rows) =>
+                rows.map((item) =>
                     item.noteType === updatedNote.noteType && item.noteId === updatedNote.noteId
                         ? {
                               ...item,

@@ -85,7 +85,8 @@ const identityOf = (
  * A save carries the body as it was when it went out. When it returns, the editor is read again
  * and the note stays "edited" if anything differs. Saves of one note go out one at a time, a save
  * that stored nothing is not counted as saved, and leaving the note (unmount, or another note in
- * the same panel) sends what the timers had not.
+ * the same panel) sends what the timers had not. A save made while leaving that FAILS is not
+ * retried (MIP-2463).
  */
 export function useNoteEditorCore<T extends EditableNote>({
     currentNote,
@@ -202,6 +203,8 @@ export function useNoteEditorCore<T extends EditableNote>({
                 const { myself, accessToken, socket } = senderRef.current;
                 const note = target.note;
                 if (target.dropped || !note || !accessToken) return null;
+                // An earlier save may have taken a while: read the editor again.
+                if (target.edited) target.body = target.bodyReadRef.current?.() ?? target.body;
                 if (
                     onlyIfChanged &&
                     !target.pendingTitle &&
@@ -233,8 +236,12 @@ export function useNoteEditorCore<T extends EditableNote>({
             console.error("Failed to update note:", error);
             // Nothing was stored. Stay "edited" and send it again when that can help.
             const retry = isRetryableSaveError(error);
+            // A lost answer does not say what the server holds now.
+            target.confirmedBody = null;
             if (retry) target.backoff.failed();
-            else target.edited = false;
+            // A refusal of a rename says nothing about the body: it goes again without
+            // the title, and is dropped only if that is refused too.
+            else if (!sentTitle) target.edited = false;
             if (isShown()) {
                 setNoteBodyEditedState(target.edited);
                 setNoteBodySaved(false);
