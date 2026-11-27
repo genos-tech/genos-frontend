@@ -63,7 +63,8 @@ export function NoteTypeSection({
 
     // Auto-expand when the open note comes to live in this section
     useEffect(() => {
-        if (isCurrent && !open) {
+        // Setting an already open section open again is no change, so `open` is not read.
+        if (isCurrent) {
             setOpen(true);
         }
     }, [isCurrent]);

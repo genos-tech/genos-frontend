@@ -24,6 +24,8 @@ import { NoteUnreadProvider } from "../features/notes/common/context/NoteUnreadC
 import type { UserProps } from "../types/admin";
 
 const counts = { sections: 0, rows: 0 };
+// The team of each call of the four on-mount loads (MIP-2229).
+const loads: Array<[string, number]> = [];
 
 vi.mock("../features/notes/common/components/NoteTypeSection", async () => {
     const actual = await vi.importActual<
@@ -104,6 +106,9 @@ type World = {
     // Read by other parts of the page, never by the sidebar.
     openingNote: { n: number } | null;
     noteResyncNonce: number;
+    teamId: string;
+    // Which render's manager object a load was called on.
+    generation: number;
 };
 
 const initialWorld = (): World => ({
@@ -111,10 +116,17 @@ const initialWorld = (): World => ({
     currentMyNote: CURRENT_A,
     openingNote: null,
     noteResyncNonce: 0,
+    teamId: myself.teamId,
+    generation: 0,
 });
 
 // Functions the real hook does not memoize: a new one for every render of the world.
 const makeFn = () => () => Promise.resolve([]);
+
+const loadFn = (name: string, generation: number) => () => {
+    loads.push([name, generation]);
+    return Promise.resolve([]);
+};
 
 let setWorld: (updater: (w: World) => World) => void = () => {};
 
@@ -151,11 +163,11 @@ const Harness = () => {
         favoriteNotes: FAVORITES,
         recentNotes: RECENTS,
         highlightedFolderId: null,
-        getFavoriteNotesMeta: makeFn(),
-        getRecentNotesMeta: makeFn(),
-        getSharedNoteMeta: makeFn(),
-        getTeamNoteFolders: makeFn(),
-        getTeamNoteMeta: makeFn(),
+        getFavoriteNotesMeta: loadFn("favorites", world.generation),
+        getRecentNotesMeta: loadFn("recent", world.generation),
+        getSharedNoteMeta: loadFn("shared", world.generation),
+        getTeamNoteFolders: loadFn("teamFolders", world.generation),
+        getTeamNoteMeta: loadFn("teamNotes", world.generation),
         getMyNoteFolders: makeFn(),
         getMyNoteMeta: makeFn(),
         getTaskNoteMeta: makeFn(),
@@ -189,7 +201,7 @@ const Harness = () => {
 
     return (
         <NoteSidebar
-            myself={myself}
+            myself={world.teamId === myself.teamId ? myself : { ...myself, teamId: world.teamId }}
             setMyself={noop}
             socket={null}
             useCM={useCM as never}
@@ -225,10 +237,33 @@ describe("NoteSidebar render boundary (MIP-2379)", () => {
     beforeEach(() => {
         counts.sections = 0;
         counts.rows = 0;
+        loads.length = 0;
         // jsdom has no scrollIntoView; the selected row calls it from a 260 ms
         // timer that can fire after a test ends, which vitest reports as an
         // unhandled error and fails the shard.
         Element.prototype.scrollIntoView = vi.fn();
+    });
+
+    it("loads its lists once per team, on the manager of that render", async () => {
+        const names = ["favorites", "recent", "shared", "teamFolders", "teamNotes"];
+        await mount();
+        expect(loads).toEqual(names.map((name) => [name, 0]));
+
+        // A render of the sidebar with a new manager object is not a reason to load again.
+        loads.length = 0;
+        await act(async () =>
+            setWorld((w) => ({
+                ...w,
+                generation: 1,
+                activeTab: TAB_B,
+                currentMyNote: CURRENT_B,
+            }))
+        );
+        expect(loads).toEqual([]);
+
+        // Another team is, and it is the current manager that is asked.
+        await act(async () => setWorld((w) => ({ ...w, generation: 2, teamId: "team2" })));
+        expect(loads).toEqual(names.map((name) => [name, 2]));
     });
 
     it("draws its sections and one row per note when it mounts", async () => {
