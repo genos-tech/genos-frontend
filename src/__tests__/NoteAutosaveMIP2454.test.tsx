@@ -13,22 +13,46 @@ import { AxiosError, AxiosHeaders } from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useNoteEditorCore } from "../features/notes/common/hooks/useNoteEditorCore";
+import {
+    readUnsavedNoteBody,
+    UNSAVED_NOTE_BODY_PREFIX,
+} from "../features/notes/common/services/unsavedNoteBody";
+import { bodyFingerprint } from "../features/tasks/services/unsavedTaskBody";
 import { useChatPanelNote } from "../hooks/notes/useChatPanelNote";
 import { clearNoteCache, getCachedNote } from "../hooks/notes/useNoteData";
+import { subscribeRequestErrors } from "../services/requestErrorNotifier";
 import type { ChatNoteProps, MyNoteProps } from "../types/notes";
+import { clearSignOutLocalStorage } from "../utils/signOutLeftovers";
 
 type Put = {
     noteId: number;
     title: string;
     text: string;
     ok: () => void;
-    fail: (status?: number) => void;
+    fail: (status?: number, code?: string) => void;
 };
-const net = vi.hoisted(() => ({ puts: [] as Put[] }));
+const net = vi.hoisted(() => ({
+    puts: [] as Put[],
+    // What `GET .../single/` answers with: the server's own copy.
+    stored: "Start.",
+    gets: 0,
+}));
 
 vi.mock("../services/api", async (importOriginal) => ({
     ...(await importOriginal<typeof import("../services/api")>()),
     authApi: () => ({
+        get: async (url: string) => {
+            net.gets += 1;
+            const noteId = Number(/note_id=(\d+)/.exec(url)?.[1]);
+            return {
+                data: {
+                    noteType: 1,
+                    noteId,
+                    title: "Server title",
+                    body: [{ type: "paragraph", text: net.stored }],
+                },
+            };
+        },
         put: (_url: string, data: { note_id: number; title: string; body: { text: string }[] }) =>
             new Promise((resolve, reject) => {
                 net.puts.push({
@@ -36,11 +60,11 @@ vi.mock("../services/api", async (importOriginal) => ({
                     title: data.title,
                     text: data.body[0]?.text ?? "",
                     ok: () => resolve({ data: {} }),
-                    fail: (status) =>
+                    fail: (status, code) =>
                         reject(
                             new AxiosError("failed", undefined, undefined, undefined, {
                                 status: status ?? 503,
-                                data: {},
+                                data: { code },
                                 statusText: "",
                                 headers: {},
                                 config: { headers: new AxiosHeaders() },
@@ -54,6 +78,10 @@ vi.mock("../features/notes/common/services/addNote", () => ({
     addNote: vi.fn(async () => null),
 }));
 
+// The bus drops a repeat of the same message for a few seconds: move past that between tests.
+let clock = Date.parse("2026-11-28T00:00:00Z");
+const __resetRequestErrors = () => vi.setSystemTime((clock += 60_000));
+
 const doc = (text: string) => [{ type: "paragraph", text }] as never;
 
 const note = (noteId: number, title = `Note ${noteId}`) =>
@@ -61,15 +89,15 @@ const note = (noteId: number, title = `Note ${noteId}`) =>
 
 const myself = { teamId: "team", userId: "me" } as never;
 
-type Props = { current: MyNoteProps | null; resync?: number };
+type Props = { current: MyNoteProps | null; resync?: number; token?: string };
 
 const mount = (initial: MyNoteProps, onNoteUpdate = vi.fn()) => {
     const hook = renderHook(
-        ({ current, resync }: Props) =>
+        ({ current, resync, token }: Props) =>
             useNoteEditorCore<MyNoteProps>({
                 currentNote: current,
                 myself,
-                accessToken: "token",
+                accessToken: token ?? "token",
                 socket: null,
                 onNoteUpdate,
                 resyncSignal: resync,
@@ -117,6 +145,10 @@ beforeEach(() => {
     vi.useFakeTimers();
     vi.spyOn(console, "error").mockImplementation(() => {});
     net.puts.length = 0;
+    net.stored = "Start.";
+    net.gets = 0;
+    localStorage.clear();
+    __resetRequestErrors();
     clearNoteCache();
 });
 afterEach(async () => {
@@ -324,5 +356,188 @@ describe("the chat panel's copy of a note", () => {
         act(() => result.current.closeTab(1));
         act(() => result.current.updateNote(chatNote(1, "one, saved late")));
         expect(result.current.tabs.map((t) => t.noteId)).toEqual([2]);
+    });
+});
+
+describe("words that could not be saved (MIP-2463)", () => {
+    const kept = (noteId = 1) => readUnsavedNoteBody("me", `1-${noteId}`);
+    const myselfWithId = { teamId: "team", userId: "me" };
+    const heard = () => {
+        const kinds: string[] = [];
+        const stop = subscribeRequestErrors((kind) => kinds.push(kind));
+        return { kinds, stop };
+    };
+    beforeEach(() => {
+        (myself as { userId: string }).userId = myselfWithId.userId;
+    });
+
+    it("tells the person when the server refuses the save, and keeps the words", async () => {
+        const bus = heard();
+        const ed = mount(note(1));
+        await typeAndSend(ed, "refused words");
+        await answer(() => net.puts[0].fail(403));
+        bus.stop();
+
+        expect(bus.kinds).toEqual(["noteNotSaved"]);
+        expect(kept()?.body).toEqual(doc("refused words"));
+    });
+
+    it("says nothing while the server is only down", async () => {
+        const bus = heard();
+        const ed = mount(note(1));
+        await typeAndSend(ed, "typed");
+        await answer(() => net.puts[0].fail(503));
+        bus.stop();
+
+        expect(bus.kinds).toEqual([]);
+    });
+
+    it("sends a failed leave save when the note is next opened", async () => {
+        const first = mount(note(1));
+        await first.keystroke("typed just before leaving");
+        first.unmount();
+        await answer(() => net.puts[0].fail(503));
+        expect(kept()?.body).toEqual(doc("typed just before leaving"));
+
+        mount(note(1));
+        await wait(0);
+        expect(texts()).toEqual(["typed just before leaving", "typed just before leaving"]);
+        expect(net.puts[1].title).toBe("Server title");
+        await answer(net.puts[1].ok);
+        expect(kept()).toBeNull();
+    });
+
+    it("keeps nothing once the leave save is stored", async () => {
+        const ed = mount(note(1));
+        await ed.keystroke("typed just before leaving");
+        ed.unmount();
+        await answer(net.puts[0].ok);
+
+        expect(kept()).toBeNull();
+    });
+
+    it("keeps the words on a reload or a closed tab", async () => {
+        const ed = mount(note(1));
+        await ed.keystroke("typed, then reloaded");
+        await act(async () => {
+            window.dispatchEvent(new Event("pagehide"));
+        });
+
+        expect(kept()?.body).toEqual(doc("typed, then reloaded"));
+    });
+
+    it("never writes over a note someone changed since", async () => {
+        const first = mount(note(1));
+        await first.keystroke("mine");
+        first.unmount();
+        await answer(() => net.puts[0].fail(503));
+
+        net.stored = "written by someone else";
+        mount(note(1));
+        await wait(0);
+
+        expect(net.gets).toBe(1);
+        expect(net.puts).toHaveLength(1);
+        expect(kept()).toBeNull();
+    });
+
+    it("does not send the old body back on a rename after the repair", async () => {
+        const first = mount(note(1));
+        await first.keystroke("repaired words");
+        first.unmount();
+        await answer(() => net.puts[0].fail(503));
+
+        const again = mount(note(1));
+        again.editor.text = "repaired words";
+        await wait(0);
+        await answer(net.puts[1].ok);
+        act(() => again.result.current.handleTitleChange("Renamed"));
+        await act(async () => void again.result.current.handleTitleBlur());
+
+        expect(net.puts[2].text).toBe("repaired words");
+    });
+
+    it("stops trying, and says so, when the repair is refused", async () => {
+        const first = mount(note(1));
+        await first.keystroke("mine");
+        first.unmount();
+        await answer(() => net.puts[0].fail(503));
+
+        const bus = heard();
+        mount(note(1));
+        await wait(0);
+        await answer(() => net.puts[1].fail(403));
+        bus.stop();
+
+        expect(bus.kinds).toEqual(["noteNotSaved"]);
+        expect(kept()).toBeNull();
+    });
+
+    it("keeps words typed while the repair was on its way", async () => {
+        const first = mount(note(1));
+        await first.keystroke("kept R");
+        first.unmount();
+        await answer(() => net.puts[0].fail(503));
+
+        const again = mount(note(1));
+        await wait(0);
+        await again.keystroke("newer N");
+        await act(async () => {
+            window.dispatchEvent(new Event("pagehide"));
+        });
+        // The newer words may end up on top of what the repair is storing.
+        expect(kept()?.bases).toContain(bodyFingerprint(doc("kept R")));
+        await answer(net.puts[1].ok);
+
+        expect(kept()?.body).toEqual(doc("newer N"));
+    });
+
+    it("takes the base from the stored note as another panel's save left it", async () => {
+        const ed = mount(note(1));
+        ed.rerender({ current: { ...note(1), body: doc("Saved elsewhere.") }, resync: 0 });
+        await ed.keystroke("mine, on top of it");
+        await act(async () => {
+            window.dispatchEvent(new Event("pagehide"));
+        });
+
+        expect(kept()?.bases).toEqual([bodyFingerprint(doc("Saved elsewhere."))]);
+    });
+
+    it("leaves the archived sentence in place for an archived project", async () => {
+        const bus = heard();
+        const ed = mount(note(1));
+        await typeAndSend(ed, "typed");
+        await answer(() => net.puts[0].fail(409, "archived"));
+        bus.stop();
+
+        expect(bus.kinds).toEqual([]);
+    });
+
+    it("tries the repair once per visit, not on every new token", async () => {
+        const first = mount(note(1));
+        await first.keystroke("mine");
+        first.unmount();
+        await answer(() => net.puts[0].fail(503));
+
+        const again = mount(note(1));
+        await wait(0);
+        await answer(() => net.puts[1].fail(503));
+        again.rerender({ current: note(1), resync: 0, token: "refreshed" });
+        await wait(0);
+
+        expect(net.puts).toHaveLength(2);
+    });
+
+    it("is cleared on sign-out and not written back by the editor that closes after it", async () => {
+        const ed = mount(note(1));
+        await ed.keystroke("private words");
+        clearSignOutLocalStorage();
+        ed.unmount();
+        await answer(() => net.puts[0].fail(401));
+
+        const left = Object.keys(localStorage).filter((k) =>
+            k.startsWith(UNSAVED_NOTE_BODY_PREFIX)
+        );
+        expect(left).toEqual([]);
     });
 });

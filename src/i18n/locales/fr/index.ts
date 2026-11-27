@@ -1091,6 +1091,7 @@ export const fr: DeepPartial<Messages> = {
                 "Vous avez atteint une limite de votre forfait. Voir Paramètres → Forfait et utilisation.",
             actionFailed: "Impossible d'effectuer cette action. Veuillez réessayer.",
             messageSendFailed: "Impossible d'envoyer votre message. Veuillez réessayer.",
+            noteNotSaved: "Impossible d'enregistrer vos dernières modifications de cette note.",
             idleReload: "Actualisation après une période d'inactivité…",
         },
         serviceSwitch: {
@@ -2883,6 +2884,7 @@ export const fr: DeepPartial<Messages> = {
             noAiUsed: "Aucune IA utilisée",
             // TODO(copy): MIP-1960 draft wording for a native reader.
             noAiNoCredits: "Aucune IA utilisée : il ne vous reste plus de crédits d'IA ce mois-ci",
+            noAiMonthlyLimit: "Aucune IA utilisée : Genos AI a atteint sa limite mensuelle",
             deductedNone: "Rien n'a été déduit de votre solde",
             deducted: "{credits} déduits de votre solde",
             scheduleFallback: "Cette planification",
@@ -3871,6 +3873,8 @@ export const fr: DeepPartial<Messages> = {
                 "Vous avez utilisé tous vos crédits d'IA : Genos ne peut pas répondre pour le moment.",
             outOfCreditsBuy: "Acheter des crédits",
             outOfCreditsUpgrade: "Changer de formule",
+            monthlyLimit:
+                "Genos AI a atteint sa limite mensuelle et ne peut donc pas le faire pour le moment. Elle revient au début du mois prochain. La recherche et tout le reste continuent de fonctionner.",
             taskSessionLoadFailed:
                 "Impossible de charger votre conversation précédente à propos de cette tâche.",
         },

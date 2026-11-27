@@ -1019,6 +1019,7 @@ export const zh: DeepPartial<Messages> = {
             limitReached: "你已达到套餐限制。请前往“设置 → 套餐与用量”查看详情。",
             actionFailed: "操作无法完成，请重试。",
             messageSendFailed: "消息发送失败，请重试。",
+            noteNotSaved: "无法保存您对此笔记的最新更改。",
             idleReload: "长时间无操作，正在刷新页面…",
         },
         serviceSwitch: {
@@ -2736,6 +2737,7 @@ export const zh: DeepPartial<Messages> = {
             noAiUsed: "未使用 AI",
             // TODO(copy): MIP-1960 draft wording for a native reader.
             noAiNoCredits: "未使用 AI：本月的 AI 额度已用完",
+            noAiMonthlyLimit: "未使用 AI：Genos AI 已达到本月上限",
             deductedNone: "未从你的余额中扣除",
             deducted: "已从你的余额中扣除 {credits}",
             scheduleFallback: "此定时任务",
@@ -3654,6 +3656,8 @@ export const zh: DeepPartial<Messages> = {
             outOfCredits: "您的 AI 额度已用完，Genos 暂时无法回答。",
             outOfCreditsBuy: "购买额度",
             outOfCreditsUpgrade: "升级套餐",
+            monthlyLimit:
+                "Genos AI 已达到本月上限，目前无法执行此操作。下月初将恢复。搜索和其他功能仍可正常使用。",
             taskSessionLoadFailed: "无法加载你之前关于此任务的对话。",
         },
         pwaInstall: {

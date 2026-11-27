@@ -517,6 +517,7 @@ export const es: DeepPartial<Messages> = {
             limitReached:
                 "Has alcanzado un límite de tu plan. Consulta Configuración → Plan y uso.",
             messageSendFailed: "No se pudo enviar tu mensaje. Inténtalo de nuevo.",
+            noteNotSaved: "No se pudieron guardar tus últimos cambios en esta nota.",
             idleReload: "Actualizando tras un periodo de inactividad…",
         },
         features: {
@@ -5665,6 +5666,7 @@ export const es: DeepPartial<Messages> = {
             noAiUsed: "No se usó IA",
             // TODO(copy): MIP-1960 draft wording for a native reader.
             noAiNoCredits: "No se usó IA: no te quedan créditos de IA este mes",
+            noAiMonthlyLimit: "Sin IA: Genos AI ha alcanzado su límite mensual",
             deductedNone: "Nada descontado de tu saldo",
             deducted: "{credits} descontados de tu saldo",
             scheduleFallback: "Esta programación",
@@ -5934,6 +5936,8 @@ export const es: DeepPartial<Messages> = {
                 "Has usado todos tus créditos de IA, así que Genos no puede responder ahora.",
             outOfCreditsBuy: "Comprar créditos",
             outOfCreditsUpgrade: "Mejorar el plan",
+            monthlyLimit:
+                "Genos AI ha alcanzado su límite mensual, así que ahora no puede hacer esto. Vuelve a principios del mes que viene. La búsqueda y todo lo demás siguen funcionando.",
             taskSessionLoadFailed: "No se pudo cargar tu conversación anterior sobre esta tarea.",
         },
         pwaInstall: {
