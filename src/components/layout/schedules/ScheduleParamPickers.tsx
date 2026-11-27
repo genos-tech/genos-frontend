@@ -17,6 +17,7 @@ import {
 import { useTheme } from "@mui/joy/styles";
 
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
+import { skillSummary } from "../../../features/genos/skills/skillSummary";
 import {
     carriesTag,
     DASHBOARD_TAG,
@@ -438,6 +439,15 @@ export const ChatParamSelect = ({ value, onChange }: Props) => {
 /** Fewer tagged skills than this and the dashboard picker says how to add one. */
 const SHORT_DASHBOARD_LIST = 5;
 
+// A skill's summary line (MIP-2441). `dir="auto"` so a description reads in its own direction in
+// any UI language.
+const SKILL_SUMMARY_SX = {
+    color: g.text.secondary,
+    overflowWrap: "anywhere",
+    textAlign: "start",
+    whiteSpace: "normal",
+} as const;
+
 /** The skill a "Run a skill" schedule runs (MIP-2045), by name: what the member may run in this
  *  team (the `/` menu's own list: theirs, a teammate's team skill, an installed one). A skill that
  *  was never published is listed but cannot be chosen, with the reason: a schedule runs a
@@ -469,6 +479,8 @@ export const SkillParamSelect = ({
         rows.filter((r) => carriesTag(r, DASHBOARD_TAG)).length < SHORT_DASHBOARD_LIST;
     const skills = filterByTags(all, ticked, value);
     const stray = value !== "" && rows !== undefined && !all.some((r) => r.id === value);
+    // The chosen skill's summary stays under the field after the list closes.
+    const chosenSummary = skillSummary(all.find((r) => r.id === value)?.description ?? "");
 
     return (
         <>
@@ -535,6 +547,7 @@ export const SkillParamSelect = ({
                 )}
                 {skills.map((r) => {
                     const name = r.title || r.slug;
+                    const summary = skillSummary(r.description);
                     return (
                         <Option
                             key={r.id}
@@ -542,35 +555,71 @@ export const SkillParamSelect = ({
                             label={name}
                             value={r.id}
                         >
-                            <Box
-                                sx={{
-                                    alignItems: "center",
-                                    display: "flex",
-                                    gap: 0.75,
-                                    minWidth: 0,
-                                }}
-                            >
-                                <Typography
-                                    level="body-sm"
-                                    sx={{ color: "inherit", minWidth: 0 }}
-                                    noWrap
+                            {/* `contain` keeps a long name or sentence out of the list's
+                                width: the list stays as wide as the field and rows wrap. */}
+                            <Box sx={{ contain: "inline-size", flexGrow: 1, minWidth: 0 }}>
+                                <Box
+                                    sx={{
+                                        alignItems: "center",
+                                        display: "flex",
+                                        flexWrap: "wrap",
+                                        columnGap: 0.75,
+                                        rowGap: 0.25,
+                                        minWidth: 0,
+                                    }}
                                 >
-                                    {r.publishedVersionNo > 0
-                                        ? name
-                                        : fmt(s.skillNotPublished, { name })}
-                                </Typography>
-                                {(r.tagChips ?? []).slice(0, 3).map((chip) => (
-                                    <ProjectTagChip
-                                        key={chip.name}
-                                        label={chip.name}
-                                        tagColor={chip.color}
-                                    />
-                                ))}
+                                    <Typography
+                                        level="body-sm"
+                                        sx={{
+                                            color: "inherit",
+                                            minWidth: 0,
+                                            overflowWrap: "anywhere",
+                                            whiteSpace: "normal",
+                                        }}
+                                    >
+                                        {r.publishedVersionNo > 0
+                                            ? name
+                                            : fmt(s.skillNotPublished, { name })}
+                                    </Typography>
+                                    {(r.tagChips ?? []).slice(0, 3).map((chip) => (
+                                        <ProjectTagChip
+                                            key={chip.name}
+                                            label={chip.name}
+                                            tagColor={chip.color}
+                                        />
+                                    ))}
+                                </Box>
+                                {summary && (
+                                    <Typography
+                                        data-testid="skill-summary"
+                                        dir="auto"
+                                        level="body-xs"
+                                        sx={{
+                                            ...SKILL_SUMMARY_SX,
+                                            display: "-webkit-box",
+                                            overflow: "hidden",
+                                            WebkitBoxOrient: "vertical",
+                                            WebkitLineClamp: 2,
+                                        }}
+                                    >
+                                        {summary}
+                                    </Typography>
+                                )}
                             </Box>
                         </Option>
                     );
                 })}
             </Select>
+            {chosenSummary && (
+                <Typography
+                    data-testid="skill-chosen-summary"
+                    dir="auto"
+                    level="body-xs"
+                    sx={SKILL_SUMMARY_SX}
+                >
+                    {chosenSummary}
+                </Typography>
+            )}
             {showAddTagHint && (
                 <Typography
                     data-testid="skill-dashboard-hint"
