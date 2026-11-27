@@ -31,6 +31,20 @@ export const isHtmlNote = (
  *  `html_note_pages.document`). */
 export const HTML_NOTE_LOADED_KEY = "genosHtmlNoteLoaded";
 
+/** What a server-drawn page (a dashboard, MIP-2417) posts when the member clicks one of its links:
+ *  the app path, with the same nonce. The page route adds the script that posts it only to pages the
+ *  server itself rendered, and the viewer listens only when the API says this revision is one. */
+export const HTML_NOTE_OPEN_KEY = "genosHtmlNoteOpen";
+
+/** The routes a page's link may open, matched whole: the same shapes the server writes
+ *  (genos-api `services/dashboard_links.is_app_path`). No query, fragment, dot segment, escape or
+ *  other host can match. */
+const PAGE_LINK =
+    /^\/workspace\/(?:tasks\/project\/\d+(?:\/(?:task|milestone)\/\d+)?|notes\/(?:my|team|shared)\/\d+|notes\/task\/project\/\d+\/task\/\d+\/note\/\d+|notes\/chat\/(?:dm|gm|pm|mdm)\/[0-9a-f-]{36}\/thread\/(?:0|[0-9a-f-]{36})\/note\/\d+)$/;
+
+export const isHtmlNotePageLink = (value: unknown): value is string =>
+    typeof value === "string" && PAGE_LINK.test(value);
+
 /** The family name the read endpoints take for a note type number. */
 export const htmlNoteFamily = (noteType: number): "personal" | "task" | "chat" =>
     noteType === 2 ? "task" : noteType === 3 ? "chat" : "personal";

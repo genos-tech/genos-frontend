@@ -60,6 +60,8 @@ A schedule (Settings > Genos > Schedules, Core and above) prepares a report at t
 - **Period:** Last week, Last month (the default), Last quarter or Last year. This is how far back the numbers go, not how often the schedule runs. A schedule runs on its own at most once a day (Run now is extra).
 - **Focus:** optional, a few words on what the page should look at.
 
+**Links.** The names on the page (the project or milestone in the title, and the tasks it lists) are links: click one to open it in Genos. A page made by a skill can link the tasks, milestones, projects and notes that its run read. Genos writes every link itself, and only to things the page's readers can open. A page you or an AI app saved by hand has no such links.
+
 The first run saves the page as one HTML page in your notes, and each run after replaces it with the new numbers. Dashboards need a plan that has HTML pages (Core and above). Each run counts toward your plan's HTML page saves per hour (30 on Core, 60 on Pro and above). You can keep up to 10 dashboard schedules.
 
 - **Who can read it.** The page names only tasks that everyone who can read the note may open. A project or milestone dashboard is refused when someone who can read the note is not on that project, and the message names nobody. My progress counts only the projects all of its readers are on, and, when others can read the page, says so on the page.
