@@ -10,6 +10,7 @@ import {
     useRef,
     useState,
     type ReactNode,
+    type RefObject,
 } from "react";
 import { PartialBlock } from "@blocknote/core";
 import { CommentsExtension } from "@blocknote/core/comments";
@@ -129,6 +130,9 @@ export type GenosNoteEditorProps = {
      *  default, so every note editor keeps them; the Skills editor turns it on (MIP-2209), where
      *  the body is instructions for a model and none of it has a use. */
     hideViewControls?: boolean;
+    /** Filled with "the document as it is now", so a host that saves or goes away can read the
+     *  words `setBody` has not been given yet (MIP-2454). */
+    bodyReadRef?: RefObject<(() => PartialBlock[]) | null>;
 };
 export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
     const {
@@ -148,6 +152,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
         currentNoteMembers,
         resyncSignal,
         hideViewControls = false,
+        bodyReadRef,
     } = props;
 
     // Editor vs. viewer toggle, decided below once the collab scope is
@@ -385,6 +390,14 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
             startTransition(() => setBody(doc));
         }
     }, EDITOR_BODY_SYNC_DEBOUNCE_MS);
+
+    useEffect(() => {
+        if (!bodyReadRef || !editor) return;
+        bodyReadRef.current = () => editor.document as unknown as PartialBlock[];
+        return () => {
+            bodyReadRef.current = null;
+        };
+    }, [bodyReadRef, editor]);
 
     // State for modal
     const [opened, setOpened] = useState(false);

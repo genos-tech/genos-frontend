@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+    Dispatch,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 
 import { toast } from "../../components/ui/feedback/toastStore";
 import { NoteService } from "../../db/services/note.service";
@@ -201,18 +209,18 @@ export interface NoteManagementState {
 
     // Chat notes
     currentChatNote: ChatNoteProps | null;
-    setCurrentChatNote: (note: ChatNoteProps | null) => void;
+    setCurrentChatNote: Dispatch<SetStateAction<ChatNoteProps | null>>;
     chatNoteMeta: ChatNoteMetaProps[];
-    setChatNoteMeta: (meta: ChatNoteMetaProps[]) => void;
+    setChatNoteMeta: Dispatch<SetStateAction<ChatNoteMetaProps[]>>;
     currentChatNoteChain: ChatNoteMetaTreeNode[] | undefined;
     setCurrentChatNoteChain: (chain: ChatNoteMetaTreeNode[]) => void;
     getChatNoteMeta: () => Promise<boolean>;
 
     // Task notes
     currentTaskNote: TaskNoteProps | null;
-    setCurrentTaskNote: (note: TaskNoteProps | null) => void;
+    setCurrentTaskNote: Dispatch<SetStateAction<TaskNoteProps | null>>;
     taskNoteMeta: TaskNoteMetaProps[];
-    setTaskNoteMeta: (meta: TaskNoteMetaProps[]) => void;
+    setTaskNoteMeta: Dispatch<SetStateAction<TaskNoteMetaProps[]>>;
     currentTaskNoteChain: TaskNoteMetaTreeNode[] | undefined;
     setCurrentTaskNoteChain: (chain: TaskNoteMetaTreeNode[]) => void;
     getTaskNoteMeta: () => Promise<boolean>;
