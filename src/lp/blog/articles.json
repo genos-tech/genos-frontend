@@ -1,130 +1,123 @@
 [
     {
-        "slug": "ai-can-search-your-tools",
-        "source": "MEDIUM_RETRIEVAL_ISNT_UNDERSTANDING.md",
+        "slug": "see-what-your-ai-wrote",
+        "source": "blog/see-what-your-ai-wrote.md",
         "bodyHeading": "## Article body",
-        "title": "AI Can Search Your Tools. It Still Can't Understand Your Work.",
-        "excerpt": "Retrieval finds fragments. Understanding requires the relationships between discussions, decisions, documents, and tasks.",
+        "title": "See what your AI wrote",
+        "excerpt": "Writes from a connected app carry its mark. Yours do not.",
         "language": "en",
-        "category": "Product thinking",
-        "publishedAt": "2026-08-08",
-        "featured": true
+        "category": "Connected AI",
+        "publishedAt": "2026-11-28",
+        "cover": "/lp/shots/en/record.webp"
     },
     {
-        "slug": "ai-should-ask-before-it-acts",
-        "source": "MEDIUM_AI_SHOULD_ASK_BEFORE_IT_ACTS.md",
+        "slug": "connect-claude-without-an-api-key",
+        "source": "blog/connect-claude-without-an-api-key.md",
         "bodyHeading": "## Article body",
-        "title": "The Best AI Coworker Knows When to Stop and Ask",
-        "excerpt": "An agent that changes shared work should make its interpretation inspectable before it acts.",
+        "title": "Connect Claude without an API key",
+        "excerpt": "Copy, paste, sign in. You choose what it may do.",
         "language": "en",
-        "category": "AI product design",
-        "publishedAt": "2026-08-08",
-        "featured": true
+        "category": "Connected AI",
+        "publishedAt": "2026-11-28",
+        "cover": "/lp/guide/en/connect.webp"
+    },
+    {
+        "slug": "dashboard-that-updates-itself",
+        "source": "blog/dashboard-that-updates-itself.md",
+        "bodyHeading": "## Article body",
+        "title": "A dashboard that updates itself",
+        "excerpt": "Schedule a page once. Every run brings new numbers.",
+        "language": "en",
+        "category": "Dashboards",
+        "publishedAt": "2026-11-28",
+        "cover": "/lp/guide/en/dashboard.webp"
+    },
+    {
+        "slug": "morning-plan-in-your-inbox",
+        "source": "blog/morning-plan-in-your-inbox.md",
+        "bodyHeading": "## Article body",
+        "title": "A morning plan, waiting in your Inbox",
+        "excerpt": "What to do today, at the time you pick.",
+        "language": "en",
+        "category": "Reports",
+        "publishedAt": "2026-11-28",
+        "cover": "/lp/guide/en/inbox.webp"
+    },
+    {
+        "slug": "run-a-skill-with-slash",
+        "source": "blog/run-a-skill-with-slash.md",
+        "bodyHeading": "## Article body",
+        "title": "Type / to repeat what works",
+        "excerpt": "Save your steps once, run them from the ask box.",
+        "language": "en",
+        "category": "Skills",
+        "publishedAt": "2026-11-28",
+        "cover": "/lp/guide/en/skills.webp"
+    },
+    {
+        "slug": "see-what-a-task-is-waiting-on",
+        "source": "blog/see-what-a-task-is-waiting-on.md",
+        "bodyHeading": "## Article body",
+        "title": "See what a task is waiting on",
+        "excerpt": "Blockers set the status. The graph shows the chain.",
+        "language": "en",
+        "category": "Tasks",
+        "publishedAt": "2026-11-28",
+        "cover": "/lp/guide/en/graph.webp"
     },
     {
         "slug": "ai-answers-need-receipts",
-        "source": "MEDIUM_AI_ANSWERS_NEED_RECEIPTS.md",
+        "source": "blog/ai-answers-need-receipts.md",
         "bodyHeading": "## Article body",
-        "title": "An AI Answer Without Sources Is Just Another Thing to Verify",
-        "excerpt": "Knowledge workers need a short path from an AI answer back to the evidence behind it.",
+        "title": "Check the answer, not just read it",
+        "excerpt": "Genos AI links the sources it drew on.",
         "language": "en",
-        "category": "AI trust",
+        "category": "Genos AI",
         "publishedAt": "2026-08-08",
-        "featured": true
+        "cover": "/lp/shots/en/ask.webp"
     },
     {
-        "slug": "building-one-connected-workspace",
-        "source": "REDDIT_SIDEPROJECT.md",
-        "bodyHeading": "## Post body",
-        "title": "Why I Built One Workspace for Chat, Docs, and Tasks",
-        "excerpt": "Three subscriptions still could not answer a simple question: why are we doing this task?",
+        "slug": "ai-should-ask-before-it-acts",
+        "source": "blog/ai-should-ask-before-it-acts.md",
+        "bodyHeading": "## Article body",
+        "title": "Genos AI asks before it changes anything",
+        "excerpt": "See the change first, then approve or reject.",
         "language": "en",
-        "category": "Founder story",
-        "publishedAt": "2026-08-08"
+        "category": "Genos AI",
+        "publishedAt": "2026-08-08",
+        "cover": "/lp/shots/en/approval.webp"
+    },
+    {
+        "slug": "ai-can-search-your-tools",
+        "source": "blog/ai-can-search-your-tools.md",
+        "bodyHeading": "## Article body",
+        "title": "One thread, one task, one note",
+        "excerpt": "Work that stays connected is easier to ask about.",
+        "language": "en",
+        "category": "Workspace",
+        "publishedAt": "2026-08-08",
+        "cover": "/lp/guide/en/chat.webp"
     },
     {
         "slug": "make-chat-messages-come-back",
-        "source": "REDDIT_PRODUCTIVITY_MESSAGES_COME_BACK.md",
-        "bodyHeading": "## Post body",
-        "stopHeading": "## Optional creator disclosure comment",
-        "title": "Make a Chat Message Come Back at the Right Time",
-        "excerpt": "Saved lists are passive. A message that matters later needs a time, its original context, and a clean completion rule.",
-        "language": "en",
-        "category": "Productivity",
-        "publishedAt": "2026-08-08"
-    },
-    {
-        "slug": "ai-yjs-collaborative-document",
-        "source": "REDDIT_WEBDEV_AI_YJS_APPROVAL.md",
-        "bodyHeading": "## Post body",
-        "title": "The Subtle Bug in Letting AI Rewrite a Live Yjs Document",
-        "excerpt": "Updating a database row is not enough when a collaborative CRDT document is already open.",
-        "language": "en",
-        "category": "Engineering",
-        "publishedAt": "2026-08-08",
-        "featured": true
-    },
-    {
-        "slug": "building-genos-technical-overview",
-        "source": "SHOW_HN.md",
-        "bodyHeading": "## First comment (post immediately after submitting)",
-        "title": "Building Genos: A Connected Workspace for AI-Readable Context",
-        "excerpt": "The product bet, architecture, stack, and honest limitations behind a solo-built connected workspace.",
-        "language": "en",
-        "category": "Engineering",
-        "publishedAt": "2026-08-08"
-    },
-    {
-        "slug": "work-agent-approved-task-plan",
-        "source": "SHOW_HN_WORK_AGENT_UPDATE.md",
-        "bodyHeading": "## First comment",
-        "title": "Building a Work Agent That Previews Every Write Before It Runs",
-        "excerpt": "How Genos turns threads into plans, proposes bulk task changes, and updates collaborative notes with explicit approval.",
-        "language": "en",
-        "category": "Engineering",
-        "publishedAt": "2026-08-08"
-    },
-    {
-        "slug": "relational-search-after-hybrid-retrieval",
-        "source": "HN_GRAPHRAG_TECHNICAL_SUBMISSION.md",
+        "source": "blog/make-chat-messages-come-back.md",
         "bodyHeading": "## Article body",
-        "stopHeading": "## Suggested first comment",
-        "title": "Why Embeddings Could Not Find the Task Downstream of a Decision",
-        "excerpt": "Adding bounded dependency-graph traversal after hybrid retrieval for questions text similarity cannot answer.",
+        "title": "Make a message come back later",
+        "excerpt": "Set a reminder on the message itself.",
         "language": "en",
-        "category": "Search engineering",
+        "category": "Chat",
         "publishedAt": "2026-08-08",
-        "featured": true
-    },
-    {
-        "slug": "notifications-are-for-what-you-missed",
-        "source": "MEDIUM_NOTIFICATIONS_ARE_FOR_WHAT_YOU_MISSED.md",
-        "bodyHeading": "## Article body",
-        "title": "Notifications Are for What You Missed",
-        "excerpt": "An activity feed should recover what escaped your attention, not repeat events you already watched happen.",
-        "language": "en",
-        "category": "Product design",
-        "publishedAt": "2026-08-08"
-    },
-    {
-        "slug": "webhooks-built-around-failure",
-        "source": "REDDIT_WEBDEV_WEBHOOK_FAILURES.md",
-        "bodyHeading": "## Post body",
-        "title": "Building Webhooks Around Failure, Not the Happy Path",
-        "excerpt": "Signed payloads are the beginning. Reliable webhooks also need bounded retries, SSRF defenses, contract tests, and an honest outbox boundary.",
-        "language": "en",
-        "category": "Engineering",
-        "publishedAt": "2026-08-08"
+        "cover": "/lp/guide/en/message-menu.webp"
     },
     {
         "slug": "cross-team-sharing-authorization",
-        "source": "HN_CROSS_TEAM_AUTHORIZATION.md",
+        "source": "blog/cross-team-sharing-authorization.md",
         "bodyHeading": "## Article body",
-        "stopHeading": "## Suggested first comment",
-        "title": "Cross-Team Sharing Is Authorization Plus Distributed State",
-        "excerpt": "Sharing one object across tenants requires consent, materialized ACLs, discovery, client replicas, and revocation to stay aligned.",
+        "title": "Share one thing with another company",
+        "excerpt": "One chat, project or note folder, and nothing else.",
         "language": "en",
-        "category": "Security engineering",
-        "publishedAt": "2026-08-08"
+        "category": "Teams",
+        "publishedAt": "2026-08-08",
+        "coverFlow": ["Connect two teams", "Share one item", "They accept"]
     }
 ]
