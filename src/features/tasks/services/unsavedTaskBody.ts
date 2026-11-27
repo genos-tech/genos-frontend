@@ -54,6 +54,8 @@ const signOutMark = (): string => {
 };
 let sessionMark = signOutMark();
 const signedOut = () => signOutMark() !== sessionMark;
+/** True after a sign-out: nothing may be written back. Also read by `unsavedNoteBody`. */
+export const isKeepingStopped = (): boolean => signedOut();
 export const stopKeepingUnsavedBodies = () => {
     try {
         localStorage.setItem(SIGN_OUT_MARK, String(Date.now() + Math.random()));

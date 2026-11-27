@@ -874,6 +874,9 @@ export async function fetchNoteSummary(args: {
         try {
             const data = await resp.json();
             if (data?.error) msg = data.error;
+            if (isMonthlyLimitRefusal(resp.status, data)) {
+                msg = getMessages().services.agent.monthlyLimit;
+            }
         } catch {
             // ignore
         }
@@ -916,6 +919,9 @@ export async function fetchThreadSummary(args: {
         try {
             const data = await resp.json();
             if (data?.error) msg = data.error;
+            if (isMonthlyLimitRefusal(resp.status, data)) {
+                msg = getMessages().services.agent.monthlyLimit;
+            }
         } catch {
             // ignore
         }
@@ -1655,6 +1661,11 @@ const asFieldErrors = (raw: unknown): Record<string, string> | null => {
     return out;
 };
 
+/** A monthly spend limit is reached (429 `{category: "ai_monthly_limit"}`, MIP-2363): the server's
+ *  sentence is English only, so ours is shown, with nothing to buy (buying would not lift it). */
+const isMonthlyLimitRefusal = (status: number, data: unknown): boolean =>
+    status === 429 && (data as { category?: unknown } | null)?.category === "ai_monthly_limit";
+
 /** True for the turn error `runNdjsonStream` files when the AI credits are used up: the turn then
  *  shows the buy / upgrade actions. Compared by text, because a turn error is a plain string. */
 export const isOutOfCreditsError = (message: string | null | undefined): boolean =>
@@ -1710,6 +1721,9 @@ async function runNdjsonStream(
             // The AI credit gate (429 `{category: "ai_credits"}`): the turn ends in a sentence of ours
             // with "Buy credits" / "Upgrade plan" next to it, never a dead end (MIP-1969).
             outOfCredits = resp.status === 429 && data?.category === "ai_credits";
+            if (isMonthlyLimitRefusal(resp.status, data)) {
+                message = getMessages().services.agent.monthlyLimit;
+            }
             platformError = typeof data?.error === "string";
             // /decide/ answers 422 `{error, field_errors}` when the person's
             // edits cannot be applied. Plain JSON, not an NDJSON stream, and

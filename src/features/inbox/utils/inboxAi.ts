@@ -59,6 +59,8 @@ export type AiSourceView = {
     usedAi: boolean | null;
     /** The report ran without its AI part because the member had no credits left (MIP-1960). */
     noCredits: boolean;
+    /** The AI part was left out because a monthly spend limit was reached (MIP-2363). */
+    monthlyLimit: boolean;
 };
 
 export type AiUsage = {
@@ -99,6 +101,7 @@ const parseSource = (raw: unknown, kind: "digest" | "schedule"): AiSourceView | 
             gone: false,
             usedAi,
             noCredits: false,
+            monthlyLimit: false,
         };
     }
     const id = text(source.schedule_id, MAX_ID);
@@ -111,6 +114,7 @@ const parseSource = (raw: unknown, kind: "digest" | "schedule"): AiSourceView | 
         gone: source.gone === true,
         usedAi,
         noCredits: source.ai_skipped === "no_credits",
+        monthlyLimit: source.ai_skipped === "monthly_limit",
     };
 };
 
