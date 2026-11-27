@@ -1091,6 +1091,7 @@ export const fr: DeepPartial<Messages> = {
                 "Vous avez atteint une limite de votre forfait. Voir Paramètres → Forfait et utilisation.",
             actionFailed: "Impossible d'effectuer cette action. Veuillez réessayer.",
             messageSendFailed: "Impossible d'envoyer votre message. Veuillez réessayer.",
+            noteNotSaved: "Impossible d'enregistrer vos dernières modifications de cette note.",
             idleReload: "Actualisation après une période d'inactivité…",
         },
         serviceSwitch: {
