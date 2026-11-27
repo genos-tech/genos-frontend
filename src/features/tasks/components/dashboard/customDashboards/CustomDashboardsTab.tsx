@@ -39,7 +39,10 @@ const MY_NOTE_TYPE = 1;
 type Entry = {
     /** `s<schedule id>` for an own dashboard, `n<note id>` for a shared one. */
     key: string;
+    /** An own dashboard's schedule name; a shared one's page title. */
     title: string;
+    /** The page's own title: what the note viewer and the share dialog of the NOTE show. */
+    pageTitle: string;
     meta: string;
     noteId: number | null;
     scheduleId: string | null;
@@ -57,7 +60,10 @@ const ownEntry = (
     return {
         // Stable across the first run: the key never changes when the page appears.
         key: `s${row.scheduleId}`,
-        title: row.note?.title || row.name,
+        // The name the member chose: two pages of one project carry the same built-in title,
+        // so the page's title cannot tell their rows apart (MIP-2437).
+        title: row.name || row.note?.title || "",
+        pageTitle: row.note?.title || row.name,
         meta: !row.enabled ? c.paused : row.note && when ? fmt(c.updated, { when }) : c.notRun,
         noteId: row.note?.noteId ?? null,
         scheduleId: row.scheduleId,
@@ -70,6 +76,7 @@ const ownEntry = (
 const sharedEntry = (row: SharedDashboard, by: string): Entry => ({
     key: `n${row.noteId}`,
     title: row.title,
+    pageTitle: row.title,
     meta: fmt(by, { name: row.ownerName || "?" }),
     noteId: row.noteId,
     scheduleId: null,
@@ -415,7 +422,7 @@ export const CustomDashboardsTab = ({ teamId, share }: Props) => {
     const [sharing, setSharing] = useState<{ noteId: number; title: string } | null>(null);
     const startSharing = (entry: Entry) => {
         if (!share || entry.noteId == null) return;
-        setSharing({ noteId: entry.noteId, title: entry.title });
+        setSharing({ noteId: entry.noteId, title: entry.pageTitle });
         void share.useNM.loadNoteMembers(MY_NOTE_TYPE, entry.noteId);
     };
     // Edit (MIP-2397): the dialog for a saved dashboard schedule; `hasNote` locks where its page is.
@@ -688,7 +695,7 @@ export const CustomDashboardsTab = ({ teamId, share }: Props) => {
                                 isActive={onTasks}
                                 noteId={selected.noteId}
                                 noteType={MY_NOTE_TYPE}
-                                title={selected.title}
+                                title={selected.pageTitle}
                             />
                         ) : (
                             <EmptyState

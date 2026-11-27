@@ -544,6 +544,18 @@ describe("GenosReportCard: empty and old reports", () => {
         expect(screen.getByText("Nothing to report.")).toBeTruthy();
     });
 
+    it("draws no empty box on a record of what a chat post cost (MIP-2434)", () => {
+        const text = "Posted in general. Only you see this cost. AI usage: 2 credits.";
+        const item = reportItem({ version: 2, title: "Week", text, sections: [] });
+        const { container } = render(
+            bubble({ ...item, itemOptionals: { ...item.itemOptionals, posted_in_chat: true } })
+        );
+        expect(screen.getByRole("heading", { name: "Week" })).toBeTruthy();
+        expect(screen.getByText(text)).toBeTruthy();
+        expect(container.querySelector("[data-report-empty]")).toBeNull();
+        expect(screen.queryByText("All clear")).toBeNull();
+    });
+
     it("draws a body without `version` exactly as before: bullets, no card", () => {
         const { container } = renderBody({
             title: "Old",

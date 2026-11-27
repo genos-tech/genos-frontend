@@ -151,7 +151,7 @@ describe("the lists and the viewer", () => {
         const rows = await screen.findAllByTestId("custom-dashboard-row");
         const islands = rows.map((row) => row.querySelector("bdi")!);
         expect(islands.map((el) => el.textContent)).toEqual([
-            "Milestone X dashboard",
+            "Monday milestone",
             "Brand new dashboard",
             "Team progress",
         ]);
@@ -161,6 +161,32 @@ describe("the lists and the viewer", () => {
             expect(style.maxWidth).toBe("100%");
             expect(style.textOverflow).toBe("ellipsis");
         }
+    });
+
+    // MIP-2437: two dashboards of one project have pages with the same built-in title.
+    it("names an own row by its schedule, so same-titled pages can be told apart", async () => {
+        const page = { noteType: "personal", title: "Project dashboard: Route Check" };
+        const row = { enabled: true, lastRun: "2026-11-27T08:00:00Z", lastStatus: "ok" };
+        load.mockResolvedValue({
+            status: "ready",
+            data: {
+                own: [
+                    { ...row, scheduleId: "a", name: "Alpha board", note: { ...page, noteId: 1 } },
+                    { ...row, scheduleId: "b", name: "Beta board", note: { ...page, noteId: 2 } },
+                ],
+                shared: [{ ...page, noteId: 3, ownerName: "Ana" }],
+            },
+        });
+        renderTab();
+        const rows = await screen.findAllByTestId("custom-dashboard-row");
+        expect(rows.map((r) => r.querySelector("bdi")!.textContent)).toEqual([
+            "Alpha board",
+            "Beta board",
+            // A shared row has no schedule behind it here: the page's title.
+            "Project dashboard: Route Check",
+        ]);
+        // The viewer still shows the note under its own title.
+        expect(screen.getByTestId("note-viewer").textContent).toBe(page.title);
     });
 
     it("says a dashboard has not run yet instead of a time", async () => {

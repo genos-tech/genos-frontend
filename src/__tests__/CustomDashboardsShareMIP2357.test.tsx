@@ -124,7 +124,7 @@ describe("the Share icon", () => {
         renderTab(host());
         const viewer = await screen.findByTestId("custom-dashboard-viewer");
         const share = within(viewer).getByTestId("custom-dashboard-header-share");
-        expect(share).toHaveAccessibleName(fmt(c().shareNamed, { name: "Milestone X dashboard" }));
+        expect(share).toHaveAccessibleName(fmt(c().shareNamed, { name: "Monday milestone" }));
         expect(within(viewer).getByRole("button", { name: c().runNow })).toBeTruthy();
     });
 
