@@ -574,6 +574,7 @@ export const ScheduleFormPanel = ({
                                         />
                                     ) : known?.picker === "skill" ? (
                                         <SkillParamSelect
+                                            forDashboard={job.job === "ai_dashboard"}
                                             value={form.params[key] ?? ""}
                                             onChange={setParam}
                                         />
@@ -791,7 +792,11 @@ export const ScheduleFormPanel = ({
                 {/* A new one-time schedule can run as soon as it is saved (MIP-2402). Editing one
                     keeps its date and time: there is nothing to "run right away" on a saved row. */}
                 {form.frequency === "once" && !schedule && (
-                    <FormControl data-testid="schedule-once-when" sx={{ minWidth: 0 }}>
+                    <FormControl
+                        data-guide-id="spotlight.scheduleRunRightAway"
+                        data-testid="schedule-once-when"
+                        sx={{ minWidth: 0 }}
+                    >
                         <FormLabel id={onceWhenLabelId}>{s.onceWhen}</FormLabel>
                         <RadioGroup
                             aria-labelledby={onceWhenLabelId}
