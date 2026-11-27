@@ -375,6 +375,8 @@ export const settings = {
         scheduleModePlainHint: "A plain report built from your data. No AI, no credits spent.",
         scheduleModeAiHint:
             "Genos AI adds one short sentence under a task when its comments explain where it stands. This spends your AI credits.",
+        scheduleModeAiSummaryHint:
+            "Genos AI adds a short summary, written from what the report already lists. This spends your AI credits.",
         scheduleModeOutOfCredits:
             "You've used all your AI credits, so the Genos AI mode can't run. Buy credits or upgrade to turn it on.",
         aiOutOfCreditsBuy: "Buy credits",
@@ -386,6 +388,8 @@ export const settings = {
         effortCostTiny: "Less than 0.01 credits per run. This is an estimate.",
         effortHint:
             "How hard the AI works on this report. The estimate is for a report of about 10 tasks; the real cost is shown only to you, in your Inbox.",
+        effortHintSummary:
+            "How hard the AI works on this report. The estimate is for a summary of a report of about 24 lines; the real cost is shown only to you, in your Inbox.",
         effortHeld: "Your plan runs this schedule at {level}.",
         rowEffort: "AI effort: {level}",
         duplicateSame:
