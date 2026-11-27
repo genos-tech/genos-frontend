@@ -135,6 +135,7 @@ import { useSettingsDeepLink } from "./utils/settingsDeepLink";
 import { spotlightFolderPath, spotlightNotePath } from "./utils/spotlightNotePath";
 
 import { fmt, getMessages, I18nProvider } from "./i18n";
+import { ShortcutOverridesBridge } from "./shortcuts/ShortcutOverridesBridge";
 import { ColorThemeProvider } from "./theme/ColorThemeProvider";
 
 // Feature roots are code-split: BlockNote/Yjs (notes), the rich-text editor
@@ -1433,6 +1434,7 @@ const AppBody = () => {
                     the normal case. */}
                 <SessionSupersededOverlay teamName={supersededByTeamName} />
                 <UiSettingsProvider>
+                    <ShortcutOverridesBridge />
                     <ThemePreferenceProvider>
                         <BubbleStylePreferenceProvider>
                             <BubbleActionsPreferenceProvider>

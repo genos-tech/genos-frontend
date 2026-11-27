@@ -5997,6 +5997,29 @@ export const fr: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "Raccourcis clavier",
+            edit: {
+                introMac:
+                    "Pour modifier un raccourci, sélectionnez ses touches puis appuyez sur les nouvelles. Les changements sont enregistrés dans votre compte et s’appliquent sur tous vos Mac.",
+                introOther:
+                    "Pour modifier un raccourci, sélectionnez ses touches puis appuyez sur les nouvelles. Les changements sont enregistrés dans votre compte et s’appliquent sur tous vos ordinateurs Windows ou Linux.",
+                change: "Modifier le raccourci de {label} (actuellement {keys})",
+                recording: "Appuyez sur les nouvelles touches…",
+                started:
+                    "Enregistrement d’un raccourci pour {label}. Maintenez {keys} et appuyez sur une lettre ou un chiffre. Échap pour annuler.",
+                hint: "Maintenez {keys} et appuyez sur une lettre ou un chiffre. Échap annule.",
+                cancel: "Annuler",
+                cancelled: "Enregistrement annulé.",
+                custom: "Personnalisé",
+                reset: "Rétablir le raccourci par défaut de {label}",
+                resetAll: "Tout rétablir",
+                saved: "{label} utilise maintenant {keys}.",
+                resetDone: "{label} utilise de nouveau {keys}.",
+                resetAllDone: "Tous les raccourcis ont retrouvé leurs touches par défaut.",
+                needsKeys: "Maintenez {keys} et appuyez sur une lettre ou un chiffre.",
+                reserved: "{keys} est utilisé par votre système. Choisissez d’autres touches.",
+                conflict:
+                    "{keys} est déjà utilisé par « {label} ». Modifiez ou rétablissez d’abord ce raccourci.",
+            },
             table: {
                 title: "Tableau des tâches",
                 description:

@@ -25,7 +25,7 @@ import { UIStateManagementState } from "../../hooks/common/useUIStateManagement"
 import { InboxManagementState } from "../../hooks/inbox/useInboxManagement";
 import { fmt, useTranslation } from "../../i18n";
 import { switchService } from "../../services/serviceSwitch/serviceSwitchStore";
-import { cycleKeys, shortcutText } from "../../shortcuts";
+import { cycleKeys, shortcutText, useShortcutsVersion } from "../../shortcuts";
 import { g } from "../../theme/tokens";
 import { UserProps } from "../../types/admin";
 import { AppTooltip } from "../ui/AppTooltip";
@@ -253,6 +253,8 @@ export const Sidebar = (props: SidebarProps) => {
     const handleLogout = useSignOut();
     const { t } = useTranslation();
     const cycle = cycleKeys();
+    // Re-render when the member rebinds the shortcut printed below (MIP-2413).
+    useShortcutsVersion();
     const isMobile = useIsMobile();
     const sidebarVisibility = useSidebarVisibility();
     const navigate = useNavigate();
