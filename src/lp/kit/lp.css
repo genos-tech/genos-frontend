@@ -2908,3 +2908,166 @@ a.lp-row:hover .lp-row__arrow {
     margin: 0;
     font-size: 1.125rem;
 }
+
+/* ---------- visual guides and diagrams (MIP-2415, MIP-2416) ---------- */
+.lp-guide {
+    display: grid;
+    gap: 40px;
+    min-width: 0;
+}
+.lp-guide__step {
+    display: grid;
+    /* `minmax(0, 1fr)`: a wide picture shrinks instead of widening the page. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+}
+.lp-root .lp-guide__step h2 {
+    font-size: 1.25rem;
+    line-height: 1.4;
+    margin: 0;
+}
+.lp-guide__line {
+    color: var(--lp-text-secondary);
+}
+.lp-guide__pic {
+    display: block;
+    justify-self: start;
+    max-width: 100%;
+}
+.lp-guide__frame {
+    display: block;
+    position: relative;
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 12px;
+    background: var(--lp-surface);
+}
+.lp-guide__frame img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 11px;
+}
+.lp-guide__pin,
+.lp-guide__pins li::before {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--lp-accent);
+    color: var(--lp-accent-fg);
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1;
+}
+.lp-guide__pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 2px var(--lp-surface);
+}
+.lp-root .lp-guide__pins {
+    list-style: none;
+    counter-reset: lp-pin;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 20px;
+}
+.lp-guide__pins li {
+    counter-increment: lp-pin;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.lp-guide__pins li::before {
+    content: counter(lp-pin);
+    flex: none;
+}
+.lp-root .lp-flow {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 26px;
+    max-width: 100%;
+}
+.lp-root .lp-flow li {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    display: grid;
+    place-items: center;
+    margin: 0;
+    max-width: none;
+    padding: 14px 10px;
+    border: 1px solid var(--lp-accent-border);
+    border-radius: 10px;
+    background: var(--lp-surface);
+    text-align: center;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+.lp-flow li + li::before {
+    content: "→";
+    content: "→" / "";
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--lp-text-secondary);
+}
+[dir="rtl"] .lp-flow li + li::before {
+    transform: translateY(-50%) scaleX(-1);
+}
+@media (max-width: 720px) {
+    .lp-root .lp-flow {
+        flex-direction: column;
+    }
+    .lp-flow li + li::before {
+        content: "↓";
+        content: "↓" / "";
+        left: 50%;
+        top: -14px;
+        transform: translate(-50%, -50%);
+    }
+}
+.lp-docs-full {
+    margin-top: 40px;
+    border-top: 1px solid var(--lp-border-subtle);
+    padding-top: 16px;
+}
+.lp-docs-full > summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 8px 0;
+}
+.lp-docs-topic-cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: top left;
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 8px;
+    margin-bottom: 6px;
+}
+.lp-post__cover {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    object-position: top left;
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 8px;
+}
+.lp-prose .lp-blog-figure {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--lp-border-subtle);
+    border-radius: 12px;
+}
+.lp-prose .lp-flow {
+    margin: 20px 0;
+}
