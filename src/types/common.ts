@@ -48,7 +48,7 @@ export type InboxAiSource = {
      *  before that). False reads "No AI used". */
     used_ai?: boolean;
     /** Why a report that could use AI did not (MIP-1960): the member had no AI credits left. */
-    ai_skipped?: "no_credits";
+    ai_skipped?: "no_credits" | "monthly_limit";
     /** The schedule that made the report was deleted: there is nothing to switch. */
     gone?: true;
 };

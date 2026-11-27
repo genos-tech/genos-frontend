@@ -2854,6 +2854,7 @@ export const ja: DeepPartial<Messages> = {
             unmeasured: "Genos がこれに AI を使用しました。使用量は計測されていません。",
             noAiUsed: "AI は使用していません",
             noAiNoCredits: "AI は使用していません: 今月の AI クレジットが残っていません",
+            noAiMonthlyLimit: "AI未使用：Genos AIが今月の利用上限に達しました",
             deductedNone: "残高からの差し引きなし",
             deducted: "残高から {credits} を差し引き",
             scheduleFallback: "このスケジュール",
@@ -3814,6 +3815,8 @@ export const ja: DeepPartial<Messages> = {
             outOfCredits: "AIクレジットを使い切ったため、現在Genosは回答できません。",
             outOfCreditsBuy: "クレジットを購入",
             outOfCreditsUpgrade: "プランをアップグレード",
+            monthlyLimit:
+                "Genos AIは今月の利用上限に達したため、いまは実行できません。来月の初めに再開します。検索やその他の機能は引き続き使えます。",
             taskSessionLoadFailed: "このタスクについての以前の会話を読み込めませんでした。",
         },
         pwaInstall: {
