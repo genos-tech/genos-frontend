@@ -664,3 +664,57 @@ describe("GenosReportCard: another locale", () => {
         expect(screen.getByText("كل شيء على ما يرام")).toBeTruthy();
     });
 });
+
+// MIP-2419: a dashboard run's item is only a pointer to its page.
+const POINTER = {
+    version: 2,
+    title: "Project dashboard: Genos",
+    text: "Dashboard page",
+    sections: [
+        {
+            heading: "",
+            items: [{ text: "Dashboard page", link: "/workspace/notes/my/9", kind: "note" }],
+        },
+    ],
+};
+
+describe("GenosReportCard: a pointer to a dashboard page", () => {
+    it("draws the name and the one link, with no section header, count or repeated words", () => {
+        const { container, open } = renderBody(POINTER);
+        expect(screen.getByRole("heading", { name: "Project dashboard: Genos" })).toBeTruthy();
+        expect(screen.getAllByText("Dashboard page")).toHaveLength(1);
+        const bare = container.querySelector("[data-report-bare]") as HTMLElement;
+        expect(within(bare).queryByRole("button")).toBeNull();
+        expect(container.querySelector("[data-report-section]")).toBeNull();
+        expect(container.querySelector("[data-report-empty]")).toBeNull();
+        expect(container.querySelector('[data-genos-report="v2"] h4')).toBeNull();
+        fireEvent.click(within(bare).getByRole("link", { name: /Dashboard page/ }));
+        expect(open).toHaveBeenCalledWith("/workspace/notes/my/9");
+    });
+
+    it("draws an item filed before the change as it was", () => {
+        const { container } = renderBody({
+            version: 2,
+            title: "Project dashboard: Genos",
+            text: "Last 30 days: 3 tasks.",
+            sections: [
+                {
+                    heading: "Dashboard page",
+                    key: "items",
+                    items: [
+                        {
+                            text: "Open the dashboard page",
+                            link: "/workspace/notes/my/9",
+                            kind: "note",
+                        },
+                    ],
+                },
+            ],
+        });
+        expect(screen.getByText("Last 30 days: 3 tasks.")).toBeTruthy();
+        expect(within(sectionOf(container, "items")).getByRole("button").textContent).toContain(
+            "Dashboard page"
+        );
+        expect(container.querySelector("[data-report-bare]")).toBeNull();
+    });
+});
