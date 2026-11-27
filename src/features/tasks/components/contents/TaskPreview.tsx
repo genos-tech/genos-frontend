@@ -72,8 +72,19 @@ import { forgetCachedSubtree } from "../../services/forgetCachedSubtree";
 import { loadSpecificTask } from "../../services/loadSpecificTask";
 import { loadTaskActivities } from "../../services/loadTaskActivities";
 import { loadTaskComments } from "../../services/loadTaskComments";
-import { emitTasksBulkChanged, onCommentsResync, onTaskTouched } from "../../services/taskEvents";
+import {
+    emitTasksBulkChanged,
+    emitTaskTouched,
+    onCommentsResync,
+    onTaskTouched,
+} from "../../services/taskEvents";
 import { createOpenLanding, OpenLanding } from "../../services/taskOpenLanding";
+import {
+    bodyFingerprint,
+    keepUnsavedBody,
+    repairUnsavedTaskBody,
+    settleUnsavedBody,
+} from "../../services/unsavedTaskBody";
 import {
     updateProjectOptions,
     updateTagOptions,
@@ -207,6 +218,9 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
 
     // Consolidated task edit state
     const taskEditState = useTaskEditState(useTM.currentPreviewTask);
+    // For work that outlives the render it started in (the unsaved body repair).
+    const taskEditStateRef = useRef(taskEditState);
+    taskEditStateRef.current = taskEditState;
 
     const previewTaskKind = getTaskKind(useTM.currentPreviewTask, useTM.allTasks);
 
@@ -269,14 +283,24 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     const flushBody = useCallback(() => bodyFlushRef.current?.(), []);
     const lastLoadedBodyRef = useRef<string>("");
     const prevTaskIdRef = useRef<number | null>(null);
+    // The stored body of the shown task, as far as this preview knows (`bodyFingerprint`):
+    // what unsaved words were typed on top of (see `unsavedTaskBody`).
+    const serverBodyRef = useRef<string>("");
     const [bodyBackoff] = useState(createRetryBackoff);
     const handleBodySettled = useCallback(
-        (taskId: number, settled: PartialBlock[]) => {
+        (
+            taskId: number,
+            settled: PartialBlock[],
+            save: { stored: boolean; startedAt: number }
+        ) => {
+            // Also for a task already left: its kept words are settled by the same save.
+            settleUnsavedBody(myself.userId, taskId, settled, save);
             if (prevTaskIdRef.current !== taskId) return;
             lastLoadedBodyRef.current = JSON.stringify(settled);
+            if (save.stored) serverBodyRef.current = bodyFingerprint(settled);
             bodyBackoff.reset();
         },
-        [bodyBackoff]
+        [bodyBackoff, myself.userId]
     );
 
     const sendUpdatedTask = useSendUpdatedTask({
@@ -361,15 +385,65 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         flushBody();
         return !!taskEditState.taskBodyEdited && isBodyDirty();
     };
+    /** For the moments after which a save may never land (leaving, switching, reloading): as
+     *  `hasUnsavedBody`, and keeps the words in this browser until a save is known to have
+     *  stored them (MIP-2455). */
+    const keepIfUnsaved = (): boolean => {
+        if (!hasUnsavedBody()) return false;
+        const taskId = prevTaskIdRef.current;
+        if (taskId != null)
+            keepUnsavedBody(myself.userId, taskId, currentBodyRef.current, serverBodyRef.current);
+        return true;
+    };
 
     // Leaving the preview (another page, a closed modal) drops the editor's pending sync and
     // the autosave interval, so what was typed in the last seconds is saved here. React runs
     // this before the editor's own cleanup, so the flush still reaches it.
     const saveOnLeaveRef = useRef<() => void>(() => {});
     saveOnLeaveRef.current = () => {
-        if (hasUnsavedBody()) void sendUpdatedTask(true);
+        if (keepIfUnsaved()) void sendUpdatedTask(true);
     };
     useEffect(() => () => saveOnLeaveRef.current(), []);
+
+    // A reload or a closed tab: no request is sure to get out, so the words are only kept.
+    const keepOnPageHideRef = useRef<() => void>(() => {});
+    keepOnPageHideRef.current = () => void keepIfUnsaved();
+    useEffect(() => {
+        const onPageHide = () => keepOnPageHideRef.current();
+        window.addEventListener("pagehide", onPageHide);
+        return () => window.removeEventListener("pagehide", onPageHide);
+    }, []);
+
+    // Opening a task: save what an earlier visit could not.
+    const repairingTask = taskEditState.tmpCurrentTaskContent;
+    useEffect(() => {
+        const taskId = Number(repairingTask?.id);
+        const projectId = Number(repairingTask?.project?.projectId);
+        if (!taskId || !projectId || !accessToken) return;
+        const typedHere = () =>
+            prevTaskIdRef.current === taskId &&
+            taskEditStateRef.current.taskBodyEdited === true &&
+            isBodyDirty();
+        void repairUnsavedTaskBody({
+            myself,
+            taskId,
+            projectId,
+            accessToken,
+            socket,
+            isSuperseded: typedHere,
+        })
+            .then((stored) => {
+                if (!stored || prevTaskIdRef.current !== taskId || typedHere()) return;
+                // A later save from this preview (a status change) must carry these words.
+                serverBodyRef.current = bodyFingerprint(stored);
+                lastLoadedBodyRef.current = JSON.stringify(stored);
+                currentBodyRef.current = stored;
+                taskEditStateRef.current.setBody(stored);
+                emitTaskTouched(taskId, "update");
+            })
+            .catch((error) => console.error("[TaskPreview] unsaved body repair failed:", error));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [repairingTask?.id, accessToken]);
 
     // Delete this task (the title menu, the status picker's "Deleted"), MIP-1303.
     // The delete waits behind an Undo toast and is sent when the toast is gone,
@@ -477,7 +551,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         if (isSwitch) {
             // Switching to a different task. Save the outgoing one
             // only if the body really changed since we loaded it.
-            if (hasUnsavedBody()) {
+            if (keepIfUnsaved()) {
                 sendUpdatedTask(true);
             }
             // Reset the unreliable flag for the incoming task — the
@@ -492,6 +566,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
             taskEditState.setBody(next.body || []);
             taskEditState.setUploadedFiles(next.attachments || []);
             prevTaskIdRef.current = nextId;
+            serverBodyRef.current = bodyFingerprint(next.body);
             return;
         }
 
@@ -514,6 +589,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         if (next === taskEditState.tmpCurrentTaskContent) {
             // A preview that MOUNTED with its task open (a modal) only ever gets here for it,
             // and the next switch must still know there is a task to save (MIP-2443).
+            if (prevId !== nextId) serverBodyRef.current = bodyFingerprint(next.body);
             prevTaskIdRef.current = nextId;
             return;
         }
@@ -545,7 +621,10 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
         taskEditState.setTaskTitle(next.title);
         // A reload of the SAME task must not put the server's older body over words that are
         // still waiting to be saved: the next autosave would store the older one (MIP-2443).
-        if (prevId !== nextId || !hasUnsavedBody()) taskEditState.setBody(next.body || []);
+        if (prevId !== nextId || !hasUnsavedBody()) {
+            taskEditState.setBody(next.body || []);
+            serverBodyRef.current = bodyFingerprint(next.body);
+        }
         taskEditState.setUploadedFiles(next.attachments || []);
         prevTaskIdRef.current = nextId;
     }, [useTM.currentPreviewTask]);
@@ -982,6 +1061,8 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
 
     return (
         <TaskPreviewSwitchGate
+            // Chat swaps the editor for its loader: what it had not synced would go with it.
+            onTaskViewRemoved={flushBody}
             holdOutgoing={!!holdSwitchWithLoader}
             isDark={isDark}
             loadingLabel={t.tasks.preview.loadingTask}

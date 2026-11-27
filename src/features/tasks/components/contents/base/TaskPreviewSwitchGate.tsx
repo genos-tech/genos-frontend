@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useLayoutEffect } from "react";
 import { Box } from "@mui/joy";
 
 import { TaskPreviewPaneState } from "../../../utils/taskPreviewPaneState";
@@ -20,6 +20,9 @@ type TaskPreviewSwitchGateProps = {
     /** The task view. A function so it is only built when it will mount —
      *  it reads the working copy, which does not exist in "loading". */
     children: () => ReactNode;
+    /** The task view has just been taken off the screen. Runs while the editor in it can still
+     *  hand over the text it has not synced (MIP-2455). */
+    onTaskViewRemoved?: () => void;
 };
 
 /**
@@ -43,6 +46,7 @@ export const TaskPreviewSwitchGate = ({
     isDark,
     loadingLabel,
     children,
+    onTaskViewRemoved,
 }: TaskPreviewSwitchGateProps) => {
     const keepMounted = holdOutgoing && (state === "content" || state === "switching");
     const taskView =
@@ -55,6 +59,13 @@ export const TaskPreviewSwitchGate = ({
                 children()
             )
         ) : null;
+
+    // A LAYOUT effect: the removed editor's own cleanup has not run yet.
+    const removed = taskView === null;
+    useLayoutEffect(() => {
+        if (removed) onTaskViewRemoved?.();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [removed]);
 
     return (
         <>

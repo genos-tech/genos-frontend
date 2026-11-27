@@ -61,7 +61,11 @@ export interface UseSendUpdatedTaskParams {
 
     /** Called when there is nothing more to do with a body that was sent: the server stored it,
      *  or refused it in a way that sending it again cannot change. */
-    onBodySettled?: (taskId: number, body: PartialBlock[]) => void;
+    onBodySettled?: (
+        taskId: number,
+        body: PartialBlock[],
+        save: { stored: boolean; startedAt: number }
+    ) => void;
 
     /** Called when a save stored nothing and is worth sending again. */
     onBodyNotStored?: () => void;
@@ -125,6 +129,7 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
         // `syncCard` note in `sendUpdatedSpecificTask`.
         async (taskSwitched: boolean, syncCard: boolean = false) => {
             flushBody?.();
+            const startedAt = Date.now();
             const baseTaskContent: TaskProps = {
                 ...tmpCurrentTaskContent,
                 title: taskTitle === "" ? initTaskTitle : taskTitle,
@@ -359,7 +364,10 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 // looking saved. The retry's own end clears them.
                 const sendAgain = collaboratorsPutBack || movePutBack;
                 if (!sendAgain) {
-                    onBodySettled?.(Number(baseTaskContent.id), baseTaskContent.body ?? []);
+                    onBodySettled?.(Number(baseTaskContent.id), baseTaskContent.body ?? [], {
+                        stored: false,
+                        startedAt,
+                    });
                 }
                 setTaskUpdated(sendAgain);
                 if (!sendAgain) {
@@ -466,7 +474,11 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             if (failed) {
                 // Not saved: the body stays marked as edited, so the autosave sends it again.
                 if (failed.retry) onBodyNotStored?.();
-                else onBodySettled?.(Number(baseTaskContent.id), baseTaskContent.body ?? []);
+                else
+                    onBodySettled?.(Number(baseTaskContent.id), baseTaskContent.body ?? [], {
+                        stored: false,
+                        startedAt,
+                    });
                 if (stillShown) {
                     setTaskBodySaved(false);
                     if (!failed.retry) setTaskBodyEdited(false);
@@ -481,7 +493,10 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 stillShown &&
                 !!bodyRef &&
                 JSON.stringify(bodyRef.current) !== JSON.stringify(baseTaskContent.body);
-            onBodySettled?.(Number(baseTaskContent.id), baseTaskContent.body ?? []);
+            onBodySettled?.(Number(baseTaskContent.id), baseTaskContent.body ?? [], {
+                stored: true,
+                startedAt,
+            });
             if (stillShown) {
                 setTaskBodySaved(!unsent);
                 setTaskBodyEdited(unsent);
