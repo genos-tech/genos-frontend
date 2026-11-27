@@ -354,7 +354,8 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
             currentTaskNote: note,
             selectedTabIndex: 0,
             setCurrentTaskNote: (next) => {
-                if (next) setModalNote(next);
+                const value = typeof next === "function" ? next(note) : next;
+                if (value) setModalNote(value);
             },
             // TaskNoteMain calls `useNM.setIsTaskNoteVisible(false)` when
             // its close button is clicked — route that through to the
@@ -442,7 +443,8 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
         currentNoteType: 3,
         selectedTabIndex: 0,
         setCurrentChatNote: (next) => {
-            if (next) setModalNote(next);
+            const value = typeof next === "function" ? next(note) : next;
+            if (value) setModalNote(value);
         },
         tabItems: [synthTab],
     };

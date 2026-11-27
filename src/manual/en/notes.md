@@ -26,7 +26,7 @@ settings: []
 - When your Genos has HTML pages turned on, the same dialog also takes a .html file and saves it as an HTML page.
     - The page is shown in a sandbox, and you can't edit it in the note editor.
     - Parts the sandbox blocks, such as scripts or styles loaded from other addresses, are listed when you import.
-    - HTML pages need the Core plan or higher, and each plan has a size limit.
+    - HTML pages need the Core plan or higher. Each plan has a page size limit and a storage quota for HTML pages.
 - **Export as Markdown** saves one note. **Export folder as .zip** saves a whole folder as Markdown files with their images, and the zip can be imported back.
 
 ## Sharing and access

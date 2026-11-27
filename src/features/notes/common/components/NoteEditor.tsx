@@ -38,6 +38,7 @@ interface NoteEditorProps {
     socket: Socket | null;
     useTEM: TeamManagementState;
     myself: UserProps;
+    bodyReadRef?: React.RefObject<(() => PartialBlock[]) | null>;
 }
 
 export const NoteEditor = ({
@@ -58,6 +59,7 @@ export const NoteEditor = ({
     socket,
     useTEM,
     myself,
+    bodyReadRef,
 }: NoteEditorProps) => {
     return (
         <>
@@ -67,6 +69,7 @@ export const NoteEditor = ({
 
             <BnMyNoteEditor
                 body={body || []}
+                bodyReadRef={bodyReadRef}
                 currentMyNote={currentMyNote}
                 currentNoteMembers={useNM.currentNoteMembers}
                 myself={myself}

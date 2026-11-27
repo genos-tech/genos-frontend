@@ -155,6 +155,7 @@ export const MyNoteEditorPanel = ({
         >
             <NoteEditor
                 body={noteEditor.body}
+                bodyReadRef={noteEditor.bodyReadRef}
                 currentMyNote={note}
                 currentMyNoteTitle={noteEditor.currentMyNoteTitle}
                 myself={myself}

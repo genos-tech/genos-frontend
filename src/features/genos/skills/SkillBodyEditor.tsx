@@ -143,6 +143,7 @@ export const SkillBodyEditor = ({
         <Box sx={bodyBoxSx}>
             <BnMyNoteEditor
                 body={noteEditor.body}
+                bodyReadRef={noteEditor.bodyReadRef}
                 currentMyNote={note}
                 currentNoteMembers={NO_MEMBERS}
                 myself={myself}

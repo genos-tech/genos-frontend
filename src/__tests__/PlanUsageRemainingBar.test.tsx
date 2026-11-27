@@ -99,3 +99,46 @@ describe("PlanUsageSection quota bars", () => {
         await waitFor(() => expect(screen.getAllByRole("progressbar").length).toBe(1));
     });
 });
+
+describe("PlanUsageSection HTML storage row (MIP-2453)", () => {
+    const MB = 1024 * 1024;
+    const renderStorage = async (htmlNotes: object | undefined) => {
+        fetchAgentFeatures.mockResolvedValue({ ...features(0, 150), html_notes: htmlNotes });
+        render(
+            <I18nProvider>
+                <PlanUsageSection />
+            </I18nProvider>
+        );
+        await waitFor(() => expect(screen.getAllByRole("progressbar").length).toBeGreaterThan(0));
+    };
+    const bar = () => screen.queryByRole("progressbar", { name: "HTML storage" });
+
+    it("says what is left and used, and the bar shows what is left", async () => {
+        await renderStorage({
+            max_bytes: 512 * 1024,
+            max_storage_bytes: 200 * MB,
+            used_bytes: 50 * MB,
+        });
+        expect(screen.getByText(/150\sMB of 200\sMB left · 50\sMB used/)).toBeTruthy();
+        expect(bar()?.getAttribute("aria-valuenow")).toBe("75");
+    });
+
+    it("stays empty when more is used than the quota (after a downgrade)", async () => {
+        await renderStorage({
+            max_bytes: 512 * 1024,
+            max_storage_bytes: 200 * MB,
+            used_bytes: 300 * MB,
+        });
+        expect(screen.getByText(/0\sKB of 200\sMB left · 300\sMB used/)).toBeTruthy();
+        expect(bar()?.getAttribute("aria-valuenow")).toBe("0");
+    });
+
+    it.each([
+        ["HTML notes are off", undefined],
+        ["the plan has none", { max_bytes: null, max_storage_bytes: null, used_bytes: null }],
+        ["the server predates the quota", { max_bytes: 512 * 1024 }],
+    ])("has no row when %s", async (_why, htmlNotes) => {
+        await renderStorage(htmlNotes);
+        expect(bar()).toBeNull();
+    });
+});
