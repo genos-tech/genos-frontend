@@ -298,7 +298,12 @@ export const useTaskRouting = ({ usePM, useTM, isActiveRoute }: UseTaskRoutingPr
             ) {
                 targetUrlProjectId.current = usePM.currentProject.projectId;
                 lastNavigatedPath.current = newPath;
-                navigate(newPath, { replace: true });
+                // A bare `/workspace/tasks` is only waiting for its project, so what the link
+                // asked for stays (`?view=custom&dashboard=<note>`, MIP-2428).
+                const bare = /^\/workspace\/tasks\/?$/.test(location.pathname);
+                navigate(bare ? { pathname: newPath, search: location.search } : newPath, {
+                    replace: true,
+                });
             }
         }
     }, [usePM.currentProject?.projectId]);
