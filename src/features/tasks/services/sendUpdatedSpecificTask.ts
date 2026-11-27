@@ -136,6 +136,11 @@ export const sendUpdatedSpecificTask = async (
                 effort_level:
                     updatedTask.effortLevel !== null ? updatedTask.effortLevel.level : null,
                 status: updatedTask.status.status !== null ? updatedTask.status.status : null,
+                // Only a status the person just picked: re-sending the stored id could
+                // write back a label the server has since cleared (MIP-2493).
+                ...(updatedTask.customStatusPick != null
+                    ? { custom_status: updatedTask.customStatusPick }
+                    : {}),
                 content: updatedTask.body.length !== 0 ? updatedTask.body : null,
                 due_date: updatedTask.dueDate !== "" ? updatedTask.dueDate : null,
                 // Three states, and the server treats them differently:
@@ -241,6 +246,7 @@ export const sendUpdatedSpecificTask = async (
                 // behaviour, but they must never leak into IDB.
                 const cacheableTask = {
                     ...updatedTask,
+                    customStatusPick: undefined,
                     attachments: (updatedTask.attachments ?? []).filter(
                         (a) => a.attachment_id >= 0
                     ),
@@ -357,6 +363,7 @@ export const sendUpdatedSpecificTask = async (
                     startDate: updatedTask.startDate ?? null,
                     daysLeft: hasDueDate ? updatedTask.daysLeft || null : null,
                     status: updatedTask.status.status,
+                    customStatusId: updatedTask.customStatusId,
                     assigneeId: updatedTask.assignee?.userId ?? null,
                     assigneeEmail: updatedTask.assignee?.userEmail ?? null,
                     assigneeName: updatedTask.assignee?.userName ?? null,

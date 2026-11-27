@@ -108,7 +108,12 @@ export const TaskListItem = ({
         >
             {leading}
             {compact ? (
-                <StatusLabel status={shownStatus} iconOnly />
+                <StatusLabel
+                    customStatusId={task.customStatusId}
+                    projectId={task.projectId}
+                    status={shownStatus}
+                    iconOnly
+                />
             ) : (
                 // On a phone the status is its icon: the word would take the title's room.
                 <Slot width={{ xs: 16, sm: SLOT.status }}>
@@ -124,7 +129,11 @@ export const TaskListItem = ({
                             },
                         }}
                     >
-                        <StatusLabel status={shownStatus} />
+                        <StatusLabel
+                            customStatusId={task.customStatusId}
+                            projectId={task.projectId}
+                            status={shownStatus}
+                        />
                     </Box>
                 </Slot>
             )}

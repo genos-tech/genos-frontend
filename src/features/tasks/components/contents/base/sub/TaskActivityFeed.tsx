@@ -54,6 +54,7 @@ import { effortLevels, priorities, statuses, taskMetaLabel } from "../../../../u
 import { viaSourceOfRow } from "../../../../utils/viaSource";
 import { PriorityIcon } from "../../../meta/PriorityIcon";
 import { StatusLabel } from "../../../meta/StatusLabel";
+import { ActivityStatusChip } from "../../../statuses/ActivityStatusChip";
 import { EffortLabel } from "../../../table/cellEditors";
 import { RestoreBodyControl } from "./RestoreBodyControl";
 
@@ -148,6 +149,7 @@ const actionIcon = (action: string) => {
         case "title_changed":
             return <EditOutlinedIcon sx={{ fontSize: 18 }} />;
         case "status_changed":
+        case "custom_status_changed":
             return <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />;
         case "priority_changed":
             return <FlagOutlinedIcon sx={{ fontSize: 18 }} />;
@@ -737,6 +739,26 @@ const formatValue = (
     return { label: readableParts(value).join(", ") || noneLabel, isUser: false };
 };
 
+type CustomStatusChange = {
+    oldLabel?: string | null;
+    newLabel?: string | null;
+    oldColor?: string | null;
+    newColor?: string | null;
+    category: string;
+};
+
+const customStatusOf = (row: TaskActivityProps): CustomStatusChange | null => {
+    const raw =
+        row.actionType === "custom_status_changed"
+            ? row.metadata
+            : row.actionType === "status_changed"
+              ? row.metadata?.customStatus
+              : null;
+    if (!raw || typeof raw !== "object") return null;
+    const change = raw as Partial<CustomStatusChange>;
+    return { ...change, category: change.category ?? "" };
+};
+
 // Diff-style actions whose verb expects both an old and a new chip
 // ("changed X from A → B"). For these we always render *both* chips
 // even when one side is null/empty — `formatValue` substitutes
@@ -747,6 +769,7 @@ const formatValue = (
 const DIFF_ACTIONS = new Set([
     "title_changed",
     "status_changed",
+    "custom_status_changed",
     "priority_changed",
     "effort_changed",
     "assignee_changed",
@@ -775,6 +798,7 @@ const verbFor = (
         case "title_changed":
             return messages.verbs.titleChanged;
         case "status_changed":
+        case "custom_status_changed":
             return messages.verbs.statusChanged;
         case "priority_changed":
             return messages.verbs.priorityChanged;
@@ -1065,6 +1089,13 @@ export const TaskActivityFeed = ({
         return taskDisplayIdById.get(numeric) ?? null;
     };
 
+    // The project of the task the feed is about, to name a category's default status.
+    const feedProjectId = useMemo(() => {
+        const task =
+            taskId != null ? allTasks.find((t) => Number(t.id) === Number(taskId)) : undefined;
+        return task?.projectId ?? null;
+    }, [allTasks, taskId]);
+
     const renderRow = (row: TaskActivityProps) => {
         // PR-comment rows render in a custom layout (GitHub
         // identity, expandable excerpt). Branch out early so we
@@ -1118,6 +1149,26 @@ export const TaskActivityFeed = ({
         const showNewChip = created
             ? created.status != null
             : isDiffAction || (row.newValue != null && row.newValue !== "");
+
+        // A change between a project's own statuses (MIP-2493): on a status row they ride in
+        // `metadata.customStatus`; a change inside one category is its own row.
+        const custom = customStatusOf(row);
+        const customChip = (side: "old" | "new") => {
+            if (!custom) return null;
+            const category =
+                row.actionType === "status_changed"
+                    ? String((side === "old" ? row.oldValue : row.newValue) ?? "")
+                    : custom.category;
+            if (!category) return null;
+            return (
+                <ActivityStatusChip
+                    category={category}
+                    color={side === "old" ? custom.oldColor : custom.newColor}
+                    label={side === "old" ? custom.oldLabel : custom.newLabel}
+                    projectId={feedProjectId}
+                />
+            );
+        };
 
         // Prefer the team-member profile (richer presence /
         // online status) over `row.actor`, which carries only
@@ -1199,13 +1250,14 @@ export const TaskActivityFeed = ({
                         {row.actionType === "pr_unlinked" && (
                             <PrUnlinkedRef isDark={isDark} metadata={row.metadata} />
                         )}
-                        {showOldChip && (
-                            <ValueChip
-                                fieldName={row.fieldName}
-                                isDark={isDark}
-                                label={oldFmt.label}
-                            />
-                        )}
+                        {showOldChip &&
+                            (customChip("old") ?? (
+                                <ValueChip
+                                    fieldName={row.fieldName}
+                                    isDark={isDark}
+                                    label={oldFmt.label}
+                                />
+                            ))}
                         {showOldChip && showNewChip && (
                             <Typography
                                 level="body-sm"
@@ -1226,16 +1278,17 @@ export const TaskActivityFeed = ({
                                 {t.tasks.fields.milestone}
                             </Typography>
                         )}
-                        {showNewChip && (
-                            <ValueChip
-                                // The row has no field_name, but this
-                                // chip IS a status: name it so it gets
-                                // the status colours and translation.
-                                fieldName={created ? "status" : row.fieldName}
-                                isDark={isDark}
-                                label={created?.status ?? newFmt.label}
-                            />
-                        )}
+                        {showNewChip &&
+                            (customChip("new") ?? (
+                                <ValueChip
+                                    // The row has no field_name, but this
+                                    // chip IS a status: name it so it gets
+                                    // the status colours and translation.
+                                    fieldName={created ? "status" : row.fieldName}
+                                    isDark={isDark}
+                                    label={created?.status ?? newFmt.label}
+                                />
+                            ))}
                         {via && <ViaChip source={via} />}
                         <Box sx={{ flexGrow: 1 }} />
                         <Typography

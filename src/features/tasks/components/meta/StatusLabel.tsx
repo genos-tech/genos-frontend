@@ -1,7 +1,10 @@
 import type { CSSProperties } from "react";
 
+import { useProjectStatuses } from "../../../../hooks/tasks/useProjectStatuses";
 import { useTranslation } from "../../../../i18n";
+import { ProjectStatusDef } from "../../../../types/tasks";
 import { statusTone, toneCss } from "../../meta/taskTone";
+import { resolveStatusRow, rowColorCss, statusRowName } from "../../utils/projectStatus";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { getStatusIcon } from "./statusIcons";
 
@@ -10,6 +13,12 @@ type StatusLabelProps = {
     /** The icon alone, with the status as its accessible name. */
     iconOnly?: boolean;
     iconSize?: number;
+    /** With the project, the chip says what that project calls the status (MIP-2493).
+     *  `status` stays the system value (the category): it picks the icon's shape. */
+    projectId?: number | null;
+    customStatusId?: number | null;
+    /** A specific row to draw (pickers, the editor, history), over the project's lookup. */
+    row?: Pick<ProjectStatusDef, "name" | "builtinKey" | "color" | "category"> | null;
 };
 
 /**
@@ -22,13 +31,25 @@ type StatusLabelProps = {
  * `isDark` prop. Plain spans on purpose: it must render in the Material
  * subtrees of the table and board, which have no Joy palette.
  */
-export const StatusLabel = ({ status, iconOnly = false, iconSize = 14 }: StatusLabelProps) => {
+export const StatusLabel = ({
+    status,
+    iconOnly = false,
+    iconSize = 14,
+    projectId,
+    customStatusId,
+    row: givenRow,
+}: StatusLabelProps) => {
     const { t } = useTranslation();
     const name = (status ?? "").trim();
+    // A project that never set up statuses lists none, and everything below falls back.
+    const { statuses } = useProjectStatuses(givenRow ? null : projectId, customStatusId);
     // No status at all: the dash the old chip showed, not an icon with no words.
     if (!name) return <span style={{ color: "var(--g-text-tertiary)" }}>—</span>;
-    const label = taskMetaLabel(name, t.tasks.filters) || name;
-    const tone = statusTone(name);
+    const row = (givenRow ?? resolveStatusRow(statuses, name, customStatusId)) as
+        | ProjectStatusDef
+        | undefined;
+    const label = row ? statusRowName(row, t.tasks) : taskMetaLabel(name, t.tasks.filters) || name;
+    const color = row ? rowColorCss(row) : toneCss(statusTone(name)).text;
     return (
         <span
             style={{
@@ -52,17 +73,22 @@ export const StatusLabel = ({ status, iconOnly = false, iconSize = 14 }: StatusL
                     {
                         display: "inline-flex",
                         flexShrink: 0,
-                        color: toneCss(tone).text,
+                        color,
                         // Joy's SvgIcon colors itself from --Icon-color (falling back to a gray
                         // palette role), so `color` on the wrapper alone leaves the icon gray.
-                        "--Icon-color": toneCss(tone).text,
+                        "--Icon-color": color,
                     } as CSSProperties
                 }
             >
                 {getStatusIcon(name, iconSize)}
             </span>
             {!iconOnly && (
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }} data-status-word>
+                <span
+                    style={{ overflow: "hidden", textOverflow: "ellipsis" }}
+                    // A team's name can be cut off in a narrow column.
+                    title={row && !row.builtinKey ? label : undefined}
+                    data-status-word
+                >
                     {label}
                 </span>
             )}

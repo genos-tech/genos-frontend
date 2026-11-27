@@ -11,7 +11,10 @@ type TaskPillProps = Omit<
     HTMLAttributes<HTMLButtonElement>,
     "className" | "style" | "color" | "children" | "onClick"
 > & {
-    task: Pick<TaskCardTask, "id" | "taskId" | "displayId" | "title" | "status">;
+    task: Pick<
+        TaskCardTask,
+        "id" | "taskId" | "displayId" | "title" | "status" | "projectId" | "customStatusId"
+    >;
     onOpen: () => void;
 };
 
@@ -72,7 +75,11 @@ export const TaskPill = forwardRef<HTMLButtonElement, TaskPillProps>(function Ta
             {task.status ? (
                 <>
                     <Divider />
-                    <StatusLabel status={task.status} />
+                    <StatusLabel
+                        customStatusId={task.customStatusId}
+                        projectId={task.projectId}
+                        status={task.status}
+                    />
                 </>
             ) : null}
         </Box>
