@@ -110,7 +110,7 @@ const common = {
     useTEM: {},
     useUISM: {},
     useCM: {},
-    useNM: { noteResyncNonce: 0, tabsApi: {}, taskNoteMeta: [], chatNoteMeta: [] },
+    useNM: { noteResync: {}, tabsApi: {}, taskNoteMeta: [], chatNoteMeta: [] },
 };
 
 // The panels take wide props (whole management states) that none of these paths read.

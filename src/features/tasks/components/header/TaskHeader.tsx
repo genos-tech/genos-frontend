@@ -24,7 +24,7 @@ import { UIStateManagementState } from "../../../../hooks/common/useUIStateManag
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
 import { emitRequestError } from "../../../../services/requestErrorNotifier";
-import { shortcutText } from "../../../../shortcuts";
+import { shortcutText, useShortcutsVersion } from "../../../../shortcuts";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { archiveProject, unarchiveProject } from "../../../archive/archiveApi";
@@ -70,6 +70,8 @@ export const TaskHeader = ({
     socket,
 }: TaskHeaderProps) => {
     const { accessToken } = useAuth();
+    // Re-render when the member rebinds the shortcut printed below (MIP-2413).
+    useShortcutsVersion();
     const { t } = useTranslation();
 
     // "Customize task fields" entry for the owner AND editors, as the API allows (MIP-2336). The

@@ -5882,6 +5882,29 @@ export const ja: DeepPartial<Messages> = {
         },
         shortcuts: {
             heading: "キーボードショートカット",
+            edit: {
+                introMac:
+                    "ショートカットを変更するには、そのキーの表示を選んでから新しいキーを押します。変更はアカウントに保存され、お使いのすべての Mac に適用されます。",
+                introOther:
+                    "ショートカットを変更するには、そのキーの表示を選んでから新しいキーを押します。変更はアカウントに保存され、お使いのすべての Windows / Linux コンピューターに適用されます。",
+                change: "「{label}」のショートカットを変更（現在 {keys}）",
+                recording: "新しいキーを押してください…",
+                started:
+                    "「{label}」のショートカットを記録しています。{keys} を押しながら英字か数字を押してください。Escape でキャンセルします。",
+                hint: "{keys} を押しながら英字か数字を押してください。Esc でキャンセルします。",
+                cancel: "キャンセル",
+                cancelled: "記録をキャンセルしました。",
+                custom: "カスタム",
+                reset: "「{label}」を初期設定に戻す",
+                resetAll: "すべて初期設定に戻す",
+                saved: "「{label}」を {keys} にしました。",
+                resetDone: "「{label}」を {keys} に戻しました。",
+                resetAllDone: "すべてのショートカットを初期設定に戻しました。",
+                needsKeys: "{keys} を押しながら英字か数字を押してください。",
+                reserved: "{keys} はシステムが使用しています。別のキーを選んでください。",
+                conflict:
+                    "{keys} はすでに「{label}」で使われています。先にそちらを変更するか、初期設定に戻してください。",
+            },
             table: {
                 title: "タスクテーブル",
                 description:

@@ -24,7 +24,7 @@ import { NoteUnreadProvider } from "../features/notes/common/context/NoteUnreadC
 import type { UserProps } from "../types/admin";
 
 const counts = { sections: 0, rows: 0 };
-// The team of each call of the four on-mount loads (MIP-2229).
+// Name and manager generation of each on-mount load call (MIP-2229).
 const loads: Array<[string, number]> = [];
 
 vi.mock("../features/notes/common/components/NoteTypeSection", async () => {
@@ -105,7 +105,7 @@ type World = {
     currentMyNote: { noteId: number };
     // Read by other parts of the page, never by the sidebar.
     openingNote: { n: number } | null;
-    noteResyncNonce: number;
+    noteResync: Record<string, number>;
     teamId: string;
     // Which render's manager object a load was called on.
     generation: number;
@@ -115,7 +115,7 @@ const initialWorld = (): World => ({
     activeTab: TAB_A,
     currentMyNote: CURRENT_A,
     openingNote: null,
-    noteResyncNonce: 0,
+    noteResync: {},
     teamId: myself.teamId,
     generation: 0,
 });
@@ -278,7 +278,7 @@ describe("NoteSidebar render boundary (MIP-2379)", () => {
         for (let i = 0; i < 5; i += 1) {
             await act(async () => {
                 // New managers every time; a member the sidebar never reads moves.
-                setWorld((w) => ({ ...w, openingNote: { n: i }, noteResyncNonce: i }));
+                setWorld((w) => ({ ...w, openingNote: { n: i }, noteResync: { [`1-${i}`]: i } }));
             });
         }
         expect(counts).toEqual(before);

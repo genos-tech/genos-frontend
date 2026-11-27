@@ -6,7 +6,18 @@ settings: []
 
 ## Mac and Windows/Linux keys
 
-Where a shortcut uses a modifier key, the Mac key and the Windows/Linux key often differ. Each shortcut below gives both. Settings > Shortcuts shows the same list for your computer. The list is for reading only: shortcuts cannot be changed.
+Where a shortcut uses a modifier key, the Mac key and the Windows/Linux key often differ. Each shortcut below gives both. Settings > Shortcuts shows the same list for your computer, with any shortcuts you changed. The keys below are the built-in ones.
+
+## Changing a shortcut
+
+You can change eight shortcuts: Spotlight (Cmd-K / Ctrl-K) and the seven letter shortcuts for actions. In Settings > Shortcuts, select the keys of the shortcut, then press the new ones. The new keys must be Ctrl and Cmd (Ctrl and Alt on Windows/Linux) with one letter or number. Escape or Cancel stops without changing anything.
+
+- Genos refuses keys that another shortcut already uses, and a few that the system takes (Ctrl-Cmd-Q, F and D on a Mac; Ctrl-Alt-D and L elsewhere). A browser or another app can still take some combinations before Genos sees them.
+- A changed shortcut is marked Custom. Use its reset button, or Reset all, to get the built-in keys back.
+- Changes are saved to your account. Mac keys and Windows/Linux keys are kept separately.
+- On Windows and Linux, a changed shortcut does nothing while you type in an editor or text field, Spotlight included.
+
+The other shortcuts (switching parts of Genos, undo, send, create task, chat arrows, the notes filter, and the table, board and calendar keys) cannot be changed.
 
 ## Anywhere in Genos
 

@@ -3,7 +3,12 @@ export {
     SHORTCUT_IDS,
     SHORTCUTS,
     chordMatches,
+    chordParts,
     currentPlatform,
+    defaultShortcutParts,
+    effectiveChords,
+    keyToken,
+    REBINDABLE_IDS,
     editablePolicy,
     cycleKeys,
     isEditableTarget,
@@ -27,3 +32,25 @@ export type {
     ShortcutScope,
 } from "./registry";
 export { useShortcut } from "./useShortcut";
+export {
+    chordsOverlap,
+    customChord,
+    CUSTOM_MODS,
+    findConflict,
+    findResetConflict,
+    parseOverrides,
+    readRecorded,
+    RESERVED_KEYS,
+    serializeOverrides,
+    SHORTCUT_SETTINGS_KEYS,
+} from "./custom";
+export {
+    applyOverrides,
+    getOverrides,
+    isRecording,
+    setRecording,
+    subscribeShortcuts,
+    getShortcutsVersion,
+} from "./overrides";
+export type { Overrides } from "./overrides";
+export { useShortcutsVersion } from "./useShortcutsVersion";

@@ -107,6 +107,16 @@ describe("tooltips and Settings print from the registry", () => {
         expect(read(file)).toContain(needle);
     });
 
+    it.each([
+        "components/layout/sidebar.tsx",
+        "features/tasks/components/header/TaskHeader.tsx",
+        "features/notes/common/components/NoteHeaderActions.tsx",
+        "features/chat/components/headers/MainChatPaneHeader.tsx",
+        "features/tasks/components/contents/TaskPreview.tsx",
+    ])("%s re-renders when the member rebinds what it prints (MIP-2413)", (file) => {
+        expect(read(file)).toContain("useShortcutsVersion();");
+    });
+
     it("no component builds its own platform text any more", () => {
         for (const file of [
             "components/layout/sidebar.tsx",

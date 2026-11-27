@@ -2,7 +2,7 @@ import { fmt } from "../i18n";
 import {
     currentPlatform,
     cycleKeys,
-    shortcutParts,
+    defaultShortcutParts,
     type Platform,
     type ShortcutId,
 } from "../shortcuts";
@@ -47,5 +47,5 @@ export const shortcutRows = (
                 label: item.label,
             };
         }
-        return { keys: shortcutParts(id, platform).join(" + "), label: item.label };
+        return { keys: defaultShortcutParts(id, platform).join(" + "), label: item.label };
     });
