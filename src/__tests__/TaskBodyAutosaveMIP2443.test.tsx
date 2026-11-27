@@ -563,8 +563,9 @@ describe("words that may not have been saved (MIP-2455)", () => {
         serverHas("loaded");
         await mount();
         expect(repairs.map((r) => [r.id, r.text])).toEqual([[1, "typed before the reload"]]);
-        // The body alone: nothing a person changes meanwhile can be put back by it.
-        expect(repairs[0].sent).toEqual(["content", "project", "task_id", "team"]);
+        // The body alone (`base_project` says the project is not being changed, MIP-2524):
+        // nothing a person changes meanwhile can be put back by it.
+        expect(repairs[0].sent).toEqual(["base_project", "content", "project", "task_id", "team"]);
         await answer(repairs[0].ok);
         expect(kept()).toHaveLength(0);
         expect(net.puts).toHaveLength(0);
