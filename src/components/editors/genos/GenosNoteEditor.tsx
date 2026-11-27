@@ -63,6 +63,7 @@ import { useNoteDeepLink, type DeepLinkEditor } from "../sub/useNoteDeepLink";
 import { WrapToggleButtons } from "../sub/WrapToggleButtons";
 import { GenosSuggestionMenus } from "./GenosSuggestionMenus";
 import { GenosDocumentToolbar } from "./GenosToolbars";
+import { replaceInTurn } from "./replaceInTurn";
 import { useGenosCollabEditor } from "./useGenosEditor";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
@@ -254,7 +255,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
 
     const documentName = `${note.documentPrefix}:${note.noteId}`;
 
-    const { editor, threadStore, collabScope } = useGenosCollabEditor({
+    const { editor, provider, threadStore, collabScope } = useGenosCollabEditor({
         documentName,
         ctx: {
             teamMemberProfiles: useTEM.teamMemberProfiles,
@@ -366,13 +367,16 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
             const report: SanitizeReport = { degraded: 0, skipped: 0 };
             const safe = sanitizeBlocksForEditor(replacement, editor as never, report);
             logSanitizeReport("restoring the note body", report);
-            (editor as any).replaceBlocks(editor.document, safe);
+            // In turn: two editors of this note replacing side by side doubled it (MIP-2475).
+            replaceInTurn(documentName, provider?.document, () =>
+                (editor as any).replaceBlocks(editor.document, safe)
+            );
         } catch {
             // Best-effort: if the editor isn't ready yet, the next render
             // will pick up the seeded body via useCollaborativeBlockNote's
             // retry effect.
         }
-    }, [resyncSignal, editor, note.noteId]);
+    }, [resyncSignal, editor, provider, documentName, note.noteId]);
 
     // Debounced document→parent sync. `onChange` fires on every keystroke;
     // serializing the whole document (`editor.document`) and re-rendering

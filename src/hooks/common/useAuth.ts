@@ -74,7 +74,6 @@ export const useMyself = (accessToken: string | null) => {
                 tsJoined: localStorage.getItem("tsJoined") || "",
                 isOfflineForced: localStorage.getItem("isOfflineForced") || "false",
                 role: localStorage.getItem("role") || "",
-                baseCountry: profile.baseCountry,
                 currentLocation: profile.currentLocation,
                 // Stored as the string "false" only when the user opted out;
                 // absent (pre-feature) or "true" both mean shared, matching
@@ -157,7 +156,6 @@ export const useMyself = (accessToken: string | null) => {
             setMyself((prev) => ({
                 ...prev,
                 userEmail: profile.userEmail,
-                baseCountry: profile.baseCountry,
                 currentLocation: profile.currentLocation,
                 aboutMe: profile.aboutMe,
             }));
