@@ -100,8 +100,13 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                     color="neutral"
                     variant="plain"
                     sx={{
+                        // 400px where it fits; on a phone the row is narrower
+                        // and a fixed width scrolls the whole card sideways.
                         width: "400px",
+                        maxWidth: "100%",
+                        minWidth: 0,
                         justifyContent: "flex-start", // left align the content
+                        textAlign: "start", // for a role that wraps
                     }}
                     onClick={() => {
                         if (myself.userId === user?.userId) {
@@ -109,7 +114,9 @@ export const UserProfileRole = (props: UserProfileRoleProps) => {
                         }
                     }}
                 >
-                    <Typography fontWeight={600}>{roleValue}</Typography>
+                    <Typography fontWeight={600} sx={{ minWidth: 0, overflowWrap: "anywhere" }}>
+                        {roleValue}
+                    </Typography>
                 </Button>
             )}
         </>
