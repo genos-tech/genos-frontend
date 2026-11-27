@@ -397,7 +397,7 @@ export const ScheduleFormPanel = ({
                             const hint =
                                 (known?.preferOwnHint ? null : spec.description) ||
                                 (known
-                                    ? fmt(s[paramHintKey(known, required)], { range })
+                                    ? fmt(s[paramHintKey(known, required, job.job)], { range })
                                     : kind === "integer" && range
                                       ? fmt(s.paramRange, {
                                             min: spec.minimum ?? "",

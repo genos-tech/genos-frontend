@@ -317,6 +317,8 @@ export const settings = {
         paramSkill: "Skill",
         paramSkillHint:
             "Runs the published version of this skill and files what it finds in your Inbox. It only reads: it changes nothing.",
+        paramDashboardSkillHint:
+            "Runs the published version of this skill and draws the dashboard page from its answer. It only reads: it changes nothing.",
         paramChat: "Group chat",
         paramChatHint:
             "Optional. Pick one group chat to catch up on, or leave it on all busy chats. Only chats you are in are listed.",

@@ -5051,6 +5051,8 @@ export const ja: DeepPartial<Messages> = {
             paramSkill: "スキル",
             paramSkillHint:
                 "このスキルの公開済みバージョンを実行し、結果を受信箱に届けます。読み取りだけで、何も変更しません。",
+            paramDashboardSkillHint:
+                "このスキルの公開済みバージョンを実行し、その回答からダッシュボードのページを作ります。読み取りだけで、何も変更しません。",
             paramChat: "グループチャット",
             paramChatHint:
                 "任意です。振り返るグループチャットを1つ選ぶか、すべての盛り上がったチャットのままにします。自分が参加しているチャットだけが表示されます。",
