@@ -4,11 +4,18 @@ import WebRoundedIcon from "@mui/icons-material/WebRounded";
 import { Box, Typography } from "@mui/joy";
 
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
+import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
 import { fmt, useTranslation } from "../../../../i18n";
+import { openAppUrl } from "../../../../services/notifications/openAppUrl";
 import { g } from "../../../../theme/tokens";
 import { onHtmlNoteReload } from "../services/htmlNoteReload";
 import { loadHtmlNoteFrame } from "../services/loadHtmlNote";
-import { HTML_NOTE_LOADED_KEY, HTML_NOTE_SANDBOX } from "../utils/htmlNote";
+import {
+    HTML_NOTE_LOADED_KEY,
+    HTML_NOTE_OPEN_KEY,
+    HTML_NOTE_SANDBOX,
+    isHtmlNotePageLink,
+} from "../utils/htmlNote";
 import { NoteLoadState } from "./NoteLoadState";
 
 /** How long after the frame's `load` its own document gets to say it finished loading. A document
@@ -52,6 +59,11 @@ const newNonce = (): string =>
  * The app's CSP `frame-src` allows that route and nothing else. The page is untrusted: this component
  * never reads anything out of it.
  *
+ * LINKS (MIP-2417): one exception, for a page the SERVER drew (a dashboard), which the API says with
+ * `links`. A click on a link in such a page arrives as a message from this frame carrying the nonce;
+ * the path is opened in the app only when it is one of the shapes in `isHtmlNotePageLink`. Nothing
+ * is added to the sandbox, and a page a person or an AI app saved is never listened to.
+ *
  * THE URL: a signed token good for ONE frame load (and ten minutes at most), asked for with the
  * signed-in session (the note's own ACL decides). Single use is what keeps the page's own script,
  * which can read its URL, from handing it to a server of its own to learn the nonce below. So every
@@ -74,7 +86,12 @@ export const HtmlNoteView = ({
 }: HtmlNoteViewProps) => {
     const { t } = useTranslation();
     const [phase, setPhase] = useState<Phase>("loading");
-    const [page, setPage] = useState<{ url: string; nonce: string; rev: number } | null>(null);
+    const [page, setPage] = useState<{
+        url: string;
+        nonce: string;
+        rev: number;
+        links: boolean;
+    } | null>(null);
     const [navigated, setNavigated] = useState(false);
     // Bumped by every reload: refetch the page and remount the frame.
     const [nonce, setNonce] = useState(0);
@@ -106,7 +123,12 @@ export const HtmlNoteView = ({
             .then((loaded) => {
                 if (cancelled) return;
                 fetchedKeyRef.current = key;
-                setPage({ url: loaded.url, nonce: loaded.nonce, rev: loaded.rev });
+                setPage({
+                    url: loaded.url,
+                    nonce: loaded.nonce,
+                    rev: loaded.rev,
+                    links: loaded.links,
+                });
                 setFrameKey(newNonce());
                 setPhase("ready");
             })
@@ -124,6 +146,8 @@ export const HtmlNoteView = ({
     // A frame that comes back after the tab was left starts clean: counters and the verdict reset.
     const frameActive = isActive && phase === "ready" && !navigated;
     const frameNonce = page?.nonce;
+    const pageLinks = page?.links === true;
+    const urlLinkModal = useUrlLinkModal();
 
     const frameRef = useRef<HTMLIFrameElement | null>(null);
     const loadsRef = useRef(0);
@@ -158,6 +182,24 @@ export const HtmlNoteView = ({
         window.addEventListener("message", onMessage);
         return () => window.removeEventListener("message", onMessage);
     }, [frameActive, frameNonce]);
+
+    // A link the member clicked in a server-drawn page: a preview of the task, milestone or note,
+    // or the project's page, exactly as a link in a note's text opens it.
+    useEffect(() => {
+        if (!frameActive || !frameNonce || !pageLinks) return;
+        const onOpen = (event: MessageEvent) => {
+            const source = frameRef.current?.contentWindow;
+            if (!source || event.source !== source) return;
+            const data = event.data as Record<string, unknown> | null;
+            if (!data || typeof data !== "object" || data.nonce !== frameNonce) return;
+            const path = data[HTML_NOTE_OPEN_KEY];
+            if (!isHtmlNotePageLink(path)) return;
+            if (urlLinkModal) urlLinkModal.openModalByHref(path);
+            else openAppUrl(path);
+        };
+        window.addEventListener("message", onOpen);
+        return () => window.removeEventListener("message", onOpen);
+    }, [frameActive, frameNonce, pageLinks, urlLinkModal]);
 
     const handleFrameLoad = () => {
         loadsRef.current += 1;
