@@ -292,6 +292,13 @@ export const MCP_TOOLS: McpTool[] = [
             "What you have not read yet, as data with counts: chats, threads, tasks and notes, by place and by reason (message, reply, mention, comment, reaction, assigned). It returns no summary; the AI writes it.",
     },
     {
+        name: "list_my_waiting_comments",
+        type: "read",
+        taskRef: true,
+        meaning:
+            "Task and milestone comments you have not answered: newer than your last reply and without your reaction, on work that is not closed and involves you. The AI reads them and says which need an answer.",
+    },
+    {
         name: "get_my_importance",
         type: "read",
         meaning:
