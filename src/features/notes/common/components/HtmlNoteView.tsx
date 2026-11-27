@@ -22,6 +22,9 @@ import { NoteLoadState } from "./NoteLoadState";
  *  that was replaced while it parsed never says it, and one that did arrives within a task or two. */
 export const HTML_NOTE_LOADED_GRACE_MS = 1500;
 
+/** The longest the loading layer waits for that word before it shows the frame anyway (MIP-2468). */
+export const HTML_NOTE_REVEAL_TIMEOUT_MS = 10_000;
+
 type HtmlNoteViewProps = {
     noteType: number;
     noteId: number;
@@ -69,6 +72,11 @@ const newNonce = (): string =>
  * which can read its URL, from handing it to a server of its own to learn the nonce below. So every
  * frame mount asks for a fresh URL: a tab that was left and comes back, and Reload.
  *
+ * LOADING (MIP-2468): the frame is mounted at once but stays invisible (`visibility`, so it still
+ * loads) under the note loader until its page posts the nonce, or `HTML_NOTE_REVEAL_TIMEOUT_MS`
+ * passes. The loader is ONE element from the URL request to that moment, so its delayed dots never
+ * restart and the caption is announced once.
+ *
  * SELF-NAVIGATION: CSP cannot stop a frame from navigating itself, so a page could swap itself for a
  * look-alike sign-in page. The frame is therefore watched. A second `load` means it navigated after
  * loading; a `load` that our own document never confirmed (the server's first script posts the nonce
@@ -96,6 +104,8 @@ export const HtmlNoteView = ({
     // Bumped by every reload: refetch the page and remount the frame.
     const [nonce, setNonce] = useState(0);
     const [frameKey, setFrameKey] = useState(() => newNonce());
+    // The frame whose page may be seen. Keyed by frame, so every new frame starts covered.
+    const [revealedKey, setRevealedKey] = useState<string | null>(null);
 
     const reload = useCallback(() => {
         setNavigated(false);
@@ -168,6 +178,16 @@ export const HtmlNoteView = ({
         return clearGrace;
     }, [frameKey, frameActive, clearGrace]);
 
+    useEffect(() => {
+        if (!frameActive) return;
+        // A frame that has fired `load` is left to its grace verdict below: showing it here could
+        // put an unconfirmed page on screen just before the notice replaces it.
+        const timer = window.setTimeout(() => {
+            if (loadsRef.current === 0) setRevealedKey(frameKey);
+        }, HTML_NOTE_REVEAL_TIMEOUT_MS);
+        return () => window.clearTimeout(timer);
+    }, [frameKey, frameActive]);
+
     // The sentinel's message. Only a message from THIS frame carrying the nonce the API gave us for
     // this URL counts (a look-alike page only has the URL, never the nonce).
     useEffect(() => {
@@ -177,11 +197,12 @@ export const HtmlNoteView = ({
             const data = event.data as Record<string, unknown> | null;
             if (data && typeof data === "object" && data[HTML_NOTE_LOADED_KEY] === frameNonce) {
                 confirmedRef.current = true;
+                setRevealedKey(frameKey);
             }
         };
         window.addEventListener("message", onMessage);
         return () => window.removeEventListener("message", onMessage);
-    }, [frameActive, frameNonce]);
+    }, [frameActive, frameKey, frameNonce]);
 
     // A link the member clicked in a server-drawn page: a preview of the task, milestone or note,
     // or the project's page, exactly as a link in a note's text opens it.
@@ -221,21 +242,28 @@ export const HtmlNoteView = ({
         return null;
     }
 
-    if (phase !== "ready") {
+    if (phase === "error") {
         return (
             <NoteLoadState
-                error={phase === "error"}
                 fillHeight={fillHeight}
                 isActive={isActive}
-                isLoading={phase === "loading"}
+                isLoading={false}
+                error
                 onRetry={reload}
             />
         );
     }
 
+    // One tree, with one geometry, for "asking for the URL" and "the page is loading": the loader
+    // below is the same element in both and does not move. The title rows hold their place unseen
+    // until the page is on its way.
+    const ready = phase === "ready";
+    const revealed = revealedKey === frameKey;
+    const loading = !ready || (frameActive && !revealed);
+
     return (
         <Box
-            data-html-note=""
+            data-html-note={ready ? "" : undefined}
             sx={{
                 display: isActive ? "flex" : "none",
                 flexDirection: "column",
@@ -248,6 +276,7 @@ export const HtmlNoteView = ({
             <Typography
                 level={fillHeight ? "h3" : "h2"}
                 sx={{
+                    visibility: ready ? "visible" : "hidden",
                     color: g.text.primary,
                     overflowWrap: "anywhere",
                     marginTop: { xs: "8px", md: "12px" },
@@ -258,6 +287,7 @@ export const HtmlNoteView = ({
             </Typography>
             <Box
                 sx={{
+                    visibility: ready ? "visible" : "hidden",
                     display: "flex",
                     alignItems: "center",
                     gap: "6px",
@@ -271,7 +301,7 @@ export const HtmlNoteView = ({
                     {t.notes.htmlNote.label}
                 </Typography>
             </Box>
-            {navigated ? (
+            {navigated && ready ? (
                 <EmptyState
                     body={t.notes.htmlNote.navigatedBody}
                     data-empty="html-note-navigated"
@@ -284,23 +314,43 @@ export const HtmlNoteView = ({
                     }}
                 />
             ) : (
-                frameActive && (
-                    <Box
-                        sx={{
-                            marginX: FRAME_INSET,
-                            flex: fillHeight ? 1 : "none",
-                            minHeight: fillHeight ? 0 : 420,
-                            // `--app-vh` is the shell's height (the viewport less the notification
-                            // banner); 180px leaves room for the header, tab strip, title and label.
-                            height: fillHeight ? "auto" : "calc(var(--app-vh) - 180px)",
-                            border: "1px solid",
-                            borderColor: g.border.default,
-                            borderRadius: g.radius.md,
-                            overflow: "hidden",
-                            // The page draws its own background; this is only what shows while it loads.
-                            backgroundColor: "white",
-                        }}
-                    >
+                <Box
+                    sx={{
+                        position: "relative",
+                        marginX: FRAME_INSET,
+                        flex: fillHeight ? 1 : "none",
+                        minHeight: fillHeight ? 0 : 420,
+                        // `--app-vh` is the shell's height (the viewport less the notification
+                        // banner); 180px leaves room for the header, tab strip, title and label.
+                        height: fillHeight ? "auto" : "calc(var(--app-vh) - 180px)",
+                        border: "1px solid",
+                        borderColor: revealed && ready ? g.border.default : "transparent",
+                        borderRadius: g.radius.md,
+                        overflow: "hidden",
+                        // A page with no background of its own is written for white; until it is
+                        // shown, the app's surface is behind the loader.
+                        backgroundColor: revealed && ready ? "white" : g.surface.default,
+                    }}
+                >
+                    {loading && (
+                        <Box
+                            sx={{
+                                position: "absolute",
+                                inset: 0,
+                                display: "flex",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <NoteLoadState
+                                error={false}
+                                isActive={isActive}
+                                fillHeight
+                                isLoading
+                                onRetry={reload}
+                            />
+                        </Box>
+                    )}
+                    {frameActive && (
                         <iframe
                             key={frameKey}
                             ref={frameRef}
@@ -308,12 +358,18 @@ export const HtmlNoteView = ({
                             referrerPolicy="no-referrer"
                             sandbox={HTML_NOTE_SANDBOX}
                             src={page?.url}
-                            style={{ display: "block", width: "100%", height: "100%", border: 0 }}
                             title={fmt(t.notes.htmlNote.frameTitle, { title })}
+                            style={{
+                                display: "block",
+                                width: "100%",
+                                height: "100%",
+                                border: 0,
+                                visibility: revealed ? "visible" : "hidden",
+                            }}
                             onLoad={handleFrameLoad}
                         />
-                    </Box>
-                )
+                    )}
+                </Box>
             )}
         </Box>
     );
