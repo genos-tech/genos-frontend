@@ -9,6 +9,9 @@
  * On a phone (MIP-1219) the labelled "Start today" goes and that one add icon takes
  * its place while today has no list; once today has one, it starts tomorrow.
  *
+ * MIP-2221: tomorrow wears a calendar, not the "+" (which reads as "add a to-do"), and a second
+ * press right after a start is ignored, so a double tap on today cannot create tomorrow too.
+ *
  * The phone switch is `useIsMobile()` (a JS media query), not an
  * `sx` breakpoint, because jsdom can't evaluate the latter — see
  * `mobile-layout-overflow-patterns`. `useIsMobile` is mocked the way
@@ -16,7 +19,7 @@
  */
 
 import { CssVarsProvider } from "@mui/joy/styles";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ToDoPane } from "../features/chat/ToDoPane";
@@ -74,12 +77,18 @@ const renderPane = (groups: TodoGroupProps[]) => {
         setMyself: vi.fn(),
         socket: null,
     };
-    render(
+    const tree = () => (
         <CssVarsProvider>
             <ToDoPane {...(props as unknown as React.ComponentProps<typeof ToDoPane>)} />
         </CssVarsProvider>
     );
-    return { addItem };
+    const view = render(tree());
+    /** What the server's answer does: the pane gets the new lists. */
+    const setGroups = (next: TodoGroupProps[]) => {
+        props.useTG.groups = next;
+        view.rerender(tree());
+    };
+    return { addItem, setGroups };
 };
 
 // Neither today's nor tomorrow's list exists, so both Start buttons show.
@@ -116,7 +125,8 @@ describe("To-do pane header on mobile", () => {
         const tomorrow = screen.getByRole("button", { name: "Start tomorrow" });
         // The name is the label, so the meaning isn't lost to assistive tech; no printed text.
         expect(tomorrow.textContent).toBe("");
-        expect(tomorrow.querySelector('[data-testid="AddIcon"]')).not.toBeNull();
+        expect(tomorrow.querySelector('[data-testid="EventRoundedIcon"]')).not.toBeNull();
+        expect(tomorrow.querySelector('[data-testid="AddIcon"]')).toBeNull();
     });
 
     it("on a phone, with no list for today, shows ONE add icon named Start today and no label", () => {
@@ -151,6 +161,8 @@ describe("To-do pane header on mobile", () => {
         expect(screen.queryByRole("button", { name: "Start today" })).toBeNull();
         const button = screen.getByRole("button", { name: "Start tomorrow" });
         expect(button.textContent).toBe("");
+        expect(button.querySelector('[data-testid="EventRoundedIcon"]')).not.toBeNull();
+        expect(button.querySelector('[data-testid="AddIcon"]')).toBeNull();
         fireEvent.click(button);
 
         expect(addItem).toHaveBeenCalledTimes(1);
@@ -158,6 +170,35 @@ describe("To-do pane header on mobile", () => {
             localDate: getLocalTomorrowDate(),
             title: "Untitled to-do",
         });
+    });
+
+    it("on a phone, a second tap right after Start today does not create tomorrow", async () => {
+        vi.useFakeTimers();
+        try {
+            isMobileViewport = true;
+            const { addItem, setGroups } = renderPane([groupOn(OLD_DAY)]);
+
+            fireEvent.click(screen.getByRole("button", { name: "Start today" }));
+            await act(() => vi.advanceTimersByTimeAsync(0));
+            // Today's list arrives and the same button now says tomorrow.
+            setGroups([groupOn(getLocalCurrentDate())]);
+            await act(() => vi.advanceTimersByTimeAsync(900));
+            fireEvent.click(screen.getByRole("button", { name: "Start tomorrow" }));
+
+            expect(addItem).toHaveBeenCalledTimes(1);
+
+            // A later press is a choice, and works.
+            await act(() => vi.advanceTimersByTimeAsync(200));
+            fireEvent.click(screen.getByRole("button", { name: "Start tomorrow" }));
+
+            expect(addItem).toHaveBeenCalledTimes(2);
+            expect(addItem).toHaveBeenLastCalledWith({
+                localDate: getLocalTomorrowDate(),
+                title: "Untitled to-do",
+            });
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it("on a phone, a list for tomorrow alone still leaves Start today", () => {

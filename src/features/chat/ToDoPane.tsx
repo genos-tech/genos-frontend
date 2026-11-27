@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AddIcon from "@mui/icons-material/Add";
 import CheckCircleOutlineRoundedIcon from "@mui/icons-material/CheckCircleOutlineRounded";
+import EventRoundedIcon from "@mui/icons-material/EventRounded";
 import FilterListRoundedIcon from "@mui/icons-material/FilterListRounded";
 import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 import RepeatRoundedIcon from "@mui/icons-material/RepeatRounded";
@@ -67,6 +68,12 @@ type ToDoPaneProps = {
     // the item (highlight threads down to TodoItemRow).
     focusTarget?: { localDate: string; itemId?: number };
 };
+
+// How long a press on a Start button keeps ignoring the next one, counted from
+// when its list was saved (MIP-2221). On a phone the one add button turns from
+// "Start today" into "Start tomorrow" under the finger, so a second tap meant for
+// today would otherwise create tomorrow's list too.
+const START_SETTLE_MS = 1000;
 
 // Virtuoso reads `components.*` unguarded, so "none" is an empty object, not undefined.
 const NO_COMPONENTS = {};
@@ -229,14 +236,22 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     const completedItems = totalItems - incompleteCount;
     const completedTodayCount = useMemo(() => countCompletedToday(groups), [groups]);
 
-    const handleCreateTodayGroup = async () => {
-        // Add an empty "Untitled todo" placeholder for today, opening the
-        // pane for editing. Matches the "+ New Todo" affordance.
-        await addItem({
-            localDate: getLocalCurrentDate(),
-            title: t.chat.todoPane.untitled,
-        });
+    const startingRef = useRef(false);
+    // An empty "Untitled todo" placeholder for that day, opening the pane for
+    // editing. Matches the "+ New Todo" affordance.
+    const startDay = async (localDate: string) => {
+        if (startingRef.current) return;
+        startingRef.current = true;
+        try {
+            await addItem({ localDate, title: t.chat.todoPane.untitled });
+        } finally {
+            setTimeout(() => {
+                startingRef.current = false;
+            }, START_SETTLE_MS);
+        }
     };
+
+    const handleCreateTodayGroup = () => startDay(getLocalCurrentDate());
 
     const handleAddItem = async (localDate: string, title: string, categoryId: number | null) => {
         await addItem({ localDate, title, categoryId });
@@ -248,15 +263,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         await addItem({ localDate, title, categoryId: null, parentItemId });
     };
 
-    const handleCreateTomorrowGroup = async () => {
-        // The mirror of the today button: tomorrow's list has to be startable
-        // before tomorrow arrives, both for the leftovers of today and for
-        // anything you already know belongs there.
-        await addItem({
-            localDate: getLocalTomorrowDate(),
-            title: t.chat.todoPane.untitled,
-        });
-    };
+    // The mirror of the today button: tomorrow's list has to be startable
+    // before tomorrow arrives, both for the leftovers of today and for
+    // anything you already know belongs there.
+    const handleCreateTomorrowGroup = () => startDay(getLocalTomorrowDate());
 
     const handleMoveToTomorrow = (itemId: number) => {
         void moveItem(itemId, getLocalTomorrowDate());
@@ -264,7 +274,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
 
     const todayExists = groups.some((g) => g.localDate === getLocalCurrentDate());
     const tomorrowExists = groups.some((g) => g.localDate === getLocalTomorrowDate());
-    // On a phone the header has one add icon, not a labelled "Start today" button (MIP-1219):
+    // On a phone the header has one start icon, not a labelled "Start today" button (MIP-1219):
     // it starts today while today has no list, and tomorrow once today has one. Desktop keeps
     // its labelled "Start today" and the "Start tomorrow" icon, each on its own gate.
     const phoneStartDay: "today" | "tomorrow" | null = !todayExists
@@ -541,10 +551,10 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                     </AppTooltip>
                                 )}
 
-                                {/* The add icon. Desktop: "Start tomorrow", same gate as
+                                {/* The start icon. Desktop: "Start tomorrow", same gate as
                             today's, so a day that already has a list doesn't offer to
                             create it again. Phone: "Start today" until today has a
-                            list, then "Start tomorrow". Icon-only at every width (MIP-1051):
+                            list ("+"), then "Start tomorrow" (a calendar). Icon-only at every width (MIP-1051):
                             tomorrow is the secondary of the two, and a second
                             labelled button made the header crowded. The tooltip
                             and aria-label carry the name. */}
@@ -586,7 +596,14 @@ export const ToDoPane = (props: ToDoPaneProps) => {
                                                     : handleCreateTomorrowGroup
                                             }
                                         >
-                                            <AddIcon sx={{ fontSize: "18px" }} />
+                                            {/* Tomorrow does not wear the "+": a bare "+" here reads
+                                            as "add a to-do", and tomorrow's list was then
+                                            created by people who never meant to (MIP-2221). */}
+                                            {startIconDay === "today" ? (
+                                                <AddIcon sx={{ fontSize: "18px" }} />
+                                            ) : (
+                                                <EventRoundedIcon sx={{ fontSize: "18px" }} />
+                                            )}
                                         </IconButton>
                                     </AppTooltip>
                                 )}
