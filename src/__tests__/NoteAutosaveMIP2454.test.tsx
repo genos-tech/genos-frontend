@@ -79,7 +79,8 @@ const mount = (initial: MyNoteProps, onNoteUpdate = vi.fn()) => {
     // The editor: a keystroke marks the note edited at once, its text reaches the hook later.
     const editor = { text: "Start." };
     const attach = () => {
-        hook.result.current.bodyReadRef.current = () => doc(editor.text);
+        const ref = hook.result.current.bodyReadRef;
+        if (ref) ref.current = () => doc(editor.text);
     };
     attach();
     return {
