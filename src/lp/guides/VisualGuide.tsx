@@ -1,12 +1,9 @@
-import guideShots from "../kit/guideShots.json";
 import { Shot } from "../kit/Shot";
 import { SHOT_ALT } from "../kit/shotAlts";
 import type { Lang } from "../lpLang";
 import { Flow } from "./Flow";
 import { GUIDES, type GuideStep } from "./guides";
-
-type GuideShot = { width: number; height: number; pins: number[][] };
-export const GUIDE_SHOTS = guideShots as unknown as Record<string, Record<Lang, GuideShot>>;
+import { GUIDE_SHOTS } from "./guideShots";
 
 /** One screenshot with its numbered dots. The dots repeat the numbered list under it. */
 function PinnedShot({ name, lang, alt }: { name: string; lang: Lang; alt: string }) {
@@ -30,9 +27,9 @@ function PinnedShot({ name, lang, alt }: { name: string; lang: Lang; alt: string
                 {shot.pins.map(([x, y], i) => (
                     <span
                         key={i}
-                        aria-hidden
                         className="lp-guide__pin"
                         style={{ left: `${x * 100}%`, top: `${y * 100}%` }}
+                        aria-hidden
                     >
                         {i + 1}
                     </span>

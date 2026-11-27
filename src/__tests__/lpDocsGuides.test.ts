@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { GUIDES } from "../lp/guides/guides";
-import { GUIDE_SHOTS } from "../lp/guides/VisualGuide";
+import { GUIDE_SHOTS } from "../lp/guides/guideShots";
 import manualEn from "../manual/manual.en.json";
 
 const LANGS = ["en", "ja"] as const;
