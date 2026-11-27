@@ -118,7 +118,8 @@ export const DashboardScheduleDialog = ({ open, teamId, editing, onClose, onSave
                     { ok: true, outcome: res.outcome },
                     res.schedule.id,
                     () => false,
-                    chat ? chat.title || s.unavailable : null
+                    chat ? chat.title || s.unavailable : null,
+                    { accessToken, teamId }
                 );
             } else {
                 toast.success(c.newDashboardSaved, { id: "custom-dashboard-created" });

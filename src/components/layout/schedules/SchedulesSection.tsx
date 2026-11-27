@@ -18,6 +18,7 @@ import {
 } from "../../../features/schedules/scheduleFormat";
 import { localizeJob } from "../../../features/schedules/scheduleParams";
 import { rowTargets } from "../../../features/schedules/scheduleRowParams";
+import { useRunningPoll } from "../../../features/schedules/useRunningPoll";
 import { fmt, useTranslation } from "../../../i18n";
 import {
     createSchedule,
@@ -73,6 +74,7 @@ const PAUSE_REASONS = {
 /** What "Run now" said, kept per schedule so the refetch after it keeps it. */
 type RunNotice =
     | { kind: "ok"; title: string; items: number }
+    | { kind: "started" }
     | { kind: "failed"; error: string }
     | { kind: "refused"; error: string };
 
@@ -156,6 +158,8 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
         };
     }, [refresh]);
 
+    useRunningPoll(!!data?.schedules.some((sch) => sch.running), refresh);
+
     /** The plan does not include schedules (403 `plan_required`): the upgrade prompt, not a
      *  failure. The list is read again so the page agrees with the server. */
     const planRefused = async () => {
@@ -219,7 +223,8 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                     { ok: true, outcome: ran },
                     res.schedule.id,
                     () => false,
-                    chat ? chat.title || s.unavailable : null
+                    chat ? chat.title || s.unavailable : null,
+                    { accessToken, teamId }
                 );
             }
             await refresh();
@@ -271,6 +276,8 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
         if (!res.ok) {
             notice = { kind: "refused", error: res.error ?? s.runFailed };
             if (res.gone) await refresh();
+        } else if (res.outcome.status === "started") {
+            notice = { kind: "started" };
         } else if (res.outcome.status === "failed") {
             notice = { kind: "failed", error: res.outcome.error || s.runFailed };
         } else {
@@ -545,6 +552,8 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                     sch
                 );
                 const rowBusy = busy === sch.id;
+                // The server's word (MIP-2457), so a run started elsewhere shows too.
+                const inRun = sch.running === true;
                 const target = paramLine(sch);
                 return (
                     <Sheet
@@ -677,9 +686,15 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                     {sch.problem}
                                 </Alert>
                             )}
-                            {notice && (
+                            {notice && (notice.kind !== "started" || inRun) && (
                                 <Alert
-                                    color={notice.kind === "ok" ? "success" : "danger"}
+                                    color={
+                                        notice.kind === "ok"
+                                            ? "success"
+                                            : notice.kind === "started"
+                                              ? "neutral"
+                                              : "danger"
+                                    }
                                     data-testid="run-notice"
                                     role="status"
                                     size="sm"
@@ -692,7 +707,15 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                           })
                                         : notice.kind === "failed"
                                           ? fmt(s.ranFailed, { error: notice.error })
-                                          : notice.error}
+                                          : notice.kind === "started"
+                                            ? sch.deliverChannel
+                                                ? fmt(s.runStartedChat, {
+                                                      chat:
+                                                          sch.deliverChannel.title ||
+                                                          s.unavailable,
+                                                  })
+                                                : s.runStarted
+                                            : notice.error}
                                 </Alert>
                             )}
 
@@ -758,14 +781,14 @@ export const SchedulesSection = ({ teamId, showHeading = true, onNavigateAway }:
                                     {!planBlockedNow && (
                                         <Button
                                             color="neutral"
-                                            disabled={rowBusy}
+                                            disabled={rowBusy || inRun}
                                             loading={running === sch.id}
                                             size="sm"
                                             startDecorator={<PlayArrowRoundedIcon />}
                                             variant="outlined"
                                             onClick={() => void runNow(sch)}
                                         >
-                                            {s.runNow}
+                                            {inRun ? s.running : s.runNow}
                                         </Button>
                                     )}
                                     {!planBlockedNow && (
