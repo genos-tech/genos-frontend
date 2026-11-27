@@ -1233,6 +1233,11 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# commentaire} other {# commentaires}}",
+            replies: "{count, plural, one {# réponse} other {# réponses}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -3312,7 +3317,7 @@ export const fr: DeepPartial<Messages> = {
             placeholder: "Demandez n'importe quoi à propos de cette note…",
             send: "Envoyer",
             cancel: "Annuler",
-            clear: "Conversation claire",
+            clear: "Effacer la conversation",
         },
         mentions: {
             ariaLabel: "Mentionner les suggestions",
@@ -7522,16 +7527,16 @@ export const fr: DeepPartial<Messages> = {
                 subtitle: "Tâches créées, démarrées, fermées et mises à jour au fil du temps",
                 day: "Jour",
                 week: "Semaine",
-                created: "Créé",
-                started: "Démarré",
-                closed: "Fermé",
-                updated: "Mis à jour",
-                weekPrefix: "O de",
+                created: "Créées",
+                started: "Démarrées",
+                closed: "Fermées",
+                updated: "Mises à jour",
+                weekPrefix: "Sem.",
                 memberLabel: "Membre",
                 allMembers: "Tous les membres",
-                empty: "Aucune activité de tâche pour le moment dans cette fenêtre.",
+                empty: "Aucune activité sur les tâches pour cette période.",
                 barTooltip: "{count} {series} · {date}",
-                totals: "En vue — {created} créé, {started} démarré, {closed} fermé, {updated} mis à jour",
+                totals: "Sur la période : {created} créées, {started} démarrées, {closed} fermées, {updated} mises à jour",
             },
             member: "Membre",
             open: "Ouvert",
@@ -8239,7 +8244,7 @@ export const fr: DeepPartial<Messages> = {
             placeholder: "Demandez n'importe quoi sur ce fil…",
             send: "Envoyer",
             cancel: "Annuler",
-            clear: "Conversation claire",
+            clear: "Effacer la conversation",
         },
         mentions: {
             ariaLabel: "Mentionner les suggestions",

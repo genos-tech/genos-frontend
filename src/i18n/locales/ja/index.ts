@@ -1219,6 +1219,11 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# 件のコメント} other {# 件のコメント}}",
+            replies: "{count, plural, one {# 件の返信} other {# 件の返信}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -3272,7 +3277,7 @@ export const ja: DeepPartial<Messages> = {
             placeholder: "このノートについて何でも聞いてください…",
             send: "送信",
             cancel: "キャンセル",
-            clear: "明確な会話",
+            clear: "会話を消去",
         },
         mentions: {
             ariaLabel: "提案についてメンションする",
@@ -8111,7 +8116,7 @@ export const ja: DeepPartial<Messages> = {
             placeholder: "このスレッドについて何でも質問してください...",
             send: "送信",
             cancel: "キャンセル",
-            clear: "明確な会話",
+            clear: "会話を消去",
         },
         mentions: {
             ariaLabel: "提案についてメンションする",

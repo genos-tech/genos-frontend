@@ -569,6 +569,11 @@ export const chat = {
             joinRequestSuffix: ".",
         },
     },
+    // The thread chip under a message: task comments in a project chat, replies elsewhere.
+    underBar: {
+        comments: "{count, plural, one {# comment} other {# comments}}",
+        replies: "{count, plural, one {# reply} other {# replies}}",
+    },
     // TODO(copy): MIP-1956 — draft wording for a native reader.
     liveRegion: {
         newMessage: "{name}: {preview}",

@@ -1154,6 +1154,11 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# 条评论} other {# 条评论}}",
+            replies: "{count, plural, one {# 条回复} other {# 条回复}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -7115,19 +7120,19 @@ export const zh: DeepPartial<Messages> = {
             velocity: {
                 loadFailed: "无法加载节奏图表",
                 title: "节奏",
-                subtitle: "随着时间的推移创建、启动、关闭和更新的任务",
-                day: "天",
-                week: "星期",
-                created: "已创建",
+                subtitle: "任务的创建、开始、关闭和更新趋势",
+                day: "日",
+                week: "周",
+                created: "创建",
                 started: "开始",
                 closed: "关闭",
-                updated: "已更新",
-                weekPrefix: "的W",
+                updated: "更新",
+                weekPrefix: "周",
                 memberLabel: "成员",
                 allMembers: "所有成员",
-                empty: "此窗口中还没有任务活动。",
+                empty: "这段时间还没有任务动态。",
                 barTooltip: "{count} {series} · {date}",
-                totals: "视图中 — {created} 创建，{started} 启动，{closed} 关闭，{updated} 更新",
+                totals: "当前范围：创建 {created}，开始 {started}，关闭 {closed}，更新 {updated}",
             },
             member: "成员",
             open: "待处理",
