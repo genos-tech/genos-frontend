@@ -1492,6 +1492,11 @@ export const hi: DeepPartial<Messages> = {
             job: "रिपोर्ट",
             jobPlaceholder: "रिपोर्ट चुनें",
             jobCatalog: {
+                scheduled_message: {
+                    title: "निर्धारित संदेश",
+                    description:
+                        "आपका लिखा संदेश, आपके चुने समय पर, आपकी ओर से किसी ग्रुप चैट या प्रोजेक्ट चैट में भेजता है। इसमें AI का उपयोग नहीं होता।",
+                },
                 ai_dashboard: {
                     title: "डैशबोर्ड पेज",
                     description:
@@ -1623,6 +1628,18 @@ export const hi: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "रिपोर्ट AI वाक्यों के साथ इस चैट में एक संदेश के रूप में पोस्ट होती है। चैट में सभी लोग इसे पढ़ सकते हैं, पर उसकी लागत सिर्फ़ आपको आपके इनबॉक्स में दिखती है। कोई सूचना नहीं भेजी जाती।",
             rowDeliver: "यहाँ पोस्ट होती है: {name}",
+            messageLabel: "संदेश",
+            messageHint:
+                "आपकी ओर से भेजा जाता है, जैसे आपने खुद भेजें दबाया हो। चैट के जिन सदस्यों का आप उल्लेख करते हैं, उन्हें सूचना मिलती है। चित्र और फ़ाइलें नहीं जोड़ी जा सकतीं।",
+            messageChatLabel: "संदेश कहाँ भेजें",
+            messageChatPlaceholder: "चैट चुनें",
+            errorMessage: "भेजने के लिए संदेश लिखें।",
+            errorMessageFiles: "संदेश से चित्र और फ़ाइलें हटाएँ।",
+            errorMessageChat: "कोई ग्रुप चैट या प्रोजेक्ट चैट चुनें।",
+            rowMessage: "संदेश: {text}",
+            rowSendTo: "भेजा जाता है: {name}",
+            messageSent: "{chat} में संदेश भेज दिया गया",
+            runRightAwayHintMessage: "अभी चलाएँ दबाते ही {chat} में भेज दिया जाएगा।",
             reportPosted: "रिपोर्ट {chat} में पोस्ट हुई",
             rowProject: "प्रोजेक्ट: {name}",
             rowMilestone: "माइलस्टोन: {name}",

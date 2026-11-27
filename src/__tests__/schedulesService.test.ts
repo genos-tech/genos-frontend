@@ -60,6 +60,7 @@ describe("every call names the member's team", () => {
             suggestions: [],
             // An API that predates MIP-1420 sends no chats: the form offers no choice.
             chatTargets: [],
+            messageChatTargets: [],
         });
     });
 

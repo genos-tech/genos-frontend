@@ -4727,6 +4727,11 @@ export const zh: DeepPartial<Messages> = {
             job: "报告",
             jobPlaceholder: "选择报告",
             jobCatalog: {
+                scheduled_message: {
+                    title: "定时消息",
+                    description:
+                        "在你选择的时间，以你的名义将你写好的消息发送到群聊或项目聊天。不使用 AI。",
+                },
                 ai_dashboard: {
                     title: "仪表板页面",
                     description:
@@ -4850,6 +4855,18 @@ export const zh: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "报告会连同 AI 撰写的句子作为消息发布到此聊天。聊天中的所有人都能阅读，但费用只会显示给你，在你的收件箱中。不会发送通知。",
             rowDeliver: "发布到：{name}",
+            messageLabel: "消息",
+            messageHint:
+                "以你的名义发送，效果与你亲自点击发送相同。被提及的聊天成员会收到通知。无法添加图片和文件。",
+            messageChatLabel: "消息发送到",
+            messageChatPlaceholder: "选择聊天",
+            errorMessage: "请输入要发送的消息。",
+            errorMessageFiles: "请从消息中删除图片和文件。",
+            errorMessageChat: "请选择群聊或项目聊天。",
+            rowMessage: "消息：{text}",
+            rowSendTo: "发送到：{name}",
+            messageSent: "消息已发送到 {chat}",
+            runRightAwayHintMessage: "点击立即运行后会马上发送到 {chat}。",
             reportPosted: "报告已发布到 {chat}",
             rowProject: "项目：{name}",
             rowMilestone: "里程碑：{name}",

@@ -1130,6 +1130,11 @@ export const es: DeepPartial<Messages> = {
             job: "Informe",
             jobPlaceholder: "Elige un informe",
             jobCatalog: {
+                scheduled_message: {
+                    title: "Mensaje programado",
+                    description:
+                        "Envía un mensaje que escribes a un chat de grupo o de proyecto, en tu nombre, a la hora que elijas. No usa IA.",
+                },
                 ai_dashboard: {
                     title: "Página de panel",
                     description:
@@ -1260,6 +1265,18 @@ export const es: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "El informe se publica en este chat como un mensaje, con sus frases de IA. Todos los del chat pueden leerlo, pero su coste solo se muestra a ti, en tu bandeja de entrada. No se envía ninguna notificación.",
             rowDeliver: "Se publica en: {name}",
+            messageLabel: "Mensaje",
+            messageHint:
+                "Se envía en tu nombre, como si pulsaras Enviar. Se avisa a los miembros del chat que menciones. No se pueden añadir imágenes ni archivos.",
+            messageChatLabel: "Enviar el mensaje a",
+            messageChatPlaceholder: "Elige un chat",
+            errorMessage: "Escribe el mensaje que quieres enviar.",
+            errorMessageFiles: "Quita las imágenes y los archivos del mensaje.",
+            errorMessageChat: "Elige un chat de grupo o de proyecto.",
+            rowMessage: "Mensaje: {text}",
+            rowSendTo: "Se envía a: {name}",
+            messageSent: "Mensaje enviado a {chat}",
+            runRightAwayHintMessage: "Se envía a {chat} en cuanto pulses Ejecutar ahora.",
             reportPosted: "Informe publicado en {chat}",
             rowProject: "Proyecto: {name}",
             rowMilestone: "Hito: {name}",

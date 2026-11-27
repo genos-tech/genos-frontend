@@ -16,8 +16,11 @@ type AnyEditor = any;
  * `todo` (MIP-1334) is `document` without the media group: a to-do's notes have nowhere to
  * upload a file to, so image, video, audio, file and GIF are left out rather than offered and
  * failing.
+ *
+ * `message` (MIP-2482) is `chat` without the media group: a scheduled message cannot carry an
+ * image or a file.
  */
-export type SlashPreset = "chat" | "document" | "todo";
+export type SlashPreset = "chat" | "document" | "todo" | "message";
 
 /** The slash items that need an upload target (and the GIF, an image by another name). */
 export const MEDIA_SLASH_KEYS: ReadonlySet<string> = new Set(["image", "video", "audio", "file"]);
@@ -28,12 +31,10 @@ export const genosSlashItems = (
     setShowGifPicker: (value: boolean) => void
 ): DefaultReactSuggestionItem[] => {
     const defaults = getDefaultReactSlashMenuItems(editor);
-    if (preset === "todo") {
-        return withGenosBlockSlashItems(
-            editor,
-            defaults.filter((item) => !MEDIA_SLASH_KEYS.has((item as { key?: string }).key ?? ""))
-        );
-    }
+    const noMedia = () =>
+        defaults.filter((item) => !MEDIA_SLASH_KEYS.has((item as { key?: string }).key ?? ""));
+    if (preset === "message") return noMedia();
+    if (preset === "todo") return withGenosBlockSlashItems(editor, noMedia());
     const withGif = withGifSlashItem(defaults, setShowGifPicker);
     return preset === "document" ? withGenosBlockSlashItems(editor, withGif) : withGif;
 };

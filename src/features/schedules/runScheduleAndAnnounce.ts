@@ -43,12 +43,18 @@ export const runScheduleAndAnnounce = async (
     teamId: string,
     id: string,
     stillShown: () => boolean = () => false,
-    postedIn: string | null = null
+    postedIn: string | null = null,
+    /** The schedule sends a message (MIP-2482), not a report. */
+    isMessage = false
 ): Promise<RunResult> =>
-    announceRunResult(await runScheduleNow(accessToken, teamId, id), id, stillShown, postedIn, {
-        accessToken,
-        teamId,
-    });
+    announceRunResult(
+        await runScheduleNow(accessToken, teamId, id),
+        id,
+        stillShown,
+        postedIn,
+        { accessToken, teamId },
+        isMessage
+    );
 
 /**
  * The announcing half of `runScheduleAndAnnounce`, for a run that already happened: "Run right
@@ -61,7 +67,8 @@ export const announceRunResult = async (
     stillShown: () => boolean = () => false,
     postedIn: string | null = null,
     /** Whose run it is, so a `started` one can be followed to its end. */
-    from?: { accessToken: string | null; teamId: string }
+    from?: { accessToken: string | null; teamId: string },
+    isMessage = false
 ): Promise<RunResult> => {
     const s = getMessages().settings.schedules;
     const toastId = `schedule-run-${id}`;
@@ -84,7 +91,9 @@ export const announceRunResult = async (
     }
 
     if (res.ok && res.outcome.status === "ok" && postedIn) {
-        toast.success(fmt(s.reportPosted, { chat: postedIn }), { id: toastId });
+        toast.success(fmt(isMessage ? s.messageSent : s.reportPosted, { chat: postedIn }), {
+            id: toastId,
+        });
         return res;
     }
 

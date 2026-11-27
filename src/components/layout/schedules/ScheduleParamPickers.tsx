@@ -352,8 +352,12 @@ export const ChatTargetSelect = ({
     onChange,
     label,
     allLabel,
+    noInbox,
 }: {
     chats: ChatTarget[];
+    /** There is no Inbox row (a scheduled message): the field is empty until a chat is picked,
+     *  and this is what it says meanwhile. */
+    noInbox?: string;
     /** Words for the empty row when it means "every chat" instead of the Inbox. */
     allLabel?: string;
     /** Id of the chat in `chats` that the member's list no longer offers, if any. */
@@ -367,16 +371,22 @@ export const ChatTargetSelect = ({
     const { t } = useTranslation();
     const popupZIndex = useDialogPopupZIndex();
     // `null` is the Inbox row.
-    const options: DeliverTarget[] = [INBOX_TARGET, ...chats];
-    const selected: DeliverTarget = chats.find((c) => c.id === value) ?? INBOX_TARGET;
+    const options: DeliverTarget[] = noInbox ? chats : [INBOX_TARGET, ...chats];
+    const chosen = chats.find((c) => c.id === value);
+    const selected = chosen ?? (noInbox ? null : INBOX_TARGET);
 
     return (
-        <Autocomplete<DeliverTarget, false, true, false>
+        <Autocomplete<DeliverTarget, false, boolean, false>
             isOptionEqualToValue={(o, v) => o.id === v.id}
             noOptionsText={t.common.empty.noResults}
             options={options}
             slotProps={projectListboxSlotProps(popupZIndex)}
-            startDecorator={<ChatTargetDecorator allLabel={allLabel} target={selected} />}
+            placeholder={noInbox}
+            startDecorator={
+                selected ? (
+                    <ChatTargetDecorator allLabel={allLabel} target={selected} />
+                ) : undefined
+            }
             sx={{ minWidth: 0 }}
             value={selected}
             getOptionLabel={(o) =>

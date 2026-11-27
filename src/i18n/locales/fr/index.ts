@@ -5007,6 +5007,11 @@ export const fr: DeepPartial<Messages> = {
             job: "Rapport",
             jobPlaceholder: "Choisir un rapport",
             jobCatalog: {
+                scheduled_message: {
+                    title: "Message programmé",
+                    description:
+                        "Envoie un message que vous rédigez dans une discussion de groupe ou de projet, en votre nom, à l'heure choisie. Aucune IA n'est utilisée.",
+                },
                 ai_dashboard: {
                     title: "Page de tableau de bord",
                     description:
@@ -5138,6 +5143,19 @@ export const fr: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "Le rapport est publié dans ce chat sous forme de message, avec ses phrases d'IA. Tout le monde dans le chat peut le lire, mais son coût n'est montré qu'à vous, dans votre boîte de réception. Aucune notification n'est envoyée.",
             rowDeliver: "Publié dans : {name}",
+            messageLabel: "Message",
+            messageHint:
+                "Envoyé en votre nom, comme si vous appuyiez sur Envoyer. Les membres de la discussion que vous mentionnez sont avertis. Impossible d'ajouter des images ou des fichiers.",
+            messageChatLabel: "Envoyer le message à",
+            messageChatPlaceholder: "Choisir une discussion",
+            errorMessage: "Rédigez le message à envoyer.",
+            errorMessageFiles: "Retirez les images et les fichiers du message.",
+            errorMessageChat: "Choisissez une discussion de groupe ou de projet.",
+            rowMessage: "Message : {text}",
+            rowSendTo: "Envoyé à : {name}",
+            messageSent: "Message envoyé à {chat}",
+            runRightAwayHintMessage:
+                "Envoyé à {chat} dès que vous appuyez sur Exécuter maintenant.",
             reportPosted: "Rapport publié dans {chat}",
             rowProject: "Projet : {name}",
             rowMilestone: "Jalon : {name}",

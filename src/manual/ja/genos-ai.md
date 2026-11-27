@@ -1,7 +1,7 @@
 ---
 id: genos-ai
 title: Genos AI: 質問し、作業を任せ、先回りする
-settings: [spotlight, spotlight.provider, spotlight.effort, spotlight.model, spotlight.aiAnswers, spotlight.webSearch, spotlight.contentLength, spotlight.sharedAnswers, spotlight.noteActivity, spotlight.scheduleMode, spotlight.scheduleEffort, spotlight.scheduleDeliver, spotlight.scheduleDashboardKind, spotlight.scheduleDashboardPeriod, spotlight.scheduleDashboardFocus, spotlight.scheduleDashboardSource, spotlight.scheduleDashboardSaveTo, spotlight.scheduleRunRightAway]
+settings: [spotlight, spotlight.provider, spotlight.effort, spotlight.model, spotlight.aiAnswers, spotlight.webSearch, spotlight.contentLength, spotlight.sharedAnswers, spotlight.noteActivity, spotlight.scheduleMode, spotlight.scheduleEffort, spotlight.scheduleDeliver, spotlight.scheduleMessage, spotlight.scheduleDashboardKind, spotlight.scheduleDashboardPeriod, spotlight.scheduleDashboardFocus, spotlight.scheduleDashboardSource, spotlight.scheduleDashboardSaveTo, spotlight.scheduleRunRightAway]
 ---
 
 ## Genos に質問できる場所
@@ -43,6 +43,15 @@ Genos にできることは、プランによって異なります。
 ## Genos AI によるスケジュールレポートとダッシュボードページ
 
 スケジュール(設定 → Genos → スケジュール、Core 以上)は、決めた時刻にレポートを用意します。ほとんどのレポートは通常のレポートで、あなたのデータから作られ、AI もクレジットも使いません。
+
+**予約メッセージ。** レポートではないジョブが 1 つあります。**予約メッセージ**は、自分で書いたメッセージを、指定した時刻にあなたの名前でチャットに送ります。AI は使わず、クレジットも消費しません。
+
+- メッセージは、チャット画面と同じエディタで書きます。書式、@メンション、#リンクが使えます。画像とファイルは追加できず、長すぎるメッセージは保存できません。
+- 送信先は、あなたがメンバーのグループチャット(公開チャットを含む)かプロジェクトチャットです。ダイレクトメッセージは選べず、受信箱に届くこともありません。
+- 実行されると、自分で送ったときと同じように、あなたからのメッセージとしてチャットに表示されます。メンションされたチャットのメンバーには通知され、ほかの人には未読として表示されます。チャットを抜けた人をメンションしていても、その人には通知されません。
+- Genos は実行のたびにチャットを確認します。あなたがチャットを抜けた場合や、アーカイブされた場合は送信されません。3 回失敗するとスケジュールは一時停止します。3 時間以上遅れた実行はスキップされます。
+- **今すぐ実行**は、押すたびにすぐチャットへ送信します。
+- 連携した AI アプリ(Claude、ChatGPT)は、予約メッセージの作成、変更、実行ができません。一覧表示、一時停止、削除だけができます。
 
 **今すぐ実行(1回のみ)。** **1回のみ**のスケジュールを新しく作るときは、日時の代わりに**今すぐ実行**を選んでから、**今すぐ実行**ボタンを押せます。レポートはすぐに受信箱か選んだチャットに届きます。実行に失敗するとスケジュールは保存されず、フォームの入力内容は残ります。実行が終わったものは一覧に残り、削除するまで同じ名前は使えません。
 
@@ -96,5 +105,5 @@ Genos にできることは、プランによって異なります。
 - **AIモデル:** どのモデルが回答するかを選びます。Genos によっては、代わりに Effort の選択(低、中、高)が表示されます。無料は低、Core は中まで、Pro 以上は高を使えます。「Soon」と表示されたプロバイダーは、まだ選べません。
 - **Genosの回答:** **AIによる回答**は、質問ボタンで Genos に質問を送れるようにします。オフのときは、スポットライトには検索結果だけが表示されます。**ウェブ検索**は、Genos が回答するときにウェブを使えるようにします。オンにするまでオフで、AIによる回答がオンである必要があり、Core 以上に含まれます。
 - **Genosの書く量:** 短め、標準、長めから選びます。Genos があなたのために書くタスク、マイルストーン、ノート、プランの長さが変わります。チャットの回答は、どの設定でも短いままです。
-- **Genos Assist スケジュール(Core 以上):** Genos が、決めた時刻にレポートを用意し、受信箱に入れるか、チャットに投稿します。レポートの種類は、Group chat catch-up(グループチャットの要約)、Project updates(プロジェクトの更新)、Milestone updates(マイルストーンの更新)、Team activity(チームの動き)、What is left from last week(先週の残り)、What you did(あなたがしたこと)、What to do today(今日やること)、ダッシュボードページ、Run a skill(スキルの実行。スキルが有効な場合)です。一部のレポートは AI モードで実行でき、ダッシュボードページは最新のページを保ちます(上の「Genos AI によるスケジュールレポートとダッシュボードページ」を参照)。スケジュールは、Core で 5 件、Pro と Max で 20 件まで作れます。**今すぐ実行**を押すと、すぐにレポートが届きます。連続で 3 回失敗すると、スケジュールは自動で一時停止します。
+- **Genos Assist スケジュール(Core 以上):** Genos が、決めた時刻にレポートを用意し、受信箱に入れるか、チャットに投稿します。レポートの種類は、Group chat catch-up(グループチャットの要約)、Project updates(プロジェクトの更新)、Milestone updates(マイルストーンの更新)、Team activity(チームの動き)、What is left from last week(先週の残り)、What you did(あなたがしたこと)、What to do today(今日やること)、ダッシュボードページ、Run a skill(スキルの実行。スキルが有効な場合)です。予約メッセージはレポートではなく、自分で書いたメッセージを、あなたの名前でグループチャットかプロジェクトチャットに送ります。一部のレポートは AI モードで実行でき、ダッシュボードページは最新のページを保ちます(上の「Genos AI によるスケジュールレポートとダッシュボードページ」を参照)。スケジュールは、Core で 5 件、Pro と Max で 20 件まで作れます。**今すぐ実行**を押すと、すぐにレポートが届きます。連続で 3 回失敗すると、スケジュールは自動で一時停止します。
 - **Genosが記憶していること:** Genos との会話を確認し、削除できます。ここでは、あなたの回答をチームメイトの役に立てるかどうか(**自分の回答でチームメイトを助ける**。新しいアカウントでは初期状態でオフ)と、連携した AI アプリの動きを Genos が記録するかどうか(**自分の作業を記録する**、180 日間保管)も選べます。Genos が保存しているものを確認して削除でき、タスクを並べるときに Genos が何を重視するかも設定できます。
