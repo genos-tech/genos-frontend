@@ -4892,6 +4892,8 @@ export const zh: DeepPartial<Messages> = {
             skillNone: "你还没有可运行的技能。请先在“技能”中创建一个。",
             skillTagFilter: "按标签筛选技能",
             skillNoMatch: "没有同时带有这些标签的技能。",
+            skillDashboardNone: "还没有带 dashboard 标签的技能。",
+            skillDashboardHint: "给技能添加 dashboard 标签后，它会显示在这里。",
             skillNotPublished: "{name}（请先与团队共享以发布一个版本）",
             errorSkill: "请选择一个技能。",
             effortHintNoEstimate:

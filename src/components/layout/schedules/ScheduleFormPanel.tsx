@@ -574,6 +574,7 @@ export const ScheduleFormPanel = ({
                                         />
                                     ) : known?.picker === "skill" ? (
                                         <SkillParamSelect
+                                            forDashboard={job.job === "ai_dashboard"}
                                             value={form.params[key] ?? ""}
                                             onChange={setParam}
                                         />
