@@ -12,6 +12,7 @@
  * debounce) or a flush. The PUT is answered by the test.
  */
 import { act, useState } from "react";
+import type { PartialBlock } from "@blocknote/core";
 import { CssVarsProvider } from "@mui/joy/styles";
 import { render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -533,6 +534,9 @@ describe("milestone description autosave", () => {
     });
 });
 
+/** The stub editor's documents, as the helpers type them. */
+const blocks = (text: string) => doc(text) as unknown as PartialBlock[];
+
 describe("words that may not have been saved (MIP-2455)", () => {
     const kept = () =>
         Object.keys(localStorage).filter((key) => key.startsWith(UNSAVED_TASK_BODY_PREFIX));
@@ -609,14 +613,17 @@ describe("words that may not have been saved (MIP-2455)", () => {
     });
 
     it("do not survive a later save, which has something newer", () => {
-        keepUnsavedBody("u1", 1, doc("older"), "base");
-        settleUnsavedBody("u1", 1, doc("newer"), { stored: true, startedAt: Date.now() + 1 });
+        keepUnsavedBody("u1", 1, blocks("older"), "base");
+        settleUnsavedBody("u1", 1, blocks("newer"), { stored: true, startedAt: Date.now() + 1 });
         expect(kept()).toHaveLength(0);
     });
 
     it("stay, on top of it, when an earlier save lands after they were kept", () => {
-        keepUnsavedBody("u1", 1, doc("older and more"), "base");
-        settleUnsavedBody("u1", 1, doc("older"), { stored: true, startedAt: Date.now() - 1000 });
+        keepUnsavedBody("u1", 1, blocks("older and more"), "base");
+        settleUnsavedBody("u1", 1, blocks("older"), {
+            stored: true,
+            startedAt: Date.now() - 1000,
+        });
         expect(JSON.parse(localStorage.getItem(kept()[0])!).bases[0]).toContain("older");
     });
 
@@ -624,16 +631,16 @@ describe("words that may not have been saved (MIP-2455)", () => {
         keepUnsavedBody(
             "u1",
             1,
-            doc("typed"),
+            blocks("typed"),
             JSON.stringify([{ text: "old", type: "paragraph" }])
         );
-        settleUnsavedBody("u1", 1, doc("old"), { stored: true, startedAt: Date.now() + 1 });
+        settleUnsavedBody("u1", 1, blocks("old"), { stored: true, startedAt: Date.now() + 1 });
         expect(kept()).toHaveLength(1);
     });
 
     it("are saved when a save that was still in flight did arrive", async () => {
-        const end = trackTaskBodySave(1, doc("half"));
-        keepUnsavedBody("u1", 1, doc("half and the rest"), "[]");
+        const end = trackTaskBodySave(1, blocks("half"));
+        keepUnsavedBody("u1", 1, blocks("half and the rest"), "[]");
         end();
         serverHas("half");
         await mount();
@@ -677,8 +684,8 @@ describe("words that may not have been saved (MIP-2455)", () => {
     });
 
     it("stay when the save that carried them was refused", () => {
-        keepUnsavedBody("u1", 1, doc("typed"), "[]");
-        settleUnsavedBody("u1", 1, doc("typed"), { stored: false, startedAt: Date.now() + 1 });
+        keepUnsavedBody("u1", 1, blocks("typed"), "[]");
+        settleUnsavedBody("u1", 1, blocks("typed"), { stored: false, startedAt: Date.now() + 1 });
         expect(kept()).toHaveLength(1);
     });
 
@@ -686,10 +693,10 @@ describe("words that may not have been saved (MIP-2455)", () => {
         keepUnsavedBody(
             "u1",
             1,
-            doc("typed"),
+            blocks("typed"),
             JSON.stringify([{ text: "old", type: "paragraph" }])
         );
-        settleUnsavedBody("u1", 1, doc("old"), {
+        settleUnsavedBody("u1", 1, blocks("old"), {
             stored: true,
             startedAt: Date.now() + 1,
             typed: true,
@@ -731,11 +738,11 @@ describe("words that may not have been saved (MIP-2455)", () => {
     });
 
     it("go with the sign-out", () => {
-        keepUnsavedBody("u1", 1, doc("private"), "base");
+        keepUnsavedBody("u1", 1, blocks("private"), "base");
         clearSignOutLocalStorage();
         expect(kept()).toHaveLength(0);
         // The preview unmounts after the sweep: nothing may be written back.
-        keepUnsavedBody("u1", 1, doc("private"), "base");
+        keepUnsavedBody("u1", 1, blocks("private"), "base");
         expect(kept()).toHaveLength(0);
     });
 
