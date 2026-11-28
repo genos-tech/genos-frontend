@@ -4,9 +4,12 @@ English-only public blog for genosai.dev. Its posts live in
 `genos-docs/marketing/blog/`. The platform drafts beside that folder are **not**
 synced here.
 
-A post is picture first and short: a real app screenshot (from the demo
-workspace) or a ` ```flow ` block (one box per line) comes first, then a few
-lines, under 150 words. Check every product claim against the app.
+A post is picture first: a real app screenshot (from the demo workspace) or a
+` ```flow ` block (one box per line) comes first. Then it says why the feature
+matters: a real situation, why it is hard today, how the feature helps, what the
+reader gets and how to start. Short paragraphs under `##` headings, about 300 to
+600 words. Check every product claim against the code and the app; no invented
+customers, numbers or quotes.
 
 ## Add a post
 
