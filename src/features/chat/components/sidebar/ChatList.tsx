@@ -517,7 +517,13 @@ const ActivityListRenderer = ({
                             />
                         ) : (
                             <ChatListItemForActivity
-                                key={`${activityMessage.activityId}-${activityMessage.isRead}`}
+                                // A card that opens a modal keeps its row when marked read, so
+                                // closing the modal can give it the focus back (MIP-1755).
+                                key={
+                                    activityMessage.viaAi
+                                        ? activityMessage.activityId
+                                        : `${activityMessage.activityId}-${activityMessage.isRead}`
+                                }
                                 activity={activityMessage}
                                 activityMessages={activityMessages}
                                 myself={data.myself}

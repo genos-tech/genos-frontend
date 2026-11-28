@@ -28,6 +28,7 @@ const SUPPORTED_KINDS: ReadonlySet<ModalTarget["kind"]> = new Set([
     "sharedNote",
     "task",
     "taskNote",
+    "teamNote",
     "todo",
 ]);
 

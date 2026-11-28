@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -56,6 +56,7 @@ import { HtmlNoteChipFor } from "../../../../notes/common/components/HtmlNoteChi
 import { ModalImportMarkdown } from "../../../../notes/common/components/ModalImportMarkdown";
 import { isImportableTextFile } from "../../../../notes/common/services/importableAttachment";
 import { isHtmlNote } from "../../../../notes/common/utils/htmlNote";
+import { ModalCommentFocusContext } from "../../../context/modalCommentFocus";
 import { useAttachmentClientIds } from "../../../hooks/useAttachmentClientIds";
 import { useAttachmentPreviews } from "../../../hooks/useAttachmentPreviews";
 import { deleteTaskAttachment } from "../../../services/deleteTaskAttachment";
@@ -201,7 +202,12 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const location = useLocation();
     const projectId = taskContent?.project?.projectId;
     const currentTaskId = taskContent?.id;
+    // A preview modal names its comment itself: the URL belongs to the page behind it.
+    const modalFocus = useContext(ModalCommentFocusContext);
     const focusedCommentId = useMemo<number | undefined>(() => {
+        if (modalFocus) {
+            return modalFocus.taskId === Number(currentTaskId) ? modalFocus.commentId : undefined;
+        }
         const parts = location.pathname.split("/").filter(Boolean);
         if (parts[0] !== "workspace" || parts[1] !== "tasks") return undefined;
         const taskIdx = parts.indexOf("task");
@@ -211,7 +217,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
         if (!Number.isFinite(urlTaskId) || urlTaskId !== Number(currentTaskId)) return undefined;
         const parsed = Number(parts[commentIdx + 1]);
         return Number.isFinite(parsed) ? parsed : undefined;
-    }, [location.pathname, currentTaskId]);
+    }, [location.pathname, currentTaskId, modalFocus]);
 
     // If this is called from chat thread panel, return the current path
     const commentLinkBuilder = useCallback(
@@ -599,6 +605,7 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 currentProjectName={taskContent.project?.projectName}
                                 currentTaskDisplayId={taskContent.displayId}
                                 focusedCommentId={focusedCommentId}
+                                inModal={modalFocus !== null}
                                 hostZIndex={hostZIndex}
                                 myself={myself}
                                 setEditTargetComment={setEditTargetComment}

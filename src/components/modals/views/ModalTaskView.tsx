@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Box, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { TaskPreview } from "../../../features/tasks/components/contents/TaskPreview";
+import { ModalCommentFocusContext } from "../../../features/tasks/context/modalCommentFocus";
 import { loadSpecificTask } from "../../../features/tasks/services/loadSpecificTask";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
@@ -77,6 +78,10 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
     // Modal-local comment slots — see the hook's doc comment. Declared
     // unconditionally (before the early returns) per rules-of-hooks.
     const localTaskComments = useModalLocalTaskComments();
+    const commentFocus = useMemo(
+        () => ({ commentId: target.commentId, taskId: target.taskId }),
+        [target.commentId, target.taskId]
+    );
 
     useEffect(() => {
         let cancelled = false;
@@ -212,19 +217,21 @@ export const ModalTaskView = (props: ModalTaskViewProps) => {
                 backgroundColor: "inherit",
             }}
         >
-            <TaskPreview
-                hostZIndex={hostZIndex}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                useCM={useCM}
-                useNM={useNM}
-                usePM={usePM}
-                useSM={useSM}
-                useTEM={useTEM}
-                useTM={useTMOverride}
-                useUISM={useUISM}
-            />
+            <ModalCommentFocusContext.Provider value={commentFocus}>
+                <TaskPreview
+                    hostZIndex={hostZIndex}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useNM={useNM}
+                    usePM={usePM}
+                    useSM={useSM}
+                    useTEM={useTEM}
+                    useTM={useTMOverride}
+                    useUISM={useUISM}
+                />
+            </ModalCommentFocusContext.Provider>
         </Box>
     );
 };

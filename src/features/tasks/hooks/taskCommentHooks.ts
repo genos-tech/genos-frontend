@@ -65,3 +65,48 @@ export const useScrollToTaskCommentByCommentId = (
         // the list has loaded still scrolls once the comments arrive.
     }, [focusedCommentId, taskComments, virtuosoRef]);
 };
+
+/** Time for the list to have scrolled itself to the comment (the hook above) and drawn its row. */
+const REVEAL_DELAY_MS = 900;
+
+/**
+ * Bring the focused comment into view of every scroller AROUND the list, up to the dialog. The list
+ * hook above only scrolls the list itself, which in a preview modal can sit below the fold
+ * (MIP-1755). Not `scrollIntoView`: that also scrolls `overflow: hidden` boxes and would shift the
+ * dialog. Once per id, like the list scroll.
+ */
+export const useRevealFocusedComment = (
+    scrollerRef: React.RefObject<HTMLElement | null>,
+    taskComments: TaskCommentProps[],
+    focusedCommentId: number | undefined
+) => {
+    const revealedRef = useRef<number | undefined>(undefined);
+    useEffect(() => {
+        if (focusedCommentId === undefined || revealedRef.current === focusedCommentId) return;
+        if (!taskComments.some((c) => c.commentId === focusedCommentId)) return;
+        const timer = setTimeout(() => {
+            const scroller = scrollerRef.current;
+            const row = scroller?.querySelector<HTMLElement>("[data-comment-focused]");
+            if (!scroller || !row) return;
+            revealedRef.current = focusedCommentId;
+            for (
+                let box = scroller.parentElement;
+                box && box.getAttribute("role") !== "dialog";
+                box = box.parentElement
+            ) {
+                const { overflowY } = getComputedStyle(box);
+                if (!/auto|scroll/.test(overflowY) || box.scrollHeight <= box.clientHeight)
+                    continue;
+                const rowBox = row.getBoundingClientRect();
+                const view = box.getBoundingClientRect();
+                // A row taller than the view shows its top; a shorter one sits in the middle.
+                const space = Math.max(0, (view.height - rowBox.height) / 2);
+                box.scrollBy({
+                    top: rowBox.top - view.top - space,
+                    behavior: smoothScrollBehavior(),
+                });
+            }
+        }, REVEAL_DELAY_MS);
+        return () => clearTimeout(timer);
+    }, [focusedCommentId, taskComments, scrollerRef]);
+};
