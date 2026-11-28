@@ -1,4 +1,3 @@
-import { Fragment } from "react";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import { Box, Dropdown, IconButton, MenuButton } from "@mui/joy";
 
@@ -85,6 +84,7 @@ export const MoreMenu = ({
     const visibleItems = orderMoreMenuItems(items);
     const row = (item: MoreMenuItem) => (
         <MenuRow
+            key={item.id}
             aria-description={item.hint}
             danger={item.danger}
             disabled={item.disabled}
@@ -124,20 +124,22 @@ export const MoreMenu = ({
                     <TriggerIcon sx={{ fontSize: iconFontSize }} />
                 </MenuButton>
                 <MenuSurface placement={placement} sx={{ minWidth: menuMinWidth }} zIndex={zIndex}>
-                    {visibleItems.map((item, index) => (
-                        <Fragment key={item.id}>
-                            {(item.danger || item.divider) && index > 0 && <MenuDivider />}
-                            {item.hint ? (
-                                // A disabled row takes no pointer events, so the tooltip sits on a
-                                // wrapper around it.
-                                <AppTooltip title={item.hint}>
-                                    <span style={{ display: "block" }}>{row(item)}</span>
-                                </AppTooltip>
-                            ) : (
-                                row(item)
-                            )}
-                        </Fragment>
-                    ))}
+                    {/* A flat list, never a Fragment per item: the Joy menu clones its first
+                        and last child, and a Fragment can't take the attribute (MIP-2545). */}
+                    {visibleItems.flatMap((item, index) => {
+                        const element = item.hint ? (
+                            // A disabled row takes no pointer events, so the tooltip sits on a
+                            // wrapper around it.
+                            <AppTooltip key={item.id} title={item.hint}>
+                                <span style={{ display: "block" }}>{row(item)}</span>
+                            </AppTooltip>
+                        ) : (
+                            row(item)
+                        );
+                        return (item.danger || item.divider) && index > 0
+                            ? [<MenuDivider key={`${item.id}-divider`} />, element]
+                            : [element];
+                    })}
                 </MenuSurface>
             </Dropdown>
         </Box>
