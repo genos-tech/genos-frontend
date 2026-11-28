@@ -42,7 +42,9 @@ export type AgentMentionRef =
     // server resolves (mine > team > installed). `label` is the slug, the token after the `/`.
     // `version` is set only on a turn restored from history (MIP-2189): the version that ran, which a
     // retry asks for again (0 = the owner's draft).
-    | { kind: "skill"; skillId: string; label: string; version?: number }
+    // `optional` = a typed `/word` that is not in the person's list (MIP-2589): the server says
+    // "install it first" if it names a skill, and takes the question as it is if it names none.
+    | { kind: "skill"; skillId: string; label: string; version?: number; optional?: boolean }
     // A Google Calendar event (MIP-1059, AGENT_PARITY_TOOLS). Only ever made by "Ask Genos about this
     // event" (`askGenosRefForCalendarEvent`), never picked from the `#` menu: the app does not index
     // events. The three ids are the event's whole identity (ids are unique per calendar, not
@@ -207,10 +209,12 @@ const toWireMention = (ref: Exclude<AgentMentionRef, { kind: "skill" }>): AgentM
  *  exact choice, `{ name }` for a typed `/name` the server resolves. Only the first one counts. */
 export const toWireSkill = (
     refs: readonly AgentMentionRef[] | undefined
-): { id: string; version_no?: number } | { name: string } | undefined => {
+): { id: string; version_no?: number } | { name: string; optional?: boolean } | undefined => {
     const ref = refs?.find((r) => r.kind === "skill");
     if (!ref || ref.kind !== "skill") return undefined;
-    if (!ref.skillId) return { name: ref.label };
+    if (!ref.skillId) {
+        return ref.optional ? { name: ref.label, optional: true } : { name: ref.label };
+    }
     // A retry from history asks for the version that ran; the server falls back if it is gone.
     return ref.version && ref.version > 0
         ? { id: ref.skillId, version_no: ref.version }

@@ -508,6 +508,7 @@ export const ar: DeepPartial<Messages> = {
             limitReached: "لقد وصلت إلى حد خطتك. راجع الإعدادات ← الخطة والاستخدام.",
             messageSendFailed: "تعذّر إرسال رسالتك. يرجى المحاولة مرة أخرى.",
             noteNotSaved: "تعذّر حفظ آخر تغييراتك على هذه الملاحظة.",
+            changeNotSaved: "لم يتم حفظ تغييرك. يرجى المحاولة مرة أخرى.",
             idleReload: "جارٍ تحديث الصفحة بعد فترة من عدم النشاط…",
         },
         features: {
@@ -1303,7 +1304,7 @@ export const ar: DeepPartial<Messages> = {
                 "اختياري. الكلمات التي كنت ستكتبها بعد اسم المهارة، مثل مشروع أو أسبوع.",
             skillPlaceholder: "اختر مهارة",
             skillLoading: "جارٍ تحميل المهارات…",
-            skillNone: "ليس لديك مهارة لتشغيلها بعد. اكتب واحدة أولاً في المهارات.",
+            skillNone: "ليس لديك مهارة لتشغيلها بعد. اكتب واحدة في المهارات أو ثبّت واحدة.",
             skillTagFilter: "تصفية المهارات حسب العلامة",
             skillNoMatch: "لا توجد مهارة تحمل كل هذه العلامات.",
             skillDashboardNone: "لا توجد بعد مهارة تحمل العلامة dashboard.",
@@ -1357,7 +1358,7 @@ export const ar: DeepPartial<Messages> = {
             tabs: {
                 label: "المهارات",
                 mine: "مهاراتي",
-                team: "الفريق",
+                team: "مهارات الفريق",
                 installed: "المثبّتة",
                 hub: "مركز Genos",
             },
@@ -1372,10 +1373,10 @@ export const ar: DeepPartial<Messages> = {
                 emptyMineBody: "ابدأ من القالب، أو اكتب مهارتك الخاصة من صفحة فارغة.",
                 emptyTeamTitle: "لا توجد مهارات للفريق بعد",
                 emptyTeamBody:
-                    "تظهر هنا المهارات التي يشاركها زملاؤك مع الفريق. شارك إحدى مهاراتك من تفاصيلها.",
+                    "تظهر هنا المهارات التي يشاركها زملاؤك مع الفريق. ثبّت إحداها لاستخدامها. شارك إحدى مهاراتك من تفاصيلها.",
                 emptyInstalledTitle: "لا توجد مهارات مثبّتة بعد",
                 emptyInstalledBody:
-                    "تظهر هنا المهارات العامة التي تثبّتها، وسنُعلمك عندما ينشر المؤلف تحديثًا.",
+                    "تظهر هنا المهارات التي تثبّتها من مهارات الفريق أو مركز Genos، وسنُعلمك عندما ينشر المؤلف تحديثًا.",
                 installedUpToDate: "الإصدار {n} · محدَّث",
                 installedBehind: "الإصدار {from} · الأحدث {to}",
                 limitReached:
@@ -1458,7 +1459,7 @@ export const ar: DeepPartial<Messages> = {
                 visibilityPrivate: "أنا فقط",
                 visibilityTeam: "فريقي",
                 visibilityTeamHelp:
-                    "يقرأ زملاؤك آخر إصدار منشور ويشغّلونه. عند اختيار «فريقي» يُنشر النص الحالي؛ وبعد ذلك يُبقي الحفظ تعديلاتك خاصة إلى أن تضغط «نشر التغييرات».",
+                    "يمكن لزملائك قراءة الإصدار المنشور وتثبيته، ثم تشغيله بعد التثبيت. عند اختيار «فريقي» يُنشر النص الحالي؛ وبعد ذلك يُبقي الحفظ تعديلاتك خاصة إلى أن تضغط «نشر التغييرات».",
                 visibilitySpecific: "أشخاص محددون",
                 visibilitySpecificHelp: "المالك وحده يغيّر من تُشارَك معه هذه المهارة.",
                 owner: "المالك",
@@ -3945,7 +3946,6 @@ export const ar: DeepPartial<Messages> = {
             folder: "المجلد",
         },
         filters: {
-            statusInCategory: "{name} ضمن {category}",
             all: "الكل",
             open: "مفتوحة",
             wip: "قيد التنفيذ",
@@ -4664,16 +4664,14 @@ export const ar: DeepPartial<Messages> = {
             inReview: "قيد المراجعة",
             introTitle: "استخدم حالاتك الخاصة",
             introBody:
-                "أعد تسمية الحالات أو لوّنها أو أضف حالات جديدة في كل فئة. لن يتغير شيء حتى تُعدّها.",
+                "أعد تسمية الحالات أو لوّنها أو أضف حالات جديدة. لا يتغير شيء حتى تقوم بإعدادها.",
             setUp: "إعداد الحالات",
             setUpFailed: "تعذّر إعداد الحالات. حاول مرة أخرى.",
             add: "إضافة",
-            addTo: "إضافة حالة إلى {category}",
             nameLabel: "اسم الحالة",
             default: "افتراضية",
             off: "متوقفة",
             count: "{n} من {max}",
-            groupLabel: "حالات {category}",
             rename: "إعادة التسمية",
             moveUp: "نقل لأعلى",
             moveDown: "نقل لأسفل",
@@ -4693,18 +4691,29 @@ export const ar: DeepPartial<Messages> = {
             nameEmpty: "لا يمكن أن يكون الاسم فارغًا.",
             saveFailed: "تعذّر الحفظ. حاول مرة أخرى.",
             saving: "جارٍ الحفظ",
-            moved: "نُقلت {name} إلى الموضع {position} من {total} في {category}.",
+            moved: "نُقلت {name} إلى الموضع {position} من {total}.",
             loadFailed: "تعذّر تحميل الحالات",
             deleteTitle: "حذف «{name}»؟",
             deleteBody: "ستنتقل المهام التي تستخدمها إلى الحالة التي تختارها.",
-            noReplacement: "شغّل حالة أخرى في هذه الفئة أولًا.",
+            noReplacement: "فعّل أولاً حالة أخرى تُحتسب {category}.",
             deleteInUse: "عدد المهام التي تستخدم هذه الحالة: {count}. انقلها إلى:",
             replacementLabel: "نقل إلى",
             deleteAndMove: "نقل وحذف",
-            boardColumnsTitle: "عمود في اللوحة لكل حالة",
-            boardColumnsHint: "عمود لكل حالة بدلاً من عمود لكل فئة، لجميع أعضاء المشروع.",
+            boardColumnsTitle: "عرض عمود لكل حالة",
+            boardColumnsHint:
+                "استخدمه عندما يمرر فريقك العمل بخطوات مثل «قيد المراجعة» أو ضمان الجودة. عند الإيقاف: عمود لكل فئة (مفتوحة، قيد التنفيذ…). ينطبق على الجميع في المشروع.",
             boardColumnsOn: "تعرض اللوحة عمودًا لكل حالة.",
             boardColumnsOff: "تعرض اللوحة عمودًا لكل فئة.",
+            countsAs: "تُحتسب: {category}",
+            countsAsLabel: "كيف تُحتسب {name}",
+            countsAsNew: "تُحتسب",
+            countsAsHint:
+                "يحدد «تُحتسب» كيف تتعامل عوامل التصفية والتأخر والتقدم وقواعد الأتمتة مع الحالة.",
+            countsAsInUse:
+                "{count, plural, one {عنصر واحد (#: مهمة أو معلم) يستخدم هذه الحالة. انقله إلى حالة أخرى لتغيير كيفية احتسابها.} two {عنصران (مهام أو معالم) يستخدمان هذه الحالة. انقلهما إلى حالة أخرى لتغيير كيفية احتسابها.} few {# من المهام أو المعالم تستخدم هذه الحالة. انقلها إلى حالة أخرى لتغيير كيفية احتسابها.} other {# من المهام أو المعالم تستخدم هذه الحالة. انقلها إلى حالة أخرى لتغيير كيفية احتسابها.}}",
+            countsAsChanged: "أصبحت {name} تُحتسب {category}.",
+            countsAsInRules: "تستخدم قاعدة أتمتة هذه الحالة. غيّر القاعدة أولاً.",
+            addStatus: "إضافة حالة",
         },
         automation: {
             tabsLabel: "أقسام إعدادات المشروع",
@@ -6178,6 +6187,9 @@ export const ar: DeepPartial<Messages> = {
             fromTeammate: "مهارة الفريق من {name}",
             installed: "مثبّتة",
             official: "Genos",
+            findMore: "ابحث عن المزيد من المهارات في مركز Genos",
+            openHub: "فتح مركز Genos",
+            openTeam: "فتح مهارات الفريق",
         },
         history: {
             header: "تاريخ",
@@ -6210,6 +6222,10 @@ export const ar: DeepPartial<Messages> = {
             unknownError: "خطأ غير معروف",
             networkError: "خطأ في الشبكة: {message}",
             serverReturned: "أعاد الخادم الحالة {status}",
+            skillInstallFromHub:
+                "المهارة /{name} غير مثبّتة. ثبّتها أولاً من مركز Genos ثم اسأل مرة أخرى.",
+            skillInstallFromTeam:
+                "المهارة /{name} غير مثبّتة. ثبّتها أولاً من مهارات الفريق ثم اسأل مرة أخرى.",
             streamInterrupted: "تم قطع البث: {message}",
             malformedNdjsonLine: "سطر NDJSON غير صالح: {line}",
             taskNotFound:

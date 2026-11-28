@@ -189,16 +189,25 @@ describe("picking and sending", () => {
         ]);
     });
 
-    it("a `/word` that is not one of the person's skills is an ordinary question", () => {
+    it("a `/word` outside the person's skills goes as an optional name (MIP-2589)", () => {
+        // The server says "install it first" for a skill, and takes anything else as a question.
         const { result } = renderHook(() => useHarness(SKILLS));
-        for (const text of ["/tmp is full, why?", "/help me plan", "/brand-new for me"]) {
-            expect(toWireSkill(result.current.draft.consumeMentions(text)), text).toBeUndefined();
+        for (const [text, name] of [
+            ["/tmp is full, why?", "tmp"],
+            ["/help me plan", "help"],
+            ["/brand-new for me", "brand-new"],
+        ]) {
+            expect(toWireSkill(result.current.draft.consumeMentions(text)), text).toEqual({
+                name,
+                optional: true,
+            });
         }
         // `[]` (Skills on, nothing to run yet) is the same.
         const empty = renderHook(() => useHarness([]));
-        expect(
-            toWireSkill(empty.result.current.draft.consumeMentions("/brand-new"))
-        ).toBeUndefined();
+        expect(toWireSkill(empty.result.current.draft.consumeMentions("/brand-new"))).toEqual({
+            name: "brand-new",
+            optional: true,
+        });
     });
 
     it("a name two teammates share goes to the server as a name, which asks which one", () => {

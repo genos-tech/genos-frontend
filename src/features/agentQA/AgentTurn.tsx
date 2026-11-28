@@ -90,6 +90,7 @@ import {
 import { requestAppNavigate } from "../../services/appNavigate";
 import { g } from "../../theme/tokens";
 import { CREDIT_PACKS_PATH, PLANS_PATH } from "../billing/billingPaths";
+import { openSkillsList } from "../genos/skills/openSkillsList";
 import { entitySubtitle } from "../spotlight/spotlightResultHelpers";
 import type { SpotlightResult } from "../spotlight/types";
 import { agentMarkdownComponents } from "./agentMarkdownComponents";
@@ -157,6 +158,8 @@ export interface AgentTurnProps {
     sourcesById?: ReadonlyMap<string, SpotlightResult>;
     toolEvents: ToolEvent[];
     askError: string | null;
+    // The refused skill is not installed (MIP-2589): offer the list it is installed from.
+    askErrorSkillList?: "hub" | "team";
     // The in-flight turn (shows the spinner, "thinking" and the approval
     // card) as opposed to a finished one.
     isCurrent: boolean;
@@ -254,6 +257,7 @@ const AgentTurnInner = ({
     sourcesById: sourcesByIdOverride,
     toolEvents,
     askError,
+    askErrorSkillList,
     isCurrent,
     isStreaming,
     pendingApproval,
@@ -563,6 +567,18 @@ const AgentTurnInner = ({
                             <Typography level="body-md" sx={{ color: g.danger.text, mb: 0.5 }}>
                                 {askError}
                             </Typography>
+                        )}
+
+                        {askError && askErrorSkillList && (
+                            <Box sx={{ mb: 0.75 }}>
+                                <Button
+                                    size="sm"
+                                    variant="outlined"
+                                    onClick={() => openSkillsList(askErrorSkillList)}
+                                >
+                                    {labels.skillInstall[askErrorSkillList]}
+                                </Button>
+                            </Box>
                         )}
 
                         {isOutOfCreditsError(askError) && (

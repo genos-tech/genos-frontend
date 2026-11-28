@@ -88,6 +88,7 @@ import {
     type CompletedTurn,
     type UndoRequest,
 } from "../agentQA";
+import { openSkillsList } from "../genos/skills/openSkillsList";
 import { useRunnableSkills } from "../genos/skills/useRunnableSkills";
 import { takePendingAskRefs } from "./askGenosAbout";
 import {
@@ -493,7 +494,7 @@ export const SpotlightContent = ({
     // `/` at the start of the question lists the skills this person may run (MIP-2042). Undefined while
     // Skills is off on the server, so `/` stays a plain character and nothing below changes. The Genos
     // page renders this same component, so it gets the same menu.
-    const runnableSkills = useRunnableSkills();
+    const { skills: runnableSkills, hubEnabled: skillHubEnabled } = useRunnableSkills();
     const mention = useAgentMentionDraft({
         value: localInput,
         onChange: handleInputChange,
@@ -502,6 +503,7 @@ export const SpotlightContent = ({
         lookupTask: mentionSources.lookupTask,
         searchTasks: mentionSources.searchTasks,
         skills: runnableSkills,
+        findSkills: skillHubEnabled,
     });
     // "Ask Genos about this task": `useSpotlight` already put `#PRJ-12 ` in the
     // draft; the ref waits in a queue for the input that mounts (the overlay is
@@ -758,9 +760,18 @@ export const SpotlightContent = ({
                             placement={inAgentMode ? "above" : "below"}
                             suggestions={mention.suggestions}
                             ariaLabel={
-                                mention.suggestions[0]?.trigger === "/"
+                                mention.skillMenu
                                     ? t.spotlight.skills.ariaLabel
                                     : t.spotlight.mentions.ariaLabel
+                            }
+                            footer={
+                                mention.findSkillsRow
+                                    ? {
+                                          label: t.spotlight.skills.findMore,
+                                          highlighted: mention.findSkillsHighlighted,
+                                          onSelect: () => openSkillsList("hub"),
+                                      }
+                                    : undefined
                             }
                             onSelect={handleMentionSelect}
                         />
@@ -858,10 +869,15 @@ export const SpotlightContent = ({
                                     !e.ctrlKey &&
                                     !e.altKey
                                 ) {
-                                    e.preventDefault();
                                     const c = mention.suggestions[mention.highlightIndex];
-                                    if (c) handleMentionSelect(c);
-                                    return;
+                                    // A `/` menu with only the Hub line and nothing highlighted
+                                    // leaves Enter to the question itself.
+                                    if (c || mention.findSkillsHighlighted) {
+                                        e.preventDefault();
+                                        if (c) handleMentionSelect(c);
+                                        else openSkillsList("hub");
+                                        return;
+                                    }
                                 }
                                 if (e.key === "Escape") {
                                     e.preventDefault();
@@ -1793,6 +1809,7 @@ const ConversationPanel = memo(
                                 askDisabled={askDisabled}
                                 askedQuery={turn.askedQuery}
                                 askError={turn.askError}
+                                askErrorSkillList={turn.askErrorSkillList}
                                 droppedReferences={turn.droppedReferences}
                                 elapsedMs={turn.elapsedMs}
                                 isCurrent={false}
@@ -1822,6 +1839,7 @@ const ConversationPanel = memo(
                                 askDisabled={askDisabled}
                                 askedQuery={ask.askedQuery}
                                 askError={ask.askError}
+                                askErrorSkillList={ask.askErrorSkillList}
                                 droppedReferences={ask.droppedReferences}
                                 elapsedMs={ask.elapsedMs}
                                 isStreaming={ask.isStreaming}

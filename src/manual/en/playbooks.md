@@ -56,7 +56,7 @@ Genos does not assume you write software. Below is one starting shape for each k
 
 ## Repeat your own steps with Skills
 
-If your Genos has Skills turned on, you can write a set of steps once and run it again later. Open Settings → Genos → Skills and create a skill. A skill can be just for you or shared with your team. To run it, type / at the start of a question in Spotlight and pick the skill. A Genos Assist Schedule can also run a skill at set times. It runs the published version, which only reads and changes nothing.
+If your Genos has Skills turned on, you can write a set of steps once and run it again later. Open Settings → Genos → Skills and create a skill. A skill can be just for you or shared with your team. To run it, type / at the start of a question in Spotlight and pick the skill. A skill someone else wrote, in Team skills or the Genos Hub, appears there once you install it. A Genos Assist Schedule can also run a skill at set times. It runs the published version, which only reads and changes nothing.
 
 ## Whatever the work is
 

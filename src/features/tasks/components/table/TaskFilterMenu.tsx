@@ -60,6 +60,7 @@ import {
     savedFilterMatchesSelection,
 } from "../../utils/savedFilterPayload";
 import {
+    listedStatuses,
     orderStatusSelection,
     pickedStatusId,
     pruneStatusPicks,
@@ -362,9 +363,16 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         const row = statusRows.find((r) => r.statusId === id);
         return row ? statusRowName(row, t.tasks) : "…";
     };
-    const shownStatusSelection = statusRows.length
-        ? orderStatusSelection(selectedStatus, statusRows)
-        : selectedStatus;
+    // A picked category reads as the statuses the menu ticks for it, so the chip's name and
+    // "+n" agree with the list.
+    const shownStatusNames = statusRows.length
+        ? orderStatusSelection(selectedStatus, statusRows).flatMap((f) => {
+              const listed = listedStatuses(statusRows, f.label, selectedStatus);
+              return listed.length
+                  ? listed.map((row) => statusRowName(row, t.tasks))
+                  : [statusFilterName(f)];
+          })
+        : selectedStatus.map(statusFilterName);
 
     // Tags filter
     const [selectedTags, setSelectedTags] = React.useState<FilterProps[]>(
@@ -2497,13 +2505,11 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 {!hideStatusFilter && (
                     <>
                         <FilterDropdown open={openStatusFilter} onOpenChange={setOpenStatusFilter}>
-                            <AppTooltip
-                                title={shownStatusSelection.map(statusFilterName).join(", ")}
-                            >
+                            <AppTooltip title={shownStatusNames.join(", ")}>
                                 <FilterChipButton
                                     active={!(selectedStatus[0].label === "All")}
-                                    extra={selectedStatus.length - 1}
-                                    value={statusFilterName(shownStatusSelection[0])}
+                                    extra={shownStatusNames.length - 1}
+                                    value={shownStatusNames[0]}
                                     field={
                                         splitFilterLabel(t.tasks.filterButtons.status, "").field
                                     }

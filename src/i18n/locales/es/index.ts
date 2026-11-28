@@ -518,6 +518,7 @@ export const es: DeepPartial<Messages> = {
                 "Has alcanzado un límite de tu plan. Consulta Configuración → Plan y uso.",
             messageSendFailed: "No se pudo enviar tu mensaje. Inténtalo de nuevo.",
             noteNotSaved: "No se pudieron guardar tus últimos cambios en esta nota.",
+            changeNotSaved: "No se guardó tu cambio. Inténtalo de nuevo.",
             idleReload: "Actualizando tras un periodo de inactividad…",
         },
         features: {
@@ -1332,7 +1333,7 @@ export const es: DeepPartial<Messages> = {
             skillPlaceholder: "Elige una habilidad",
             skillLoading: "Cargando habilidades…",
             skillNone:
-                "Todavía no tienes ninguna habilidad para ejecutar. Escribe una primero en Habilidades.",
+                "Todavía no tienes ninguna habilidad para ejecutar. Escribe una en Habilidades o instala una.",
             skillTagFilter: "Filtrar habilidades por etiqueta",
             skillNoMatch: "Ninguna habilidad tiene todas estas etiquetas.",
             skillDashboardNone: "Todavía ninguna habilidad tiene la etiqueta dashboard.",
@@ -1388,7 +1389,7 @@ export const es: DeepPartial<Messages> = {
             tabs: {
                 label: "Habilidades",
                 mine: "Mis habilidades",
-                team: "Equipo",
+                team: "Habilidades del equipo",
                 installed: "Instaladas",
                 hub: "Genos Hub",
             },
@@ -1404,10 +1405,10 @@ export const es: DeepPartial<Messages> = {
                     "Empieza con la plantilla o escribe la tuya desde una página en blanco.",
                 emptyTeamTitle: "Aún no hay habilidades del equipo",
                 emptyTeamBody:
-                    "Aquí aparecen las habilidades que tus compañeros comparten con el equipo. Comparte una tuya desde sus detalles.",
+                    "Aquí aparecen las habilidades que tus compañeros comparten con el equipo. Instala una para usarla. Comparte una tuya desde sus detalles.",
                 emptyInstalledTitle: "Aún no hay habilidades instaladas",
                 emptyInstalledBody:
-                    "Aquí aparecen las habilidades públicas que instalas, y te avisamos cuando el autor publica una actualización.",
+                    "Aquí aparecen las habilidades que instalas desde Habilidades del equipo o Genos Hub, y te avisamos cuando el autor publica una actualización.",
                 installedUpToDate: "Versión {n} · al día",
                 installedBehind: "Versión {from} · última {to}",
                 limitReached:
@@ -1490,7 +1491,7 @@ export const es: DeepPartial<Messages> = {
                 visibilityPrivate: "Solo yo",
                 visibilityTeam: "Mi equipo",
                 visibilityTeamHelp:
-                    "Tus compañeros leen y ejecutan la última versión publicada. Al elegir Mi equipo se publica el texto actual; después, Guardar mantiene tus cambios privados hasta que pulses Publicar cambios.",
+                    "Tus compañeros pueden leer e instalar la versión publicada y ejecutarla una vez instalada. Al elegir Mi equipo se publica el texto actual; después, Guardar mantiene tus cambios privados hasta que pulses Publicar cambios.",
                 visibilitySpecific: "Personas concretas",
                 visibilitySpecificHelp:
                     "Solo la persona propietaria cambia con quién se comparte esta habilidad.",
@@ -4017,7 +4018,6 @@ export const es: DeepPartial<Messages> = {
             folder: "Carpeta",
         },
         filters: {
-            statusInCategory: "{name}, en {category}",
             all: "Todas",
             open: "Abiertas",
             wip: "En curso",
@@ -4742,16 +4742,14 @@ export const es: DeepPartial<Messages> = {
             inReview: "En revisión",
             introTitle: "Usa tus propios estados",
             introBody:
-                "Cambia el nombre o el color, o añade estados en cada categoría. Nada cambia hasta que los configures.",
+                "Cambia el nombre o el color de los estados, o añade otros. Nada cambia hasta que los configures.",
             setUp: "Configurar estados",
             setUpFailed: "No se pudieron configurar los estados. Inténtalo de nuevo.",
             add: "Añadir",
-            addTo: "Añadir un estado a {category}",
             nameLabel: "Nombre del estado",
             default: "Predeterminado",
             off: "Desactivado",
             count: "{n} de {max}",
-            groupLabel: "Estados de {category}",
             rename: "Cambiar nombre",
             moveUp: "Subir",
             moveDown: "Bajar",
@@ -4771,20 +4769,31 @@ export const es: DeepPartial<Messages> = {
             nameEmpty: "El nombre no puede estar vacío.",
             saveFailed: "No se pudo guardar. Inténtalo de nuevo.",
             saving: "Guardando",
-            moved: "{name} pasó a la posición {position} de {total} en {category}.",
+            moved: "{name} pasó a la posición {position} de {total}.",
             loadFailed: "No se pudieron cargar los estados",
             deleteTitle: "¿Eliminar «{name}»?",
             deleteBody: "Las tareas que lo usen pasarán al estado que elijas.",
-            noReplacement: "Activa antes otro estado de esta categoría.",
+            noReplacement: "Activa primero otro estado que cuente como {category}.",
             deleteInUse:
                 "{count, plural, one {# tarea usa este estado. Moverla a:} other {# tareas usan este estado. Moverlas a:}}",
             replacementLabel: "Mover a",
             deleteAndMove: "Mover y eliminar",
-            boardColumnsTitle: "Una columna del tablero por estado",
+            boardColumnsTitle: "Mostrar una columna por cada estado",
             boardColumnsHint:
-                "Una columna por estado en lugar de por categoría, para todo el proyecto.",
+                "Úsalo si tu equipo pasa el trabajo por pasos como En revisión o QA. Desactivado: una columna por categoría (Abiertas, En curso…). Se aplica a todo el proyecto.",
             boardColumnsOn: "El tablero muestra una columna por estado.",
             boardColumnsOff: "El tablero muestra una columna por categoría.",
+            countsAs: "Cuenta como: {category}",
+            countsAsLabel: "Cómo cuenta {name}",
+            countsAsNew: "Cuenta como",
+            countsAsHint:
+                "«Cuenta como» indica cómo tratan un estado los filtros, los atrasos, el progreso y las automatizaciones.",
+            countsAsInUse:
+                "{count, plural, one {# tarea o hito usa este estado. Muévelo a otro estado para cambiar cómo cuenta.} other {# tareas o hitos usan este estado. Muévelos a otro estado para cambiar cómo cuenta.}}",
+            countsAsChanged: "{name} ahora cuenta como {category}.",
+            countsAsInRules:
+                "Una regla de automatización usa este estado. Cambia primero la regla.",
+            addStatus: "Añadir estado",
         },
         automation: {
             tabsLabel: "Secciones de ajustes del proyecto",
@@ -6289,6 +6298,9 @@ export const es: DeepPartial<Messages> = {
             fromTeammate: "Habilidad del equipo de {name}",
             installed: "Instalada",
             official: "Genos",
+            findMore: "Buscar más habilidades en Genos Hub",
+            openHub: "Abrir Genos Hub",
+            openTeam: "Abrir habilidades del equipo",
         },
         history: {
             header: "Historial",
@@ -6319,6 +6331,10 @@ export const es: DeepPartial<Messages> = {
             unknownError: "Error desconocido",
             networkError: "Error de red: {message}",
             serverReturned: "El servidor devolvió {status}",
+            skillInstallFromHub:
+                "/{name} no está instalada. Instálala primero desde Genos Hub y vuelve a preguntar.",
+            skillInstallFromTeam:
+                "/{name} no está instalada. Instálala primero desde Habilidades del equipo y vuelve a preguntar.",
             streamInterrupted: "Transmisión interrumpida: {message}",
             malformedNdjsonLine: "Línea NDJSON malformada: {line}",
             taskNotFound:

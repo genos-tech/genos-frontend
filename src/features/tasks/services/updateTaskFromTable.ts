@@ -6,11 +6,8 @@ import { TaskProps, TaskTableProps } from "../../../types/tasks";
 import { keptCustomStatusId } from "../utils/projectStatus";
 import { loadSpecificTask } from "./loadSpecificTask";
 import { sendUpdatedSpecificTask } from "./sendUpdatedSpecificTask";
+import { reportTaskNotSaved, TaskNotSavedError } from "./taskNotSavedError";
 import { TaskSaveRefusedError } from "./taskSaveRefusedError";
-
-/** The row without a status pick, which must not ride along on its next edit (MIP-2493). */
-const withoutPick = (row: TaskTableProps): TaskTableProps =>
-    row.customStatusPick == null ? row : { ...row, customStatusPick: undefined };
 
 /**
  * Updates a task from table edits
@@ -20,10 +17,9 @@ const withoutPick = (row: TaskTableProps): TaskTableProps =>
  * @param accessToken - Authentication token
  * @param teamMembers - List of team members for assignee lookup
  * @returns Promise<TaskTableProps> - The updated task table data
- * @throws TaskSaveRefusedError when the server refuses the save (HTTP 400).
- *   The reason has already been shown to the person; the caller must put its
- *   own copy of the row back, because nothing was stored. This is the only
- *   rejection: every other failure still resolves with the edited row.
+ * @throws TaskNotSavedError whenever nothing was stored (`TaskSaveRefusedError`
+ *   for an HTTP 400). The person has already been told; the caller must put its
+ *   own copy of the row back.
  */
 export const updateTaskFromTable = async (
     updatedRow: TaskTableProps,
@@ -51,7 +47,7 @@ export const updateTaskFromTable = async (
             fullTask = _fullTask[0];
         } else {
             console.error("Failed to load task for update");
-            return withoutPick(updatedRow);
+            throw new TaskNotSavedError();
         }
 
         // Tags are editable inline from the table too. The row carries the
@@ -127,7 +123,9 @@ export const updateTaskFromTable = async (
             : updatedRow.dueDate;
         updatedTask.dueDate = dueDateStr || updatedTask.dueDate;
 
-        // Send the updated task to the backend
+        // Send the updated task to the backend. It swallows every failure but a 400,
+        // so `onNotSaved` is how a failed save is known here (MIP-2582).
+        let notSaved: { error: unknown } | null = null;
         await sendUpdatedSpecificTask(
             socket,
             myself,
@@ -140,8 +138,14 @@ export const updateTaskFromTable = async (
             // freshness check above). Re-sending its start date would clear
             // a date set since (a cached `null`) or revert one (a stale
             // string), so leave the field out of this PUT altogether.
-            { sendStartDate: false }
+            {
+                sendStartDate: false,
+                onNotSaved: (_retry, error) => (notSaved = { error }),
+            }
         );
+        // The cast: TypeScript does not see the callback's assignment.
+        const failure = notSaved as { error: unknown } | null;
+        if (failure) throw failure.error ?? new TaskNotSavedError();
 
         return {
             ...updatedRow,
@@ -157,11 +161,12 @@ export const updateTaskFromTable = async (
             dueDate: dueDateStr,
         };
     } catch (error) {
-        // Let the refusal through. Returning the edited row here made a
-        // refused save look like a stored one: the table kept the new value
-        // and the board's rollback (a `catch` around this call) never ran.
+        // Never resolve with the edited row: that makes a failed save look stored, and
+        // the board's rollback (a `catch` around this call) never runs.
+        // A refusal has already shown its own reason.
         if (error instanceof TaskSaveRefusedError) throw error;
         console.error("Error updating task from table:", error);
-        return withoutPick(updatedRow);
+        reportTaskNotSaved(error);
+        throw new TaskNotSavedError();
     }
 };

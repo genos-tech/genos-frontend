@@ -15,6 +15,7 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { sendUpdatedSpecificTask } from "../features/tasks/services/sendUpdatedSpecificTask";
+import { TaskNotSavedError } from "../features/tasks/services/taskNotSavedError";
 import { TaskSaveRefusedError } from "../features/tasks/services/taskSaveRefusedError";
 import { updateTaskFromTable } from "../features/tasks/services/updateTaskFromTable";
 import { getMessages } from "../i18n";
@@ -258,7 +259,7 @@ describe("sendUpdatedSpecificTask on everything that is not a 400", () => {
 // The table and the board both save through `updateTaskFromTable`. The board
 // rolls its columns back in a `catch` around the call, so the contract that
 // matters here is that a refusal REJECTS rather than coming back as a row.
-describe("updateTaskFromTable on a refused save", () => {
+describe("updateTaskFromTable on a save that failed", () => {
     const row = (extra: Partial<TaskTableProps> = {}): TaskTableProps =>
         ({
             id: "42",
@@ -291,24 +292,47 @@ describe("updateTaskFromTable on a refused save", () => {
         expect(lastToast()).toEqual(["serverMessage", reason]);
     });
 
-    it("still hands back the edited row when the save fails any other way", async () => {
+    it("rejects and says the change was not saved on a 500", async () => {
         respondWith(500, { detail: "boom" });
 
-        const edited = row({ status: "Closed" });
-        const result = await updateTaskFromTable(edited, myself, null, "tok", [user]);
+        const saving = updateTaskFromTable(row(), myself, null, "tok", [user]);
 
+        await expect(saving).rejects.toBeInstanceOf(TaskNotSavedError);
+        await expect(saving).rejects.not.toBeInstanceOf(TaskSaveRefusedError);
         expect(adapter).toHaveBeenCalledTimes(1);
-        expect(result.status).toBe("Closed");
+        // After the interceptor's generic toast, so it is what stays on screen.
+        expect(bus.map(([kind]) => kind)).toEqual(["serverError", "changeNotSaved"]);
     });
 
-    it("still hands back the edited row when the task cannot be loaded to build the save", async () => {
-        loadSpecificTask.mockResolvedValue(undefined);
+    it("does the same when the server cannot be reached", async () => {
+        adapter.mockRejectedValue(new AxiosError("Network Error", "ERR_NETWORK"));
 
-        const edited = row({ status: "Closed" });
-        const result = await updateTaskFromTable(edited, myself, null, "tok", [user]);
+        await expect(
+            updateTaskFromTable(row(), myself, null, "tok", [user])
+        ).rejects.toBeInstanceOf(TaskNotSavedError);
+
+        expect(lastToast()?.[0]).toBe("changeNotSaved");
+    });
+
+    it("keeps the sentence that says why on a 403", async () => {
+        respondWith(403, { detail: "no" });
+
+        await expect(
+            updateTaskFromTable(row(), myself, null, "tok", [user])
+        ).rejects.toBeInstanceOf(TaskNotSavedError);
+
+        expect(lastToast()?.[0]).toBe("permissionDenied");
+    });
+
+    it("rejects when the task cannot be loaded to build the save", async () => {
+        loadSpecificTask.mockResolvedValue([]);
+
+        await expect(
+            updateTaskFromTable(row(), myself, null, "tok", [user])
+        ).rejects.toBeInstanceOf(TaskNotSavedError);
 
         expect(adapter).not.toHaveBeenCalled();
-        expect(result).toBe(edited);
+        expect(lastToast()?.[0]).toBe("changeNotSaved");
     });
 });
 

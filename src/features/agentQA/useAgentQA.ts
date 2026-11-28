@@ -97,6 +97,7 @@ const snapshotTurn = (ask: AskState): CompletedTurn => {
         answerSources: ask.answerSources,
         toolEvents: ask.toolEvents,
         askError: ask.askError,
+        ...(ask.askErrorSkillList ? { askErrorSkillList: ask.askErrorSkillList } : {}),
         runId: ask.runId ?? null,
         mentions: ask.askedMentions,
         // Only a turn that had them carries the keys, so an ordinary turn is the object it was.
@@ -292,10 +293,17 @@ export const useAgentQA = ({
                         elapsedMs: typeof elapsedMs === "number" ? elapsedMs : null,
                     });
                 },
-                onError: (message: string) => {
+                onError: (message: string, detail?: { skillList?: "hub" | "team" }) => {
                     setAsk((prev) =>
                         stillCurrent(prev)
-                            ? { ...prev, isStreaming: false, askError: message }
+                            ? {
+                                  ...prev,
+                                  isStreaming: false,
+                                  askError: message,
+                                  ...(detail?.skillList
+                                      ? { askErrorSkillList: detail.skillList }
+                                      : {}),
+                              }
                             : prev
                     );
                     promoteCurrentTurn(askedTurnId);

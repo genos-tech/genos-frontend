@@ -10,6 +10,7 @@ import {
     resolveSettingsTab,
     SETTINGS_PARAM,
 } from "../../utils/settingsDeepLink";
+import { asSkillsList, SKILLS_LIST_PARAM } from "../genos/skills/openSkillsList";
 
 export const AuthGuard = () => {
     const { accessToken } = useAuth();
@@ -27,7 +28,9 @@ export const AuthGuard = () => {
     // A signed-out visit to a Settings link keeps its tab through sign-in (MIP-2323).
     const settings = readSettingsParam(search);
     if (pathname.startsWith("/workspace") && settings !== null) {
-        rememberReturn(`/workspace?${SETTINGS_PARAM}=${resolveSettingsTab(settings)}`);
+        const list = asSkillsList(new URLSearchParams(search).get(SKILLS_LIST_PARAM));
+        const skills = list ? `&${SKILLS_LIST_PARAM}=${list}` : "";
+        rememberReturn(`/workspace?${SETTINGS_PARAM}=${resolveSettingsTab(settings)}${skills}`);
     }
     return <Navigate to="/signin" />;
 };

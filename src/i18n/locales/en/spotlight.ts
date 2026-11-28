@@ -129,6 +129,9 @@ export const spotlight = {
         fromTeammate: "Team skill from {name}",
         installed: "Installed",
         official: "Genos",
+        findMore: "Find more skills in the Genos Hub",
+        openHub: "Open the Genos Hub",
+        openTeam: "Open Team skills",
     },
     errors: {
         noTeam: "No team selected.",

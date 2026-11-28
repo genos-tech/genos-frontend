@@ -552,10 +552,13 @@ export type RunnableSkill = {
     slug: string;
     title: string;
     description: string;
-    /** Resolution order of a typed name: mine, then team, then installed, then official. */
+    /** Resolution order of a typed name: mine, then installed team skills, then installed public
+     *  ones. `official` is only what an older server sends. */
     group: "mine" | "team" | "installed" | "official";
     /** A teammate's account name (team and own skills); "" otherwise. */
     ownerName: string;
+    /** One of Genos's own skills. Only a skill the server says so of carries it. */
+    isOfficial?: boolean;
     /** The version a schedule would run (MIP-2045); 0 = none (a skill never published), so it
      *  cannot be scheduled. A server that predates it sends none: read as 0. */
     publishedVersionNo: number;
@@ -580,6 +583,7 @@ export const parseRunnableSkills = (raw: unknown): RunnableSkill[] | null => {
                 description: str(s.description, 600),
                 group: oneOf(s.group, ["mine", "team", "installed", "official"] as const, "mine"),
                 ownerName: str(s.ownerName, 120),
+                ...(s.isOfficial === true ? { isOfficial: true } : {}),
                 publishedVersionNo: int(s.publishedVersionNo),
                 tagChips: Array.isArray(s.tagChips)
                     ? parseTagChips(s.tagChips).slice(0, 10)
@@ -593,12 +597,13 @@ export const parseRunnableSkills = (raw: unknown): RunnableSkill[] | null => {
     });
 };
 
-/** What this member may run from the `/` menu in this team. `{ ok: false, reason: "off" }` (the
- *  server's 404) while Skills is switched off: the menu then does not exist at all. */
+/** What this member may run from the `/` menu in this team: their own skills and the installed
+ *  ones (MIP-2589). `{ ok: false, reason: "off" }` (the server's 404) while Skills is switched off:
+ *  the menu then does not exist at all. `hubEnabled`: there is a Genos Hub to point at for more. */
 export const fetchRunnableSkills = async (
     accessToken: string | null,
     teamId: string
-): Promise<Result<RunnableSkill[]>> => {
+): Promise<Result<RunnableSkill[]> & { hubEnabled?: boolean }> => {
     const api = authApi(accessToken);
     if (!api) return NO_API;
     try {
@@ -607,7 +612,9 @@ export const fetchRunnableSkills = async (
             params: { team_id: teamId, tab: "runnable" },
         });
         const data = parseRunnableSkills(res.data);
-        return data ? { ok: true, data } : NO_API;
+        const hubEnabled =
+            (res.data as { publicEnabled?: unknown } | null)?.publicEnabled === true;
+        return data ? { ok: true, data, hubEnabled } : NO_API;
     } catch (error) {
         return failure(error);
     }
@@ -1036,6 +1043,27 @@ export const setSkillStar = async (
 };
 
 /** Install a public skill: the server pins the version published now and answers it. Idempotent. */
+/** Fired after an install or uninstall, so an open picker asks again (MIP-2589). */
+export const SKILL_INSTALLS_CHANGED_EVENT = "genos:skill-installs-changed";
+const installsChanged = (): void => {
+    window.dispatchEvent(new Event(SKILL_INSTALLS_CHANGED_EVENT));
+};
+
+/** A skill a teammate shared that can be installed (MIP-2589): published, active and not hidden
+ *  from the team. A private one a co-editor can see is not shared, so it is not installed. */
+export const isInstallableTeamSkill = (skill: {
+    mine: boolean;
+    visibility: string;
+    publishedVersionNo: number;
+    status: string;
+    hiddenByTeam: boolean;
+}): boolean =>
+    !skill.mine &&
+    (skill.visibility === "team" || skill.visibility === "specific") &&
+    skill.publishedVersionNo > 0 &&
+    skill.status === "active" &&
+    !skill.hiddenByTeam;
+
 export const installSkill = async (
     accessToken: string | null,
     skillId: string
@@ -1046,6 +1074,7 @@ export const installSkill = async (
         const res = await api.post(`/skills/${encodeURIComponent(skillId)}/install/`, {}, OPTIONS);
         const r = rec(res.data);
         if (!r || !isVersionNo(r.installedVersionNo)) return NO_API;
+        installsChanged();
         return { ok: true, data: { installedVersionNo: r.installedVersionNo } };
     } catch (error) {
         return failure(error);
@@ -1061,6 +1090,7 @@ export const uninstallSkill = async (
     if (!api) return NO_API;
     try {
         await api.delete(`/skills/${encodeURIComponent(skillId)}/install/`, OPTIONS);
+        installsChanged();
         return { ok: true, data: null };
     } catch (error) {
         return failure(error);

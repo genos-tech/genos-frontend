@@ -1092,6 +1092,7 @@ export const fr: DeepPartial<Messages> = {
             actionFailed: "Impossible d'effectuer cette action. Veuillez réessayer.",
             messageSendFailed: "Impossible d'envoyer votre message. Veuillez réessayer.",
             noteNotSaved: "Impossible d'enregistrer vos dernières modifications de cette note.",
+            changeNotSaved: "Votre modification n’a pas été enregistrée. Veuillez réessayer.",
             idleReload: "Actualisation après une période d'inactivité…",
         },
         serviceSwitch: {
@@ -3948,6 +3949,10 @@ export const fr: DeepPartial<Messages> = {
             unknownError: "Erreur inconnue",
             networkError: "Erreur réseau : {message}",
             serverReturned: "Le serveur a renvoyé {status}",
+            skillInstallFromHub:
+                "/{name} n'est pas installée. Installez-la d'abord depuis le Genos Hub, puis reposez la question.",
+            skillInstallFromTeam:
+                "/{name} n'est pas installée. Installez-la d'abord depuis les compétences d'équipe, puis reposez la question.",
             streamInterrupted: "Flux interrompu : {message}",
             malformedNdjsonLine: "Ligne NDJSON mal formée : {line}",
             taskNotFound:
@@ -5299,7 +5304,7 @@ export const fr: DeepPartial<Messages> = {
             skillPlaceholder: "Choisir une compétence",
             skillLoading: "Chargement des compétences…",
             skillNone:
-                "Vous n'avez pas encore de compétence à exécuter. Écrivez-en une d'abord dans Compétences.",
+                "Vous n'avez pas encore de compétence à exécuter. Écrivez-en une dans Compétences ou installez-en une.",
             skillTagFilter: "Filtrer les compétences par balise",
             skillNoMatch: "Aucune compétence n'a toutes ces balises.",
             skillDashboardNone: "Aucune compétence n'a encore la balise dashboard.",
@@ -5357,7 +5362,7 @@ export const fr: DeepPartial<Messages> = {
             tabs: {
                 label: "Compétences",
                 mine: "Mes compétences",
-                team: "Équipe",
+                team: "Compétences d'équipe",
                 installed: "Installées",
                 hub: "Genos Hub",
             },
@@ -5372,10 +5377,10 @@ export const fr: DeepPartial<Messages> = {
                 emptyMineBody: "Partez du modèle ou écrivez la vôtre sur une page blanche.",
                 emptyTeamTitle: "Aucune compétence d'équipe pour l'instant",
                 emptyTeamBody:
-                    "Les compétences que vos collègues partagent avec l'équipe apparaissent ici. Partagez l'une des vôtres depuis ses détails.",
+                    "Les compétences que vos collègues partagent avec l'équipe apparaissent ici. Installez-en une pour l'utiliser. Partagez l'une des vôtres depuis ses détails.",
                 emptyInstalledTitle: "Aucune compétence installée pour l'instant",
                 emptyInstalledBody:
-                    "Les compétences publiques que vous installez apparaissent ici, et vous êtes prévenu quand l'auteur publie une mise à jour.",
+                    "Les compétences que vous installez depuis les compétences d'équipe ou le Genos Hub apparaissent ici, et vous êtes prévenu quand l'auteur publie une mise à jour.",
                 installedUpToDate: "Version {n} · à jour",
                 installedBehind: "Version {from} · dernière {to}",
                 limitReached:
@@ -5459,7 +5464,7 @@ export const fr: DeepPartial<Messages> = {
                 visibilityPrivate: "Moi seul",
                 visibilityTeam: "Mon équipe",
                 visibilityTeamHelp:
-                    "Vos collègues lisent et lancent la dernière version publiée. Choisir Mon équipe publie le texte actuel ; ensuite, Enregistrer garde vos modifications privées jusqu'à ce que vous appuyiez sur Publier les modifications.",
+                    "Vos collègues peuvent lire et installer la version publiée, puis la lancer une fois installée. Choisir Mon équipe publie le texte actuel ; ensuite, Enregistrer garde vos modifications privées jusqu'à ce que vous appuyiez sur Publier les modifications.",
                 visibilitySpecific: "Personnes précises",
                 visibilitySpecificHelp:
                     "Seul le propriétaire change avec qui cette compétence est partagée.",
@@ -6404,6 +6409,9 @@ export const fr: DeepPartial<Messages> = {
             fromTeammate: "Compétence d'équipe de {name}",
             installed: "Installée",
             official: "Genos",
+            findMore: "Trouver d'autres compétences dans le Genos Hub",
+            openHub: "Ouvrir le Genos Hub",
+            openTeam: "Ouvrir les compétences d'équipe",
         },
         errors: {
             noTeam: "Aucune équipe sélectionnée.",
@@ -7139,16 +7147,14 @@ export const fr: DeepPartial<Messages> = {
             inReview: "En revue",
             introTitle: "Utilisez vos propres statuts",
             introBody:
-                "Renommez, recolorez ou ajoutez des statuts dans chaque catégorie. Rien ne change tant qu'ils ne sont pas configurés.",
+                "Renommez, recolorez ou ajoutez des statuts. Rien ne change tant que vous ne les avez pas configurés.",
             setUp: "Configurer les statuts",
             setUpFailed: "Impossible de configurer les statuts. Réessayez.",
             add: "Ajouter",
-            addTo: "Ajouter un statut à {category}",
             nameLabel: "Nom du statut",
             default: "Par défaut",
             off: "Désactivé",
             count: "{n} sur {max}",
-            groupLabel: "Statuts {category}",
             rename: "Renommer",
             moveUp: "Monter",
             moveDown: "Descendre",
@@ -7168,20 +7174,31 @@ export const fr: DeepPartial<Messages> = {
             nameEmpty: "Le nom ne peut pas être vide.",
             saveFailed: "Échec de l'enregistrement. Réessayez.",
             saving: "Enregistrement",
-            moved: "{name} est passé en position {position} sur {total} dans {category}.",
+            moved: "{name} déplacé à la position {position} sur {total}.",
             loadFailed: "Impossible de charger les statuts",
             deleteTitle: "Supprimer « {name} » ?",
             deleteBody: "Les tâches qui l'utilisent passeront au statut de votre choix.",
-            noReplacement: "Activez d'abord un autre statut de cette catégorie.",
+            noReplacement: "Activez d’abord un autre statut qui compte comme {category}.",
             deleteInUse:
                 "{count, plural, one {# tâche utilise ce statut. La déplacer vers :} other {# tâches utilisent ce statut. Les déplacer vers :}}",
             replacementLabel: "Déplacer vers",
             deleteAndMove: "Déplacer et supprimer",
-            boardColumnsTitle: "Une colonne de tableau par statut",
+            boardColumnsTitle: "Afficher une colonne par statut",
             boardColumnsHint:
-                "Une colonne par statut au lieu d'une par catégorie, pour tout le projet.",
+                "Utile si votre équipe fait avancer le travail par étapes comme En revue ou QA. Désactivé : une colonne par catégorie (Ouvert, En cours…). S’applique à tout le projet.",
             boardColumnsOn: "Le tableau affiche une colonne par statut.",
             boardColumnsOff: "Le tableau affiche une colonne par catégorie.",
+            countsAs: "Compte comme : {category}",
+            countsAsLabel: "Comment compte {name}",
+            countsAsNew: "Compte comme",
+            countsAsHint:
+                "« Compte comme » indique comment les filtres, les retards, l’avancement et les automatisations traitent un statut.",
+            countsAsInUse:
+                "{count, plural, one {# tâche ou jalon utilise ce statut. Déplacez-le vers un autre statut pour changer comment il compte.} other {# tâches ou jalons utilisent ce statut. Déplacez-les vers un autre statut pour changer comment il compte.}}",
+            countsAsChanged: "{name} compte désormais comme {category}.",
+            countsAsInRules:
+                "Une règle d’automatisation utilise ce statut. Modifiez d’abord la règle.",
+            addStatus: "Ajouter un statut",
         },
         automation: {
             tabsLabel: "Sections des réglages du projet",
@@ -7456,7 +7473,6 @@ export const fr: DeepPartial<Messages> = {
                 "Le filtrage par jalon spécifique l'ouvre automatiquement afin que vous puissiez voir ses tâches. D'autres filtres laissent les lignes réduites.",
         },
         filters: {
-            statusInCategory: "{name}, dans {category}",
             all: "Toutes",
             open: "Ouvert",
             wip: "En cours",
