@@ -67,7 +67,7 @@ export const AiAppActivityRow: React.FC<AiAppActivityRowProps> = ({
         const target = aiAppModalTarget(notice);
         if (target && modal) {
             if ("href" in target) {
-                // A to-do has no page of its own to move to (/workspace/todo renders nothing).
+                // A to-do gets no "Open full page": it has no page of its own.
                 modal.openModalByHref(
                     target.href,
                     target.href.startsWith("/workspace/todo/")

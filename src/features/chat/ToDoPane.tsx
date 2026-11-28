@@ -119,20 +119,38 @@ export const ToDoPane = (props: ToDoPaneProps) => {
             return null;
         }
     });
+    // What the pane has already acted on for the current target (the two effects further down).
+    const scrolledFocusRef = useRef<string | null>(null);
+    const tabFlipHandledRef = useRef<string | null>(null);
     useEffect(() => {
         if (hostedInModal) return;
+        let timer: number | undefined;
         const handler = (e: Event) => {
             const detail = (e as CustomEvent).detail as
                 | { localDate?: string; itemId?: number }
                 | null
                 | undefined;
-            if (detail?.localDate) {
-                setRoutedFocusTarget({ itemId: detail.itemId, localDate: detail.localDate });
-                sessionStorage.removeItem("todoDeepLinkTarget");
-            }
+            // Every request starts over (MIP-2593): the same link followed again scrolls and
+            // highlights again, and the whole list drops the earlier item's highlight.
+            window.clearTimeout(timer);
+            scrolledFocusRef.current = null;
+            tabFlipHandledRef.current = null;
+            setRoutedFocusTarget(null);
+            const localDate = detail?.localDate;
+            if (!localDate) return;
+            sessionStorage.removeItem("todoDeepLinkTarget");
+            // A tick later, so a row that is still highlighted sees it go and come back:
+            // it centres itself only when its highlight turns on.
+            timer = window.setTimeout(
+                () => setRoutedFocusTarget({ itemId: detail.itemId, localDate }),
+                0
+            );
         };
         window.addEventListener("openTodoPane", handler);
-        return () => window.removeEventListener("openTodoPane", handler);
+        return () => {
+            window.clearTimeout(timer);
+            window.removeEventListener("openTodoPane", handler);
+        };
     }, [hostedInModal]);
 
     const focusTarget = focusTargetProp ?? routedFocusTarget ?? undefined;
@@ -316,7 +334,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     // Once per target: a day group added or removed above it must not pull a reader back
     // (MIP-2543). The key says whether the item's own group was found, so the tab flip below
     // that reveals a completed item still scrolls to it.
-    const scrolledFocusRef = useRef<string | null>(null);
     useEffect(() => {
         if (!focusTarget || focusGroupIndex < 0) return;
         const found = displayGroups[focusGroupIndex]?.items.some(
@@ -333,7 +350,6 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     // ref guard), so the user can still switch back to Incomplete
     // afterwards without us fighting them. In the modal the tab is
     // pre-initialized by ModalTodoView, making this a no-op there.
-    const tabFlipHandledRef = useRef<string | null>(null);
     useEffect(() => {
         if (!focusTarget || focusTarget.itemId == null) return;
         const key = `${focusTarget.localDate}:${focusTarget.itemId}`;
