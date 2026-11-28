@@ -195,6 +195,9 @@ const CountsAsSelect = ({
             size="sm"
             value={value}
             variant={plain ? "plain" : "outlined"}
+            renderValue={() =>
+                fmt(t.tasks.projectStatuses.countsAs, { category: categoryName(value) })
+            }
             slotProps={{
                 button: { "aria-label": label },
                 listbox: { sx: { zIndex } },
@@ -215,9 +218,6 @@ const CountsAsSelect = ({
                           "@media (pointer: coarse)": { minHeight: 36 },
                       }
                     : { minWidth: 0, ...touchSx }
-            }
-            renderValue={() =>
-                fmt(t.tasks.projectStatuses.countsAs, { category: categoryName(value) })
             }
             onChange={(_event, next) => {
                 if (next && next !== value) onChange(next);
@@ -619,11 +619,11 @@ export const ModalProjectStatuses = ({
                             </Box>
                         ) : (
                             <CountsAsSelect
-                                plain
                                 disabled={busyId != null}
                                 label={fmt(words.countsAsLabel, { name })}
                                 value={row.category}
                                 zIndex={layer + 10}
+                                plain
                                 onChange={(category) => void patch(row, { category })}
                             />
                         )}
@@ -778,8 +778,8 @@ export const ModalProjectStatuses = ({
                 {words.countsAsHint}
             </Box>
             <Box
-                component="ul"
                 aria-label={words.title}
+                component="ul"
                 sx={{
                     listStyle: "none",
                     m: 0,
