@@ -243,11 +243,13 @@ export const NotificationPauseSection = ({ pause }: SectionProps) => {
                     }
                 />
             </SettingRow>
+            {/* Wraps on a phone, where From and To do not fit one line (MIP-2599).
+                `gap`, not `spacing`: margins lay out wrongly once a row wraps. */}
             <Stack
                 alignItems="center"
+                data-testid="pause-schedule-times"
                 direction="row"
-                spacing={1.5}
-                sx={{ opacity: schedEnabled ? 1 : 0.5 }}
+                sx={{ flexWrap: "wrap", gap: 1.5, opacity: schedEnabled ? 1 : 0.5 }}
             >
                 <Stack alignItems="center" direction="row" spacing={0.75}>
                     <Typography level="body-sm">{p.scheduleStart}</Typography>
