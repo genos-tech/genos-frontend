@@ -1,6 +1,6 @@
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { MilestonesAtRiskCard } from "../features/tasks/components/dashboard/tabs/MilestonesAtRiskCard";
 import type { EffectiveTask } from "../features/tasks/utils/effectiveTasks";
@@ -81,6 +81,11 @@ describe("milestone risk", () => {
 });
 
 describe("MilestonesAtRiskCard", () => {
+    // The card judges due dates against the clock, so the clock is the fixtures' `NOW`: left
+    // real, the tests turn red a few days after the date they were written around.
+    beforeAll(() => void vi.useFakeTimers({ toFake: ["Date"], now: NOW }));
+    afterAll(() => void vi.useRealTimers());
+
     const mount = (
         milestones: never[],
         tasks: EffectiveTask[],
