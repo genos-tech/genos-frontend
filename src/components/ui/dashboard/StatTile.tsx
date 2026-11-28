@@ -14,7 +14,10 @@ export type StatTileProps = {
     value: string;
     /** The numeric value, only to grey a zero. */
     raw?: number;
-    tone?: Extract<Tone, "danger" | "warning" | "success" | "neutral">;
+    tone?: Extract<Tone, "danger" | "warning" | "success" | "info" | "neutral">;
+    /** A 2 px top rule in a tone, tying the tile to the section it jumps to (MIP-2442).
+     *  A zero has none. */
+    edge?: Extract<Tone, "danger" | "warning" | "info" | "neutral">;
     sub?: string;
     onClick?: () => void;
     /** A clickable tile is a filter: whether it is the active one. */
@@ -23,11 +26,19 @@ export type StatTileProps = {
     valueTestId?: string;
 };
 
+const EDGE = {
+    danger: g.danger.solid,
+    warning: g.warning.solid,
+    info: g.info.solid,
+    neutral: g.border.strong,
+};
+
 export const StatTile = ({
     label,
     value,
     raw,
     tone = "neutral",
+    edge,
     sub,
     onClick,
     pressed,
@@ -85,6 +96,11 @@ export const StatTile = ({
         background: g.surface.default,
         border: `1px solid ${pressed ? g.accent.border : g.border.subtle}`,
         borderRadius: g.radius.md,
+        // Always 2 px with an edge, so a zero's number sits level with its neighbours'. A pressed
+        // tile keeps its own accent border all round.
+        ...(edge && !pressed
+            ? { borderTop: `2px solid ${zero ? g.border.subtle : EDGE[edge]}` }
+            : {}),
         minHeight: 72,
         minWidth: 0,
         p: 1.5,

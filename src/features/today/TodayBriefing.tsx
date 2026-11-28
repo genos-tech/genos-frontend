@@ -1,4 +1,14 @@
 import { ReactNode, useMemo } from "react";
+import AlarmRoundedIcon from "@mui/icons-material/AlarmRounded";
+import AlternateEmailRoundedIcon from "@mui/icons-material/AlternateEmailRounded";
+import AutoAwesomeRoundedIcon from "@mui/icons-material/AutoAwesomeRounded";
+import DescriptionRoundedIcon from "@mui/icons-material/DescriptionRounded";
+import ForumRoundedIcon from "@mui/icons-material/ForumRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
+import HourglassTopRoundedIcon from "@mui/icons-material/HourglassTopRounded";
+import MoveToInboxRoundedIcon from "@mui/icons-material/MoveToInboxRounded";
+import OutboxRoundedIcon from "@mui/icons-material/OutboxRounded";
+import PersonAddAlt1RoundedIcon from "@mui/icons-material/PersonAddAlt1Rounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
 import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
 import { Box, IconButton, Typography } from "@mui/joy";
@@ -21,7 +31,10 @@ import {
 } from "./briefingToday";
 import { changeLine, reasonLine } from "./briefingWords";
 import { ROW_MIN_HEIGHT, rowDivider } from "./rowDivider";
+import { SECTIONS_GRID_SX } from "./sectionStyles";
 import { TodayAction } from "./todayActions";
+import { TodaySection } from "./TodaySection";
+import { TodaySkeleton } from "./TodaySkeleton";
 import { TodaySummary } from "./TodaySummary";
 import { TodayTaskRow } from "./TodayTaskRow";
 import { BriefingTodayView } from "./useBriefingToday";
@@ -36,6 +49,10 @@ type Props = {
 
 type RowProps = {
     href: string | null;
+    /** What kind of thing the row is, where a task row has its status icon. */
+    glyph: ReactNode;
+    /** The glyph's colour. */
+    glyphColor?: string;
     primary: ReactNode;
     secondary?: ReactNode;
     meta?: ReactNode;
@@ -44,9 +61,35 @@ type RowProps = {
 };
 
 /** One row, one click. A row the answer could not name a path for is plain text, not a dead link. */
-const Row = ({ href, primary, secondary, meta, onOpen, noLink }: RowProps) => {
+const Row = ({
+    href,
+    glyph,
+    glyphColor = g.text.secondary,
+    primary,
+    secondary,
+    meta,
+    onOpen,
+    noLink,
+}: RowProps) => {
     const body = (
         <>
+            <Box
+                aria-hidden="true"
+                component="span"
+                sx={{
+                    display: "inline-flex",
+                    flexShrink: 0,
+                    justifyContent: "center",
+                    // A task row's status icon sits on its first line, so this one does too.
+                    alignSelf: "flex-start",
+                    mt: 1,
+                    width: 16,
+                    color: glyphColor,
+                    "& svg": { fontSize: 16 },
+                }}
+            >
+                {glyph}
+            </Box>
             <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography
                     level="body-sm"
@@ -123,45 +166,6 @@ const Row = ({ href, primary, secondary, meta, onOpen, noLink }: RowProps) => {
     );
 };
 
-const Section = ({
-    title,
-    count,
-    id,
-    children,
-}: {
-    title: string;
-    count: number;
-    id?: string;
-    children: ReactNode;
-}) => (
-    <Box
-        aria-label={title}
-        component="section"
-        id={id}
-        sx={{
-            minWidth: 0,
-            border: `1px solid ${g.border.subtle}`,
-            borderRadius: g.radius.md,
-            bgcolor: g.surface.default,
-            py: 1,
-        }}
-    >
-        <Typography
-            component="h3"
-            level="title-sm"
-            sx={{ m: 0, px: 1.25, pb: 0.5, color: g.text.primary }}
-        >
-            {title}
-            <Box component="span" sx={{ ml: 0.75, color: g.text.secondary, fontWeight: 400 }}>
-                {count}
-            </Box>
-        </Typography>
-        <Box component="ul" sx={{ m: 0, p: 0 }}>
-            {children}
-        </Box>
-    </Box>
-);
-
 /** Delegated and suggested rows come without a project name: the loaded project list has it. */
 const withProjectName = (
     task: BriefingTask,
@@ -227,11 +231,7 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
 
     let body: ReactNode;
     if (view.status === "loading" && !view.data) {
-        body = (
-            <Typography level="body-sm" role="status" sx={{ color: g.text.secondary, py: 2 }}>
-                {a.states.loading}
-            </Typography>
-        );
+        body = <TodaySkeleton label={a.states.loading} />;
     } else if (view.status === "unavailable") {
         body = <EmptyState size="sm" title={a.states.unavailable} />;
     } else if (view.status === "error" || !view.data) {
@@ -266,9 +266,9 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
                 onOpen={open}
             />
         );
-        const groupLabel = (text: string, count: number) => (
+        const groupLabel = (text: string, count: number, color: string) => (
             <Box component="li" sx={{ listStyle: "none", px: 1.25, pt: 0.75 }}>
-                <Typography level="body-xs" sx={{ color: g.text.secondary, fontWeight: 600 }}>
+                <Typography level="body-xs" sx={{ color, fontWeight: 600 }}>
                     {text} · {count}
                 </Typography>
             </Box>
@@ -284,47 +284,59 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
         const sections: ReactNode[] = [];
         if (d.overdueCount + d.dueTodayCount > 0) {
             sections.push(
-                <Section
+                <TodaySection
                     key="due"
                     count={d.overdueCount + d.dueTodayCount}
+                    hue={d.overdueCount > 0 ? "danger" : "warning"}
+                    icon={AlarmRoundedIcon}
                     id="today-due"
                     title={a.sections.due}
                 >
                     {d.overdue.length > 0 ? (
                         <>
-                            {groupLabel(a.tiles.overdue, d.overdueCount)}
+                            {groupLabel(a.tiles.overdue, d.overdueCount, g.danger.text)}
                             {d.overdue.map((task) => taskRow(task, undefined, "leaves"))}
                         </>
                     ) : null}
                     {d.dueToday.length > 0 ? (
                         <>
-                            {groupLabel(a.dueToday, d.dueTodayCount)}
+                            {groupLabel(a.dueToday, d.dueTodayCount, g.warning.text)}
                             {d.dueToday.map((task) => taskRow(task, undefined, "leaves"))}
                         </>
                     ) : null}
-                </Section>
+                </TodaySection>
             );
         }
         if (d.suggestedNext.length > 0) {
             sections.push(
-                <Section key="next" count={d.suggestedNext.length} title={a.sections.next}>
+                <TodaySection
+                    key="next"
+                    count={d.suggestedNext.length}
+                    hue="accent"
+                    icon={AutoAwesomeRoundedIcon}
+                    title={a.sections.next}
+                >
                     {d.suggestedNext.map((task) =>
                         taskRow(task, reasonLine(task, a, locale), "stays")
                     )}
-                </Section>
+                </TodaySection>
             );
         }
         if (waitingCount > 0) {
             sections.push(
-                <Section
+                <TodaySection
                     key="waiting"
                     count={waitingCount}
+                    hue="info"
+                    icon={MoveToInboxRoundedIcon}
                     id="today-waiting"
                     title={a.sections.waiting}
                 >
                     {d.requests.map((r) => (
                         <Row
                             key={`r${r.itemId}`}
+                            glyph={<PersonAddAlt1RoundedIcon />}
+                            glyphColor={g.info.text}
                             href={null}
                             meta={r.at ? formatAgentWhen(r.at, locale) : ""}
                             noLink={a.noLink}
@@ -336,6 +348,8 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
                     {d.mentions.map((m, i) => (
                         <Row
                             key={`m${i}${m.at}`}
+                            glyph={<AlternateEmailRoundedIcon />}
+                            glyphColor={g.info.text}
                             href={mentionHref(m)}
                             meta={formatAgentWhen(m.at, locale)}
                             noLink={a.noLink}
@@ -344,14 +358,15 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
                             onOpen={open}
                         />
                     ))}
-                </Section>
+                </TodaySection>
             );
         }
         if (d.changed.total > 0) {
             sections.push(
-                <Section
+                <TodaySection
                     key="changed"
                     count={d.changed.total}
+                    icon={HistoryRoundedIcon}
                     id="today-changed"
                     title={a.sections.changed}
                 >
@@ -380,30 +395,49 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
                                 noLink={a.noLink}
                                 primary={[c.displayId, c.title].filter(Boolean).join(" ")}
                                 secondary={changeLine(c, a)}
+                                glyph={
+                                    c.type === "note" ? (
+                                        <DescriptionRoundedIcon />
+                                    ) : (
+                                        <ForumRoundedIcon />
+                                    )
+                                }
                                 onOpen={open}
                             />
                         );
                     })}
-                </Section>
+                </TodaySection>
             );
         }
         if (d.blocked.length > 0) {
             sections.push(
-                <Section key="blocked" count={d.blocked.length} title={a.sections.blocked}>
+                <TodaySection
+                    key="blocked"
+                    count={d.blocked.length}
+                    court="others"
+                    icon={HourglassTopRoundedIcon}
+                    title={a.sections.blocked}
+                >
                     {d.blocked.map((b) =>
                         taskRow(
                             { ...b, taskId: b.taskId, status: "Blocked" },
                             b.waitingFor.map((w) => w.title).join(" · ")
                         )
                     )}
-                </Section>
+                </TodaySection>
             );
         }
         if (d.delegatedTotal > 0) {
             sections.push(
-                <Section key="delegated" count={d.delegatedTotal} title={a.sections.delegated}>
+                <TodaySection
+                    key="delegated"
+                    count={d.delegatedTotal}
+                    court="others"
+                    icon={OutboxRoundedIcon}
+                    title={a.sections.delegated}
+                >
                     {d.delegated.map((task) => taskRow(task))}
-                </Section>
+                </TodaySection>
             );
         }
         const quiet = total(d) === 0;
@@ -427,26 +461,7 @@ export const TodayBriefing = ({ view, onAction, extra }: Props) => {
                     />
                 ) : null}
                 {sections.length > 0 ? (
-                    // One column on a phone and a tablet. From a wide screen, two columns of
-                    // equal-height cards in reading order, so each pair of lists sits side by side
-                    // and no column ends ragged; a last card on its own spans both.
-                    <Box
-                        data-testid="today-sections"
-                        sx={{
-                            display: "grid",
-                            gap: 1.5,
-                            alignItems: "stretch",
-                            gridTemplateColumns: {
-                                xs: "minmax(0, 1fr)",
-                                lg: "repeat(2, minmax(0, 1fr))",
-                            },
-                            "@media (min-width: 1200px)": {
-                                "& > section:last-of-type:nth-of-type(odd)": {
-                                    gridColumn: "1 / -1",
-                                },
-                            },
-                        }}
-                    >
+                    <Box data-testid="today-sections" sx={SECTIONS_GRID_SX}>
                         {sections}
                     </Box>
                 ) : null}

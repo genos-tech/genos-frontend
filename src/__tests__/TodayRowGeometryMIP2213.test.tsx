@@ -230,7 +230,7 @@ describe("the Today sections", () => {
         const grid = screen.getByTestId("today-sections");
         // No side column, no second band: every section is a direct child of the one grid.
         const titles = Array.from(grid.children).map(
-            (c) => c.querySelector("h3")?.firstChild?.textContent
+            (c) => c.querySelector('[data-testid="today-section-title"]')?.textContent
         );
         expect(titles).toEqual([
             copy.sections.due,
