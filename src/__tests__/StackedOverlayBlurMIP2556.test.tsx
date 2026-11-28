@@ -56,13 +56,27 @@ describe("useCoveredOverlay", () => {
         expect(view.getByTestId("closed").textContent).toBe("top");
     });
 
+    it("keeps the opening order when an open layer changes its z-index", () => {
+        const pair = (z: number) => (
+            <>
+                <Layer name="first" z={z} />
+                <Layer name="second" z={10020} />
+            </>
+        );
+        const view = render(pair(13200));
+        expect(view.getByTestId("second").textContent).toBe("covered");
+        view.rerender(pair(10020));
+        expect(view.getByTestId("first").textContent).toBe("covered");
+        expect(view.getByTestId("second").textContent).toBe("top");
+    });
+
     it("marks the covered dialog of two stacked ModalFrames", () => {
         render(
             <>
-                <ModalFrame open title="Under" onClose={() => {}}>
+                <ModalFrame title="Under" open onClose={() => {}}>
                     a
                 </ModalFrame>
-                <ModalFrame open title="Over" zIndex={20000} onClose={() => {}}>
+                <ModalFrame title="Over" zIndex={20000} open onClose={() => {}}>
                     b
                 </ModalFrame>
             </>

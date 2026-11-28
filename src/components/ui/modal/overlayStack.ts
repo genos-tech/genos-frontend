@@ -8,7 +8,7 @@
 // Joy modals and the Spotlight overlay are siblings in different parts of the DOM and are ordered by
 // z-index, not by DOM order, which a CSS selector cannot read: hence this small registry.
 
-import { useCallback, useLayoutEffect, useState, useSyncExternalStore } from "react";
+import { useCallback, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 
 type Layer = { id: object; zIndex: number };
 
@@ -40,15 +40,24 @@ const isCovered = (id: object): boolean => {
 export const useCoveredOverlay = (open: boolean, zIndex: number): boolean => {
     const [id] = useState(() => ({}));
 
+    // A new z-index moves nothing in the DOM, so the entry keeps its place (the tie order).
+    const latestZIndex = useRef(zIndex);
+    useLayoutEffect(() => {
+        latestZIndex.current = zIndex;
+        if (!layers.some((layer) => layer.id === id && layer.zIndex !== zIndex)) return;
+        layers = layers.map((layer) => (layer.id === id ? { id, zIndex } : layer));
+        emit();
+    }, [id, zIndex]);
+
     useLayoutEffect(() => {
         if (!open) return;
-        layers = [...layers, { id, zIndex }];
+        layers = [...layers, { id, zIndex: latestZIndex.current }];
         emit();
         return () => {
             layers = layers.filter((layer) => layer.id !== id);
             emit();
         };
-    }, [id, open, zIndex]);
+    }, [id, open]);
 
     return useSyncExternalStore(
         subscribe,
