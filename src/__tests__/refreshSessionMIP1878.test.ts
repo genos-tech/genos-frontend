@@ -126,14 +126,12 @@ describe("refreshSession (MIP-1878, MIP-1882)", () => {
         expect(failing).toHaveBeenCalledTimes(1);
     });
 
-    it("falls back to GET once when an older API refuses the POST (deploy order)", async () => {
-        const fetchMock = vi
-            .fn()
-            .mockResolvedValueOnce(json(400, { refresh: ["This field is required."] }))
-            .mockResolvedValueOnce(json(200, { access: "A3" }));
+    it("only ever POSTs: a refused POST is not retried as a GET", async () => {
+        const fetchMock = vi.fn().mockResolvedValue(json(405));
         vi.stubGlobal("fetch", fetchMock);
-        await expect(refreshSession()).resolves.toEqual({ kind: "ok", access: "A3" });
-        expect(fetchMock.mock.calls.map((c) => c[1].method)).toEqual(["POST", "GET"]);
+        vi.spyOn(console, "error").mockImplementation(() => undefined);
+        await expect(refreshSession()).resolves.toEqual({ kind: "transient" });
+        expect(fetchMock.mock.calls.map((c) => c[1].method)).toEqual(["POST"]);
     });
 
     it("treats a 200 without an access token as transient", async () => {
