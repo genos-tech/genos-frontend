@@ -794,6 +794,8 @@ export interface AgentSessionTurn {
     // Only on a turn with `status: "awaiting_approval"` (MIP-2604): the card the stream sent when the
     // run paused, or null when there is nothing left to decide. Absent against older backends.
     pending_approval?: PendingApprovalPayload | null;
+    /** The paused write is older than the server lets anyone decide (7 days, MIP-2613). */
+    approval_expired?: boolean;
 }
 
 export interface AgentSessionUndo {
@@ -1738,6 +1740,10 @@ async function runNdjsonStream(
             if (resp.status === 409) needsConfirmation = asSkillNeedsConfirmation(data);
             // The AI credit gate (429 `{category: "ai_credits"}`): the turn ends in a sentence of ours
             // with "Buy credits" / "Upgrade plan" next to it, never a dead end (MIP-1969).
+            // /decide/ on a card that waited too long (MIP-2613): the same sentence the history shows.
+            if (resp.status === 410 && data?.code === "approval_expired") {
+                message = getMessages().spotlight.states.approvalExpired;
+            }
             outOfCredits = isOutOfCreditsRefusal(resp.status, data);
             if (isMonthlyLimitRefusal(resp.status, data)) {
                 message = getMessages().services.agent.monthlyLimit;

@@ -372,6 +372,8 @@ const AgentTurnInner = ({
     const showThinking = isCurrent && isStreaming && !answer && !askError && !pendingApproval;
     // A finished turn that produced no text and did not fail.
     const showNoAnswer = !isCurrent && !askError && !answer;
+    // An expired ask says so under whatever it wrote before it paused too (MIP-2613).
+    const showExpired = !isCurrent && !askError && unanswered === "expired";
     // Show copy for any turn with answer text.
     // Show retry for finished turns (always) and for the in-flight turn when
     // it errored.
@@ -626,7 +628,7 @@ const AgentTurnInner = ({
                             </Box>
                         )}
 
-                        {(showThinking || showNoAnswer) && (
+                        {(showThinking || showNoAnswer || showExpired) && (
                             <Typography level="body-md" sx={{ color: g.text.secondary }}>
                                 {showThinking
                                     ? labels.states.thinking
@@ -634,7 +636,9 @@ const AgentTurnInner = ({
                                       ? labels.states.cancelledBeforeAnswer
                                       : unanswered === "notDecided"
                                         ? labels.states.notDecided
-                                        : labels.states.noAnswer}
+                                        : unanswered === "expired"
+                                          ? labels.states.approvalExpired
+                                          : labels.states.noAnswer}
                             </Typography>
                         )}
 

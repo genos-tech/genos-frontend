@@ -50,6 +50,7 @@ export interface AgentTurnLabels {
         // A restored turn with no answer, when the reason is known (MIP-2604).
         cancelledBeforeAnswer: string;
         notDecided: string;
+        approvalExpired: string;
     };
     actions: {
         approve: string;
@@ -109,6 +110,7 @@ export const buildAgentTurnLabels = (t: Messages, host: AgentTurnHost): AgentTur
             noAnswer: sp.states.noAnswer,
             cancelledBeforeAnswer: sp.states.cancelledBeforeAnswer,
             notDecided: sp.states.notDecided,
+            approvalExpired: sp.states.approvalExpired,
         },
         actions: {
             approve: own ? own.actions.approve : sp.actions.approve,
