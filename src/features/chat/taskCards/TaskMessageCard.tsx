@@ -91,8 +91,8 @@ const TaskMessageCardImpl = (props: TaskMessageCardProps) => {
                 <CardHeader
                     customStatusId={card?.customStatusId}
                     displayId={displayId}
-                    projectId={card?.project?.projectId}
                     isMilestone={isMilestone}
+                    projectId={card?.project?.projectId}
                     sentAt={props.sentAt}
                     status={card?.status ?? props.seedStatus}
                     viaApp={props.viaApp}
