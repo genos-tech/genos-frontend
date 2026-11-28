@@ -754,7 +754,8 @@ export const tasks = {
         replacementLabel: "Move to",
         deleteAndMove: "Delete and move",
         boardColumnsTitle: "One board column per status",
-        boardColumnsHint: "Everyone in the project sees this.",
+        boardColumnsHint:
+            "A column for each status instead of each category, for everyone in the project.",
         boardColumnsOn: "The board shows one column per status.",
         boardColumnsOff: "The board shows one column per category.",
     },

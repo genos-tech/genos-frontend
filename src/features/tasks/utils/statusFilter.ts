@@ -188,6 +188,9 @@ export const statusMatcher = (
         else if (filter.label !== "Expired") labels.add(filter.label);
     }
     if (!labels.size && !ids.size) return null;
+    // Picks that cannot be read yet (or whose statuses failed to load) must not hide every
+    // row: nothing is narrowed by status until the list is here.
+    if (ids.size && !rows.length) return null;
     return (effective, customStatusId) => {
         if (labels.has(effective)) return true;
         if (!ids.size) return false;

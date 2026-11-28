@@ -6735,7 +6735,7 @@ export const zh: DeepPartial<Messages> = {
             replacementLabel: "移动到",
             deleteAndMove: "移动并删除",
             boardColumnsTitle: "看板每个状态单独一列",
-            boardColumnsHint: "对项目中的所有人生效。",
+            boardColumnsHint: "每个状态一列（而不是每个类别一列），对项目中的所有人生效。",
             boardColumnsOn: "看板现在按状态分列显示。",
             boardColumnsOff: "看板现在按类别分列显示。",
         },

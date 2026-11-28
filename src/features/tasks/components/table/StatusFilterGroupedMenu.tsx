@@ -9,10 +9,15 @@ import { predefinedStatusFilters, type FilterProps } from "../../types/TaskTable
 import { STATUS_CATEGORIES, statusRowName } from "../../utils/projectStatus";
 import { pickedStatusId, subStatuses } from "../../utils/statusFilter";
 import { StatusLabel } from "../meta/StatusLabel";
+import { CategoryHeading } from "../statuses/statusChoices";
 import { useCategoryName } from "../statuses/useCategoryName";
 import { FilterMenuItem } from "./filterBarParts";
 
 const dividerSx = { my: 0.5, "--Divider-lineColor": g.border.subtle } as const;
+
+const Check = () => (
+    <CheckRoundedIcon aria-hidden="true" sx={{ fontSize: 16, color: g.accent.text }} />
+);
 
 const Count = ({ label, count }: { label: string; count: number | null }) =>
     count === null ? null : (
@@ -62,8 +67,12 @@ export const StatusFilterGroupedMenu = ({
                 key={label}
                 aria-checked={has(label)}
                 role="menuitemcheckbox"
-                selected={has(label)}
-                trailing={<Count count={countOf(label)} label={label} />}
+                trailing={
+                    <>
+                        <Count count={countOf(label)} label={label} />
+                        {has(label) && <Check />}
+                    </>
+                }
                 onClick={() => onFilter(filter)}
             >
                 {label === "All" || label === "Expired" ? (
@@ -100,15 +109,11 @@ export const StatusFilterGroupedMenu = ({
                         key={category}
                         aria-checked={whole ? true : some ? "mixed" : false}
                         data-status-category={category}
-                        mark="none"
                         role="menuitemcheckbox"
-                        selected={whole}
                         trailing={
                             <>
                                 <Count count={count} label={category} />
-                                {whole && (
-                                    <CheckRoundedIcon aria-hidden="true" sx={{ fontSize: 16 }} />
-                                )}
+                                {whole && <Check />}
                                 {some && (
                                     <RemoveRoundedIcon
                                         aria-hidden="true"
@@ -123,7 +128,12 @@ export const StatusFilterGroupedMenu = ({
                             component="span"
                             sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}
                         >
-                            <StatusLabel status={category} />
+                            {/* With statuses under it, a category is their heading. */}
+                            {subs.length ? (
+                                <CategoryHeading category={category} />
+                            ) : (
+                                <StatusLabel status={category} />
+                            )}
                             {renamed && (
                                 <Box
                                     component="span"
@@ -136,18 +146,23 @@ export const StatusFilterGroupedMenu = ({
                     </FilterMenuItem>,
                     ...subs.map((row) => {
                         const on = whole || picked.has(row.statusId);
+                        const name = fmt(t.tasks.filters.statusInCategory, {
+                            name: statusRowName(row, t.tasks),
+                            category: categoryName(category),
+                        });
                         return (
                             <FilterMenuItem
                                 key={`st:${row.statusId}`}
                                 aria-checked={on}
+                                aria-label={
+                                    row.isArchived
+                                        ? `${name}, ${t.tasks.projectStatuses.off}`
+                                        : name
+                                }
                                 data-status-id={row.statusId}
                                 role="menuitemcheckbox"
-                                selected={on}
                                 sx={{ paddingInlineStart: 3.5 }}
-                                aria-label={fmt(t.tasks.filters.statusInCategory, {
-                                    name: statusRowName(row, t.tasks),
-                                    category: categoryName(category),
-                                })}
+                                trailing={on ? <Check /> : undefined}
                                 onClick={() => onStatus(row)}
                             >
                                 <StatusLabel row={row} status={row.category} />

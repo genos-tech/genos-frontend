@@ -4727,7 +4727,8 @@ export const es: DeepPartial<Messages> = {
             replacementLabel: "Mover a",
             deleteAndMove: "Mover y eliminar",
             boardColumnsTitle: "Una columna del tablero por estado",
-            boardColumnsHint: "Lo ven todos los miembros del proyecto.",
+            boardColumnsHint:
+                "Una columna por estado en lugar de por categoría, para todo el proyecto.",
             boardColumnsOn: "El tablero muestra una columna por estado.",
             boardColumnsOff: "El tablero muestra una columna por categoría.",
         },

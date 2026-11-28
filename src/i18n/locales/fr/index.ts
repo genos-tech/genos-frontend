@@ -7123,7 +7123,8 @@ export const fr: DeepPartial<Messages> = {
             replacementLabel: "Déplacer vers",
             deleteAndMove: "Déplacer et supprimer",
             boardColumnsTitle: "Une colonne de tableau par statut",
-            boardColumnsHint: "Visible par tous les membres du projet.",
+            boardColumnsHint:
+                "Une colonne par statut au lieu d'une par catégorie, pour tout le projet.",
             boardColumnsOn: "Le tableau affiche une colonne par statut.",
             boardColumnsOff: "Le tableau affiche une colonne par catégorie.",
         },

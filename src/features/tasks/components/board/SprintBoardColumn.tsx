@@ -142,6 +142,8 @@ const StatusColumnHeader = ({
                     aria-label={label}
                     aria-level={3}
                     role="heading"
+                    // Focusable only when off, so the keyboard reaches the explanation.
+                    tabIndex={row.isArchived ? 0 : undefined}
                     sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}
                 >
                     <span
@@ -170,6 +172,16 @@ const StatusColumnHeader = ({
                     >
                         {title}
                     </Box>
+                    {/* A status the team named says which category it belongs to. */}
+                    {title !== categoryName(row.category) && (
+                        <Box
+                            component="span"
+                            data-testid="status-column-category"
+                            sx={{ ...type("caption"), color: g.text.tertiary, flexShrink: 0 }}
+                        >
+                            {categoryName(row.category)}
+                        </Box>
+                    )}
                     {row.isArchived && (
                         <Box component="span" sx={{ ...type("caption"), color: g.text.tertiary }}>
                             {t.tasks.projectStatuses.off}

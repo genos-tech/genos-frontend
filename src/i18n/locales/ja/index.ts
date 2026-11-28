@@ -6998,7 +6998,8 @@ export const ja: DeepPartial<Messages> = {
             replacementLabel: "移動先",
             deleteAndMove: "移動して削除",
             boardColumnsTitle: "ステータスごとにボードの列を分ける",
-            boardColumnsHint: "プロジェクトの全員に適用されます。",
+            boardColumnsHint:
+                "列を分類ごとではなくステータスごとにします。プロジェクトの全員に適用されます。",
             boardColumnsOn: "ボードはステータスごとの列で表示されます。",
             boardColumnsOff: "ボードはカテゴリーごとの列で表示されます。",
         },

@@ -4649,7 +4649,7 @@ export const ar: DeepPartial<Messages> = {
             replacementLabel: "نقل إلى",
             deleteAndMove: "نقل وحذف",
             boardColumnsTitle: "عمود في اللوحة لكل حالة",
-            boardColumnsHint: "يسري على جميع أعضاء المشروع.",
+            boardColumnsHint: "عمود لكل حالة بدلاً من عمود لكل فئة، لجميع أعضاء المشروع.",
             boardColumnsOn: "تعرض اللوحة عمودًا لكل حالة.",
             boardColumnsOff: "تعرض اللوحة عمودًا لكل فئة.",
         },

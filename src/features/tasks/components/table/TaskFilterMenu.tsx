@@ -1784,12 +1784,18 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     // Once the statuses are read, a pick of one that was deleted is dropped (never before:
     // a reload would lose the selection), and the rows are filtered by the names just read.
     // Declared after the effect that applies on a row change, so on one commit this wins.
+    const filteredByRef = React.useRef<unknown>(null);
     React.useEffect(() => {
         if (hideStatusFilter || !projectStatuses.loaded || projectStatuses.failed) return;
         if (selectionKey !== filterStorageKey) return;
         const kept = pruneStatusPicks(selectedStatus, statusRows, defaultStatusFilters);
+        // A click has already filtered; only a newly read list filters again.
+        const newlyRead = filteredByRef.current !== projectStatuses;
+        filteredByRef.current = projectStatuses;
         if (kept !== selectedStatus) chooseStatuses(kept);
-        else if (selectedStatus.some((f) => pickedStatusId(f) != null)) applyFilters(selection);
+        else if (newlyRead && selectedStatus.some((f) => pickedStatusId(f) != null)) {
+            applyFilters(selection);
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [projectStatuses, selectedStatus, selectionKey, filterStorageKey]);
 

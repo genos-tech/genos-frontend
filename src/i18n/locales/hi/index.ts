@@ -3987,7 +3987,8 @@ export const hi: DeepPartial<Messages> = {
             replacementLabel: "यहाँ ले जाएँ",
             deleteAndMove: "ले जाएँ और हटाएँ",
             boardColumnsTitle: "हर स्थिति के लिए बोर्ड का अलग कॉलम",
-            boardColumnsHint: "प्रोजेक्ट के सभी लोगों पर लागू होता है।",
+            boardColumnsHint:
+                "हर श्रेणी के बजाय हर स्थिति का एक कॉलम, प्रोजेक्ट के सभी लोगों के लिए।",
             boardColumnsOn: "बोर्ड हर स्थिति के लिए एक कॉलम दिखाता है।",
             boardColumnsOff: "बोर्ड हर श्रेणी के लिए एक कॉलम दिखाता है।",
         },
