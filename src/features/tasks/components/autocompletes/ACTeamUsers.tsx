@@ -13,10 +13,12 @@ import { useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TaskProps } from "../../../../types/tasks";
 import { personFilterOptions, personLabel } from "../../../../utils/personLabel";
+import { PickerField, pickerInputProps } from "./pickerField";
 
 type ACTeamUsersProps = {
     myself: UserProps;
-    setMyself: (value: UserProps) => void;
+    // Only passed on to the avatars, which no longer read it.
+    setMyself?: (value: UserProps) => void;
     // Nullable so the assignee field can be empty / cleared, and so the
     // reporter field can show a reporter whose account is gone.
     initialUser: UserProps | null;
@@ -27,10 +29,13 @@ type ACTeamUsersProps = {
     setIsOpenTeamMembersList: (value: boolean) => void;
     isAssignee: boolean;
     setTaskUpdated?: (value: boolean) => void;
-    useTEM: TeamManagementState;
-    socket: Socket | null;
-    useCM: ChatManagementState;
-    useUISM: UIStateManagementState;
+    useTEM: Pick<TeamManagementState, "teamMembers" | "teamMemberProfiles">;
+    socket?: Socket | null;
+    useCM?: ChatManagementState;
+    useUISM?: UIStateManagementState;
+    /** What the empty field says, when not "Unassigned". */
+    placeholder?: string;
+    field?: PickerField;
 };
 export const ACTeamUsers = (props: ACTeamUsersProps) => {
     const {
@@ -48,6 +53,8 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         socket,
         useCM,
         useUISM,
+        placeholder,
+        field,
     } = props;
 
     const { t } = useTranslation();
@@ -84,6 +91,8 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
     return (
         <Autocomplete
             key={taskContent.id}
+            error={field?.invalid}
+            noOptionsText={field?.noOptions}
             filterOptions={personFilterOptions}
             getOptionLabel={(option) => personLabel(option, myself.userId, youSuffix)}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
@@ -94,15 +103,16 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
             // were the assignee.
             // A reporter field with nobody in it is a reporter whose account is gone.
             size="sm"
-            slotProps={{ input: { dir: "auto" } }}
+            slotProps={{ input: { dir: "auto", ...pickerInputProps(field) } }}
             sx={{ width: "100%" }}
             value={resolvedValue}
             placeholder={
-                isAssignee
+                placeholder ??
+                (isAssignee
                     ? t.tasks.messageTemplate.unassigned
                     : initialUser
                       ? undefined
-                      : t.tasks.messageTemplate.deletedUser
+                      : t.tasks.messageTemplate.deletedUser)
             }
             renderOption={(props, option) => {
                 return (

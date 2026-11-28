@@ -246,7 +246,9 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                     automation={{
                         projects: usePM.teamProjects,
                         members: useTEM.teamMembers,
-                        myUserId: myself.userId,
+                        myself,
+                        profiles: useTEM.teamMemberProfiles,
+                        chats: useCM.allChats,
                     }}
                     open
                     onClose={() => setOpenStatuses(false)}
