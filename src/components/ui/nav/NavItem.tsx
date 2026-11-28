@@ -478,6 +478,9 @@ export const NavItem = ({
                     id={contentId}
                     sx={{
                         ...contentLayoutSx,
+                        // The row button's own border: without it the content sits 1px
+                        // further out and the card is 2px shorter than its neighbours.
+                        border: "1px solid transparent",
                         position: "relative",
                         zIndex: 1,
                         display: "flex",
