@@ -418,7 +418,7 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // The Genos skill the question runs (MIP-2042): `{ id }` is the picker's exact choice, `{ name }` a
     // typed `/name` the server resolves (mine > team > installed). The question is still what the
     // person typed, `/name` included; the skill's text goes to the agent from the server.
-    skill?: { id: string; version_no?: number } | { name: string };
+    skill?: { id: string; version_no?: number } | { name: string; optional?: boolean };
     // A passage of text the member selected (MIP-1058): `selected_text` on the wire, with
     // `selectedFrom` (`selected_from`) naming where it came from when that has an id. Both are
     // omitted unless the text has something in it; the text is cut at the server's 4,000 characters

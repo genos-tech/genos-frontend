@@ -488,16 +488,17 @@ export function useAgentMentionDraft({
             }
             // A `/name` that is one of the person's skills but was not resolved above (the name is
             // shared by teammates) goes to the server as a name. A `/word` that is NOT one of their
-            // skills ("/tmp is full, why?") is an ordinary question, as it was before skills.
+            // skills goes as an optional name (MIP-2589): it may be a skill they have not installed,
+            // and "/tmp is full, why?" is still an ordinary question.
             if (skills && !out.some((r) => r.kind === "skill")) {
                 const typed = TYPED_SKILL.exec(finalText)?.[1];
-                if (
-                    typed &&
-                    typed.length >= SKILL_NAME_MIN &&
-                    typed.length <= SKILL_NAME_MAX &&
-                    skills.some((c) => c.ref.label === typed)
-                ) {
-                    out.push({ kind: "skill", skillId: "", label: typed });
+                if (typed && typed.length >= SKILL_NAME_MIN && typed.length <= SKILL_NAME_MAX) {
+                    out.push({
+                        kind: "skill",
+                        skillId: "",
+                        label: typed,
+                        ...(skills.some((c) => c.ref.label === typed) ? {} : { optional: true }),
+                    });
                 }
             }
             return out;
