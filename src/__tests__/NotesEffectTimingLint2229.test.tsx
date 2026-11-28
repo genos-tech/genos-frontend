@@ -78,7 +78,7 @@ describe("the note search boxes", () => {
         },
     ];
 
-    it.each(boxes)("$name: loads once per opening, with what is current then", async (box) => {
+    it.each(boxes)("$name: loads once per opening and per target", async (box) => {
         const view = (open: boolean, user: string, n: number) => (
             <CssVarsProvider>
                 <box.Box
@@ -93,16 +93,21 @@ describe("the note search boxes", () => {
         await settle();
         expect(box.load.mock.calls).toEqual([box.args("u1", 1, "token-1")]);
 
-        // Still loading: a new member, note and token do not ask a second time.
+        // Still loading: a new member and token do not ask a second time.
         auth.accessToken = "token-2";
-        rerender(view(true, "u2", 2));
+        rerender(view(true, "u2", 1));
         await settle();
         expect(box.load).toHaveBeenCalledTimes(1);
+
+        // Another task or note does (MIP-2478), with what is current then.
+        rerender(view(true, "u2", 2));
+        await settle();
+        expect(box.load.mock.calls[1]).toEqual(box.args("u2", 2, "token-2"));
 
         rerender(view(false, "u2", 2));
         rerender(view(true, "u2", 2));
         await settle();
-        expect(box.load.mock.calls[1]).toEqual(box.args("u2", 2, "token-2"));
+        expect(box.load).toHaveBeenCalledTimes(3);
     });
 });
 

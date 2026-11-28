@@ -6,7 +6,6 @@ import { InboxHeader } from "./components/InboxHeader";
 import { InboxSection } from "./components/InboxSection";
 import { InboxTabHeader } from "./components/InboxTabHeader";
 import { useInboxItems } from "./hooks/useInboxItems";
-import { useInboxScroll } from "./hooks/useInboxScroll";
 import { InboxHomeProps } from "./types/inboxTypes";
 
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
@@ -14,21 +13,15 @@ import { useTranslation } from "../../i18n";
 import { InboxItemProps } from "../../types/common";
 
 // Wrapper component for Activities section with item routing
-const ActivitiesSection = (
-    props: InboxHomeProps & {
-        items: InboxItemProps[];
-        virtuosoRef: ReturnType<typeof useInboxScroll>;
-    }
-) => {
+const ActivitiesSection = (props: InboxHomeProps & { items: InboxItemProps[] }) => {
     const { itemId } = useParams<{ itemId?: string }>();
-    const { items, virtuosoRef, useCM, myself, setMyself, socket, useTEM, useUISM } = props;
+    const { items, useCM, myself, setMyself, socket, useTEM, useUISM } = props;
     const { t } = useTranslation();
 
     // If there's an itemId in the URL, we could scroll to it or highlight it
     // For now, we just render the section normally
     return (
         <InboxSection
-            ref={virtuosoRef}
             emptySubtitle={t.inbox.emptyStates.activitiesSubtitle}
             emptyTitle={t.inbox.emptyStates.activitiesTitle}
             isRequest={false}
@@ -49,19 +42,13 @@ const ActivitiesSection = (
 };
 
 // Wrapper component for Requests section with item routing
-const RequestsSection = (
-    props: InboxHomeProps & {
-        items: InboxItemProps[];
-        virtuosoRef: ReturnType<typeof useInboxScroll>;
-    }
-) => {
+const RequestsSection = (props: InboxHomeProps & { items: InboxItemProps[] }) => {
     const { itemId } = useParams<{ itemId?: string }>();
-    const { items, virtuosoRef, useCM, myself, setMyself, socket, useTEM, useUISM } = props;
+    const { items, useCM, myself, setMyself, socket, useTEM, useUISM } = props;
     const { t } = useTranslation();
 
     return (
         <InboxSection
-            ref={virtuosoRef}
             emptySubtitle={t.inbox.emptyStates.requestsSubtitle}
             emptyTitle={t.inbox.emptyStates.requestsTitle}
             isRequest={true}
@@ -87,8 +74,6 @@ export const InboxHome = (props: InboxHomeProps) => {
     const isDark = mode === "dark";
 
     const { activityInboxItems, requestInboxItems } = useInboxItems(useIM.inboxItems);
-    const activityVirtuosoRef = useInboxScroll(activityInboxItems);
-    const requestVirtuosoRef = useInboxScroll(requestInboxItems);
 
     const ls = isDark ? LayoutStyles.dark : LayoutStyles.light;
 
@@ -141,11 +126,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                         },
                                     }}
                                 >
-                                    <RequestsSection
-                                        {...props}
-                                        items={requestInboxItems}
-                                        virtuosoRef={requestVirtuosoRef}
-                                    />
+                                    <RequestsSection {...props} items={requestInboxItems} />
                                 </Box>
                             }
                         />
@@ -164,11 +145,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                         },
                                     }}
                                 >
-                                    <RequestsSection
-                                        {...props}
-                                        items={requestInboxItems}
-                                        virtuosoRef={requestVirtuosoRef}
-                                    />
+                                    <RequestsSection {...props} items={requestInboxItems} />
                                 </Box>
                             }
                         />
@@ -189,11 +166,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                         },
                                     }}
                                 >
-                                    <ActivitiesSection
-                                        {...props}
-                                        items={activityInboxItems}
-                                        virtuosoRef={activityVirtuosoRef}
-                                    />
+                                    <ActivitiesSection {...props} items={activityInboxItems} />
                                 </Box>
                             }
                         />
@@ -212,11 +185,7 @@ export const InboxHome = (props: InboxHomeProps) => {
                                         },
                                     }}
                                 >
-                                    <ActivitiesSection
-                                        {...props}
-                                        items={activityInboxItems}
-                                        virtuosoRef={activityVirtuosoRef}
-                                    />
+                                    <ActivitiesSection {...props} items={activityInboxItems} />
                                 </Box>
                             }
                         />

@@ -2,6 +2,7 @@ import { Edge, MarkerType, Node } from "@xyflow/react";
 
 import { TaskTableProps } from "../../../../types/tasks";
 import { parseCalendarDate } from "../../../../utils/calendarDate";
+import { isFinishedStatus } from "../../meta/taskStatuses";
 import { Sprint } from "../../sprint-milestone/types";
 import { isOpenBlockerStatus } from "../../utils/blockerStatus";
 import {
@@ -101,8 +102,7 @@ export const computeOverview = (
     for (const t of liveTasks) {
         if (t.id == null) continue;
         const taskId = Number(t.id);
-        const isClosed =
-            (t.status ?? "").toLowerCase() === "closed" || isUnderClosedAncestor(t, verdicts);
+        const isClosed = isFinishedStatus(t.status) || isUnderClosedAncestor(t, verdicts);
         if (taskId !== rootTaskId) {
             total += 1;
             if (isClosed) closed += 1;
@@ -425,10 +425,7 @@ export const computeDescendantCounts = (
             total += 1;
             // A child under a Closed task is Closed too, whatever its own row says
             // (MIP-1382), so the badge agrees with the header overview.
-            if (
-                (child.status ?? "").toLowerCase() === "closed" ||
-                isUnderClosedAncestor(child, verdicts)
-            )
+            if (isFinishedStatus(child.status) || isUnderClosedAncestor(child, verdicts))
                 closed += 1;
             const sub = walk(Number(child.id));
             total += sub.total;

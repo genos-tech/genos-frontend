@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/authState";
+import { forgetTaskCards } from "../../features/chat/taskCards/taskCardStore";
 import { resetProjectScopes } from "../../features/tasks/state/projectStatusScopeStore";
 import { analytics } from "../../services/analytics";
 import { clearPrivateProfile } from "../../services/privateProfileStore";
@@ -80,6 +81,8 @@ export const useSignOut = () => {
             await clearSignOutLeftovers();
             // The statuses the next person's rows hold are not this person's (MIP-2000).
             resetProjectScopes();
+            // Nor are the task cards they could read (MIP-2484).
+            forgetTaskCards();
 
             setAccessToken(null);
             // The sign-in form, as before: `/` is the home page for signed-out visitors now.

@@ -32,6 +32,7 @@ import { TaskCommentProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { isRealTaskId } from "../../../tasks/utils/taskPreviewPaneVisibility";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
+import { TaskMessageCard } from "../../taskCards/TaskMessageCard";
 import { askMessageProps } from "../../utils/messageSelection";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleMoreMenu } from "./BubbleMoreMenu";
@@ -547,7 +548,12 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     // in the bubble look, so it also showed over the padding and the name).
     // In the bubble look a click on the body of a task card also opens the
     // task, before the balloon's own click handling, as before.
-    const body = message.attachment ? (
+    // A project chat's message is its task's card (MIP-2484), drawn from the live task.
+    // The stored body, and the header it had, show only when that task cannot be read.
+    const cardTaskId = chat.chatType === 3 && !message.attachment ? message.taskId : null;
+    const isTaskCard = isRealTaskId(cardTaskId);
+
+    const storedBody = message.attachment ? (
         <BubbleAttachmentSheet
             fileName={message.attachment.fileName}
             fileSize={message.attachment.size}
@@ -606,17 +612,57 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         </AppTooltip>
     ) : null;
 
+    const body = isTaskCard ? (
+        <AppTooltip
+            enterDelay={1000}
+            placement="right"
+            suppressed={isMoreMenuOpen}
+            title={
+                <>
+                    {t.chat.bubble.clickToOpenTask}
+                    <br />
+                    {fmt(t.chat.bubble.clickToOpenThread, { modKey: threadClickModifier() })}
+                </>
+            }
+        >
+            <Box {...askMessageProps(message.messageIdWithChatId)}>
+                <TaskMessageCard
+                    framed={isCompact}
+                    messageUpdatedAt={message.tsUpdated}
+                    seedDisplayId={message.displayId}
+                    seedStatus={message.taskStatus}
+                    seedTitle={message.contentText}
+                    sentAt={dtSent}
+                    taskId={cardTaskId as number}
+                    viaApp={message.viaApp}
+                    viewerId={myself.userId}
+                    fallback={
+                        <>
+                            {userName(false)}
+                            {storedBody}
+                        </>
+                    }
+                    onOpen={(e) => handleMessageClick(e as unknown as React.MouseEvent)}
+                />
+            </Box>
+        </AppTooltip>
+    ) : (
+        storedBody
+    );
+
     // Compact: a grouped follow-up has no author line, only an empty avatar
     // column. Bubble: it shows the author line only while hovered.
-    const header = isCompact
-        ? isSimpleBubble
-            ? undefined
-            : userName(false)
-        : isSimpleBubble
-          ? showUnderBarOption
-              ? userName(true)
-              : undefined
-          : userName(false);
+    const header = isTaskCard
+        ? undefined
+        : isCompact
+          ? isSimpleBubble
+              ? undefined
+              : userName(false)
+          : isSimpleBubble
+            ? showUnderBarOption
+                ? userName(true)
+                : undefined
+            : userName(false);
     const avatar = hideAvatarSlot ? undefined : isSimpleBubble ? (
         isCompact ? (
             "reserve"
@@ -636,12 +682,13 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             bodyOffset={isCompact ? 0.25 : 0.5}
             emphasis={isFocused}
             footerOffset={0}
-            grouped={isSimpleBubble}
+            grouped={isSimpleBubble && !isTaskCard}
             header={header}
             layout={isCompact ? "compact" : "bubble"}
             narrowBody="beside"
             rootRef={bubbleRef}
             side={isSent ? "sent" : "received"}
+            tail={!isTaskCard}
             toolbarRef={toolbarRef}
             footer={
                 <BubbleUnderBar
@@ -676,12 +723,16 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                     />
                 )
             }
-            wrapperSx={balloonWrapperSx(
-                chat.chatType,
-                isSimpleBubble,
-                numRepliesWithoutFirstMessage,
-                uniqueReactionEmojiCount
-            )}
+            wrapperSx={
+                isTaskCard
+                    ? CARD_WRAPPER_SX
+                    : balloonWrapperSx(
+                          chat.chatType,
+                          isSimpleBubble,
+                          numRepliesWithoutFirstMessage,
+                          uniqueReactionEmojiCount
+                      )
+            }
             interactive
             suppressTouchCallout
             onClick={handleMessageClick}
@@ -697,6 +748,15 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         </Bubble>
     );
 };
+
+// A task card takes the pane's width up to a readable measure, on a phone all of it.
+const CARD_WRAPPER_SX = {
+    width: "100%",
+    maxWidth: 560,
+    minWidth: 0,
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+} as const;
 
 // The balloon's width limits (task cards are wide, a bare message is narrow,
 // reactions widen it). A module function so a hot row does not rebuild the

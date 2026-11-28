@@ -55,7 +55,7 @@ Claude、ChatGPT などの AI アプリを接続するのに、キーは要り�
 Webhook は、スクリプトがタイマーで確認する代わりに、何かが起きたときに Genos がサーバーへ知らせる仕組みです。「設定 → Developer → Webhook」で、チームのオーナーかエディターが追加します。
 
 1. https のアドレスを入力します。公開されたアドレスでなければなりません。
-2. 受け取るイベントにチェックを入れます: task.created、task.updated、task.completed、task.comment_created、message.created。
+2. 受け取るイベントにチェックを入れます: task.created、task.updated、task.completed、task.rejected、task.comment_created、message.created。
 3. 任意: プロジェクトを選びます。何も選ばない場合は、すべてのプロジェクトが対象です。
 4. message.created では、メッセージの本文があなたのアドレスに送られるため、監視するチャンネルを必ず選ぶ必要があります。何も選ばない場合、チャットのイベントは送られません。ダイレクトメッセージは、Webhook に送られることはありません。
 5. **Webhook を追加する**を押します。Genos は、キーのときと同じようにパスワードの再入力を求め、Webhook が追加されたことをメールで知らせます。

@@ -21,6 +21,10 @@ import type { Socket } from "socket.io-client";
 import { handleV3ActivitiesRead } from "../../features/chat/services/handleV3ActivitiesRead";
 import { handleV3Activity } from "../../features/chat/services/handleV3Activity";
 import { handleV3TodoChanged } from "../../features/chat/services/handleV3Todo";
+import {
+    installTaskCardSignals,
+    noteCardMessageUpdated,
+} from "../../features/chat/taskCards/installTaskCardSignals";
 import { requestInboxResync } from "../../features/inbox/inboxResyncEvent";
 import type {
     Channel,
@@ -58,6 +62,8 @@ export function registerSocketRouter(socket: Socket): () => void {
 
     on<Message>("message.created", (m) => {
         channelService.handleMessageCreated(m);
+        // A new task in a milestone moves that milestone's progress.
+        noteCardMessageUpdated(m);
         // Live notification fan-out. Fires ONLY for events arriving on
         // the live socket — not for REST hydration or resync batches,
         // which use channelService.handleMessageCreated directly. This
@@ -67,7 +73,11 @@ export function registerSocketRouter(socket: Socket): () => void {
         // through the existing notification router.
         window.dispatchEvent(new CustomEvent("v3:message:created", { detail: { message: m } }));
     });
-    on<Message>("message.updated", (m) => channelService.handleMessageUpdated(m));
+    on<Message>("message.updated", (m) => {
+        channelService.handleMessageUpdated(m);
+        noteCardMessageUpdated(m);
+    });
+    offs.push(installTaskCardSignals());
     // Narrow reply-count delta from a thread reply create/delete. Distinct
     // from `message.updated` (the genuine body edit) on purpose: this
     // merges only `replyCount` so a parent's stale body can't ride along

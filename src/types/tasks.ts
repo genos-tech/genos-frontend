@@ -265,6 +265,10 @@ export type TaskProps = {
     // and emits it on every task response.
     displayId?: string | null;
     project: ProjectProps | null;
+    // The project the server held the task in when this copy was read or last saved (MIP-2524),
+    // set by `loadSpecificTask` and the save. The project picker changes `project` and keeps this,
+    // so a save can tell "the person moved it" from "this copy is older than a move".
+    storedProjectId?: number;
     title: string;
     body: PartialBlock[];
     // `null` means "Unassigned" — backend `TaskMaster.assignee` is a

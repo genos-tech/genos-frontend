@@ -244,6 +244,7 @@ export const repairUnsavedTaskBody = async ({
         task_id: taskId,
         team: myself.teamId,
         project: projectId,
+        base_project: projectId,
         content: record.body,
     });
     repairing.set(

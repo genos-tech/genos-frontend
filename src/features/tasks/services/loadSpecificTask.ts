@@ -13,8 +13,15 @@ import { inFlightTaskKey, inFlightTaskLoads } from "./taskLoadInFlight";
 // and the next save would re-POST it (creating a duplicate file on
 // the server every drop until the cache entry is naturally evicted).
 const scrubInFlightAttachments = (task: TaskProps): TaskProps => ({
-    ...task,
+    ...withStoredProject(task),
     attachments: (task.attachments ?? []).filter((a) => a.attachment_id >= 0),
+});
+
+// The server's project of a copy that does not say it yet (a fresh answer, or a cache row from
+// before the field): its `project` is the stored one then (MIP-2524).
+const withStoredProject = (task: TaskProps): TaskProps => ({
+    ...task,
+    storedProjectId: task.storedProjectId ?? task.project?.projectId,
 });
 
 // Concurrent callers for the same task share ONE load (the IndexedDB read, the
@@ -76,10 +83,10 @@ const fetchSpecificTask = async (
             const query: string = `team_id=${myself.teamId}&project_id=${projectId}&task_id=${taskId}&attachments=meta`;
             const res = await api.get(`/task/getTask/?${query}`);
             const data = res.data;
-            if (Array.isArray(data) && data[0]) {
-                await cacheFullTask(data[0] as TaskProps);
-            }
-            return Array.isArray(data) ? (data as TaskProps[]) : [];
+            if (!Array.isArray(data)) return [];
+            const tasks = (data as TaskProps[]).map(withStoredProject);
+            if (tasks[0]) await cacheFullTask(tasks[0]);
+            return tasks;
         } else {
             console.error("Unauthorized. Auth toke is not found.");
         }

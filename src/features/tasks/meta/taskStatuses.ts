@@ -9,21 +9,36 @@
  * Pure data, no imports: safe to use from services, stores and tests.
  * `taskStatusOneSource.test.ts` fails when a new hard-coded copy appears elsewhere.
  *
- * Pure refactor: every value below is exactly what the old copies held.
+ * The server holds the same list (`task_status_values.py`).
  */
 
 /** Every status the server can hold, in the table's order. */
-export const STATUS_NAMES = ["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"] as const;
+export const STATUS_NAMES = [
+    "Open",
+    "WIP",
+    "Blocked",
+    "Pending",
+    "Closed",
+    "Rejected",
+    "Deleted",
+] as const;
 export type StatusName = (typeof STATUS_NAMES)[number];
 
 /** Not finished and not gone: the "Ongoing" group. */
 export const ACTIVE_STATUS_NAMES = ["Open", "WIP", "Blocked", "Pending"] as const;
 
 /** The statuses a normal workflow uses: no tombstone. Milestones, CSV import, reports. */
-export const WORKFLOW_STATUS_NAMES = ["Open", "WIP", "Blocked", "Pending", "Closed"] as const;
+export const WORKFLOW_STATUS_NAMES = [
+    "Open",
+    "WIP",
+    "Blocked",
+    "Pending",
+    "Closed",
+    "Rejected",
+] as const;
 
 /** Left out of a sub-task list's first request (fetched on demand). */
-export const HIDDEN_STATUS_NAMES = ["Closed", "Deleted"] as const;
+export const HIDDEN_STATUS_NAMES = ["Closed", "Rejected", "Deleted"] as const;
 
 export const STATUS_OPEN = "Open";
 export const STATUS_WIP = "WIP";
@@ -31,7 +46,22 @@ export const STATUS_BLOCKED = "Blocked";
 export const STATUS_PENDING = "Pending";
 /** The status that means done. */
 export const STATUS_CLOSED = "Closed";
+/** Finished but not done (MIP-2494): left out of progress, never counted as completed. */
+export const STATUS_REJECTED = "Rejected";
 export const STATUS_DELETED = "Deleted";
+
+/** Not open work any more: done, or not going to be (never overdue, never blocking). Case does
+ *  not matter. Deleted is gone and is asked about apart. */
+export const isFinishedStatus = (status: string | null | undefined): boolean => {
+    const value = (status ?? "").toLowerCase();
+    return value === "closed" || value === "rejected";
+};
+
+/** Left out of progress altogether: neither in the total nor done. */
+export const isUncountedStatus = (status: string | null | undefined): boolean => {
+    const value = (status ?? "").toLowerCase();
+    return value === "rejected" || value === "deleted";
+};
 
 /** Table sort rank: the order of `STATUS_NAMES`, 1-based (what `sortTask` has always used). */
 export const STATUS_RANK: Record<string, number> = Object.fromEntries(

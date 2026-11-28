@@ -29,6 +29,8 @@ export type ColumnConfig = {
     color: string;
     bgColor: string;
     icon?: React.ReactNode;
+    /** Drawn only while it has cards (Rejected, MIP-2494), so a board without any is unchanged. */
+    onlyWithCards?: boolean;
 };
 
 // Narrowest a column may get before the BOARD scrolls horizontally

@@ -2689,6 +2689,8 @@ export const es: DeepPartial<Messages> = {
             line: "La regla «{rule}» movió {task} a {project}.",
             aTask: "una tarea",
             anotherProject: "otro proyecto",
+            milestoneLine: "La regla «{rule}» movió el hito {task} a {project}.",
+            aMilestone: "un hito",
         },
         retentionBanner:
             "Los mensajes de hace más de {days} días están ocultos en tu plan. Mejora tu plan para ver el historial completo.",
@@ -3061,6 +3063,22 @@ export const es: DeepPartial<Messages> = {
             ariaLabel: "Secciones del hilo",
             comments: "Comentarios",
             activities: "Actividad",
+        },
+        taskCard: {
+            openTaskLabel: "Abrir la tarea {id}: {title}",
+            openMilestoneLabel: "Abrir el hito {id}: {title}",
+            milestone: "Hito",
+            createdBy: "Creada por {name}",
+            updated: "Actualizada {time}",
+            blockedBy: "Bloqueada por {task}",
+            subtaskOf: "Subtarea de {task}",
+            inMilestone: "En el hito {title}",
+            sprint: "Sprint {name}",
+            progress: "{closed} de {total} completadas",
+            progressAria: "{closed} de {total} tareas completadas: {breakdown}",
+            breakdownItem: "{status}: {count}",
+            noTasksYet: "Aún no hay tareas",
+            loading: "Cargando los detalles de la tarea",
         },
         bubble: {
             clickToOpenTask: "Haz clic para abrir la tarea",
@@ -3470,6 +3488,7 @@ export const es: DeepPartial<Messages> = {
             statusBlocked: "Bloqueada",
             statusPending: "Pendiente",
             statusClosed: "Cerrada",
+            statusRejected: "Rechazada",
             priorityMinimal: "Mínima",
             priorityLow: "Baja",
             priorityNormal: "Normal",
@@ -3876,6 +3895,7 @@ export const es: DeepPartial<Messages> = {
             columnWip: "En progreso",
             columnBlocked: "Bloqueadas",
             columnClosed: "Cerradas",
+            columnRejected: "Rechazadas",
             columnPending: "Pendientes",
             dropToColumn: "↳ Soltar en {title}",
             dropTasksHere: "Suelta las tareas aquí",
@@ -3947,6 +3967,7 @@ export const es: DeepPartial<Messages> = {
             blocked: "Bloqueadas",
             pending: "Pendientes",
             closed: "Cerradas",
+            rejected: "Rechazada",
             expired: "Vencidas",
             deleted: "Eliminadas",
             ongoing: "En marcha",
@@ -5012,6 +5033,14 @@ export const es: DeepPartial<Messages> = {
                     error: "algo salió mal",
                     bad_status: "el estado que establece la regla ya no está disponible",
                     assignee_not_allowed: "la persona que asigna la regla no puede asignarse allí",
+                    too_many_tasks:
+                        "el hito tiene más de 200 tareas, demasiadas para que una regla lo mueva",
+                },
+                // The two reasons that name what the row is about, for a milestone's history.
+                milestoneReasons: {
+                    destination: "el hito no puede moverse al proyecto de destino de la regla",
+                    rate_limited:
+                        "las reglas han actuado demasiadas veces sobre este hito en poco tiempo",
                 },
             },
             via: {

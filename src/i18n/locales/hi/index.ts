@@ -2669,6 +2669,8 @@ export const hi: DeepPartial<Messages> = {
             line: "नियम “{rule}” ने {task} को {project} में ले जाया।",
             aTask: "एक टास्क",
             anotherProject: "दूसरा प्रोजेक्ट",
+            milestoneLine: "नियम “{rule}” ने माइलस्टोन {task} को {project} में ले जाया।",
+            aMilestone: "एक माइलस्टोन",
         },
         retentionBanner:
             "आपकी योजना में {days} दिनों से पुराने संदेश छिपे हुए हैं। पूरा इतिहास देखने के लिए अपग्रेड करें।",
@@ -3057,6 +3059,22 @@ export const hi: DeepPartial<Messages> = {
             ariaLabel: "थ्रेड के खंड",
             comments: "टिप्पणी",
             activities: "गतिविधियाँ",
+        },
+        taskCard: {
+            openTaskLabel: "टास्क {id} खोलें: {title}",
+            openMilestoneLabel: "माइलस्टोन {id} खोलें: {title}",
+            milestone: "माइलस्टोन",
+            createdBy: "{name} ने बनाया",
+            updated: "अपडेट: {time}",
+            blockedBy: "{task} के कारण ब्लॉक",
+            subtaskOf: "{task} का सब-टास्क",
+            inMilestone: "माइलस्टोन {title} में",
+            sprint: "स्प्रिंट {name}",
+            progress: "{total} में से {closed} पूरे",
+            progressAria: "{total} में से {closed} टास्क पूरे: {breakdown}",
+            breakdownItem: "{status}: {count}",
+            noTasksYet: "अभी कोई टास्क नहीं",
+            loading: "टास्क का विवरण लोड हो रहा है",
         },
         bubble: {
             clickToOpenTask: "टास्क खोलने के लिए क्लिक करें",
@@ -3448,6 +3466,7 @@ export const hi: DeepPartial<Messages> = {
             statusBlocked: "अवरुद्ध",
             statusPending: "लंबित",
             statusClosed: "पूरा",
+            statusRejected: "अस्वीकृत",
             priorityMinimal: "न्यूनतम",
             priorityLow: "कम",
             priorityNormal: "सामान्य",
@@ -3854,6 +3873,7 @@ export const hi: DeepPartial<Messages> = {
             columnWip: "प्रगति पर",
             columnBlocked: "अवरुद्ध",
             columnClosed: "बंद",
+            columnRejected: "अस्वीकृत",
             columnPending: "लंबित",
             dropToColumn: "↳ {title} में ड्रॉप करें",
             dropTasksHere: "टास्क यहाँ ड्रॉप करें",
@@ -4193,6 +4213,7 @@ export const hi: DeepPartial<Messages> = {
             blocked: "अवरुद्ध",
             pending: "लंबित",
             closed: "बंद",
+            rejected: "अस्वीकृत",
             expired: "समाप्त",
             deleted: "हटाया गया",
             ongoing: "जारी",
@@ -4290,6 +4311,13 @@ export const hi: DeepPartial<Messages> = {
                     bad_status: "नियम जो स्थिति सेट करता है वह अब उपलब्ध नहीं है",
                     assignee_not_allowed:
                         "नियम जिस व्यक्ति को असाइन करता है उसे वहाँ असाइन नहीं किया जा सकता",
+                    too_many_tasks:
+                        "माइलस्टोन में 200 से ज़्यादा टास्क हैं, इसलिए नियम इसे नहीं ले जा सकता",
+                },
+                // The two reasons that name what the row is about, for a milestone's history.
+                milestoneReasons: {
+                    destination: "माइलस्टोन को नियम के गंतव्य प्रोजेक्ट में नहीं ले जाया जा सकता",
+                    rate_limited: "थोड़े समय में नियमों ने इस माइलस्टोन पर बहुत बार कार्रवाई की",
                 },
             },
             via: {

@@ -11,6 +11,7 @@ import { Box, Button, Chip, Stack, Tab, TabList, TabPanel, Tabs, Typography } fr
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../features/chat/utils/common";
+import { ruleMovePreviewText } from "../../features/chat/utils/ruleMovePreview";
 import { HtmlNoteChipFor } from "../../features/notes/common/components/HtmlNoteChip";
 import { NoteOriginIcon } from "../../features/notes/common/components/noteOrigin";
 import { isHtmlNote } from "../../features/notes/common/utils/htmlNote";
@@ -444,6 +445,14 @@ export const HistoryModal = ({
         return kind ? t.chat.sidebar[MEDIA_LABEL_KEYS[kind]] : undefined;
     };
 
+    // A rule's "moved a task" line, worded for the viewer as in the sidebar (MIP-2535).
+    const chatPreviewText = (chat: AllChatProps | undefined): string | undefined => {
+        const ruleMove = chat?.latestMessage?.ruleMove;
+        return ruleMove
+            ? ruleMovePreviewText(ruleMove, t.chat.ruleMoveNotice)
+            : chat?.latestMessageText;
+    };
+
     const renderEntry = (entry: HistoryEntry) => {
         switch (entry.kind) {
             case "chat": {
@@ -465,7 +474,7 @@ export const HistoryModal = ({
                     entry.messageId != null
                         ? entry.messageText ||
                           fmt(t.history.messageNumber, { id: entry.messageId })
-                        : chat?.latestMessageText || chatMediaLabel(chat);
+                        : chatPreviewText(chat) || chatMediaLabel(chat);
                 return (
                     <HistoryRow
                         key={`chat-${entry.chatType}-${entry.chatId}-${entry.messageId ?? 0}-${entry.openedAt}`}

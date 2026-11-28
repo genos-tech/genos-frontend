@@ -30,7 +30,7 @@ import { contrast } from "../theme/tokens/color";
 import { buildRoles } from "../theme/tokens/roles";
 import { buildTokenStylesheet } from "../theme/tokens/tokenStyles";
 
-const TONES: Tone[] = ["info", "warning", "danger", "success", "neutral", "muted"];
+const TONES: Tone[] = ["info", "warning", "danger", "success", "neutral", "muted", "rejected"];
 const AA = 4.5;
 
 describe("the mapping", () => {
@@ -41,6 +41,7 @@ describe("the mapping", () => {
             Blocked: "danger",
             Pending: "neutral",
             Closed: "success",
+            Rejected: "rejected",
             Deleted: "muted",
         });
     });

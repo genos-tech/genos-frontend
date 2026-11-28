@@ -846,6 +846,11 @@ pasted url   https://app.genosai.dev/workspace/tasks/project/${PROJECT_ID}/task/
                                             meaning: "A task moved into a closed status.",
                                         },
                                         {
+                                            name: "task.rejected",
+                                            type: "project",
+                                            meaning: "A task was rejected: it will not be done.",
+                                        },
+                                        {
                                             name: "task.comment_created",
                                             type: "project",
                                             meaning: "Carries the comment body.",
