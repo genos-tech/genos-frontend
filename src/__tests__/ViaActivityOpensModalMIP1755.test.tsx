@@ -89,6 +89,12 @@ describe("viaActivityModalHref", () => {
         expect(parseInternalUrl(got!).kind).not.toBe("route");
     });
 
+    it("a thread under an ordinary project-chat message needs no task and no cached rows", () => {
+        expect(
+            viaActivityModalHref(card({ isThread: true, threadId: ROOT as never }), chats)
+        ).toBe(`/workspace/chat/pm/${CHANNEL}/thread/${ROOT}/message/${MESSAGE}`);
+    });
+
     it("is null for a chat that is not in the member's list", () => {
         expect(viaActivityModalHref(card({ chatType: 1 }), chats)).toBeNull();
     });
@@ -177,6 +183,14 @@ describe("a click on the card", () => {
         const href = "/workspace/notes/team/9";
         expect(openModalByHrefMock).toHaveBeenCalledWith(href, { fullPageHref: href });
         expect(navigateMock).not.toHaveBeenCalled();
+    });
+
+    it("a card stored before the flag, with an app's mark, opens in the modal too", async () => {
+        renderCard(card({ viaAi: undefined, viaApp: "claude", taskId: 7, taskCommentId: 41 }));
+
+        await press();
+
+        expect(openModalByHrefMock).toHaveBeenCalledTimes(1);
     });
 
     it("a person's own change keeps its old click", async () => {

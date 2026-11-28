@@ -46,9 +46,6 @@ const renderList = (inModal: boolean) =>
             <MemoryRouter>
                 <VirtuosoMockContext.Provider value={{ itemHeight: 40, viewportHeight: 400 }}>
                     <TaskCommentList
-                        commentLinkBuilder={(id) =>
-                            `/workspace/tasks/project/3/task/7/comment/${id}`
-                        }
                         inModal={inModal}
                         myself={{ userId: "me" } as never}
                         setEditTargetComment={vi.fn()}
@@ -58,7 +55,11 @@ const renderList = (inModal: boolean) =>
                         taskComments={comments}
                         useCM={{} as never}
                         useTEM={{} as never}
+                        useTM={{} as never}
                         useUISM={{} as never}
+                        commentLinkBuilder={(id) =>
+                            `/workspace/tasks/project/3/task/7/comment/${id}`
+                        }
                     />
                 </VirtuosoMockContext.Provider>
             </MemoryRouter>

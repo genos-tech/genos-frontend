@@ -68,6 +68,7 @@ export const useScrollToTaskCommentByCommentId = (
 
 /** Time for the list to have scrolled itself to the comment (the hook above) and drawn its row. */
 const REVEAL_DELAY_MS = 900;
+const REVEAL_TRIES = 4;
 
 /**
  * Bring the focused comment into view of every scroller AROUND the list, up to the dialog. The list
@@ -84,10 +85,15 @@ export const useRevealFocusedComment = (
     useEffect(() => {
         if (focusedCommentId === undefined || revealedRef.current === focusedCommentId) return;
         if (!taskComments.some((c) => c.commentId === focusedCommentId)) return;
-        const timer = setTimeout(() => {
+        let tries = REVEAL_TRIES;
+        const reveal = () => {
             const scroller = scrollerRef.current;
             const row = scroller?.querySelector<HTMLElement>("[data-comment-focused]");
-            if (!scroller || !row) return;
+            // A slow device may still be scrolling the list: the row is not drawn yet.
+            if (!scroller || !row) {
+                if (--tries > 0) timer = setTimeout(reveal, REVEAL_DELAY_MS);
+                return;
+            }
             revealedRef.current = focusedCommentId;
             for (
                 let box = scroller.parentElement;
@@ -106,7 +112,8 @@ export const useRevealFocusedComment = (
                     behavior: smoothScrollBehavior(),
                 });
             }
-        }, REVEAL_DELAY_MS);
+        };
+        let timer = setTimeout(reveal, REVEAL_DELAY_MS);
         return () => clearTimeout(timer);
     }, [focusedCommentId, taskComments, scrollerRef]);
 };

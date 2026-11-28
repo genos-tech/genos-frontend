@@ -53,7 +53,11 @@ import {
 } from "../../../services/loadV3SpecificThreadMessages";
 import { AggregatedActivityMessage } from "../../../utils/activityAggregation";
 import { resolveV3ThreadRootUuid } from "../../../utils/channelIdResolvers";
-import { noteModalHref, viaActivityModalHref } from "../../../utils/viaActivityModalHref";
+import {
+    isViaAiCard,
+    noteModalHref,
+    viaActivityModalHref,
+} from "../../../utils/viaActivityModalHref";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
 import { hasButtonAvatar } from "./hasButtonAvatar";
@@ -696,7 +700,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     // MIP-1755: a card for a change made through an AI app opens what it names in the chat's
     // preview modal, the URL staying on the chat. False when the modal cannot show it.
     const openViaModal = async (): Promise<boolean> => {
-        if (!activity.viaAi || !modal) return false;
+        if (!modal) return false;
         if (!noteTypeForActivity) {
             const href = viaActivityModalHref(activity, useCM.allChats);
             if (!href) return false;
@@ -718,7 +722,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
 
     const onClickHandler = async () => {
-        if (activity.viaAi && modal) {
+        if (isViaAiCard(activity) && modal) {
             setSelectedActivityId(activity.activityId);
             if (await openViaModal()) {
                 if (activity.isRead === false) updateActivityReadStatus();

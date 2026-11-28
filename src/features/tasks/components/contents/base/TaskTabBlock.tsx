@@ -223,12 +223,13 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
     const commentLinkBuilder = useCallback(
         (commentId: number) => {
             const currentPath = window.location.pathname;
-            if (currentPath.includes("/workspace/chat/pm/")) {
+            // Not in a preview modal: the page behind it is not this comment's address.
+            if (!modalFocus && currentPath.includes("/workspace/chat/pm/")) {
                 return currentPath;
             }
             return `/workspace/tasks/project/${projectId}/task/${currentTaskId}/comment/${commentId}`;
         },
-        [projectId, currentTaskId]
+        [projectId, currentTaskId, modalFocus]
     );
 
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -605,8 +606,8 @@ export const TaskTabBlock = (props: TaskTabBlockProps) => {
                                 currentProjectName={taskContent.project?.projectName}
                                 currentTaskDisplayId={taskContent.displayId}
                                 focusedCommentId={focusedCommentId}
-                                inModal={modalFocus !== null}
                                 hostZIndex={hostZIndex}
+                                inModal={modalFocus !== null}
                                 myself={myself}
                                 setEditTargetComment={setEditTargetComment}
                                 setIsInEdit={setIsInEdit}

@@ -6,6 +6,7 @@
 
 import type { ActivityMessageProps, AllChatProps } from "../../../types/chat";
 import type { ChatNoteProps, MyNoteProps, TaskNoteProps } from "../../../types/notes";
+import { isV3Uuid } from "../../../utils/legacyId";
 import { resolveV3ThreadRootUuid } from "./channelIdResolvers";
 
 const CHAT_SLUGS: Record<number, string> = { 1: "dm", 2: "gm", 3: "pm", 4: "mdm" };
@@ -13,6 +14,11 @@ const CHAT_SLUGS: Record<number, string> = { 1: "dm", 2: "gm", 3: "pm", 4: "mdm"
 const taskHref = (projectId: number, taskId: number, commentId?: number): string =>
     `/workspace/tasks/project/${projectId}/task/${taskId}` +
     (commentId ? `/comment/${commentId}` : "");
+
+/** Whether a card's change was made through an AI app. A card stored before `viaAi` was read
+ *  still carries the app's mark. */
+export const isViaAiCard = (activity: ActivityMessageProps): boolean =>
+    !!(activity.viaAi || activity.viaApp);
 
 /** A task body, a task comment, a chat message or a thread reply. Notes need the note itself:
  *  see `noteModalHref`. */
@@ -51,10 +57,13 @@ export function viaActivityModalHref(
     // `messageUniqueKey` is the message's v3 id, the key the pane focuses on.
     const message = `/message/${activity.messageUniqueKey}`;
     if (!activity.isThread) return base + message;
+    // `threadId` is the root message's v3 id. A project chat's older rows hold the task id there,
+    // so those are looked up among the cached messages.
+    const threadId = String(activity.threadId || "");
     const root =
-        chatType === 3
+        chatType === 3 && !isV3Uuid(threadId)
             ? resolveV3ThreadRootUuid(chatId, activity.taskId, true)
-            : String(activity.threadId || "");
+            : threadId;
     return root ? `${base}/thread/${root}${message}` : null;
 }
 
