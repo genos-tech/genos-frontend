@@ -138,4 +138,26 @@ describe("ModalImportMarkdown", () => {
         expect(screen.queryByRole("combobox")).toBeNull();
         expect(screen.queryByText("Folder")).toBeNull();
     });
+
+    it("seeds a second opening from the surface current at that moment", () => {
+        const modal = (open: boolean, taskId: number) => (
+            <CssVarsProvider>
+                <ModalImportMarkdown
+                    allowDestinationChange={true}
+                    context={{ kind: "task", projectId: 7, taskId }}
+                    myself={myself}
+                    open={open}
+                    useNM={useNM}
+                    onClose={() => {}}
+                />
+            </CssVarsProvider>
+        );
+        const { rerender } = render(modal(true, 42));
+        rerender(modal(false, 42));
+        // The header moves to another task while the dialog is closed, then opens it.
+        rerender(modal(false, 43));
+        rerender(modal(true, 43));
+
+        expect(destinationInput().value).toBe("Genos › Ship it GEN-43");
+    });
 });

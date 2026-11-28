@@ -1288,9 +1288,9 @@ export const useNoteManagement = (
     // edit on next open. So we also refetch the fresh body (cache-
     // bypassing, same as the version-restore flow), write it through the
     // caches, and push it into the Yjs doc via a short headless collab
-    // session. If that push fails (collab down) and the note is the one
-    // currently open, fall back to the restore flow's resync signal so the
-    // open editor writes the fresh body into Yjs itself on reconnect.
+    // session. If that push fails (collab down), fall back to the restore
+    // flow's resync signal so a mounted editor of the note writes the fresh
+    // body into Yjs itself on reconnect.
     //
     // The ref never carries the body, only the id: the note is ALWAYS
     // re-read, so a restore_note_version (no proposed body in the call) takes
@@ -1347,15 +1347,11 @@ export const useNoteManagement = (
             accessToken,
         });
         if (status !== "applied") {
-            if (isCurrent) {
-                setNoteResync((counts) => bumpNoteResync(counts, typeCode, ref.note_id));
-            } else {
-                console.warn(
-                    "noteChanged: Yjs apply failed for closed note; REST body saved, " +
-                        "collab doc will lag until the next successful apply/open.",
-                    ref
-                );
-            }
+            // Not only for the current note: a background tab has a mounted editor too, and
+            // its next edit would save the old document over this write (MIP-2474). With no
+            // mounted editor nothing listens, and the collab doc lags until a later apply.
+            console.warn("noteChanged: Yjs apply failed; REST body saved.", ref);
+            setNoteResync((counts) => bumpNoteResync(counts, typeCode, ref.note_id));
         }
     };
     const getMyNoteMetaRef = useRef(getMyNoteMeta);

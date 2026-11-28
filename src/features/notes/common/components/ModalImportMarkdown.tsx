@@ -16,6 +16,7 @@ import { useTheme } from "@mui/joy/styles";
 
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useOptionalAccessToken } from "../../../../context/authState";
+import { useLatestRef } from "../../../../hooks/common/useLatestRef";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { resolveHtmlNoteLimit, type HtmlNoteLimit } from "../../../../services/htmlNoteLimits";
@@ -201,13 +202,15 @@ export const ModalImportMarkdown = ({
 
     // Fresh state per open, seeded from `context`.
     //
-    // `open` is the ONLY dependency on purpose. The note header mounts
+    // Only `open` re-runs it, on purpose. The note header mounts
     // this dialog continuously and rebuilds its `context` object literal
     // every render, so listing it here would re-run this reset on any
     // unrelated parent re-render — wiping the file and title the user had
-    // already chosen, mid-dialog. The effect body still reads the current
-    // context: React runs the latest render's callback when `open` flips.
+    // already chosen, mid-dialog. The effect reads the current context and
+    // attachment through a ref when `open` flips.
+    const seedRef = useLatestRef({ context, initialFile });
     useEffect(() => {
+        const { context, initialFile } = seedRef.current;
         if (open) {
             setFileName(null);
             setFileText(null);
@@ -242,7 +245,7 @@ export const ModalImportMarkdown = ({
                 setTitle(titleFromFilename(initialFile.name));
             }
         }
-    }, [open]);
+    }, [open, seedRef]);
 
     // Fetch the attachment's text once per open.
     useEffect(() => {

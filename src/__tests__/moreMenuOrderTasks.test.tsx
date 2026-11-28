@@ -201,6 +201,7 @@ describe("project header menu", () => {
             h.newMilestoneMenuItem,
             h.manageTagsMenuItem,
             h.customizeFieldsMenuItem,
+            en.tasks.projectStatuses.menuItem,
             // The owner's archive item (MIP-1693) sits before Delete, which is always last.
             "Archive project",
             // MIP-1835: the CSV task import is a "content" action, after the organize group.

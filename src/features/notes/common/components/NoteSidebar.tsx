@@ -39,6 +39,7 @@ import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { SectionHeader } from "../../../../components/ui/nav/SectionHeader";
 import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useLatestRef } from "../../../../hooks/common/useLatestRef";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
@@ -365,30 +366,34 @@ const NoteSidebarBody = memo(function NoteSidebarBody(props: NoteSidebarBodyProp
 
     // The four loads below are keyed on the team: with none (a reload or a deep link before a team
     // is chosen) the getters ask for nothing, and they ask again when one is picked (MIP-1651).
+    // `useNM` is a new object whenever the open note or a list changes, so the loads read it
+    // through a ref: they run for a team, not for each new object.
+    const useNMRef = useLatestRef(useNM);
+
     // Load favorite notes on mount
     useEffect(() => {
-        useNM.getFavoriteNotesMeta();
-    }, [myself.teamId]);
+        useNMRef.current.getFavoriteNotesMeta();
+    }, [myself.teamId, useNMRef]);
 
     // Load recent notes on mount (parity with favorites — both seed
     // their sidebar sections from the server when this component first
     // appears).
     useEffect(() => {
-        useNM.getRecentNotesMeta();
-    }, [myself.teamId]);
+        useNMRef.current.getRecentNotesMeta();
+    }, [myself.teamId, useNMRef]);
 
     // Load personal notes shared with me — drives the noteType=4 bucket.
     useEffect(() => {
-        useNM.getSharedNoteMeta();
-    }, [myself.teamId]);
+        useNMRef.current.getSharedNoteMeta();
+    }, [myself.teamId, useNMRef]);
 
     // Team Notes (noteType=8 bucket): the folder list and the notes
     // inside it are separate calls, because the folders ARE the ACL and
     // the server resolves them before it can say which notes you see.
     useEffect(() => {
-        void useNM.getTeamNoteFolders();
-        void useNM.getTeamNoteMeta();
-    }, [myself.teamId]);
+        void useNMRef.current.getTeamNoteFolders();
+        void useNMRef.current.getTeamNoteMeta();
+    }, [myself.teamId, useNMRef]);
 
     // Use custom hooks for each note type
     const myNoteState = useNoteTreeState({

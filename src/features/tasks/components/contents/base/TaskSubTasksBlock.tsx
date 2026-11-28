@@ -335,7 +335,16 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
     };
 
     const renderChildRow = (
-        { assignee, project, id, displayId, title, status, tags }: (typeof childTasks)[number],
+        {
+            assignee,
+            project,
+            id,
+            displayId,
+            title,
+            status,
+            customStatusId,
+            tags,
+        }: (typeof childTasks)[number],
         index: number
     ) => (
         <ListItem key={`listitem-${id}-${index}`}>
@@ -382,7 +391,11 @@ export const TaskSubTasksBlock = (props: TaskSubTasksBlockProps) => {
                     task={{ id, displayId }}
                 />
                 <Box key={`status-chip-${id}-${index}`} sx={{ mx: "5px" }}>
-                    <StatusLabel status={status.status} />
+                    <StatusLabel
+                        customStatusId={customStatusId}
+                        projectId={project?.projectId}
+                        status={status.status}
+                    />
                 </Box>
                 <Typography
                     sx={{

@@ -39,6 +39,8 @@ export const TaskInfoPill = ({ task, onOpen }: TaskInfoPillProps) => {
                     displayId: task.displayId,
                     title: task.title,
                     status: task.status?.status || null,
+                    projectId: task.project?.projectId,
+                    customStatusId: task.customStatusId,
                 }}
                 onOpen={onOpen}
             />

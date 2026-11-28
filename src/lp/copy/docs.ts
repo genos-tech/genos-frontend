@@ -31,6 +31,8 @@ export interface DocsCopy {
     notTranslated: string;
     backToDocs: string;
     onThisPage: string;
+    /** The summary of the folded full text under a topic's pictures. */
+    fullDetails: string;
     topicsHeading: string;
     previous: string;
     next: string;
@@ -61,6 +63,7 @@ export const DOCS_COPY: Record<Lang, DocsCopy> = {
             "This topic is not available in Japanese yet. It is shown in English. TODO(copy): MIP-2331",
         backToDocs: "All docs",
         onThisPage: "On this page",
+        fullDetails: "Read the full details",
         topicsHeading: "Topics",
         previous: "Previous",
         next: "Next",
@@ -98,6 +101,7 @@ export const DOCS_COPY: Record<Lang, DocsCopy> = {
             "このトピックの日本語版はまだありません。英語で表示しています。 TODO(copy): MIP-2331",
         backToDocs: "ドキュメント一覧",
         onThisPage: "このページの内容",
+        fullDetails: "詳しい説明を読む",
         topicsHeading: "トピック",
         previous: "前へ",
         next: "次へ",
