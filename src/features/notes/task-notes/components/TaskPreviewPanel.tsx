@@ -1,8 +1,8 @@
 import { Box } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
-import { Panel, PanelResizeHandle } from "react-resizable-panels";
+import { Panel } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
+import { ResizeHandle } from "../../../../components/ui/ResizeHandle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -29,7 +29,6 @@ type TaskPreviewPanelProps = {
 export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
     const { myself, setMyself, useUISM, socket, useTEM, usePM, useNM, useCM, useTM, useSM } =
         props;
-    const { mode } = useColorScheme();
 
     // A MILESTONE preview leaves `currentPreviewTask` undefined and routes
     // through `currentPreviewKind` instead — `TaskPreview` has its own
@@ -51,15 +50,7 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
 
     return (
         <>
-            <PanelResizeHandle
-                className="resize-handle"
-                style={{
-                    width: "1px",
-                    backgroundColor: mode === "dark" ? "grey" : "lightgrey",
-                    transition: "all 0.3s ease-in-out",
-                    cursor: "col-resize",
-                }}
-            />
+            <ResizeHandle />
 
             <Panel id={"4"} maxSize={85} minSize={35} order={4}>
                 <Box
@@ -77,9 +68,6 @@ export const TaskPreviewPanel = (props: TaskPreviewPanelProps) => {
                         minWidth: 0,
                         height: "var(--app-vh)",
                         gap: 1,
-                        boxShadow: "0 0 0 1px grey",
-                        borderColor: mode === "dark" ? "black" : "white",
-                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                     }}
                 >
                     <TaskPreview

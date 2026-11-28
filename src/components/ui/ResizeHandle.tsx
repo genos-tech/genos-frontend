@@ -1,33 +1,7 @@
-import { useColorScheme } from "@mui/joy/styles";
 import { PanelResizeHandle } from "react-resizable-panels";
 
-import { purplePalette } from "../../theme/purplePalette";
-
-interface ResizeHandleProps {
-    className?: string;
-    direction?: "horizontal" | "vertical";
-}
-
-// Canonical thin resize handle for react-resizable-panels.
-// Pass className to keep feature-scoped hover-width CSS animations that are
-// already defined in each Home's <style> block.
-export const ResizeHandle = ({
-    className = "resize-handle",
-    direction = "horizontal",
-}: ResizeHandleProps) => {
-    const { mode } = useColorScheme();
-    const isDark = mode === "dark";
-    const color = isDark ? purplePalette.dark.border : purplePalette.light.border;
-
-    return (
-        <PanelResizeHandle
-            className={className}
-            style={{
-                [direction === "horizontal" ? "width" : "height"]: "1px",
-                backgroundColor: color,
-                transition: "all 0.3s ease-in-out",
-                cursor: direction === "horizontal" ? "col-resize" : "row-resize",
-            }}
-        />
-    );
-};
+// The one resize handle for react-resizable-panels (MIP-2606). The handle IS the
+// divider: panes beside it draw no border of their own, so a pane can never leave
+// a line at the page edge. Look, hover and cursor are `.gp-pane-handle` in
+// index.css; the library's `data-panel-group-direction` picks the axis.
+export const ResizeHandle = () => <PanelResizeHandle className="gp-pane-handle" />;

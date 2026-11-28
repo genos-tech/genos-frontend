@@ -271,8 +271,6 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                     width: "100%",
                     display: "flex",
                     flexDirection: "column",
-                    borderRight: "1px solid",
-                    borderColor: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)",
                     background: isDark
                         ? "linear-gradient(180deg, rgba(18,18,22,1) 0%, rgba(14,14,18,1) 100%)"
                         : "linear-gradient(180deg, rgba(252,252,255,1) 0%, rgba(248,248,252,1) 100%)",

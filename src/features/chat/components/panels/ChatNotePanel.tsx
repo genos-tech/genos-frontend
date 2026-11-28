@@ -1,5 +1,4 @@
 import { Box } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "react-resizable-panels";
 import type { Socket } from "socket.io-client";
 
@@ -35,8 +34,6 @@ export const ChatNotePanel = ({
     setMyself,
     useUISM,
 }: ChatNotePanelProps) => {
-    const { mode } = useColorScheme();
-
     return (
         <Panel id={"8"} maxSize={90} minSize={30} order={8}>
             <Box
@@ -54,9 +51,6 @@ export const ChatNotePanel = ({
                     minWidth: 0,
                     height: "var(--app-vh)",
                     gap: 1,
-                    boxShadow: "0 0 0 1px grey",
-                    borderColor: mode === "dark" ? "black" : "white",
-                    borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                 }}
             >
                 <ChatNoteMain

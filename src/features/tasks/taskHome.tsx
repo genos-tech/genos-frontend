@@ -175,19 +175,6 @@ export const TaskHome = (props: TaskHomeProps) => {
                     useTM={useTM}
                 />
             </Sheet>
-
-            {/* Hover Animation with CSS */}
-            <style>
-                {`
-                .task-resize-handle {
-                    transition: all 0.3s ease-in-out;
-                }
-                .task-resize-handle:hover {
-                    background-color: grey !important;
-                    width: 8px !important;
-                }
-                `}
-            </style>
         </Box>
     );
 };

@@ -74,8 +74,6 @@ export const NoteHome = (props: NoteHomeProps) => {
     const noteContentBox = {
         px: 1,
         height: "var(--app-vh)",
-        borderRight: "1px solid",
-        borderColor: ls.sidebarPanel.borderColor,
     };
 
     // One panel identity now that the Home dashboard is gone; the
@@ -134,7 +132,7 @@ export const NoteHome = (props: NoteHomeProps) => {
                                 </Box>
                             </Panel>
 
-                            <ResizeHandle className="note-resize-handle" />
+                            <ResizeHandle />
 
                             {renderMainContent()}
 
@@ -153,19 +151,6 @@ export const NoteHome = (props: NoteHomeProps) => {
                         </PanelGroup>
                     )}
                 </Sheet>
-
-                {/* Hover Animation with CSS */}
-                <style>
-                    {`
-                .note-resize-handle {
-                    transition: all 0.3s ease-in-out;
-                }
-                .note-resize-handle:hover {
-                    background-color: grey !important;
-                    width: 8px !important;
-                }
-                `}
-                </style>
             </Box>
         </NoteUnreadProvider>
     );

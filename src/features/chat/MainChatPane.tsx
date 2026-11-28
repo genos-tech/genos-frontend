@@ -4,7 +4,7 @@
 // wins per project convention.
 
 import { useCallback, useState } from "react";
-import { Box, Sheet, useColorScheme } from "@mui/joy";
+import { Box, Sheet } from "@mui/joy";
 import { VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
@@ -70,8 +70,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
         useTM,
         setTodoFromMessageBubble,
     } = props;
-
-    const { mode } = useColorScheme();
 
     // File drag-and-drop state
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
@@ -141,8 +139,6 @@ export const MessagesPane = (props: MessagesPaneProps) => {
             >
                 <Box
                     sx={{
-                        borderColor: mode === "dark" ? "black" : "white",
-                        borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                         display: "flex",
                         flex: 1,
                         flexDirection: "column",

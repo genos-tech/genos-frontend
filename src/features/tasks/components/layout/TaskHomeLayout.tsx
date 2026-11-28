@@ -210,7 +210,7 @@ export const TaskHomeLayout = ({
     // The form beside an already-open preview (e.g. a sub-task made from it).
     const renderCreateTaskPanel = () => (
         <>
-            <ResizeHandle className="task-resize-handle" />
+            <ResizeHandle />
             <Panel id={"4"} maxSize={80} minSize={30} order={4}>
                 <Box sx={ls.mainPanel}>{renderCreateTaskForm()}</Box>
             </Panel>
@@ -222,7 +222,7 @@ export const TaskHomeLayout = ({
     // instead of closing one pane and opening another (MIP-2370).
     const renderTaskPreviewPanel = () => (
         <>
-            <ResizeHandle className="task-resize-handle" />
+            <ResizeHandle />
             <Panel defaultSize={50} id={"3"} maxSize={80} minSize={30} order={3}>
                 <Box sx={ls.mainPanel}>
                     {soloCreate ? (
@@ -256,7 +256,7 @@ export const TaskHomeLayout = ({
 
     const renderTaskNotePanel = () => (
         <>
-            <ResizeHandle className="task-resize-handle" />
+            <ResizeHandle />
             <Panel defaultSize={50} id={"7"} maxSize={100} minSize={50} order={7}>
                 <Box sx={ls.mainPanel}>
                     {activeNoteType === 1 && useNM.currentMyNote && (
@@ -309,7 +309,7 @@ export const TaskHomeLayout = ({
         if (projectsSync.failed) {
             return (
                 <>
-                    <ResizeHandle className="task-resize-handle" />
+                    <ResizeHandle />
                     <Panel id={"6"} maxSize={100} minSize={70} order={6}>
                         <DataState
                             hasData={false}
@@ -332,7 +332,7 @@ export const TaskHomeLayout = ({
         // blurred glass card, glowing gradient tile, bold large button).
         return (
             <>
-                <ResizeHandle className="task-resize-handle" />
+                <ResizeHandle />
                 <Panel id={"6"} maxSize={100} minSize={70} order={6}>
                     <EmptyState
                         body={t.tasks.layout.noProjectBody}
@@ -373,7 +373,7 @@ export const TaskHomeLayout = ({
                         useTM.isSprintBoardVisible ||
                         useTM.isTaskDashboardVisible) && (
                         <>
-                            <ResizeHandle className="task-resize-handle" />
+                            <ResizeHandle />
                             <Panel id={"2"} maxSize={85} minSize={30} order={2}>
                                 {renderMainContent()}
                             </Panel>

@@ -483,8 +483,6 @@ export const LayoutStyles = {
         sidebarPanel: {
             height: "100%",
             width: "100%",
-            borderRight: "1px solid",
-            borderColor: D.border,
         },
 
         // Box that wraps a main content Panel (right-side resizable column with header offset)
@@ -503,8 +501,6 @@ export const LayoutStyles = {
             height: "var(--app-vh)",
             overflow: "hidden" as const,
             gap: 1,
-            borderRight: "1px solid",
-            borderColor: D.border,
         },
     },
 
@@ -521,8 +517,6 @@ export const LayoutStyles = {
         sidebarPanel: {
             height: "100%",
             width: "100%",
-            borderRight: "1px solid",
-            borderColor: L.border,
         },
 
         mainPanel: {
@@ -540,8 +534,6 @@ export const LayoutStyles = {
             height: "var(--app-vh)",
             overflow: "hidden" as const,
             gap: 1,
-            borderRight: "1px solid",
-            borderColor: L.border,
         },
     },
 } as const;
