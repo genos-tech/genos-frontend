@@ -13,17 +13,30 @@ export const coarsePointer = (): boolean =>
 export const forMilestones = (rule: AutomationRule): boolean => rule.appliesTo === "milestone";
 
 /** The server does not name where this rule moves tasks to: the reader is not on it, or it
- *  is gone. */
+ *  was deleted. */
 export const unnamedDestination = (rule: AutomationRule): boolean =>
     rule.movesTask && rule.destination?.visible === false;
 
 /** The engine turned it off over the destination, so another one has to be chosen. */
 const DESTINATION_OFF = new Set(["destination", "destination_not_found"]);
 
+/** The destination project was deleted: there is nothing to hide, only a new one to choose. */
+export const destinationGone = (rule: AutomationRule): boolean =>
+    rule.movesTask && rule.destination?.gone === true;
+
 /** Nobody who is not on the destination may change a rule that works: that would be changing
- *  what they cannot see. One turned off over its destination can be given a new one. */
+ *  what they cannot see. One turned off over its destination, or whose destination was
+ *  deleted, can be given a new one. */
 export const isHidden = (rule: AutomationRule): boolean =>
-    unnamedDestination(rule) && !(!rule.enabled && DESTINATION_OFF.has(rule.disabledReason));
+    unnamedDestination(rule) &&
+    !destinationGone(rule) &&
+    !(!rule.enabled && DESTINATION_OFF.has(rule.disabledReason));
+
+/** Why the engine turned it off, with a deleted destination said as that. */
+export const turnedOffCode = (rule: AutomationRule): string =>
+    destinationGone(rule) && DESTINATION_OFF.has(rule.disabledReason)
+        ? "destination_gone"
+        : rule.disabledReason;
 
 /** Reasons about the rule itself: every match has it, and turning the rule on is pointless. */
 const RULE_LEVEL = new Set([

@@ -5,6 +5,8 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { cssOf } from "./utils/cssOf";
+
 import { ModalFrame } from "../components/ui/modal/ModalFrame";
 import { useCoveredOverlay } from "../components/ui/modal/overlayStack";
 
@@ -84,5 +86,17 @@ describe("useCoveredOverlay", () => {
         const covered = document.querySelectorAll(".MuiModal-root[data-covered]");
         expect(covered).toHaveLength(1);
         expect(covered[0].textContent).toContain("Under");
+    });
+
+    it("blurs once per ModalFrame: Joy's backdrop blur is off (MIP-2563)", () => {
+        render(
+            <ModalFrame title="One" open onClose={() => {}}>
+                a
+            </ModalFrame>
+        );
+        const root = document.querySelector(".MuiModal-root")!;
+        const backdrop = document.querySelector(".MuiModal-backdrop")!;
+        expect(cssOf(root)).toMatch(/backdrop-filter:\s*blur\(4px\)/);
+        expect(cssOf(backdrop)).toMatch(/backdrop-filter:\s*none/);
     });
 });

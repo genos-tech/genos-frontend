@@ -60,6 +60,8 @@ const CLONING_PARENTS = [
     "ListItem",
     "Menu",
     "MenuList",
+    // The app's `Menu` (components/ui/menu): its children are the Menu's direct children.
+    "MenuSurface",
     "Select",
     "TabList",
     "Skeleton",

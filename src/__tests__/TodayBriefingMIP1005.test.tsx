@@ -349,6 +349,12 @@ describe("the briefing's own sentences are said in the viewer's language (MIP-19
         expect(changeLine(c, copyOf(ja))).not.toContain("ENGLISH");
     });
 
+    it("says a change with no values to give, in ja and en", () => {
+        const c = item({ code: "field_edited", field: "milestone" });
+        expect(changeLine(c, copyOf(en))).toBe("ana changed milestone");
+        expect(changeLine(c, copyOf(ja))).not.toContain("ENGLISH");
+    });
+
     it("translates the server's English stand-ins for an unknown person and automation", () => {
         const data = { code: "created" };
         expect(changeLine(item(data, { by: "someone" }), copyOf(ja))).toBe(

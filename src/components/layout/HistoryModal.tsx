@@ -11,6 +11,7 @@ import { Box, Button, Chip, Stack, Tab, TabList, TabPanel, Tabs, Typography } fr
 import { useColorScheme, useTheme } from "@mui/joy/styles";
 
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../features/chat/utils/common";
+import { mdmChatName } from "../../features/chat/utils/mdmChatName";
 import { ruleMovePreviewText } from "../../features/chat/utils/ruleMovePreview";
 import { HtmlNoteChipFor } from "../../features/notes/common/components/HtmlNoteChip";
 import { NoteOriginIcon } from "../../features/notes/common/components/noteOrigin";
@@ -465,7 +466,7 @@ export const HistoryModal = ({
     const theme = useTheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
-    const { myself } = useAvatarContext();
+    const { myself, teamMemberProfiles } = useAvatarContext();
     const { chatsEntries, tasksEntries, notesEntries, clear } = useHistory();
     const [tab, setTab] = useState<HistoryTabKey>("chats");
 
@@ -473,6 +474,11 @@ export const HistoryModal = ({
     // and `HistoryEntry.chatId` normalized on read (see `readId`).
     const findChat = (chatType: number, chatId: string): AllChatProps | undefined =>
         useCM.allChats.find((c) => c.chatType === chatType && c.chatId === chatId);
+
+    // A multi-person DM has no stored title, so what was recorded is empty: name it the way the
+    // chat list does. Without the chat (left, not loaded) the recorded text is all there is.
+    const mdmName = (chat: AllChatProps | undefined): string =>
+        chat?.chatType === 4 ? mdmChatName(chat.mdmMembers, myself, teamMemberProfiles) : "";
 
     // "GIF" / "Image" / … for a chat whose latest message is media-only
     // and so has no preview text at all. `undefined` (not "") so the
@@ -518,7 +524,7 @@ export const HistoryModal = ({
                         avatar={renderChatAvatar(entry.chatType, chat, isDark)}
                         avatarIsButton={entry.chatType === 4 && !!chat}
                         isDark={isDark}
-                        label={entry.label}
+                        label={mdmName(chat) || entry.label}
                         relativeMessages={t.history.relative}
                         subtitle={subtitle}
                         timestamp={entry.openedAt}
@@ -543,7 +549,7 @@ export const HistoryModal = ({
                         avatar={renderChatAvatar(entry.chatType, chat, isDark)}
                         avatarIsButton={entry.chatType === 4 && !!chat}
                         isDark={isDark}
-                        label={entry.label}
+                        label={mdmName(chat) || entry.label}
                         relativeMessages={t.history.relative}
                         subtitle={subtitle}
                         timestamp={entry.openedAt}
@@ -603,11 +609,15 @@ export const HistoryModal = ({
             }
             case "note": {
                 const visual = NOTE_TYPE_VISUAL[entry.noteType];
+                const noteChat =
+                    entry.noteType === 3 && entry.chatType != null && entry.chatId != null
+                        ? findChat(entry.chatType, entry.chatId)
+                        : undefined;
                 const subtitle =
                     entry.noteType === 2
                         ? [entry.projectName, entry.taskTitle].filter(Boolean).join(" · ") || null
                         : entry.noteType === 3
-                          ? entry.chatName || null
+                          ? mdmName(noteChat) || entry.chatName || null
                           : // Team notes show their folder, the way a task
                             // note shows its project.
                             entry.noteType === 8
@@ -641,8 +651,7 @@ export const HistoryModal = ({
                     entry.chatType != null &&
                     entry.chatId != null
                 ) {
-                    const chat = findChat(entry.chatType, entry.chatId);
-                    noteAvatar = renderChatAvatar(entry.chatType, chat, isDark);
+                    noteAvatar = renderChatAvatar(entry.chatType, noteChat, isDark);
                 } else {
                     noteAvatar = (
                         <GroupOrProjectAvatar

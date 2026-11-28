@@ -1232,6 +1232,8 @@ export const ja: DeepPartial<Messages> = {
             listLabel: "メッセージ",
             threadListLabel: "スレッドの返信",
         },
+        // The line a closed task leaves in the thread it was made from (MIP-2553).
+        taskClosedNotice: "タスク {task} は「{status}」になりました。",
         ruleMoveNotice: {
             line: "ルール「{rule}」が{task}を{project}に移動しました。",
             aTask: "タスク",
@@ -7096,6 +7098,7 @@ export const ja: DeepPartial<Messages> = {
             cNotSet: "{field}が空",
             aMove: "{project} に移動する",
             aMoveHidden: "参加していないプロジェクトに移動する",
+            aMoveGone: "削除されたプロジェクトに移動する",
             aStatus: "ステータスを {status} にする",
             aAssign: "{person} を担当にする",
             aTag: "タグ {tag} を追加する",
@@ -7195,6 +7198,7 @@ export const ja: DeepPartial<Messages> = {
             stSkipped: "スキップ",
             reason: {
                 destination_not_found: "移動先プロジェクトがないか、参加していません。",
+                destination_gone: "移動先プロジェクトは削除されました。",
                 destination_archived: "移動先プロジェクトはアーカイブされています。",
                 same_project: "移動先は別のプロジェクトにしてください。",
                 private_to_public:
@@ -7934,6 +7938,7 @@ export const ja: DeepPartial<Messages> = {
                     customField: "{by} さんが {name} を変更しました",
                     customFieldGeneric: "{by} さんがカスタムフィールドを変更しました",
                     fieldChanged: "{by} さんが{field}を変更しました: {old} → {new}",
+                    fieldEdited: "{by} さんが{field}を変更しました",
                     noteEdited: "{by} さんがノートを編集しました",
                     noteRestored: "{by} さんが以前のバージョンに戻しました",
                     fields: {
