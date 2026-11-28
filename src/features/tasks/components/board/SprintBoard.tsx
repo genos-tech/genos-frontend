@@ -23,6 +23,7 @@ import { TagListProps, TaskTableProps } from "../../../../types/tasks";
 import { LazyTaskDiagram } from "../../diagram/components/LazyTaskDiagram";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTasksBulkChanged, emitTaskTouched } from "../../services/taskEvents";
+import { reportTaskNotSaved } from "../../services/taskNotSavedError";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { isWidening, useProjectStatusScope } from "../../state/projectStatusScopeStore";
 import { FilterProps } from "../../types/TaskTableTypes";
@@ -341,9 +342,15 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         status: newStatus,
                         customStatusId: pickedStatusId,
                     },
-                    projectId
+                    projectId,
+                    undefined,
+                    undefined,
+                    { refusal: { onNotSaved: (_retry, error) => reportTaskNotSaved(error) } }
                 );
-                if (!updated) return;
+                if (!updated) {
+                    setBoardTasks(previousBoardTasks);
+                    return;
+                }
 
                 // Mirror the milestone shape onto the row format (same
                 // mapping as DraggableTaskTable.handleRowUpdate). This

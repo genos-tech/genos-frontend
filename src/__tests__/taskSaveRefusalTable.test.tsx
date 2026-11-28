@@ -307,6 +307,23 @@ describe("an inline edit in the task table", () => {
         expect(bus[bus.length - 1]).toEqual(["serverMessage", reason]);
     });
 
+    it("keeps the stored row and says the change was not saved on a 500 (MIP-2582)", async () => {
+        respondWith(500, { detail: "boom" });
+        renderTable();
+        await waitFor(() => expect(screen.queryByTestId("row-42")).not.toBeNull());
+
+        let returned: TaskTableProps | undefined;
+        await act(async () => {
+            returned = await rowUpdate(makeRow("42", { status: "WIP" }));
+        });
+
+        expect(adapter).toHaveBeenCalledTimes(1);
+        expect(returned?.status).toBe("Open");
+        expect(screen.getByTestId("row-42").getAttribute("data-status")).toBe("Open");
+        expect(setAllTasksSpy).not.toHaveBeenCalled();
+        expect(bus[bus.length - 1]?.[0]).toBe("changeNotSaved");
+    });
+
     it("shows the edited row once the server accepts it (the harness can show a stuck edit)", async () => {
         respondWith(200, { task: { ts_updated_at: "now" } });
         renderTable();
@@ -404,6 +421,19 @@ describe("dropping a task onto another in the task table", () => {
                 destination: null,
             });
         });
+
+    it("puts the moved rows back when the move fails with a 500 (MIP-2582)", async () => {
+        respondWith(500, { detail: "boom" });
+        renderTable();
+        await waitFor(() => expect(parentOf("42")).toBe(""));
+
+        await drop();
+
+        await waitFor(() => expect(adapter).toHaveBeenCalledTimes(1));
+        await waitFor(() => expect(bus[bus.length - 1]?.[0]).toBe("changeNotSaved"));
+        expect(latestAllTasks.find((r) => r.id === "42")?.parentTaskId ?? null).toBeNull();
+        expect(latestPreview.parentTaskId).toBeNull();
+    });
 
     it("puts the moved rows and the open preview back when the server refuses the move", async () => {
         const reason = "A task cannot be moved under itself or one of its own sub-tasks.";

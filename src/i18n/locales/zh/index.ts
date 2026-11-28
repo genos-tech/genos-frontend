@@ -1020,6 +1020,7 @@ export const zh: DeepPartial<Messages> = {
             actionFailed: "操作无法完成，请重试。",
             messageSendFailed: "消息发送失败，请重试。",
             noteNotSaved: "无法保存您对此笔记的最新更改。",
+            changeNotSaved: "你的更改未保存，请重试。",
             idleReload: "长时间无操作，正在刷新页面…",
         },
         serviceSwitch: {

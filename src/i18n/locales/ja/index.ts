@@ -1079,6 +1079,7 @@ export const ja: DeepPartial<Messages> = {
             actionFailed: "操作を完了できませんでした。もう一度お試しください。",
             messageSendFailed: "メッセージを送信できませんでした。もう一度お試しください。",
             noteNotSaved: "このノートの最新の変更を保存できませんでした。",
+            changeNotSaved: "変更は保存されませんでした。もう一度お試しください。",
             idleReload: "一定時間操作がなかったため、ページを更新しています…",
         },
         serviceSwitch: {

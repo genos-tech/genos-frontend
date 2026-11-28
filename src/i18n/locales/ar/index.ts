@@ -508,6 +508,7 @@ export const ar: DeepPartial<Messages> = {
             limitReached: "لقد وصلت إلى حد خطتك. راجع الإعدادات ← الخطة والاستخدام.",
             messageSendFailed: "تعذّر إرسال رسالتك. يرجى المحاولة مرة أخرى.",
             noteNotSaved: "تعذّر حفظ آخر تغييراتك على هذه الملاحظة.",
+            changeNotSaved: "لم يتم حفظ تغييرك. يرجى المحاولة مرة أخرى.",
             idleReload: "جارٍ تحديث الصفحة بعد فترة من عدم النشاط…",
         },
         features: {

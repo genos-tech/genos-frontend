@@ -1,3 +1,5 @@
+import { TaskNotSavedError } from "./taskNotSavedError";
+
 /**
  * The server answered a task save with HTTP 400: it looked at the request and
  * refused it (an assignee who is not on the project, a custom-field value of
@@ -7,9 +9,10 @@
  * reason by the time this reaches a caller. What is left to the caller is
  * putting its own copy of the task back to what the server holds, because the
  * working copy now carries a value that was never stored. Every other failure
- * (network, 5xx, 401) is NOT this error and keeps its old, non-throwing path.
+ * (network, 5xx, 401) is NOT this error: `sendUpdatedSpecificTask` reports it through
+ * `onNotSaved` instead of throwing.
  */
-export class TaskSaveRefusedError extends Error {
+export class TaskSaveRefusedError extends TaskNotSavedError {
     /** The server's own sentence (`error` in the body), or the translated
      *  sub-task message for that code. `null` when the body had no single
      *  sentence, e.g. a DRF field-error map. */
