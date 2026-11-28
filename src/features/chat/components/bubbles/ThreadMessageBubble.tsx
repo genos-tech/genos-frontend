@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, SyntheticEvent, useEffect, useRef, useState } from "react";
 import { Box, Stack } from "@mui/joy";
 import { useNavigate } from "react-router-dom";
 import { Socket } from "socket.io-client";
@@ -34,6 +34,7 @@ import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleThreadMoreMenu } from "./BubbleThreadMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
+import { useBubbleToolbar } from "./useBubbleToolbar";
 
 // Chat type → URL path segment. Module constant so it isn't rebuilt on
 // every bubble render.
@@ -105,7 +106,17 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
     const isSystemUser = message.sender.isSystemUser === true;
 
     // Handle thread message click to update URL and focus
-    const handleMessageClick = () => {
+    const handleMessageClick = (e: React.MouseEvent) => {
+        // A long press ends in a synthetic click: it only meant "show the toolbar".
+        if (consumedTap()) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        focusReply();
+    };
+
+    const focusReply = () => {
         // In the preview dialog there is no reply URL to go to: the page stays (MIP-2580).
         if (isModalHosted) return;
         const typePath = CHAT_TYPE_PATH[thread.chatType];
@@ -136,14 +147,9 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
     };
 
     // Reaction handling
-    const [isHovered, setIsHovered] = useState(false);
-    // While the More menu — or a dialog it opened — is on screen, keep the
-    // toolbar mounted after the cursor leaves the bubble. Same lock as
-    // `MessageBubble.isMoreMenuOpen`, and for the same reason: without it
-    // the hover state flips false and unmounts the menu (or its dialog)
-    // out from under the user.
-    const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-    const showUnderBarOption = isHovered || isMoreMenuOpen;
+    const bubbleRef = useRef<HTMLDivElement>(null);
+    const { showUnderBarOption, setIsMoreMenuOpen, consumedTap, rowHandlers } =
+        useBubbleToolbar(bubbleRef);
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
@@ -156,7 +162,6 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
         .join(" ");
 
     // Dynamic positioning for emoji picker
-    const bubbleRef = useRef<HTMLDivElement>(null);
     const toolbarRef = useRef<HTMLDivElement>(null);
     const [pickerBottomPosition, setPickerBottomPosition] = useState<number>(40);
     const [pickerTopPosition, setPickerTopPosition] = useState<number | string>("auto");
@@ -377,8 +382,10 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
 
     // The same steps as the thread header's "open task": the task may belong to a project
     // other than the loaded one, and inside the preview dialog it opens in that dialog.
-    const openCardTask = (_event: unknown, card?: LiveCard) => {
-        handleMessageClick();
+    const openCardTask = (event: SyntheticEvent<HTMLElement>, card?: LiveCard) => {
+        // The tap that ends a long press must not open the task either.
+        if (consumedTap()) return;
+        focusReply();
         const project = card?.project;
         if (isModalHosted) {
             if (project) {
@@ -521,9 +528,9 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                     : balloonWrapperSx(isSimpleBubble, uniqueReactionEmojiCount)
             }
             interactive
+            suppressTouchCallout
             onClick={handleMessageClick}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            {...rowHandlers}
             onDoubleClick={
                 doubleClickTodoEnabled
                     ? () => {
