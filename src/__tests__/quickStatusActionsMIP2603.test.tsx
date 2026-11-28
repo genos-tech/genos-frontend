@@ -189,10 +189,12 @@ describe("which buttons a status offers", () => {
 describe("titles", () => {
     it("translates a default title per viewer and kind, and shows a typed one as typed", () => {
         const [start, , , done, ship] = ACTIONS;
+        // Typed as partial: the catalog holds every key (the locale tests pin that).
+        const jaWords = ja.tasks!.preview as typeof en.tasks.preview;
         expect(actionTitle(start, "task", en.tasks.preview)).toBe("Start Task");
         expect(actionTitle(start, "milestone", en.tasks.preview)).toBe("Start Milestone");
-        expect(actionTitle(done, "task", ja.tasks.preview)).toBe(ja.tasks.preview.completeTask);
-        expect(actionTitle(ship, "milestone", ja.tasks.preview)).toBe("Ship it");
+        expect(actionTitle(done, "task", jaWords)).toBe(jaWords.completeTask);
+        expect(actionTitle(ship, "milestone", jaWords)).toBe("Ship it");
     });
 });
 
