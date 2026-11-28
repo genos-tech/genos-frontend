@@ -942,6 +942,13 @@ export const tasks = {
                 error: "something went wrong",
                 bad_status: "the status the rule sets is no longer available",
                 assignee_not_allowed: "the person the rule assigns cannot be assigned there",
+                too_many_tasks:
+                    "the milestone has more than 200 tasks, too many for a rule to move",
+            },
+            // The two reasons that name what the row is about, for a milestone's history.
+            milestoneReasons: {
+                destination: "the milestone cannot move to the rule’s destination project",
+                rate_limited: "rules have acted on this milestone too often in a short time",
             },
         },
     },

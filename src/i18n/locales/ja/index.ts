@@ -1236,6 +1236,8 @@ export const ja: DeepPartial<Messages> = {
             line: "ルール「{rule}」が{task}を{project}に移動しました。",
             aTask: "タスク",
             anotherProject: "別のプロジェクト",
+            milestoneLine: "ルール「{rule}」がマイルストーン{task}を{project}に移動しました。",
+            aMilestone: "マイルストーン",
         },
         retentionBanner:
             "プランの制限により、{days} 日より前のメッセージは非表示になっています。アップグレードすると全履歴を表示できます。",
@@ -7161,6 +7163,14 @@ export const ja: DeepPartial<Messages> = {
                     error: "問題が発生しました",
                     bad_status: "ルールが設定するステータスは利用できなくなりました",
                     assignee_not_allowed: "ルールが割り当てる人は移動先で担当者にできません",
+                    too_many_tasks:
+                        "マイルストーンのタスクが 200 件を超えているため、ルールでは移動できません",
+                },
+                // The two reasons that name what the row is about, for a milestone's history.
+                milestoneReasons: {
+                    destination:
+                        "ルールの移動先プロジェクトにはこのマイルストーンを移動できません",
+                    rate_limited: "短時間にルールがこのマイルストーンを何度も操作しました",
                 },
             },
         },

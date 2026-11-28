@@ -1171,6 +1171,8 @@ export const zh: DeepPartial<Messages> = {
             line: "规则“{rule}”已将{task}移至{project}。",
             aTask: "一个任务",
             anotherProject: "另一个项目",
+            milestoneLine: "规则“{rule}”已将里程碑{task}移至{project}。",
+            aMilestone: "一个里程碑",
         },
         retentionBanner: "根据你的套餐，超过 {days} 天的消息已被隐藏。升级后可查看完整历史记录。",
         composer: {
@@ -6855,6 +6857,12 @@ export const zh: DeepPartial<Messages> = {
                     error: "出现了问题",
                     bad_status: "规则要设置的状态已不可用",
                     assignee_not_allowed: "规则指定的负责人无法在那里被指派",
+                    too_many_tasks: "里程碑包含超过 200 个任务，规则无法移动",
+                },
+                // The two reasons that name what the row is about, for a milestone's history.
+                milestoneReasons: {
+                    destination: "里程碑无法移至规则指定的目标项目",
+                    rate_limited: "规则在短时间内对此里程碑操作过于频繁",
                 },
             },
             via: {

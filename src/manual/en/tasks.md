@@ -50,8 +50,9 @@ A project can have **automation rules**: when something happens to one of its ta
 - **Who it acts as:** a rule runs as the person who last saved it, who must be the project's owner or an editor and a member of the destination project.
 - **What moves:** the task takes its sub-tasks, comments, notes and chat card with it. It gets a new ID, and the old ID still works. Tags carry over when the destination has a tag of the same name.
 - **What you see:** the task's Activity tab says it was moved by the rule, or why the rule was not applied. The old project's chat gets one line saying a rule moved a task; it names the task and the new project only to people who can open them. The assignee is told.
+- **Milestones:** a rule can also be set to act on milestones. It reads the milestone's own status, tags and assignees, and cannot use a “milestone” condition. Moving a milestone moves every task under it and clears the sprint and folder. A rule that assigns someone makes that person the milestone's only assignee.
 
-**Guards.** A rule never moves a task to another team, or to a project that somebody could read who cannot read this one, so a private project's tasks never move to a public one. A sub-task does not move without its parent. A task that rules have acted on several times within an hour is left alone for a while. A rule whose owner can no longer run it is turned off. Milestones are not moved by rules.
+**Guards.** A rule never moves a task to another team, or to a project that somebody could read who cannot read this one, so a private project's tasks never move to a public one. A sub-task does not move without its parent. A task that rules have acted on several times within an hour is left alone for a while. A rule whose owner can no longer run it is turned off. A milestone with more than 200 tasks under it is not moved by a rule, and its Activity says so. Rules apply to one milestone at most twice within an hour.
 
 ## GitHub and Google Calendar
 

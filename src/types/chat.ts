@@ -248,6 +248,8 @@ export type RuleMoveNotice = {
     ruleName: string;
     taskId: number;
     projectId: number;
+    /** The rule moved a milestone; `taskId` is then its backing task (MIP-2540). */
+    milestone?: boolean;
 };
 
 export type MessageProps = {

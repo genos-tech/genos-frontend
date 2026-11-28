@@ -4,6 +4,8 @@ export const chat = {
         line: "Rule “{rule}” moved {task} to {project}.",
         aTask: "a task",
         anotherProject: "another project",
+        milestoneLine: "Rule “{rule}” moved the milestone {task} to {project}.",
+        aMilestone: "a milestone",
     },
     // Tier retention strip (RetentionBanner) — shown when the viewer's
     // plan hides part of this channel's history.

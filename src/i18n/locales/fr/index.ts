@@ -1250,6 +1250,8 @@ export const fr: DeepPartial<Messages> = {
             line: "La règle « {rule} » a déplacé {task} vers {project}.",
             aTask: "une tâche",
             anotherProject: "un autre projet",
+            milestoneLine: "La règle « {rule} » a déplacé le jalon {task} vers {project}.",
+            aMilestone: "un jalon",
         },
         retentionBanner:
             "Les messages de plus de {days} jours sont masqués avec votre forfait. Passez à un forfait supérieur pour voir tout l'historique.",
@@ -7251,6 +7253,14 @@ export const fr: DeepPartial<Messages> = {
                     bad_status: "le statut défini par la règle n’est plus disponible",
                     assignee_not_allowed:
                         "la personne que la règle assigne ne peut pas être assignée là-bas",
+                    too_many_tasks:
+                        "le jalon compte plus de 200 tâches, trop pour qu’une règle le déplace",
+                },
+                // The two reasons that name what the row is about, for a milestone's history.
+                milestoneReasons: {
+                    destination:
+                        "le jalon ne peut pas être déplacé vers le projet de destination de la règle",
+                    rate_limited: "les règles ont agi trop souvent sur ce jalon en peu de temps",
                 },
             },
             via: {
