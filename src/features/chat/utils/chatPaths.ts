@@ -46,7 +46,8 @@ export const buildChatPath = (
     // thread-root UUID (string), PM keeps the numeric task id. See
     // `parseChatRoute`, which parses the segment back type-awarely.
     threadId?: number | string,
-    messageId?: number,
+    // A numeric `seq` or a `Message.id` UUID, as `parseChatRoute` read it.
+    messageId?: number | string,
     commentId?: number
 ): string => {
     let path = `/workspace/chat/${typePath}`;

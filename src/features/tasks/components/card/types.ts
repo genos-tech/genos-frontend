@@ -11,6 +11,9 @@ export type TaskCardTask = {
     displayId?: string | null;
     title: string | null;
     status: string | null;
+    /** With the project, the status reads as that project calls it (MIP-2493). */
+    projectId?: number | null;
+    customStatusId?: number | null;
     priority?: string | null;
     assigneeId?: string | null;
     assigneeName?: string | null;

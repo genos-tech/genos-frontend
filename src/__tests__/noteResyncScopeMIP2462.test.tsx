@@ -273,4 +273,26 @@ describe("an agent write that could not reach the collab document", () => {
         expect(world.replaced).toEqual([{ doc: "my-note:5", text: "restored" }]);
         expect(editorOf("my-note:6").document).toEqual(body("written by a collaborator"));
     });
+
+    // MIP-2474: a background tab keeps its editor mounted, and typing in it would save the old
+    // document over what the agent wrote.
+    it("is forced into a background tab of that note", async () => {
+        await mount();
+        await act(async () => useNM.setCurrentMyNote(note(1, 5) as never));
+        remoteWrite("task-note:5", "written in the task note");
+
+        await act(async () => {
+            window.dispatchEvent(
+                new CustomEvent("noteChanged", {
+                    detail: {
+                        note: { note_id: 6, note_type: "personal", changed_fields: ["body"] },
+                    },
+                })
+            );
+        });
+        await vi.waitFor(() => expect(world.replaced.length).toBeGreaterThan(0));
+
+        expect(world.replaced).toEqual([{ doc: "my-note:6", text: "restored" }]);
+        expect(editorOf("task-note:5").document).toEqual(body("written in the task note"));
+    });
 });

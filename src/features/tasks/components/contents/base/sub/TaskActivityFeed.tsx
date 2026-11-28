@@ -1,7 +1,8 @@
-import { useId, useMemo, useState, type ReactElement } from "react";
+import { useId, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import AssignmentIndRoundedIcon from "@mui/icons-material/AssignmentIndRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CallSplitRoundedIcon from "@mui/icons-material/CallSplitRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
@@ -54,6 +55,7 @@ import { effortLevels, priorities, statuses, taskMetaLabel } from "../../../../u
 import { viaSourceOfRow } from "../../../../utils/viaSource";
 import { PriorityIcon } from "../../../meta/PriorityIcon";
 import { StatusLabel } from "../../../meta/StatusLabel";
+import { ActivityStatusChip } from "../../../statuses/ActivityStatusChip";
 import { EffortLabel } from "../../../table/cellEditors";
 import { RestoreBodyControl } from "./RestoreBodyControl";
 
@@ -148,6 +150,7 @@ const actionIcon = (action: string) => {
         case "title_changed":
             return <EditOutlinedIcon sx={{ fontSize: 18 }} />;
         case "status_changed":
+        case "custom_status_changed":
             return <CheckCircleOutlineRoundedIcon sx={{ fontSize: 18 }} />;
         case "priority_changed":
             return <FlagOutlinedIcon sx={{ fontSize: 18 }} />;
@@ -462,6 +465,87 @@ const PrMergeCloseActivityRow = ({
     );
 };
 
+/** The sentence of a row a project rule wrote (MIP-2500), with the rule's name isolated: a name
+ *  in another script cannot reorder the words around it. */
+const automationSentence = (
+    activity: TaskActivityProps,
+    messages: ActivityMessages
+): ReactNode[] => {
+    const metadata = activity.metadata ?? {};
+    const rule = typeof metadata.ruleName === "string" ? metadata.ruleName : "";
+    const code = typeof metadata.reason === "string" ? metadata.reason : "";
+    const reason = Object.prototype.hasOwnProperty.call(messages.automation.reasons, code)
+        ? messages.automation.reasons[code as keyof ActivityMessages["automation"]["reasons"]]
+        : "";
+    let template: string;
+    if (activity.actionType === "automation_applied") {
+        template =
+            metadata.toProjectId != null ? messages.automation.moved : messages.automation.changed;
+    } else {
+        template = reason ? messages.automation.notApplied : messages.automation.notAppliedPlain;
+    }
+    // Split first, so a rule's name cannot add a placeholder.
+    return template.split(/(\{rule\}|\{reason\})/).map((part, index) => {
+        if (part === "{rule}") return <bdi key={index}>{rule}</bdi>;
+        return part === "{reason}" ? reason : part;
+    });
+};
+
+// A project rule acted, or could not (`automation_applied` / `automation_refused`). The row is
+// attributed to the rule, not to its owner, who did nothing at that moment.
+const AutomationActivityRow = ({ activity }: { activity: TaskActivityProps }) => {
+    const { t, locale } = useTranslation();
+    return (
+        <Stack
+            alignItems="center"
+            data-automation-row=""
+            direction="row"
+            spacing={1.25}
+            sx={{
+                py: 1,
+                px: 1,
+                borderRadius: "8px",
+                "&:hover": { background: g.hover },
+            }}
+        >
+            <BaseAvatar>
+                <BoltRoundedIcon sx={{ fontSize: 18 }} />
+            </BaseAvatar>
+            <Box
+                sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 0.75,
+                    flexWrap: "wrap",
+                }}
+            >
+                <Typography
+                    level="body-sm"
+                    sx={{
+                        color: g.text.secondary,
+                        overflowWrap: "anywhere",
+                    }}
+                >
+                    {automationSentence(activity, t.tasks.activity)}
+                </Typography>
+                <Box sx={{ flexGrow: 1 }} />
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        color: g.text.tertiary,
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {formatRelative(activity.tsCreatedAt, t.tasks.activity, locale)}
+                </Typography>
+            </Box>
+        </Stack>
+    );
+};
+
 // Render branch for a GitHub PR auto-linked to this task (`pr_linked`).
 // The link is established when a PR is opened on a branch whose name
 // carries the task's display id. Like the other GitHub rows the actor is
@@ -737,6 +821,26 @@ const formatValue = (
     return { label: readableParts(value).join(", ") || noneLabel, isUser: false };
 };
 
+type CustomStatusChange = {
+    oldLabel?: string | null;
+    newLabel?: string | null;
+    oldColor?: string | null;
+    newColor?: string | null;
+    category: string;
+};
+
+const customStatusOf = (row: TaskActivityProps): CustomStatusChange | null => {
+    const raw =
+        row.actionType === "custom_status_changed"
+            ? row.metadata
+            : row.actionType === "status_changed"
+              ? row.metadata?.customStatus
+              : null;
+    if (!raw || typeof raw !== "object") return null;
+    const change = raw as Partial<CustomStatusChange>;
+    return { ...change, category: change.category ?? "" };
+};
+
 // Diff-style actions whose verb expects both an old and a new chip
 // ("changed X from A → B"). For these we always render *both* chips
 // even when one side is null/empty — `formatValue` substitutes
@@ -747,6 +851,7 @@ const formatValue = (
 const DIFF_ACTIONS = new Set([
     "title_changed",
     "status_changed",
+    "custom_status_changed",
     "priority_changed",
     "effort_changed",
     "assignee_changed",
@@ -775,6 +880,7 @@ const verbFor = (
         case "title_changed":
             return messages.verbs.titleChanged;
         case "status_changed":
+        case "custom_status_changed":
             return messages.verbs.statusChanged;
         case "priority_changed":
             return messages.verbs.priorityChanged;
@@ -1065,6 +1171,13 @@ export const TaskActivityFeed = ({
         return taskDisplayIdById.get(numeric) ?? null;
     };
 
+    // The project of the task the feed is about, to name a category's default status.
+    const feedProjectId = useMemo(() => {
+        const task =
+            taskId != null ? allTasks.find((t) => Number(t.id) === Number(taskId)) : undefined;
+        return task?.projectId ?? null;
+    }, [allTasks, taskId]);
+
     const renderRow = (row: TaskActivityProps) => {
         // PR-comment rows render in a custom layout (GitHub
         // identity, expandable excerpt). Branch out early so we
@@ -1076,6 +1189,9 @@ export const TaskActivityFeed = ({
         // task's display id) gets a GitHub-styled link row.
         if (row.actionType === "pr_linked") {
             return <PrLinkActivityRow key={row.activityId} activity={row} isDark={isDark} />;
+        }
+        if (row.actionType === "automation_applied" || row.actionType === "automation_refused") {
+            return <AutomationActivityRow key={row.activityId} activity={row} />;
         }
         // A status change tagged as an automatic PR-merge close
         // gets its own attribution row (the underlying actor is
@@ -1118,6 +1234,26 @@ export const TaskActivityFeed = ({
         const showNewChip = created
             ? created.status != null
             : isDiffAction || (row.newValue != null && row.newValue !== "");
+
+        // A change between a project's own statuses (MIP-2493): on a status row they ride in
+        // `metadata.customStatus`; a change inside one category is its own row.
+        const custom = customStatusOf(row);
+        const customChip = (side: "old" | "new") => {
+            if (!custom) return null;
+            const category =
+                row.actionType === "status_changed"
+                    ? String((side === "old" ? row.oldValue : row.newValue) ?? "")
+                    : custom.category;
+            if (!category) return null;
+            return (
+                <ActivityStatusChip
+                    category={category}
+                    color={side === "old" ? custom.oldColor : custom.newColor}
+                    label={side === "old" ? custom.oldLabel : custom.newLabel}
+                    projectId={feedProjectId}
+                />
+            );
+        };
 
         // Prefer the team-member profile (richer presence /
         // online status) over `row.actor`, which carries only
@@ -1199,13 +1335,14 @@ export const TaskActivityFeed = ({
                         {row.actionType === "pr_unlinked" && (
                             <PrUnlinkedRef isDark={isDark} metadata={row.metadata} />
                         )}
-                        {showOldChip && (
-                            <ValueChip
-                                fieldName={row.fieldName}
-                                isDark={isDark}
-                                label={oldFmt.label}
-                            />
-                        )}
+                        {showOldChip &&
+                            (customChip("old") ?? (
+                                <ValueChip
+                                    fieldName={row.fieldName}
+                                    isDark={isDark}
+                                    label={oldFmt.label}
+                                />
+                            ))}
                         {showOldChip && showNewChip && (
                             <Typography
                                 level="body-sm"
@@ -1226,16 +1363,17 @@ export const TaskActivityFeed = ({
                                 {t.tasks.fields.milestone}
                             </Typography>
                         )}
-                        {showNewChip && (
-                            <ValueChip
-                                // The row has no field_name, but this
-                                // chip IS a status: name it so it gets
-                                // the status colours and translation.
-                                fieldName={created ? "status" : row.fieldName}
-                                isDark={isDark}
-                                label={created?.status ?? newFmt.label}
-                            />
-                        )}
+                        {showNewChip &&
+                            (customChip("new") ?? (
+                                <ValueChip
+                                    // The row has no field_name, but this
+                                    // chip IS a status: name it so it gets
+                                    // the status colours and translation.
+                                    fieldName={created ? "status" : row.fieldName}
+                                    isDark={isDark}
+                                    label={created?.status ?? newFmt.label}
+                                />
+                            ))}
                         {via && <ViaChip source={via} />}
                         <Box sx={{ flexGrow: 1 }} />
                         <Typography

@@ -14,7 +14,18 @@ import { Socket } from "socket.io-client";
 import { getCachedNote, noteCacheKind } from "../../../../hooks/notes/useNoteData";
 import { UserProps } from "../../../../types/admin";
 import { isRetryableSaveError } from "../../../tasks/services/isRetryableSaveError";
+import {
+    bodyFingerprint,
+    resumeKeepingUnsavedBodies,
+} from "../../../tasks/services/unsavedTaskBody";
+import { repairUnsavedNoteBody } from "../services/repairUnsavedNoteBody";
 import { EditableNote } from "../services/saveNote";
+import {
+    forgetUnsavedNoteBody,
+    keepUnsavedNoteBody,
+    settleUnsavedNoteBody,
+    tellNoteNotSaved,
+} from "../services/unsavedNoteBody";
 import { createNoteSaveSession, NoteSaveSession, sendNoteSave } from "./noteSaveSession";
 
 // Debounce delay between the user's last body edit and the auto-save firing.
@@ -85,8 +96,14 @@ const identityOf = (
  * A save carries the body as it was when it went out. When it returns, the editor is read again
  * and the note stays "edited" if anything differs. Saves of one note go out one at a time, a save
  * that stored nothing is not counted as saved, and leaving the note (unmount, or another note in
- * the same panel) sends what the timers had not. A save made while leaving that FAILS is not
- * retried (MIP-2463).
+ * the same panel) sends what the timers had not.
+ *
+ * ## What could not be saved (MIP-2463)
+ *
+ * When the server refuses a save for good, the person is told. At the moments after which a save
+ * may never land (leaving, a reload or closed tab, a refusal) the words are also kept in this
+ * browser (`unsavedNoteBody`) and sent when the note is next opened, only if the stored note has
+ * not changed since.
  */
 export function useNoteEditorCore<T extends EditableNote>({
     currentNote,
@@ -140,6 +157,10 @@ export function useNoteEditorCore<T extends EditableNote>({
         setNoteBodyEditedState(false);
         setNoteBodySaved(false);
     } else {
+        // The stored note changed under this panel (another panel's save, a fresh read): words
+        // typed from now on are on top of it.
+        if (currentNote && currentNote.body !== session.note?.body)
+            session.serverBody = bodyFingerprint(currentNote.body);
         session.note = currentNote;
         session.onNoteUpdate = onNoteUpdate;
     }
@@ -188,93 +209,129 @@ export function useNoteEditorCore<T extends EditableNote>({
         [setPendingTitle]
     );
 
-    /** `onlyIfChanged`: do not send a body the server has already confirmed. */
-    const save = useCallback(async (target: NoteSaveSession<T>, onlyIfChanged: boolean) => {
-        // Read the editor NOW: its sync into `body` is debounced, and it may be gone by
-        // the time an earlier save of this note lets this one go.
-        const typed = target.edited ? target.bodyReadRef.current?.() : undefined;
-        if (typed) target.body = typed;
-
-        const isShown = () => sessionRef.current === target;
-        let sentTitle: string | null = null;
-        let sent: T | null = null;
-        try {
-            const stored = await sendNoteSave(target, () => {
-                const { myself, accessToken, socket } = senderRef.current;
-                const note = target.note;
-                if (target.dropped || !note || !accessToken) return null;
-                // An earlier save may have taken a while: read the editor again.
-                if (target.edited) target.body = target.bodyReadRef.current?.() ?? target.body;
-                if (
-                    onlyIfChanged &&
-                    !target.pendingTitle &&
-                    JSON.stringify(target.body ?? []) === target.confirmedBody
-                ) {
-                    // Typed and then undone, or already carried by the save before this one.
-                    target.edited = false;
-                    if (isShown()) setNoteBodyEditedState(false);
-                    return null;
-                }
-                // Resolve the title from the freshest source at SAVE time. A save
-                // triggered by a BODY edit must never carry this panel's snapshot of the
-                // title: the note may have been renamed on another surface since. The
-                // shared cache is written by every persisted edit, so it outranks the
-                // note; only an in-progress local rename outranks the cache. An empty
-                // rename (the input was cleared) is not persisted as a blank title.
-                sentTitle = target.pendingTitle;
-                const persisted = getCachedNote(noteCacheKind(note.noteType), note.noteId);
-                const payload = {
-                    ...note,
-                    title: sentTitle || persisted?.title || note.title,
-                    body: target.body || [],
-                } as T;
-                sent = payload;
-                return { note: payload, myself, accessToken, socket };
-            });
-            if (!stored || !sent) return;
-        } catch (error) {
-            console.error("Failed to update note:", error);
-            // Nothing was stored. Stay "edited" and send it again when that can help.
-            const retry = isRetryableSaveError(error);
-            // A lost answer does not say what the server holds now.
-            target.confirmedBody = null;
-            if (retry) target.backoff.failed();
-            // A refusal of a rename says nothing about the body: it goes again without
-            // the title, and is dropped only if that is refused too.
-            else if (!sentTitle) target.edited = false;
-            if (isShown()) {
-                setNoteBodyEditedState(target.edited);
-                setNoteBodySaved(false);
-                setSaveRound((n) => n + 1);
-            }
-            return;
-        } finally {
-            // The rename attempt is over either way, so stop overriding the note's own
-            // title: holding it after a failure made this panel PUT a title the note did
-            // not have. A title typed since the save went out is a new attempt and stays.
-            if (target.pendingTitle === sentTitle) {
-                target.pendingTitle = null;
-                if (isShown()) setPendingTitleState(null);
-            }
-        }
-
-        const saved = sent as T;
-        target.backoff.reset();
-        target.confirmedBody = JSON.stringify(saved.body);
-        // Words typed while the save was in flight (or still waiting in the editor's
-        // debounce) are not in what was sent.
-        const now = isShown() && target.edited ? target.bodyReadRef.current?.() : undefined;
-        if (now) target.body = now;
-        const unsent = target.edited && JSON.stringify(target.body ?? []) !== target.confirmedBody;
-        target.edited = unsent;
-        if (isShown()) {
-            setBodyState(target.body);
-            setNoteBodyEditedState(unsent);
-            setNoteBodySaved(!unsent);
-            if (unsent) setSaveRound((n) => n + 1);
-        }
-        target.onNoteUpdate?.(saved);
+    /** For the moments after which a save may never land: keeps the words in this browser until
+     *  a save is known to have stored them. */
+    const keepIfUnsaved = useCallback((target: NoteSaveSession<T>) => {
+        if (target.dropped || !target.noteKey) return;
+        const { userId } = senderRef.current.myself;
+        const body = target.bodyReadRef.current?.() ?? target.body;
+        if (!body) return;
+        target.body = body;
+        // Typed and back to what is stored: words kept earlier were taken out again.
+        if (bodyFingerprint(body) === target.serverBody)
+            forgetUnsavedNoteBody(userId, target.noteKey);
+        else keepUnsavedNoteBody(userId, target.noteKey, body, target.serverBody);
     }, []);
+
+    /** `onlyIfChanged`: do not send a body the server has already confirmed. */
+    const save = useCallback(
+        async (target: NoteSaveSession<T>, onlyIfChanged: boolean) => {
+            // Read the editor NOW: its sync into `body` is debounced, and it may be gone by
+            // the time an earlier save of this note lets this one go.
+            const typed = target.edited ? target.bodyReadRef.current?.() : undefined;
+            if (typed) target.body = typed;
+
+            const isShown = () => sessionRef.current === target;
+            const startedAt = Date.now();
+            const typedHere = target.edited;
+            let sentTitle: string | null = null;
+            let sent: T | null = null;
+            try {
+                const stored = await sendNoteSave(target, () => {
+                    const { myself, accessToken, socket } = senderRef.current;
+                    const note = target.note;
+                    if (target.dropped || !note || !accessToken) return null;
+                    // An earlier save may have taken a while: read the editor again.
+                    if (target.edited) target.body = target.bodyReadRef.current?.() ?? target.body;
+                    if (
+                        onlyIfChanged &&
+                        !target.pendingTitle &&
+                        JSON.stringify(target.body ?? []) === target.confirmedBody
+                    ) {
+                        // Typed and then undone, or already carried by the save before this one.
+                        target.edited = false;
+                        if (isShown()) setNoteBodyEditedState(false);
+                        return null;
+                    }
+                    // Resolve the title from the freshest source at SAVE time. A save
+                    // triggered by a BODY edit must never carry this panel's snapshot of the
+                    // title: the note may have been renamed on another surface since. The
+                    // shared cache is written by every persisted edit, so it outranks the
+                    // note; only an in-progress local rename outranks the cache. An empty
+                    // rename (the input was cleared) is not persisted as a blank title.
+                    sentTitle = target.pendingTitle;
+                    const persisted = getCachedNote(noteCacheKind(note.noteType), note.noteId);
+                    const payload = {
+                        ...note,
+                        title: sentTitle || persisted?.title || note.title,
+                        body: target.body || [],
+                    } as T;
+                    sent = payload;
+                    return { note: payload, myself, accessToken, socket };
+                });
+                if (!stored || !sent) return;
+            } catch (error) {
+                console.error("Failed to update note:", error);
+                // Nothing was stored. Stay "edited" and send it again when that can help.
+                const retry = isRetryableSaveError(error);
+                // A lost answer does not say what the server holds now.
+                target.confirmedBody = null;
+                if (retry) target.backoff.failed();
+                // A refusal of a rename says nothing about the body: it goes again without
+                // the title, and is dropped only if that is refused too. A note already left
+                // has nobody to send it again.
+                else if (!sentTitle || !isShown()) {
+                    // Not stored and not going to be: say so, and keep the words (MIP-2463).
+                    if (target.edited) keepIfUnsaved(target);
+                    target.edited = false;
+                    tellNoteNotSaved(error);
+                }
+                if (isShown()) {
+                    setNoteBodyEditedState(target.edited);
+                    setNoteBodySaved(false);
+                    setSaveRound((n) => n + 1);
+                }
+                return;
+            } finally {
+                // The rename attempt is over either way, so stop overriding the note's own
+                // title: holding it after a failure made this panel PUT a title the note did
+                // not have. A title typed since the save went out is a new attempt and stays.
+                if (target.pendingTitle === sentTitle) {
+                    target.pendingTitle = null;
+                    if (isShown()) setPendingTitleState(null);
+                }
+            }
+
+            const saved = sent as T;
+            target.backoff.reset();
+            target.confirmedBody = JSON.stringify(saved.body);
+            target.serverBody = bodyFingerprint(saved.body);
+            settleUnsavedNoteBody(
+                senderRef.current.myself.userId,
+                target.noteKey,
+                saved.body ?? [],
+                {
+                    startedAt,
+                    typed: typedHere,
+                }
+            );
+            // Words typed while the save was in flight (or still waiting in the editor's
+            // debounce) are not in what was sent.
+            const now = isShown() && target.edited ? target.bodyReadRef.current?.() : undefined;
+            if (now) target.body = now;
+            const unsent =
+                target.edited && JSON.stringify(target.body ?? []) !== target.confirmedBody;
+            target.edited = unsent;
+            if (isShown()) {
+                setBodyState(target.body);
+                setNoteBodyEditedState(unsent);
+                setNoteBodySaved(!unsent);
+                if (unsent) setSaveRound((n) => n + 1);
+            }
+            target.onNoteUpdate?.(saved);
+        },
+        [keepIfUnsaved]
+    );
 
     const updateNote = useCallback(() => save(session, false), [save, session]);
 
@@ -305,12 +362,55 @@ export function useNoteEditorCore<T extends EditableNote>({
                 // The same note re-seeded (a restore from history): the old text must not
                 // be written over it.
                 session.dropped = true;
+                forgetUnsavedNoteBody(senderRef.current.myself.userId, session.noteKey);
                 return;
             }
-            if (session.edited) void save(session, true);
+            if (!session.edited) return;
+            keepIfUnsaved(session);
+            void save(session, true);
         },
-        [session, save]
+        [session, save, keepIfUnsaved]
     );
+
+    // A reload or a closed tab: no request is sure to get out, so the words are kept.
+    useEffect(() => {
+        const onPageHide = () => {
+            if (sessionRef.current.edited) keepIfUnsaved(sessionRef.current);
+        };
+        window.addEventListener("pagehide", onPageHide);
+        return () => window.removeEventListener("pagehide", onPageHide);
+    }, [keepIfUnsaved]);
+
+    useEffect(resumeKeepingUnsavedBodies, []);
+
+    // Opening a note: save what an earlier visit could not. Once per visit: a token refresh
+    // must not send (and drop) words refused while the note is open.
+    const repairedRef = useRef<NoteSaveSession<T> | null>(null);
+    useEffect(() => {
+        const { myself, accessToken, socket } = senderRef.current;
+        const note = session.note;
+        if (!note || !accessToken || repairedRef.current === session) return;
+        repairedRef.current = session;
+        void repairUnsavedNoteBody({
+            myself,
+            noteType: note.noteType as 1 | 2 | 3,
+            noteId: note.noteId,
+            accessToken,
+            socket,
+            isSuperseded: () => session.edited,
+        })
+            .then((repaired) => {
+                if (!repaired) return;
+                session.serverBody = bodyFingerprint(repaired.body);
+                // A later rename from this panel must not send the old body back.
+                if (!session.edited) {
+                    session.body = repaired.body as PartialBlock[];
+                    if (sessionRef.current === session) setBodyState(session.body);
+                }
+                session.onNoteUpdate?.(repaired as T);
+            })
+            .catch((error) => console.error("Unsaved note repair failed:", error));
+    }, [session, accessToken]);
 
     // Auto-clear the "saved" indicator after a short delay so it behaves
     // like a transient confirmation rather than a sticky badge.

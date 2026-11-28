@@ -1,37 +1,13 @@
-<!-- Generated from genos-docs/marketing/REDDIT_PRODUCTIVITY_MESSAGES_COME_BACK.md. Run npm run blog:sync; do not edit this copy directly. -->
+<!-- Generated from genos-docs/marketing/blog/make-chat-messages-come-back.md. Run npm run blog:sync; do not edit this copy directly. -->
 
-Disclosure: I am building a workspace called Genos, and I recently shipped this
-workflow in it. I am asking because I am not convinced I chose the right
-abstraction.
+![A chat message menu with Remind me highlighted](/lp/guide/en/message-menu.webp)
 
-The case is simple: a message needs action later. Saving or flagging it preserves
-the message, but the list is passive. Turning it into a task gives it a due date,
-but now there are two objects and the task may lose the surrounding conversation.
+Not now, but don't lose it.
 
-I treated the reminder as part of the message flag:
+```flow
+Open the message menu
+Remind me…
+Pick a time
+```
 
-1. Add a time to the original message.
-2. Keep it visible as a flagged item before the time arrives.
-3. At that time, send Web Push and create an Inbox activity that links back to the
-   message.
-4. If the flag is completed or removed first, cancel the pending reminder.
-
-That behavior is shipped. The broader product is still early and web-only.
-
-The trade-off I want criticism on: should "remind me about this message" stay a
-message-level action, or should every reminder create a real task with ownership,
-status, and a due date?
-
-For people who have a system that survives a busy week: what do you use, and where
-does it fail? Also, should a reminder fire while you already have that conversation
-open, or should presence suppress it?
-
----
-
-## Optional reply if someone asks for the product
-
-Use only if links are allowed:
-
-> I built the workflow in Genos. There is a no-login demo at
-> <https://genosai.dev>. It is early and web-only. The relevant behavior is the
-> message flag/reminder flow; no signup is needed to inspect the product.
+When it is due you get a notification and an Inbox item that links back to the message. Task comments can do the same.

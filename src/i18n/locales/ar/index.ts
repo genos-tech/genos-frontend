@@ -507,6 +507,7 @@ export const ar: DeepPartial<Messages> = {
             actionFailed: "تعذّر إكمال الإجراء. يرجى المحاولة مرة أخرى.",
             limitReached: "لقد وصلت إلى حد خطتك. راجع الإعدادات ← الخطة والاستخدام.",
             messageSendFailed: "تعذّر إرسال رسالتك. يرجى المحاولة مرة أخرى.",
+            noteNotSaved: "تعذّر حفظ آخر تغييراتك على هذه الملاحظة.",
             idleReload: "جارٍ تحديث الصفحة بعد فترة من عدم النشاط…",
         },
         features: {
@@ -1027,7 +1028,7 @@ export const ar: DeepPartial<Messages> = {
         },
         schedules: {
             title: "الجداول الزمنية لـ Genos Assist",
-            blurb: "يعدّ لك Genos تقريرًا في الأوقات التي تختارها، ويصل إلى صندوق الوارد لديك.",
+            blurb: "يشغّل Genos هذه في الأوقات التي تختارها: يصل التقرير إلى صندوق الوارد أو إلى محادثة، وتُرسَل رسالتك إلى محادثة.",
             loading: "جارٍ تحميل جداولك الزمنية…",
             loadFailed: "تعذّر تحميل جداولك الزمنية.",
             retry: "حاول مجددًا",
@@ -1043,6 +1044,11 @@ export const ar: DeepPartial<Messages> = {
             suggestEveningName: "ملخص المساء",
             suggestEveningBlurb: "ما أنجزته اليوم",
             suggestDaily: "كل يوم في {time}",
+            ruleDaily: "كل يوم في {time}",
+            ruleWeekdays: "من الاثنين إلى الجمعة في {time}",
+            ruleWeekly: "كل {days} في {time}",
+            ruleMonthly: "كل شهر في اليوم {day} الساعة {time}",
+            ruleOnce: "مرة واحدة، في {date} الساعة {time}",
             upgradeTitle: "تقارير تصلك من تلقاء نفسها",
             upgradeChip: "Core وما فوقها",
             upgradeBody:
@@ -1107,6 +1113,11 @@ export const ar: DeepPartial<Messages> = {
             job: "التقرير",
             jobPlaceholder: "اختر تقريرًا",
             jobCatalog: {
+                scheduled_message: {
+                    title: "رسالة مجدولة",
+                    description:
+                        "ترسل رسالة تكتبها إلى محادثة مجموعة أو محادثة مشروع، باسمك، في الوقت الذي تختاره. لا يُستخدم الذكاء الاصطناعي.",
+                },
                 ai_dashboard: {
                     title: "صفحة لوحة معلومات",
                     description:
@@ -1233,6 +1244,18 @@ export const ar: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "يُنشر التقرير في هذه المحادثة كرسالة مع جمله المكتوبة بالذكاء الاصطناعي. يستطيع الجميع في المحادثة قراءته، لكن تكلفته تظهر لك وحدك في صندوق الوارد. لا يُرسل أي إشعار.",
             rowDeliver: "يُنشر في: {name}",
+            messageLabel: "الرسالة",
+            messageHint:
+                "تُرسل باسمك كما لو ضغطت على إرسال. يصل إشعار إلى أعضاء المحادثة الذين تشير إليهم. لا يمكن إضافة صور أو ملفات.",
+            messageChatLabel: "إرسال الرسالة إلى",
+            messageChatPlaceholder: "اختر محادثة",
+            errorMessage: "اكتب الرسالة المراد إرسالها.",
+            errorMessageFiles: "أزل الصور والملفات من الرسالة.",
+            errorMessageChat: "اختر محادثة مجموعة أو محادثة مشروع.",
+            rowMessage: "الرسالة: {text}",
+            rowSendTo: "تُرسل إلى: {name}",
+            messageSent: "أُرسلت الرسالة إلى {chat}",
+            runRightAwayHintMessage: "تُرسل إلى {chat} بمجرد الضغط على «تشغيل الآن».",
             reportPosted: "تم نشر التقرير في {chat}",
             rowProject: "المشروع: {name}",
             rowMilestone: "المعلم: {name}",
@@ -2595,6 +2618,13 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments:
+                "{count, plural, zero {# تعليق} one {تعليق واحد} two {تعليقان} few {# تعليقات} many {# تعليقًا} other {# تعليق}}",
+            replies:
+                "{count, plural, zero {# رد} one {رد واحد} two {ردّان} few {# ردود} many {# ردًا} other {# رد}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -2602,6 +2632,11 @@ export const ar: DeepPartial<Messages> = {
             attachment: "أرسل مرفقًا",
             listLabel: "الرسائل",
             threadListLabel: "ردود المحادثة الفرعية",
+        },
+        ruleMoveNotice: {
+            line: "نقلت القاعدة «{rule}» {task} إلى {project}.",
+            aTask: "مهمة",
+            anotherProject: "مشروع آخر",
         },
         retentionBanner:
             "الرسائل الأقدم من {days} يومًا مخفية في خطتك. قم بالترقية لعرض السجل الكامل.",
@@ -4079,21 +4114,21 @@ export const ar: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "تعذّر تحميل مخطط السرعة",
-                title: "سرعة",
-                subtitle: "المهام التي تم إنشاؤها وبدأت وإغلاقها وتحديثها بمرور الوقت",
+                loadFailed: "تعذّر تحميل مخطط الوتيرة",
+                title: "الوتيرة",
+                subtitle: "المهام المُنشأة والمبدوءة والمغلقة والمُحدَّثة بمرور الوقت",
                 day: "يوم",
                 week: "أسبوع",
-                created: "مخلوق",
-                started: "بدأت",
-                closed: "مغلق",
-                updated: "تم التحديث",
-                weekPrefix: "دبليو من",
+                created: "المُنشأة",
+                started: "المبدوءة",
+                closed: "المغلقة",
+                updated: "المُحدَّثة",
+                weekPrefix: "أسبوع",
                 memberLabel: "عضو",
                 allMembers: "جميع الأعضاء",
-                empty: "لا يوجد نشاط مهمة في هذه النافذة حتى الآن.",
+                empty: "لا يوجد نشاط للمهام في هذه الفترة بعد.",
                 barTooltip: "{count} {series} · {date}",
-                totals: "ضمن العرض — أُنشئت {created}، وبدأت {started}، وأُغلقت {closed}، وحُدّثت {updated}",
+                totals: "في هذه الفترة: المُنشأة {created}، المبدوءة {started}، المغلقة {closed}، المُحدَّثة {updated}",
             },
             moreCount: "+{count} المزيد",
             noOverdueTasks: "لا توجد مهام متأخرة",
@@ -4544,6 +4579,52 @@ export const ar: DeepPartial<Messages> = {
             sharedByTeam: "شاركها {team} مع فريقك",
             sharedByAnotherTeam: "مشتركة مع فريقك من قبل فريق آخر",
         },
+        // Per-project statuses (MIP-2493).
+        projectStatuses: {
+            menuItem: "الحالات والأتمتة",
+            title: "الحالات",
+            description: "حالات هذا المشروع. تُحفظ التغييرات فور إجرائها.",
+            inReview: "قيد المراجعة",
+            introTitle: "استخدم حالاتك الخاصة",
+            introBody:
+                "أعد تسمية الحالات أو لوّنها أو أضف حالات جديدة في كل فئة. لن يتغير شيء حتى تُعدّها.",
+            setUp: "إعداد الحالات",
+            setUpFailed: "تعذّر إعداد الحالات. حاول مرة أخرى.",
+            add: "إضافة",
+            addTo: "إضافة حالة إلى {category}",
+            nameLabel: "اسم الحالة",
+            default: "افتراضية",
+            off: "متوقفة",
+            count: "{n} من {max}",
+            groupLabel: "حالات {category}",
+            rename: "إعادة التسمية",
+            moveUp: "نقل لأعلى",
+            moveDown: "نقل لأسفل",
+            makeDefault: "جعلها افتراضية",
+            turnOff: "إيقاف",
+            turnOn: "تشغيل",
+            delete: "حذف",
+            categoryColor: "لون الفئة",
+            colorFor: "لون {name}",
+            changeColor: "تغيير لون {name}",
+            moreActions: "إجراءات أخرى لـ {name}",
+            builtinHint: "لا يمكن حذف الحالات المدمجة.",
+            limitHint: "بلغت الحد: {max} حالة. احذف واحدة أولًا.",
+            nameTaken: "هذا الاسم مستخدم بالفعل.",
+            nameReserved: "هذا الاسم يخص حالة مدمجة.",
+            nameTooLong: "استخدم {max} حرفًا على الأكثر.",
+            nameEmpty: "لا يمكن أن يكون الاسم فارغًا.",
+            saveFailed: "تعذّر الحفظ. حاول مرة أخرى.",
+            saving: "جارٍ الحفظ",
+            moved: "نُقلت {name} إلى الموضع {position} من {total} في {category}.",
+            loadFailed: "تعذّر تحميل الحالات",
+            deleteTitle: "حذف «{name}»؟",
+            deleteBody: "ستنتقل المهام التي تستخدمها إلى الحالة التي تختارها.",
+            noReplacement: "شغّل حالة أخرى في هذه الفئة أولًا.",
+            deleteInUse: "عدد المهام التي تستخدم هذه الحالة: {count}. انقلها إلى:",
+            replacementLabel: "نقل إلى",
+            deleteAndMove: "نقل وحذف",
+        },
         customFields: {
             heading: "الحقول المخصصة",
             manageTooltip: "إدارة الحقول المخصصة",
@@ -4663,6 +4744,22 @@ export const ar: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "وأضاف",
                 milestoneAssigneeRemoved: "تمت إزالته",
                 prUnlinked: "أزال الرابط إلى",
+            },
+            automation: {
+                moved: "نُقلت بواسطة القاعدة «{rule}»",
+                changed: "غُيّرت بواسطة القاعدة «{rule}»",
+                notApplied: "لم تُطبَّق القاعدة «{rule}»: {reason}",
+                notAppliedPlain: "لم تُطبَّق القاعدة «{rule}»",
+                reasons: {
+                    destination: "لا يمكن نقل المهمة إلى مشروع الوجهة المحدد في القاعدة",
+                    owner: "لم يعد بإمكان مالك القاعدة تشغيلها",
+                    plan: "خطة مالك القاعدة لا تتضمن قواعد الأتمتة",
+                    nested: "المهمة الفرعية لا تنتقل إلا مع مهمتها الأم",
+                    rate_limited: "طُبّقت القواعد على هذه المهمة مرات كثيرة خلال وقت قصير",
+                    error: "حدث خطأ ما",
+                    bad_status: "الحالة التي تضبطها القاعدة لم تعد متاحة",
+                    assignee_not_allowed: "لا يمكن إسناد المهمة هناك إلى الشخص الذي تحدده القاعدة",
+                },
             },
             via: {
                 mcp: "عبر MCP",
@@ -5555,6 +5652,7 @@ export const ar: DeepPartial<Messages> = {
             // TODO(copy): MIP-1960 draft wording for a native reader.
             noAiNoCredits:
                 "لم يُستخدم الذكاء الاصطناعي: لا يوجد لديك رصيد ذكاء اصطناعي متبقٍ هذا الشهر",
+            noAiMonthlyLimit: "لم يُستخدم الذكاء الاصطناعي: بلغ Genos AI حدّه الشهري",
             deductedNone: "لم يُخصم شيء من رصيدك",
             deducted: "خُصم {credits} من رصيدك",
             scheduleFallback: "هذا الجدول",
@@ -5818,6 +5916,8 @@ export const ar: DeepPartial<Messages> = {
             outOfCredits: "استنفدت كل رصيد الذكاء الاصطناعي، لذا لا يستطيع Genos الإجابة الآن.",
             outOfCreditsBuy: "شراء رصيد",
             outOfCreditsUpgrade: "ترقية الخطة",
+            monthlyLimit:
+                "بلغ Genos AI حدّه الشهري، لذا لا يمكنه تنفيذ هذا الآن. سيعود في بداية الشهر المقبل. يظل البحث وكل ما سواه يعمل.",
             taskSessionLoadFailed: "تعذّر تحميل محادثتك السابقة حول هذه المهمة.",
         },
         pwaInstall: {
@@ -7900,7 +8000,7 @@ export const ar: DeepPartial<Messages> = {
             placeholder: "اسأل أي شيء عن هذه المذكرة...",
             send: "إرسال",
             cancel: "إلغاء",
-            clear: "محادثة واضحة",
+            clear: "مسح المحادثة",
         },
         mentions: {
             ariaLabel: "اذكر الاقتراحات",
@@ -7986,7 +8086,7 @@ export const ar: DeepPartial<Messages> = {
             placeholder: "اسأل أي شيء عن هذا الموضوع...",
             send: "إرسال",
             cancel: "إلغاء",
-            clear: "محادثة واضحة",
+            clear: "مسح المحادثة",
         },
         mentions: {
             ariaLabel: "اذكر الاقتراحات",

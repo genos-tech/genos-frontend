@@ -13,6 +13,8 @@ export const services = {
         outOfCredits: "You've used all your AI credits, so Genos can't answer right now.",
         outOfCreditsBuy: "Buy credits",
         outOfCreditsUpgrade: "Upgrade plan",
+        monthlyLimit:
+            "Genos AI has reached its monthly limit, so it can't do this right now. It comes back at the start of next month. Search and everything else still work.",
         taskSessionLoadFailed: "Couldn't load your earlier conversation about this task.",
     },
     // Install-to-home-screen banner (InstallBanner.tsx). `iosBody` is the

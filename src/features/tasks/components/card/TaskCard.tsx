@@ -6,6 +6,7 @@ import { useTranslation } from "../../../../i18n";
 import { focusRing, g, type } from "../../../../theme/tokens";
 import { PriorityIcon } from "../meta/PriorityIcon";
 import { StatusLabel } from "../meta/StatusLabel";
+import { CardStatusMark } from "../statuses/CardStatusMark";
 import { domPropsOf } from "./domProps";
 import { dueDisplay } from "./due";
 import { AssigneeAvatar, DueText, MilestoneFlag, TagStrip, TaskIdText, TaskTitle } from "./parts";
@@ -255,12 +256,26 @@ export const TaskCard = ({
                 {task.isMilestone === true && <MilestoneFlag size={14} />}
                 <TaskIdText task={task} />
                 <Box sx={{ flex: 1 }} />
-                {showStatus && shownStatus && <StatusLabel status={shownStatus} />}
+                {showStatus && shownStatus && (
+                    <StatusLabel
+                        customStatusId={task.customStatusId}
+                        projectId={task.projectId}
+                        status={shownStatus}
+                    />
+                )}
                 <PriorityIcon priority={task.priority} />
                 {headerEnd}
             </Box>
 
             <TaskTitle lines={2}>{task.title || untitled || t.tasks.mobile.untitled}</TaskTitle>
+
+            {!showStatus && (
+                <CardStatusMark
+                    customStatusId={task.customStatusId}
+                    projectId={task.projectId}
+                    status={shownStatus}
+                />
+            )}
 
             {showTags && <TagStrip tags={task.tags} />}
 

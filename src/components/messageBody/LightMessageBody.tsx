@@ -170,7 +170,7 @@ const MentionChip = ({
  * `component="span"` (not the Box default `<div>`) because this lives
  * inside `<p class="bn-inline-content">` — see the `MentionChip` note.
  */
-const LightHashChip = ({
+export const LightHashChip = ({
     href,
     label,
     palette,

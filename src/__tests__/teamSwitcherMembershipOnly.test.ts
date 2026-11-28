@@ -41,7 +41,6 @@ const myself: UserProps = {
     tsJoined: "",
     isOfflineForced: false,
     role: "member",
-    baseCountry: "JP",
     customStatus: "",
     avatarImgPath: "",
 } as unknown as UserProps;

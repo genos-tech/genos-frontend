@@ -68,7 +68,6 @@ export const useWebSocket = (
         if (socketInstance) {
             const isOfflineForced: string = localStorage.getItem("isOfflineForced") || "false";
             const role: string = localStorage.getItem("role") || "";
-            const baseCountry: string = myself.baseCountry || "";
             const customStatus: string = localStorage.getItem("customStatus") || "";
             // Absolute ISO instant the custom status auto-clears; "" = none.
             // Rides the beat so other users' rosters learn the expiry within a
@@ -98,7 +97,6 @@ export const useWebSocket = (
                     avatarImgPath: avatarImgPath,
                     isOfflineForced: isOfflineForced,
                     role: role,
-                    baseCountry: baseCountry,
                     customStatus: customStatus,
                     customStatusExpiry: customStatusExpiry,
                     isNotificationsPaused: isNotificationsPaused,

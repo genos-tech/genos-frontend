@@ -168,7 +168,7 @@ describe("DevelopersPage", () => {
     // ── MCP ──────────────────────────────────────────────────────────
 
     // `fixtures/mcp_catalog_snapshot.json` is a copy (Prettier-formatted) of genos-api
-    // `origin/tests/fixtures/mcp_catalog_snapshot.json` (111 tools, the registry's own snapshot).
+    // `origin/tests/fixtures/mcp_catalog_snapshot.json` (112 tools, the registry's own snapshot).
     // This repo cannot import that one: when the catalog changes, copy the file again and
     // `MCP_TOOLS` changes with it (MIP-2309: the page listed 85 of 110 and the home page said
     // "85 tools"). Switch-gated tools are listed too: the switches are on in production.
@@ -198,9 +198,9 @@ describe("DevelopersPage", () => {
         ]);
     });
 
-    it("lists as many tools as the registry has (111)", () => {
+    it("lists as many tools as the registry has (112)", () => {
         renderPage();
-        expect(mcpTable()).toHaveLength(111);
+        expect(mcpTable()).toHaveLength(112);
     });
 
     it("says every destructive tool needs the destructive opt-in", () => {

@@ -294,6 +294,11 @@ export type TaskProps = {
     createdDate?: string;
     updatedAt?: string;
     status: TaskStatusProps;
+    // The project status this task reads as (MIP-2493). Honoured only while its
+    // category equals `status.status` (see utils/projectStatus.ts).
+    customStatusId?: number | null;
+    // A status picked here and not stored yet: the next save sends it. Never cached.
+    customStatusPick?: number;
     priority: TaskPriorityProps;
     effortLevel: TaskEffortLevelProps;
     tags: TagListProps[];
@@ -352,6 +357,9 @@ export type TaskTableProps = {
     // Optional planning start date — paired with dueDate.
     startDate?: string | null;
     status: string | null;
+    // See `TaskProps.customStatusId` / `customStatusPick` (MIP-2493).
+    customStatusId?: number | null;
+    customStatusPick?: number;
     assigneeId: string | null;
     assigneeEmail: string | null;
     assigneeName: string | null;
@@ -441,3 +449,20 @@ export type TaskMetaProps = {
 };
 
 export type TaskMetaTreeNode = TaskMetaProps & { children: TaskMetaTreeNode[] };
+
+/** One of a project's statuses (MIP-2492), as `/projects/<id>/statuses/` lists it. */
+export type ProjectStatusDef = {
+    statusId: number;
+    name: string;
+    /** The system status it counts as: Open, WIP, Blocked, Pending or Closed. */
+    category: string;
+    /** Set on a built-in; its name is translated while it still equals this. */
+    builtinKey: string | null;
+    /** `#rrggbb`, a colour name, or "" for the category's own colour. */
+    color: string;
+    sortOrder: number;
+    isDefault: boolean;
+    isArchived: boolean;
+    canTurnOff: boolean;
+    canDelete: boolean;
+};

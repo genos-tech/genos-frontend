@@ -3,8 +3,10 @@ import { PartialBlock } from "@blocknote/core";
 import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../../types/admin";
+import { bodyFingerprint } from "../../../tasks/services/unsavedTaskBody";
 import { createRetryBackoff } from "../../../tasks/utils/retryBackoff";
 import { EditableNote, saveNote } from "../services/saveNote";
+import { trackNoteBodySave } from "../services/unsavedNoteBody";
 
 // How long a save waits for an earlier one of the same note before it goes anyway: a request
 // that never answers must not stop every later save.
@@ -20,6 +22,9 @@ export type NoteSaveSession<T extends EditableNote> = {
     pendingTitle: string | null;
     /** The body (JSON) of the last save the server accepted. */
     confirmedBody: string | null;
+    /** The stored body as far as this session knows (`bodyFingerprint`): what unsaved words
+     *  were typed on top of. */
+    serverBody: string;
     /** Replaced by a restore: nothing it still holds may be sent. */
     dropped: boolean;
     onNoteUpdate?: (updatedNote: T) => void;
@@ -39,6 +44,7 @@ export const createNoteSaveSession = <T extends EditableNote>(
     edited: false,
     pendingTitle: null,
     confirmedBody: null,
+    serverBody: bodyFingerprint(note?.body),
     dropped: false,
     bodyReadRef: { current: null },
     backoff: createRetryBackoff(),
@@ -55,21 +61,14 @@ type Payload = {
 };
 
 /**
- * Saves of one note go out one at a time. Two in flight can land in either order, and the older
+ * Writes of one note go out one at a time. Two in flight can land in either order, and the older
  * text landing last is what the note then keeps (MIP-2454).
- *
- * `build` runs when this save's turn comes, so it carries the text as it is by then; `null` means
- * there is nothing to send. Resolves to whether something was stored.
  */
-export const sendNoteSave = async <T extends EditableNote>(
-    session: NoteSaveSession<T>,
-    build: () => Payload | null
-): Promise<boolean> => {
-    const key = session.noteKey;
-    const earlier = inFlight.get(key);
+export const inNoteTurn = async <R>(noteKey: string, write: () => Promise<R>): Promise<R> => {
+    const earlier = inFlight.get(noteKey);
     let done = () => {};
     const mine = new Promise<void>((resolve) => (done = resolve));
-    inFlight.set(key, mine);
+    inFlight.set(noteKey, mine);
     try {
         if (earlier) {
             let timer: ReturnType<typeof setTimeout> | undefined;
@@ -79,12 +78,29 @@ export const sendNoteSave = async <T extends EditableNote>(
             ]);
             clearTimeout(timer);
         }
-        const payload = build();
-        if (!payload) return false;
-        await saveNote(payload.note, payload.myself, payload.accessToken, payload.socket);
-        return true;
+        return await write();
     } finally {
         done();
-        if (inFlight.get(key) === mine) inFlight.delete(key);
+        if (inFlight.get(noteKey) === mine) inFlight.delete(noteKey);
     }
 };
+
+/**
+ * `build` runs when this save's turn comes, so it carries the text as it is by then; `null` means
+ * there is nothing to send. Resolves to whether something was stored.
+ */
+export const sendNoteSave = <T extends EditableNote>(
+    session: NoteSaveSession<T>,
+    build: () => Payload | null
+): Promise<boolean> =>
+    inNoteTurn(session.noteKey, async () => {
+        const payload = build();
+        if (!payload) return false;
+        const ended = trackNoteBodySave(session.noteKey, payload.note.body as PartialBlock[]);
+        try {
+            await saveNote(payload.note, payload.myself, payload.accessToken, payload.socket);
+        } finally {
+            ended();
+        }
+        return true;
+    });

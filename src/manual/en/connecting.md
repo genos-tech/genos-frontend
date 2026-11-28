@@ -66,7 +66,7 @@ Everything from here to the end of this page is the API-key way. It is for a scr
 
 ## What an AI app can do
 
-The address in the "Connect your AI" panel (ending in `/mcp/core`) gives an app 34 tools for day-to-day work: tasks, comments, notes, milestones, inbox, mentions, to-dos and calendar events. The full address (ending in `/mcp`) offers the whole catalog of 110 tools. Six of those appear only when your Genos has the matching feature turned on. Read access lets an app read; "Make changes" lets it write; deleting needs its own tick.
+The address in the "Connect your AI" panel (ending in `/mcp/core`) gives an app the tools for day-to-day work: tasks, comments, notes, milestones, inbox, mentions, to-dos and calendar events. The full address (ending in `/mcp`) offers the whole catalog of tools. Six of those appear only when your Genos has the matching feature turned on. Read access lets an app read; "Make changes" lets it write; deleting needs its own tick.
 
 ## Checking it works
 

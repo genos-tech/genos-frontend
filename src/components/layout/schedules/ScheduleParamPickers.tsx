@@ -352,8 +352,12 @@ export const ChatTargetSelect = ({
     onChange,
     label,
     allLabel,
+    noInbox,
 }: {
     chats: ChatTarget[];
+    /** There is no Inbox row (a scheduled message): the field is empty until a chat is picked,
+     *  and this is what it says meanwhile. */
+    noInbox?: string;
     /** Words for the empty row when it means "every chat" instead of the Inbox. */
     allLabel?: string;
     /** Id of the chat in `chats` that the member's list no longer offers, if any. */
@@ -367,16 +371,17 @@ export const ChatTargetSelect = ({
     const { t } = useTranslation();
     const popupZIndex = useDialogPopupZIndex();
     // `null` is the Inbox row.
-    const options: DeliverTarget[] = [INBOX_TARGET, ...chats];
-    const selected: DeliverTarget = chats.find((c) => c.id === value) ?? INBOX_TARGET;
+    const options: DeliverTarget[] = noInbox ? chats : [INBOX_TARGET, ...chats];
+    const chosen = chats.find((c) => c.id === value);
+    const selected = chosen ?? (noInbox ? null : INBOX_TARGET);
 
     return (
-        <Autocomplete<DeliverTarget, false, true, false>
+        <Autocomplete<DeliverTarget, false, boolean, false>
             isOptionEqualToValue={(o, v) => o.id === v.id}
             noOptionsText={t.common.empty.noResults}
             options={options}
+            placeholder={noInbox}
             slotProps={projectListboxSlotProps(popupZIndex)}
-            startDecorator={<ChatTargetDecorator allLabel={allLabel} target={selected} />}
             sx={{ minWidth: 0 }}
             value={selected}
             getOptionLabel={(o) =>
@@ -395,6 +400,11 @@ export const ChatTargetSelect = ({
                     />
                 </AutocompleteOption>
             )}
+            startDecorator={
+                selected ? (
+                    <ChatTargetDecorator allLabel={allLabel} target={selected} />
+                ) : undefined
+            }
             disableClearable
             onChange={(_, option) => onChange(option ? option.id : "")}
         />
@@ -446,6 +456,15 @@ const SKILL_SUMMARY_SX = {
     overflowWrap: "anywhere",
     textAlign: "start",
     whiteSpace: "normal",
+} as const;
+
+// The closed field's value is its own bidi island (MIP-2444): a long name ends with an ellipsis, and
+// in an RTL app a name in another direction keeps its start. Joy's button is a flex row, so the text
+// has to be an element of its own for the ellipsis to apply.
+const CLOSED_VALUE_SX = {
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
 } as const;
 
 /** The skill a "Run a skill" schedule runs (MIP-2045), by name: what the member may run in this
@@ -526,6 +545,11 @@ export const SkillParamSelect = ({
                 slotProps={{ listbox: { sx: { zIndex: popupZIndex, maxHeight: 280 } } }}
                 sx={{ minWidth: 0 }}
                 value={value || null}
+                renderValue={(option) => (
+                    <Box component="bdi" sx={CLOSED_VALUE_SX}>
+                        {option?.label}
+                    </Box>
+                )}
                 onChange={(_, next) => {
                     if (next) onChange(next);
                 }}

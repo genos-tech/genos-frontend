@@ -24,6 +24,8 @@ export type UpdateMilestoneInput = {
     description?: unknown;
     status?: string;
     statusCode?: number | null;
+    /** One of the project's statuses, only when it was picked (MIP-2493). */
+    customStatusId?: number;
     priority?: string | null;
     priorityCode?: number | null;
     effortLevel?: string | null;
@@ -75,6 +77,7 @@ export const updateMilestone = async (
             if (input.description !== undefined) body.description = input.description;
             if (input.status !== undefined) body.status = input.status;
             if (input.statusCode !== undefined) body.status_code = input.statusCode;
+            if (input.customStatusId !== undefined) body.custom_status = input.customStatusId;
             if (input.priority !== undefined) body.priority = input.priority;
             if (input.priorityCode !== undefined) body.priority_code = input.priorityCode;
             if (input.effortLevel !== undefined) body.effort_level = input.effortLevel;

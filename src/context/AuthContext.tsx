@@ -3,6 +3,7 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { NoteService } from "../db/services/note.service";
 import { TaskService } from "../db/services/task.service";
 import { DatabaseUtils } from "../db/utils/database";
+import { setProjectStatusesToken } from "../hooks/tasks/useProjectStatuses";
 import {
     accessTokenExpiryMs,
     isDueForRefresh,
@@ -329,6 +330,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // fresh object every render → every `useAuth()` consumer (and there are
     // many in the chat/notes/tasks tree) re-renders on every parent re-render.
     const value = useMemo(() => ({ accessToken, setAccessToken }), [accessToken]);
+
+    // The project statuses store reads the token from here (MIP-2493).
+    useEffect(() => setProjectStatusesToken(value.accessToken), [value.accessToken]);
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

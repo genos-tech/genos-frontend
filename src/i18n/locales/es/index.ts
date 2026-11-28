@@ -517,6 +517,7 @@ export const es: DeepPartial<Messages> = {
             limitReached:
                 "Has alcanzado un límite de tu plan. Consulta Configuración → Plan y uso.",
             messageSendFailed: "No se pudo enviar tu mensaje. Inténtalo de nuevo.",
+            noteNotSaved: "No se pudieron guardar tus últimos cambios en esta nota.",
             idleReload: "Actualizando tras un periodo de inactividad…",
         },
         features: {
@@ -913,7 +914,7 @@ export const es: DeepPartial<Messages> = {
             benefitNotesUnlimited: "Notas ilimitadas",
             benefitUpload: "Archivos de hasta {mb} MB",
             billingReturnCancelled: "Pago cancelado — tu plan no ha cambiado.",
-            quotaRemaining: "{remaining} de {limit} izquierda {window}",
+            quotaRemaining: "Restante: {remaining} de {limit} {window}",
             currencyLabel: "Mostrar precios en",
             startForFree: "Empieza gratis",
             benefitAiCredits: "Créditos de IA {n} cada mes",
@@ -1046,7 +1047,7 @@ export const es: DeepPartial<Messages> = {
         },
         schedules: {
             title: "Programaciones de Genos Assist",
-            blurb: "Genos te prepara un informe a las horas que elijas; llega a tu bandeja de entrada.",
+            blurb: "Genos las ejecuta a las horas que elijas: un informe llega a tu bandeja de entrada o a un chat, y un mensaje tuyo se envía a un chat.",
             loading: "Cargando tus programaciones…",
             loadFailed: "No se pudieron cargar tus programaciones.",
             retry: "Reintentar",
@@ -1062,6 +1063,11 @@ export const es: DeepPartial<Messages> = {
             suggestEveningName: "Resumen de la tarde",
             suggestEveningBlurb: "Lo que hiciste hoy",
             suggestDaily: "Todos los días a las {time}",
+            ruleDaily: "Todos los días a las {time}",
+            ruleWeekdays: "De lunes a viernes a las {time}",
+            ruleWeekly: "Cada {days} a las {time}",
+            ruleMonthly: "Cada mes, el día {day}, a las {time}",
+            ruleOnce: "Una sola vez, el {date} a las {time}",
             upgradeTitle: "Informes que llegan solos",
             upgradeChip: "Core y superior",
             upgradeBody:
@@ -1130,6 +1136,11 @@ export const es: DeepPartial<Messages> = {
             job: "Informe",
             jobPlaceholder: "Elige un informe",
             jobCatalog: {
+                scheduled_message: {
+                    title: "Mensaje programado",
+                    description:
+                        "Envía un mensaje que escribes a un chat de grupo o de proyecto, en tu nombre, a la hora que elijas. No usa IA.",
+                },
                 ai_dashboard: {
                     title: "Página de panel",
                     description:
@@ -1260,6 +1271,18 @@ export const es: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "El informe se publica en este chat como un mensaje, con sus frases de IA. Todos los del chat pueden leerlo, pero su coste solo se muestra a ti, en tu bandeja de entrada. No se envía ninguna notificación.",
             rowDeliver: "Se publica en: {name}",
+            messageLabel: "Mensaje",
+            messageHint:
+                "Se envía en tu nombre, como si pulsaras Enviar. Se avisa a los miembros del chat que menciones. No se pueden añadir imágenes ni archivos.",
+            messageChatLabel: "Enviar el mensaje a",
+            messageChatPlaceholder: "Elige un chat",
+            errorMessage: "Escribe el mensaje que quieres enviar.",
+            errorMessageFiles: "Quita las imágenes y los archivos del mensaje.",
+            errorMessageChat: "Elige un chat de grupo o de proyecto.",
+            rowMessage: "Mensaje: {text}",
+            rowSendTo: "Se envía a: {name}",
+            messageSent: "Mensaje enviado a {chat}",
+            runRightAwayHintMessage: "Se envía a {chat} en cuanto pulses Ejecutar ahora.",
             reportPosted: "Informe publicado en {chat}",
             rowProject: "Proyecto: {name}",
             rowMilestone: "Hito: {name}",
@@ -2649,6 +2672,11 @@ export const es: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# comentario} other {# comentarios}}",
+            replies: "{count, plural, one {# respuesta} other {# respuestas}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -2656,6 +2684,11 @@ export const es: DeepPartial<Messages> = {
             attachment: "envió un archivo adjunto",
             listLabel: "Mensajes",
             threadListLabel: "Respuestas del hilo",
+        },
+        ruleMoveNotice: {
+            line: "La regla «{rule}» movió {task} a {project}.",
+            aTask: "una tarea",
+            anotherProject: "otro proyecto",
         },
         retentionBanner:
             "Los mensajes de hace más de {days} días están ocultos en tu plan. Mejora tu plan para ver el historial completo.",
@@ -4154,22 +4187,22 @@ export const es: DeepPartial<Messages> = {
                 },
             },
             velocity: {
-                loadFailed: "No se pudo cargar el gráfico de velocidad",
-                title: "Velocidad",
+                loadFailed: "No se pudo cargar el gráfico de ritmo",
+                title: "Ritmo",
                 subtitle:
-                    "Tareas creadas, iniciadas, cerradas y actualizadas a lo largo del tiempo.",
+                    "Tareas creadas, iniciadas, cerradas y actualizadas a lo largo del tiempo",
                 day: "Día",
                 week: "Semana",
-                created: "Creado",
-                started: "Comenzó",
-                closed: "Cerrado",
-                updated: "Actualizado",
-                weekPrefix: "W de",
+                created: "Creadas",
+                started: "Iniciadas",
+                closed: "Cerradas",
+                updated: "Actualizadas",
+                weekPrefix: "Sem.",
                 memberLabel: "Miembro",
                 allMembers: "Todos los miembros",
-                empty: "Aún no hay actividad de tarea en esta ventana.",
+                empty: "Aún no hay actividad de tareas en este periodo.",
                 barTooltip: "{count} {series} · {date}",
-                totals: "En vista: {created} creado, {started} iniciado, {closed} cerrado, {updated} actualizado.",
+                totals: "En este periodo — Creadas: {created} · Iniciadas: {started} · Cerradas: {closed} · Actualizadas: {updated}",
             },
             moreCount: "+{count} más",
             noOverdueTasks: "Sin tareas atrasadas",
@@ -4622,6 +4655,53 @@ export const es: DeepPartial<Messages> = {
             sharedByTeam: "Compartido con tu equipo por {team}",
             sharedByAnotherTeam: "Compartido con tu equipo por otro equipo.",
         },
+        // Per-project statuses (MIP-2493).
+        projectStatuses: {
+            menuItem: "Estados y automatización",
+            title: "Estados",
+            description: "Estados de este proyecto. Los cambios se guardan al momento.",
+            inReview: "En revisión",
+            introTitle: "Usa tus propios estados",
+            introBody:
+                "Cambia el nombre o el color, o añade estados en cada categoría. Nada cambia hasta que los configures.",
+            setUp: "Configurar estados",
+            setUpFailed: "No se pudieron configurar los estados. Inténtalo de nuevo.",
+            add: "Añadir",
+            addTo: "Añadir un estado a {category}",
+            nameLabel: "Nombre del estado",
+            default: "Predeterminado",
+            off: "Desactivado",
+            count: "{n} de {max}",
+            groupLabel: "Estados de {category}",
+            rename: "Cambiar nombre",
+            moveUp: "Subir",
+            moveDown: "Bajar",
+            makeDefault: "Usar como predeterminado",
+            turnOff: "Desactivar",
+            turnOn: "Activar",
+            delete: "Eliminar",
+            categoryColor: "Color de la categoría",
+            colorFor: "Color de {name}",
+            changeColor: "Cambiar el color de {name}",
+            moreActions: "Más acciones para {name}",
+            builtinHint: "Los estados integrados no se pueden eliminar.",
+            limitHint: "Límite alcanzado: {max} estados. Elimina uno antes.",
+            nameTaken: "Ese nombre ya se usa.",
+            nameReserved: "Ese nombre es de un estado integrado.",
+            nameTooLong: "Usa {max} caracteres como máximo.",
+            nameEmpty: "El nombre no puede estar vacío.",
+            saveFailed: "No se pudo guardar. Inténtalo de nuevo.",
+            saving: "Guardando",
+            moved: "{name} pasó a la posición {position} de {total} en {category}.",
+            loadFailed: "No se pudieron cargar los estados",
+            deleteTitle: "¿Eliminar «{name}»?",
+            deleteBody: "Las tareas que lo usen pasarán al estado que elijas.",
+            noReplacement: "Activa antes otro estado de esta categoría.",
+            deleteInUse:
+                "{count, plural, one {# tarea usa este estado. Moverla a:} other {# tareas usan este estado. Moverlas a:}}",
+            replacementLabel: "Mover a",
+            deleteAndMove: "Mover y eliminar",
+        },
         customFields: {
             heading: "Campos personalizados",
             manageTooltip: "Administrar campos personalizados",
@@ -4737,6 +4817,23 @@ export const es: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "agregado",
                 milestoneAssigneeRemoved: "remoto",
                 prUnlinked: "quitó el vínculo con",
+            },
+            automation: {
+                moved: "Movida por la regla «{rule}»",
+                changed: "Cambiada por la regla «{rule}»",
+                notApplied: "No se aplicó la regla «{rule}»: {reason}",
+                notAppliedPlain: "No se aplicó la regla «{rule}»",
+                reasons: {
+                    destination: "la tarea no puede moverse al proyecto de destino de la regla",
+                    owner: "el propietario de la regla ya no puede ejecutarla",
+                    plan: "el plan del propietario de la regla no incluye reglas de automatización",
+                    nested: "una subtarea solo se mueve con su tarea principal",
+                    rate_limited:
+                        "las reglas han actuado demasiadas veces sobre esta tarea en poco tiempo",
+                    error: "algo salió mal",
+                    bad_status: "el estado que establece la regla ya no está disponible",
+                    assignee_not_allowed: "la persona que asigna la regla no puede asignarse allí",
+                },
             },
             via: {
                 mcp: "vía MCP",
@@ -5648,6 +5745,7 @@ export const es: DeepPartial<Messages> = {
             noAiUsed: "No se usó IA",
             // TODO(copy): MIP-1960 draft wording for a native reader.
             noAiNoCredits: "No se usó IA: no te quedan créditos de IA este mes",
+            noAiMonthlyLimit: "Sin IA: Genos AI ha alcanzado su límite mensual",
             deductedNone: "Nada descontado de tu saldo",
             deducted: "{credits} descontados de tu saldo",
             scheduleFallback: "Esta programación",
@@ -5917,6 +6015,8 @@ export const es: DeepPartial<Messages> = {
                 "Has usado todos tus créditos de IA, así que Genos no puede responder ahora.",
             outOfCreditsBuy: "Comprar créditos",
             outOfCreditsUpgrade: "Mejorar el plan",
+            monthlyLimit:
+                "Genos AI ha alcanzado su límite mensual, así que ahora no puede hacer esto. Vuelve a principios del mes que viene. La búsqueda y todo lo demás siguen funcionando.",
             taskSessionLoadFailed: "No se pudo cargar tu conversación anterior sobre esta tarea.",
         },
         pwaInstall: {

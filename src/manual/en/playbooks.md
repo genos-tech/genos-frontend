@@ -23,7 +23,7 @@ Genos does not assume you write software. Below is one starting shape for each k
 - Use milestones for dated outcomes, sprints for a regular rhythm, and the task table when you need a spreadsheet view.
 - When you rebuild the same filters again and again, use Saved Filters → "Save current filters…". A saved filter is shared with everyone in the project.
 - In Customize Task Fields, add the custom fields your process needs and mark them required. Then a task cannot be created without them.
-- Task Weight, Team Capacity and Velocity on the dashboard help you check whether a plan is realistic.
+- Task Weight, Team Capacity and Pace on the dashboard help you check whether a plan is realistic.
 - For a regular status report, add one in Settings → Genos → Genos Assist Schedules (Core and up). At the times you choose, Genos sends the report to your Inbox or posts it in a chat. Available reports include project and milestone updates, team activity, and what to do today.
 - Ask for status instead of putting it together yourself: "what's at risk before Friday?", "what did we close last sprint?"
 

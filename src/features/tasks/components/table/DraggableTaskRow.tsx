@@ -45,6 +45,7 @@ import {
 import { deriveDaysLeft } from "../../utils/daysLeft";
 import { isDeletingStatus } from "../../utils/deletedStatus";
 import { TASK_ROW_CLASS } from "../../utils/familyFocusCss";
+import { keptCustomStatusId } from "../../utils/projectStatus";
 import { formatRelativeAge } from "../../utils/relativeAge";
 import { formatTaskDisplayId } from "../../utils/taskDisplayId";
 import { effortLevels, priorities } from "../../utils/taskMeta";
@@ -52,6 +53,7 @@ import { computeTaskWeight, MAX_TASK_WEIGHT, weightBand } from "../../utils/task
 import { PriorityIcon } from "../meta/PriorityIcon";
 import { StatusLabel } from "../meta/StatusLabel";
 import { ProjectTagChip } from "../ProjectTagChip";
+import { TableStatusSelect } from "../statuses/TableStatusSelect";
 import {
     CellButton,
     CellDateInput,
@@ -63,7 +65,6 @@ import {
     MemberAutocomplete,
     PillChip,
     prioritySelectNode,
-    statusSelectNode,
     TagAutocomplete,
 } from "./cellEditors";
 import {
@@ -353,6 +354,18 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
     const handleSelectChange = async (field: string, value: string) => {
         const updatedTask = { ...task, [field]: value };
         await onRowUpdate(updatedTask);
+    };
+
+    // A status pick (MIP-2493). One of the project's own statuses carries its id along; any
+    // other write of `status` drops the id once the category changes, as the server does.
+    const handleStatusPick = async (status: string, statusId?: number) => {
+        await onRowUpdate({
+            ...task,
+            status,
+            customStatusId:
+                statusId ?? keptCustomStatusId(task.status, status, task.customStatusId),
+            customStatusPick: statusId,
+        });
     };
 
     const handleStartEditTags = () => {
@@ -764,21 +777,14 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 const statusOption = statusOptions.find((opt) => opt.value === value);
                 if (editingField === "status") {
                     return (
-                        <ChipSelect
-                            fullWidth={false}
-                            minWidth={110}
-                            value={(value as string) || ""}
-                            options={statusOptions.map((opt) => ({
-                                value: opt.value,
-                                node: statusSelectNode(opt.value),
-                            }))}
-                            autoFocus
-                            open
+                        <TableStatusSelect
+                            customStatusId={task.customStatusId}
+                            projectId={task.projectId}
+                            status={(value as string) || ""}
                             onClose={handleCancelEdit}
-                            onChange={(next) => {
+                            onPick={(next, statusId) => {
                                 if (isDeletingStatus(next, task.status)) onDeleteTask(task);
-                                else handleSelectChange("status", next);
-                                handleCancelEdit();
+                                else handleStatusPick(next, statusId);
                             }}
                         />
                     );
@@ -786,7 +792,11 @@ const DraggableTaskRowImpl = (props: DraggableTaskRowProps) => {
                 return statusOption ? (
                     <>
                         <CellButton onClick={() => handleStartEdit("status", value as string)}>
-                            <StatusLabel status={statusOption.value} />
+                            <StatusLabel
+                                customStatusId={task.customStatusId}
+                                projectId={task.projectId}
+                                status={statusOption.value}
+                            />
                         </CellButton>
                     </>
                 ) : null;

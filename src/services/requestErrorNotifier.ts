@@ -25,6 +25,7 @@ export type RequestErrorKind =
     | "archived" // API 409 code "archived": a write to an archived project or group chat (MIP-1693)
     | "actionFailed" // v3 socket user-action emit failed (reaction / edit)
     | "messageSendFailed" // chat message send failed (the composer)
+    | "noteNotSaved" // a note save the server refused: the text is not stored (MIP-2463)
     | "serverMessage"; // the server's own sentence, carried as `text` (a refused task save)
 
 /**

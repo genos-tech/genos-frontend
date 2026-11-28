@@ -66,7 +66,7 @@ export const projects: SegmentConfig = {
                 subtitle: "議論から、マイルストーン・タスク・依存関係を提案",
                 bullets: [
                     "タスク、担当、期限、状態、コメントを管理",
-                    "ブロッカー、依存関係、停滞中のマイルストーン、ベロシティを確認。停滞タスクはGenosに聞けます",
+                    "ブロッカー、依存関係、停滞中のマイルストーン、ペースを確認。停滞タスクはGenosに聞けます",
                     "Pro以上では、複合タスク計画を一度の承認で作成",
                 ],
             },
@@ -93,7 +93,7 @@ export const projects: SegmentConfig = {
         },
         now: [
             "Chat、Note、Taskを同じワークスペースで管理",
-            "タスク依存関係、ブロッカー、停滞中のマイルストーン、ベロシティの確認（停滞タスクはGenosに質問）",
+            "タスク依存関係、ブロッカー、停滞中のマイルストーン、ペースの確認（停滞タスクはGenosに質問）",
             "プロジェクト、マイルストーン、スプリント、チーム状況の読み取り",
             "GitHub PRのコメント、ファイル、レビュー、コミットの読み取り（Pro以上、GitHub連携時）",
             "マイルストーン、タスクツリー、依存関係を含む計画の承認付き作成（Pro以上。Coreは1件ずつ）",
@@ -208,7 +208,7 @@ export const projects: SegmentConfig = {
                 subtitle: "Turn a discussion into milestones, tasks, and dependencies",
                 bullets: [
                     "Manage tasks, owners, deadlines, status, and comments",
-                    "Review blockers, dependencies, stalled milestones and velocity; ask Genos for stale tasks",
+                    "Review blockers, dependencies, stalled milestones and pace; ask Genos for stale tasks",
                     "On Pro and up, create a structured task plan through one approval",
                 ],
             },
@@ -235,7 +235,7 @@ export const projects: SegmentConfig = {
         },
         now: [
             "Manage chat, notes, and tasks in the same workspace",
-            "Review task dependencies, blockers, stalled milestones and velocity; ask Genos for stale tasks",
+            "Review task dependencies, blockers, stalled milestones and pace; ask Genos for stale tasks",
             "Read project, milestone, sprint, and team-status information",
             "Read selected GitHub pull-request comments, files, reviews, and commits (Pro and up, with GitHub connected)",
             "Create an approved plan containing a milestone, task tree, and dependencies (Pro and up; on Core, one task per approval)",

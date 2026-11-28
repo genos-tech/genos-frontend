@@ -344,7 +344,7 @@ export default function DevelopersPage() {
                                 <p>{connectApp.intro}</p>
                                 <Pre label="the address to paste">{MCP_ADDRESS}</Pre>
                                 <p className="lp-small">
-                                    This is the core address: the 34 tools for day-to-day work
+                                    This is the core address: the tools for day-to-day work
                                     (briefing, search, tasks, notes). The same server also has an
                                     address with every tool, <Code>{MCP_FULL_ADDRESS}</Code>, and
                                     one per area (<Code>/mcp/tasks</Code>, <Code>/mcp/notes</Code>,{" "}
