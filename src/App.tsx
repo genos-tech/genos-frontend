@@ -131,7 +131,6 @@ import { switchService } from "./services/serviceSwitch/serviceSwitchStore";
 import { syncStatus } from "./services/syncStatus";
 import { canonicalSpotlightHref, milestoneIdFromEntityId } from "./utils/canonicalSpotlightHref";
 import { saveLastWorkspacePath } from "./utils/lastWorkspacePath";
-import { parseInternalUrl } from "./utils/parseInternalUrl";
 import { useSettingsDeepLink } from "./utils/settingsDeepLink";
 import { spotlightFolderPath, spotlightNotePath } from "./utils/spotlightNotePath";
 
