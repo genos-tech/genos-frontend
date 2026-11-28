@@ -198,6 +198,12 @@ describe("the status filter's selection", () => {
         expect(labels(toggleStatus([filter("All")], ROWS, ROWS[3]))).toEqual(["st:4"]);
     });
 
+    it("keeps a turned-off status that tasks have when one status is unticked", () => {
+        const whole = [filter("WIP")];
+        expect(labels(toggleStatus(whole, ROWS, ROWS[3]))).toEqual(["st:3"]);
+        expect(labels(toggleStatus(whole, ROWS, ROWS[3], new Set([5])))).toEqual(["st:3", "st:5"]);
+    });
+
     it("names the first of the menu's order, and widens the load to a pick's category", () => {
         const selection = [filter("Expired"), statusPick(4), filter("Open")];
         expect(labels(orderStatusSelection(selection, ROWS))).toEqual(["Open", "st:4", "Expired"]);

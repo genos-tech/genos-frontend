@@ -115,19 +115,27 @@ export const toggleCategory = (
     ];
 };
 
-/** A status row was clicked. */
+/** A status row was clicked. `heldIds` are the statuses the loaded tasks have. */
 export const toggleStatus = (
     selection: readonly FilterProps[],
     rows: readonly ProjectStatusDef[],
-    row: ProjectStatusDef
+    row: ProjectStatusDef,
+    heldIds: ReadonlySet<number> = new Set()
 ): FilterProps[] => {
     const { category, statusId } = row;
     const on = rows.filter((r) => r.category === category && !r.isArchived);
-    // The whole category was picked: it becomes its other statuses.
+    // The whole category was picked: it becomes its other statuses. A turned-off one that
+    // tasks still have comes along (and is listed), so unticking one status hides only it.
     if (selection.some((f) => f.label === category)) {
+        const others = rows.filter(
+            (r) =>
+                r.category === category &&
+                r.statusId !== statusId &&
+                (!r.isArchived || heldIds.has(r.statusId))
+        );
         return settled([
             ...selection.filter((f) => f.label !== category),
-            ...on.filter((r) => r.statusId !== statusId).map((r) => statusPick(r.statusId)),
+            ...others.map((r) => statusPick(r.statusId)),
         ]);
     }
     if (selection.some((f) => pickedStatusId(f) === statusId)) {

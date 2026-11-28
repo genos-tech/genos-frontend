@@ -2521,7 +2521,16 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                         }
                                         onStatus={(row) =>
                                             chooseStatuses(
-                                                toggleStatus(selectedStatus, statusRows, row)
+                                                toggleStatus(
+                                                    selectedStatus,
+                                                    statusRows,
+                                                    row,
+                                                    new Set(
+                                                        useTM.allTasks.flatMap(
+                                                            (task) => task.customStatusId ?? []
+                                                        )
+                                                    )
+                                                )
                                             )
                                         }
                                     />

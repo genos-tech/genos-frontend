@@ -14,6 +14,7 @@ import { isFinishedStatus } from "../../meta/taskStatuses";
 import { Milestone } from "../../sprint-milestone/types";
 import { TaskCard, TaskCardFrame } from "../card";
 import { MilestoneCardBody } from "../MilestoneCardBody";
+import { CardStatusMark } from "../statuses/CardStatusMark";
 
 type SprintBoardCardProps = {
     task: TaskTableProps;
@@ -127,6 +128,15 @@ const SprintBoardCardImpl = ({
                             <MilestoneCardBody
                                 milestone={milestone}
                                 sprintName={sprintName}
+                                statusMark={
+                                    hideStatusMark ? undefined : (
+                                        <CardStatusMark
+                                            customStatusId={task.customStatusId}
+                                            projectId={task.projectId}
+                                            status={task.status}
+                                        />
+                                    )
+                                }
                                 topRight={diagramButton}
                             />
                         </TaskCardFrame>

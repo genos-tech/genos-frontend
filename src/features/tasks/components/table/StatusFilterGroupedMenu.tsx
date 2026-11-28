@@ -67,7 +67,13 @@ export const StatusFilterGroupedMenu = ({
                 onClick={() => onFilter(filter)}
             >
                 {label === "All" || label === "Expired" ? (
-                    labelOf(filter)
+                    // No glyph of their own: in the others' ink, and lined up with their words.
+                    <Box
+                        component="span"
+                        sx={{ color: g.text.secondary, paddingInlineStart: 2.5 }}
+                    >
+                        {labelOf(filter)}
+                    </Box>
                 ) : (
                     <StatusLabel status={label} />
                 )}
