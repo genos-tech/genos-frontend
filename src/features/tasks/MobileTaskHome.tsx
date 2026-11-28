@@ -15,6 +15,7 @@ import { CreateTaskForm } from "./components/contents/CreateTaskForm";
 import { TaskPreview } from "./components/contents/TaskPreview";
 import { TaskDashboard } from "./components/dashboard/TaskDashboard";
 import { TaskSearchBar } from "./components/header/TaskSearchBar";
+import { ModalCustomizeTaskFields } from "./components/modals/ModalCustomizeTaskFields";
 import { ModalImportTasksCsv } from "./components/modals/ModalImportTasksCsv";
 import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
 
@@ -37,7 +38,7 @@ import { archiveProject, unarchiveProject } from "../archive/archiveApi";
 import { ArchivedBanner } from "../archive/ArchivedBanner";
 import { useArchiveState, useIsProjectArchived } from "../archive/archiveState";
 import { useCreateTaskBlockedByArchive } from "../archive/createTaskGuard";
-import { isOwnerOfProject } from "../archive/projectOwner";
+import { canCustomizeTaskFields, isOwnerOfProject } from "../archive/projectOwner";
 import { ChatNoteMain } from "../notes/chat-notes/components/ChatNoteMain";
 import { MyNoteMain } from "../notes/my-notes/components/MyNoteMain";
 import { TaskNoteMain } from "../notes/task-notes/components/TaskNoteMain";
@@ -93,6 +94,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
     const isDark = mode === "dark";
     // CSV task import (MIP-1835): not offered on an archived project.
     const [openImportCsv, setOpenImportCsv] = useState(false);
+    const [openCustomizeFields, setOpenCustomizeFields] = useState(false);
     const archiveState = useArchiveState();
     const importProjectId = usePM.currentProject?.projectId;
     const importArchived = archiveState.archivedProjects.some(
@@ -141,6 +143,15 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
     const handleCreateTaskClick = () => {
         useTM.handleCreateTask();
     };
+
+    // Owner and editors, the same gate as the desktop header (MIP-2336, MIP-2531).
+    const canCustomizeFields =
+        hasProject &&
+        canCustomizeTaskFields(
+            useTM.taskFieldRules,
+            usePM.currentProject?.projectId,
+            myself.userId
+        );
 
     const selectedTab = useNM.tabItems[useNM.selectedTabIndex];
     const activeNoteType = selectedTab?.noteType ?? useNM.currentNoteType;
@@ -350,6 +361,11 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             <MenuRow onClick={() => useTM.setOpenManageTags(true)}>
                                 {t.tasks.mobile.manageTags}
                             </MenuRow>
+                            {canCustomizeFields && (
+                                <MenuRow onClick={() => setOpenCustomizeFields(true)}>
+                                    {t.tasks.header.customizeFieldsMenuItem}
+                                </MenuRow>
+                            )}
                             {importProjectId != null && !importArchived && (
                                 <MenuRow onClick={() => setOpenImportCsv(true)}>
                                     {t.tasks.importCsv.menuItem}
@@ -577,6 +593,16 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                     open
                     onChanged={() => void usePM.refreshProjectTasks(importProjectId)}
                     onClose={() => setOpenImportCsv(false)}
+                />
+            )}
+            {openCustomizeFields && (
+                <ModalCustomizeTaskFields
+                    myself={myself}
+                    usePM={usePM}
+                    useTEM={useTEM}
+                    useTM={useTM}
+                    open
+                    onClose={() => setOpenCustomizeFields(false)}
                 />
             )}
         </Box>
