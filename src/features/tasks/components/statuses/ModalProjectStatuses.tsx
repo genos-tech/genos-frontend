@@ -23,6 +23,10 @@ import {
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { useAuth } from "../../../../context/authState";
 import {
+    refreshProjectStatusActions,
+    useProjectStatusActions,
+} from "../../../../hooks/tasks/useProjectStatusActions";
+import {
     refreshProjectStatuses,
     setProjectStatuses,
     useProjectStatuses,
@@ -51,6 +55,7 @@ import {
 } from "../../utils/projectStatus";
 import { StatusLabel } from "../meta/StatusLabel";
 import { rowSx, srOnly } from "./listStyles";
+import { QuickActionsPane } from "./QuickActionsPane";
 import { StatusColorMenu } from "./StatusColorMenu";
 import { useCategoryName } from "./useCategoryName";
 
@@ -64,7 +69,7 @@ type Props = {
     automation?: AutomationContextData;
 };
 
-export type ProjectSettingsTab = "statuses" | "automation";
+export type ProjectSettingsTab = "statuses" | "automation" | "quickActions";
 
 type Deleting = { row: ProjectStatusDef; inUse: number | null; replacementId: number | null };
 
@@ -355,6 +360,7 @@ export const ModalProjectStatuses = ({
     const categoryName = useCategoryName();
     const { accessToken } = useAuth();
     const entry = useProjectStatuses(open ? projectId : null);
+    const quick = useProjectStatusActions(open ? projectId : null, accessToken);
     const rows = sortStatuses(entry.statuses);
     const layer = hostZIndex != null ? hostZIndex + 2 : MODAL_FRAME_DEFAULT_Z_INDEX;
     const errorId = useId();
@@ -375,15 +381,17 @@ export const ModalProjectStatuses = ({
         onLeave: onClose,
     });
     const onRules = automation != null && tab === "automation";
-    const panelA11y =
-        automation && !(onRules && rules.subView)
-            ? {
-                  role: "tabpanel",
-                  "aria-label": onRules
-                      ? t.tasks.automation.tabAutomation
-                      : t.tasks.automation.tabStatuses,
-              }
-            : {};
+    const onQuick = tab === "quickActions";
+    const panelA11y = !(onRules && rules.subView)
+        ? {
+              role: "tabpanel",
+              "aria-label": onRules
+                  ? t.tasks.automation.tabAutomation
+                  : onQuick
+                    ? t.tasks.quickActions.tab
+                    : t.tasks.automation.tabStatuses,
+          }
+        : {};
 
     // A teammate may have changed the list since it was first read.
     useEffect(() => {
@@ -865,6 +873,16 @@ export const ModalProjectStatuses = ({
         </Box>
     );
 
+    const setUp = async () => {
+        const result = await save("setup", () =>
+            reorderProjectStatuses(projectId, [], accessToken)
+        );
+        // The default quick actions were written with the statuses (MIP-2603).
+        if (result.ok) {
+            void refreshProjectStatusActions(projectId, accessToken, { afterChange: true });
+        }
+    };
+
     const intro = () => (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pb: 2 }}>
             <Box
@@ -906,9 +924,7 @@ export const ModalProjectStatuses = ({
                     alignSelf: { xs: "stretch", sm: "flex-end" },
                     "@media (pointer: coarse)": { minHeight: 44 },
                 }}
-                onClick={() =>
-                    void save("setup", () => reorderProjectStatuses(projectId, [], accessToken))
-                }
+                onClick={() => void setUp()}
             >
                 {words.setUp}
             </Button>
@@ -940,6 +956,8 @@ export const ModalProjectStatuses = ({
         );
         if (result.ok) {
             setDeleting(null);
+            // Its quick actions went with it (MIP-2603).
+            void refreshProjectStatusActions(projectId, accessToken, { afterChange: true });
             focusLater(neighbour ? menuSelector(neighbour.statusId) : "[data-add-status]");
             return;
         }
@@ -954,82 +972,122 @@ export const ModalProjectStatuses = ({
         throw new Error(errorText(result.code));
     };
 
+    const actionsUsing = deleting
+        ? quick.actions.filter(
+              (a) =>
+                  a.beforeStatusId === deleting.row.statusId ||
+                  a.afterStatusId === deleting.row.statusId
+          ).length
+        : 0;
+    const actionsNote = actionsUsing
+        ? ` ${fmt(t.tasks.quickActions.statusDeleteNote, { count: actionsUsing })}`
+        : "";
+
     return (
         <>
             <ModalFrame
                 actions={onRules ? rules.actions : undefined}
-                description={onRules ? t.tasks.automation.description : words.description}
                 hostZIndex={hostZIndex}
                 icon={<DonutLargeRoundedIcon sx={{ color: g.accent.text }} />}
                 open={open}
                 size="lg"
                 title={automation ? words.menuItem : words.title}
+                description={
+                    onRules
+                        ? t.tasks.automation.description
+                        : onQuick
+                          ? t.tasks.quickActions.description
+                          : words.description
+                }
                 fullScreenOnMobile
                 // An unsaved rule is asked about first.
                 onClose={() => rules.guard(onClose)}
             >
-                {automation && (
-                    <Box
-                        sx={{
-                            position: "sticky",
-                            top: "-8px",
-                            zIndex: 2,
-                            background: g.surface.raised,
-                            mt: -1,
-                            mb: 1.5,
-                        }}
-                    >
-                        {onRules && rules.subView ? (
-                            rules.backRow
-                        ) : (
-                            <TabStrip
-                                ariaLabel={t.tasks.automation.tabsLabel}
-                                size="sm"
-                                value={tab}
-                                tabs={[
-                                    {
-                                        id: "statuses",
-                                        label: t.tasks.automation.tabStatuses,
-                                        panelId: "project-settings-panel",
-                                    },
-                                    {
-                                        id: "automation",
-                                        label: (
-                                            <>
-                                                {t.tasks.automation.tabAutomation}
-                                                {rules.needsFix > 0 && (
-                                                    <Box component="span" sx={srOnly}>
-                                                        {fmt(t.tasks.automation.needsFixTitle, {
-                                                            n: rules.needsFix,
-                                                        })}
-                                                    </Box>
-                                                )}
-                                            </>
-                                        ),
-                                        panelId: "project-settings-panel",
-                                        count: rules.needsFix,
-                                        attention: true,
-                                        title: rules.needsFix
-                                            ? fmt(t.tasks.automation.needsFixTitle, {
-                                                  n: rules.needsFix,
-                                              })
-                                            : undefined,
-                                    },
-                                ]}
-                                onChange={(id) => setTab(id as ProjectSettingsTab)}
-                            />
-                        )}
-                    </Box>
-                )}
+                <Box
+                    sx={{
+                        position: "sticky",
+                        top: "-8px",
+                        zIndex: 2,
+                        background: g.surface.raised,
+                        mt: -1,
+                        mb: 1.5,
+                    }}
+                >
+                    {onRules && rules.subView ? (
+                        rules.backRow
+                    ) : (
+                        <TabStrip
+                            ariaLabel={t.tasks.automation.tabsLabel}
+                            size="sm"
+                            value={tab}
+                            tabs={[
+                                {
+                                    id: "statuses",
+                                    label: t.tasks.automation.tabStatuses,
+                                    panelId: "project-settings-panel",
+                                },
+                                ...(automation
+                                    ? [
+                                          {
+                                              id: "automation",
+                                              label: (
+                                                  <>
+                                                      {t.tasks.automation.tabAutomation}
+                                                      {rules.needsFix > 0 && (
+                                                          <Box component="span" sx={srOnly}>
+                                                              {fmt(
+                                                                  t.tasks.automation.needsFixTitle,
+                                                                  {
+                                                                      n: rules.needsFix,
+                                                                  }
+                                                              )}
+                                                          </Box>
+                                                      )}
+                                                  </>
+                                              ),
+                                              panelId: "project-settings-panel",
+                                              count: rules.needsFix,
+                                              attention: true,
+                                              title: rules.needsFix
+                                                  ? fmt(t.tasks.automation.needsFixTitle, {
+                                                        n: rules.needsFix,
+                                                    })
+                                                  : undefined,
+                                          },
+                                      ]
+                                    : []),
+                                {
+                                    id: "quickActions",
+                                    label: t.tasks.quickActions.tab,
+                                    panelId: "project-settings-panel",
+                                },
+                            ]}
+                            onChange={(id) => setTab(id as ProjectSettingsTab)}
+                        />
+                    )}
+                </Box>
                 {/* The dialog must not jump in height between the tabs, and past the list
                     the tabs are gone, and with them the panel. */}
-                <Box
-                    id={automation ? "project-settings-panel" : undefined}
-                    sx={automation ? { minHeight: { sm: 420 } } : undefined}
-                    {...panelA11y}
-                >
+                <Box id="project-settings-panel" sx={{ minHeight: { sm: 420 } }} {...panelA11y}>
                     {onRules ? (
                         rules.body
+                    ) : onQuick && !entry.loaded ? (
+                        <SkeletonRows count={6} label={t.tasks.quickActions.tab} />
+                    ) : onQuick && entry.failed ? (
+                        <ErrorState
+                            size="sm"
+                            title={words.loadFailed}
+                            onRetry={() => void refreshProjectStatuses(projectId, accessToken)}
+                        />
+                    ) : onQuick ? (
+                        <QuickActionsPane
+                            layer={layer}
+                            projectId={projectId}
+                            rows={rows}
+                            settingUp={busyId === "setup"}
+                            setUpFailed={error?.at === "setup"}
+                            onSetUp={() => void setUp()}
+                        />
                     ) : (
                         <Box ref={body} aria-busy={busyId != null} data-testid="project-statuses">
                             {!entry.loaded ? (
@@ -1065,11 +1123,11 @@ export const ModalProjectStatuses = ({
                 description={
                     deleting?.inUse != null
                         ? replacements.length
-                            ? fmt(words.deleteInUse, { count: deleting.inUse })
+                            ? fmt(words.deleteInUse, { count: deleting.inUse }) + actionsNote
                             : fmt(words.noReplacement, {
                                   category: categoryName(deleting.row.category),
                               })
-                        : words.deleteBody
+                        : words.deleteBody + actionsNote
                 }
                 destructive
                 onClose={() => setDeleting(null)}

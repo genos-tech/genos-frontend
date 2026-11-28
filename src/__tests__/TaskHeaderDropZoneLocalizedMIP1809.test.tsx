@@ -15,6 +15,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskCreateAttachmentBlock } from "../features/tasks/components/contents/base/TaskCreateAttachmentBlock";
 import { TaskTitleBlock } from "../features/tasks/components/contents/base/TaskTitleBlock";
+import {
+    __resetProjectStatusActionsStore,
+    setProjectStatusActions,
+} from "../hooks/tasks/useProjectStatusActions";
+import {
+    __resetProjectStatusesStore,
+    setProjectStatuses,
+} from "../hooks/tasks/useProjectStatuses";
 import { I18nProvider, loadLocale } from "../i18n";
 import { ar } from "../i18n/locales/ar";
 import { en } from "../i18n/locales/en";
@@ -44,7 +52,34 @@ vi.mock("../features/tasks/diagram/components/LazyTaskDiagram", () => ({
 
 type L = "en" | "ja" | "ar";
 
-beforeEach(() => window.localStorage.removeItem("genos-locale"));
+// The buttons come from the project's quick actions (MIP-2603): what a project that never set
+// up its statuses is served.
+beforeEach(() => {
+    window.localStorage.removeItem("genos-locale");
+    __resetProjectStatusesStore();
+    __resetProjectStatusActionsStore();
+    setProjectStatuses(7, { statuses: [], canManage: false });
+    setProjectStatusActions(7, {
+        canManage: false,
+        canAct: true,
+        actions: (
+            [
+                ["Open", "WIP", "start"],
+                ["WIP", "Closed", "complete"],
+                ["Pending", "WIP", "resume"],
+            ] as const
+        ).map(([beforeKey, afterKey, defaultKey]) => ({
+            actionId: null,
+            beforeStatusId: null,
+            afterStatusId: null,
+            beforeKey,
+            afterKey,
+            title: null,
+            defaultKey,
+            enabled: true,
+        })),
+    });
+});
 afterEach(cleanup);
 
 const inLocale = async (locale: L, ui: React.ReactElement) => {
@@ -102,13 +137,14 @@ describe("the task header's Start / Complete buttons", () => {
     });
 
     for (const locale of ["ja", "ar"] as const) {
-        it(`${locale}: Start Task on an Open and a Pending task`, async () => {
+        it(`${locale}: Start Task on an Open task, Resume Task on a Pending one`, async () => {
             const c = await loadLocale(locale);
-            for (const status of ["Open", "Pending"]) {
+            for (const [status, name] of [
+                ["Open", c.tasks.preview.startTask],
+                ["Pending", c.tasks.preview.resumeTask],
+            ]) {
                 await inLocale(locale, titleBlock(status));
-                expect(
-                    screen.getByRole("button", { name: c.tasks.preview.startTask })
-                ).toBeInTheDocument();
+                expect(screen.getByRole("button", { name })).toBeInTheDocument();
                 expect(screen.queryByText("Start Task")).toBeNull();
                 cleanup();
             }

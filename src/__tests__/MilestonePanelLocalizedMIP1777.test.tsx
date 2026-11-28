@@ -16,6 +16,14 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TaskPreview } from "../features/tasks/components/contents/TaskPreview";
+import {
+    __resetProjectStatusActionsStore,
+    setProjectStatusActions,
+} from "../hooks/tasks/useProjectStatusActions";
+import {
+    __resetProjectStatusesStore,
+    setProjectStatuses,
+} from "../hooks/tasks/useProjectStatuses";
 import { fmt, I18nProvider, loadLocale } from "../i18n";
 import { en } from "../i18n/locales/en";
 
@@ -259,6 +267,30 @@ const mount = async (locale: "en" | "ja" | "ar", status: string) => {
 
 beforeEach(() => {
     window.localStorage.removeItem("genos-locale");
+    // The buttons come from the project's quick actions (MIP-2603).
+    __resetProjectStatusesStore();
+    __resetProjectStatusActionsStore();
+    setProjectStatuses(7, { statuses: [], canManage: false });
+    setProjectStatusActions(7, {
+        canManage: false,
+        canAct: true,
+        actions: (
+            [
+                ["Open", "WIP", "start"],
+                ["WIP", "Closed", "complete"],
+                ["Pending", "WIP", "resume"],
+            ] as const
+        ).map(([beforeKey, afterKey, defaultKey]) => ({
+            actionId: null,
+            beforeStatusId: null,
+            afterStatusId: null,
+            beforeKey,
+            afterKey,
+            title: null,
+            defaultKey,
+            enabled: true,
+        })),
+    });
 });
 afterEach(() => {
     window.localStorage.removeItem("genos-locale");
@@ -309,11 +341,11 @@ describe("the milestone panel header reads in the member's language (MIP-1777)",
         expect(screen.getByRole("button", { name: "Complete Milestone" })).toBeInTheDocument();
     });
 
-    it("a Pending milestone offers Start too", async () => {
+    it("a Pending milestone offers Resume (MIP-2603)", async () => {
         await mount("ja", "Pending");
         const ja = await loadLocale("ja");
         expect(
-            screen.getByRole("button", { name: ja.tasks.preview.startMilestone })
+            screen.getByRole("button", { name: ja.tasks.preview.resumeMilestone })
         ).toBeInTheDocument();
     });
 });

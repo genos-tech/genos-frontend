@@ -61,16 +61,21 @@ describe("buttons come from Joy defaults", () => {
     });
 
     it("the status buttons are flat warning / success, not hex gradients", () => {
+        // The headers' buttons are one component now (MIP-2603); their tone is chosen here.
         for (const rel of [
             "features/tasks/components/contents/TaskPreview.tsx",
             "features/tasks/components/contents/base/TaskTitleBlock.tsx",
+            "features/tasks/components/statuses/QuickStatusButtons.tsx",
+            "features/tasks/components/statuses/quickActionIcon.tsx",
         ]) {
             const source = FILES.find((f) => f.rel === rel)?.source ?? "";
+            expect(source, rel).not.toBe("");
             expect(source, rel).not.toContain("#ff9500");
             expect(source, rel).not.toContain("#4caf50");
-            expect(source, rel).toContain('color="warning"');
-            expect(source, rel).toContain('color="success"');
         }
+        const tones = FILES.find((f) => f.rel.endsWith("statuses/quickActionIcon.tsx"))?.source;
+        expect(tones).toContain('color: "warning"');
+        expect(tones).toContain('color: "success"');
     });
 
     it("a primary Button is the one place the brand gradient is drawn (theme default)", () => {
