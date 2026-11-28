@@ -144,7 +144,9 @@ export const sendUpdatedSpecificTask = async (
                 ...(updatedTask.customStatusPick != null
                     ? { custom_status: updatedTask.customStatusPick }
                     : {}),
-                content: updatedTask.body.length !== 0 ? updatedTask.body : null,
+                // A task that never had a description comes back with `body: null`: reading
+                // `.length` of it threw and the whole save was lost (MIP-2572).
+                content: updatedTask.body?.length ? updatedTask.body : null,
                 due_date: updatedTask.dueDate !== "" ? updatedTask.dueDate : null,
                 // Three states, and the server treats them differently:
                 //   - a date string  -> set it;
