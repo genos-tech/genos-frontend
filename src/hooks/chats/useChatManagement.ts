@@ -400,8 +400,12 @@ export const useChatManagement = (
             return path;
         };
 
-        const goToChat = () =>
-            replaceUrl ? navigate(buildPath(), { replace: true }) : navigate(buildPath());
+        const startPath = window.location.pathname;
+        const goToChat = () => {
+            if (!replaceUrl) return navigate(buildPath());
+            // The messages load first. A reader who has gone elsewhere meanwhile stays there.
+            if (window.location.pathname === startPath) navigate(buildPath(), { replace: true });
+        };
 
         // Switching to the chat service is implicit: every code path below
         // calls `navigate("/workspace/chat/...")`, and the URL is now the source
