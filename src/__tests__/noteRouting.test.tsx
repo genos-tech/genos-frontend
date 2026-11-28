@@ -114,6 +114,63 @@ describe("useNoteRouting with a team note", () => {
     });
 });
 
+// MIP-2229: both sync effects read the manager and the router through a ref.
+describe("when the note sync effects run", () => {
+    const useHarness = (
+        props: { noteId?: number; active: boolean },
+        load: () => Promise<void>
+    ) => {
+        // A new manager object on every render, as the real hook hands over.
+        useNoteRouting({
+            useNM: stubNM({
+                currentNoteType: props.noteId ? 1 : 0,
+                currentMyNote: props.noteId ? { noteId: props.noteId } : undefined,
+                loadNote: load,
+            }),
+            isActiveRoute: props.active,
+        });
+        return { path: useLocation().pathname, navigate: useNavigate() };
+    };
+    const mountAt = (path: string, initialProps: { noteId?: number; active: boolean }) => {
+        const load = vi.fn(() => Promise.resolve());
+        const view = renderHook((props) => useHarness(props, load), {
+            initialProps,
+            wrapper: routerAt(path),
+        });
+        return { ...view, load };
+    };
+
+    it("loads the note of a URL once, not once per render", () => {
+        const { result, rerender, load } = mountAt("/workspace/notes/my/5", { active: true });
+        rerender({ active: true });
+        rerender({ active: true });
+        expect(load.mock.calls).toEqual([[1, 5, -1]]);
+        act(() => result.current.navigate("/workspace/notes/my/6"));
+        expect(load.mock.calls).toEqual([
+            [1, 5, -1],
+            [1, 6, -1],
+        ]);
+    });
+
+    it("does not push the open note back when only the URL moves", async () => {
+        const { result } = mountAt("/workspace/notes", { noteId: 5, active: true });
+        expect(result.current.path).toBe("/workspace/notes/my/5");
+        // The load of the pushed URL holds the state→URL sync off for 100 ms; wait it out,
+        // or that guard would hide a push.
+        await act(async () => void (await new Promise((resolve) => setTimeout(resolve, 160))));
+        act(() => result.current.navigate("/workspace/notes"));
+        expect(result.current.path).toBe("/workspace/notes");
+    });
+
+    it("writes the URL with the router and the note of the render that opened it", () => {
+        const { result, rerender } = mountAt("/workspace/notes", { active: false });
+        // Shown again, then a note is opened: the hidden render's no-op navigate must be gone.
+        rerender({ active: true });
+        rerender({ noteId: 7, active: true });
+        expect(result.current.path).toBe("/workspace/notes/my/7");
+    });
+});
+
 // MIP-841: `/workspace/notes/folder/:id` opens a folder in the sidebar.
 describe("folder routes", () => {
     it("parses the folder id and nothing else", () => {
