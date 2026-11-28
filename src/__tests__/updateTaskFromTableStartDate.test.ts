@@ -131,3 +131,26 @@ describe("updateTaskFromTable start_date", () => {
         });
     });
 });
+
+// MIP-2572: a task from a CSV import (or any row with no description) comes back with
+// `body: null`. The save read `body.length`, threw, and the PUT never left, while the row
+// already showed the new value.
+describe("updateTaskFromTable on a task with no body", () => {
+    beforeEach(() => {
+        put.mockReset();
+        put.mockResolvedValue({ data: { task: { ts_updated_at: "now" } } });
+        loadSpecificTask.mockReset();
+    });
+
+    it.each([
+        ["null", null],
+        ["absent", undefined],
+        ["empty", []],
+    ])("sends the edit when the body is %s", async (_name, taskBody) => {
+        const body = await putBody(cachedTask({ body: taskBody as unknown as TaskProps["body"] }));
+        expect(body.task_id).toBe(42);
+        expect(body.status).toBe("WIP");
+        // The server drops a null, so the stored content is left as it is.
+        expect(body.content).toBeNull();
+    });
+});
