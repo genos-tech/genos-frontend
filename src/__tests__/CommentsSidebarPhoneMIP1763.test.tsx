@@ -169,14 +169,16 @@ describe("GenosNoteEditor wiring", () => {
         "utf8"
     );
 
-    it("asks for the overlay at the app's phone breakpoint (useIsMobile), not one of its own", () => {
+    it("asks for the overlay at the app's phone breakpoint (useIsMobile), or in a narrow pane", () => {
         expect(src).toContain('from "../../../hooks/common/useIsMobile"');
-        expect(src).toMatch(/<CommentsSidebar[^>]*overlay=\{isMobile\}/s);
+        expect(src).toContain("useIsNarrowerThan(editorBoxRef, COMMENTS_DOCK_MIN_PANE_WIDTH)");
+        expect(src).toContain("const commentsOverlay = isMobile || isPaneNarrow;");
+        expect(src).toMatch(/<CommentsSidebar[^>]*overlay=\{commentsOverlay\}/s);
         expect(src).not.toMatch(/max-width:\s*\d+px/);
     });
 
     it("the title row only clears the panel's edge when the panel is docked", () => {
-        expect(src).toContain("const commentsDocked = showComments && !isMobile;");
+        expect(src).toContain("const commentsDocked = showComments && !commentsOverlay;");
         expect(src.match(/right: commentsDocked \? COMMENTS_SIDEBAR_WIDTH \+ 12/g)?.length).toBe(
             2
         );

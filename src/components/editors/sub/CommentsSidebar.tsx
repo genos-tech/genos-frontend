@@ -51,12 +51,13 @@ import { useCommentAuthor } from "./useCommentAuthor";
 // (a flex row), so it sits INSIDE `<BlockNoteView>` and can use the comment
 // hooks. When `open` is false it renders nothing, so the editor is full-width.
 //
-// On a phone (`overlay`, MIP-1763) there is no room for a 340px column beside the note: it
-// squeezed the note to a sliver. There the panel is a sheet laid over the editor instead,
+// On a phone, or in a note pane narrower than `COMMENTS_DOCK_MIN_PANE_WIDTH` (`overlay`,
+// MIP-1763, MIP-2614), there is no room for a 340px column beside the note: it squeezed the
+// note to a sliver. There the panel is a sheet laid over the editor instead,
 // with its own Close in the header (the floating toggle is under it), Escape to leave, and
 // focus handed to the Close on open. Tapping a row closes the sheet and opens that thread's
 // card over the note: the note is hidden while the sheet is up, so a card pinned beside it
-// would point at text nobody can see. The desktop layout does not go through any of this.
+// would point at text nobody can see. A wide pane does not go through any of this.
 // ─────────────────────────────────────────────────────────────────────────
 
 /** Panel width when open. The editors shift their top-right affordance cluster
@@ -64,14 +65,18 @@ import { useCommentAuthor } from "./useCommentAuthor";
  *  the one offset lives in one place. */
 export const COMMENTS_SIDEBAR_WIDTH = 340;
 
-/** Layer of the phone sheet: above the note's title row (100, GenosNoteEditor) and the
+/** The narrowest note pane the panel is docked in: its own width plus 300px of editor. In a
+ *  narrower one (a small window, the task preview open) it is laid over the note (MIP-2614). */
+export const COMMENTS_DOCK_MIN_PANE_WIDTH = COMMENTS_SIDEBAR_WIDTH + 300;
+
+/** Layer of the sheet: above the note's title row (100, GenosNoteEditor) and the
  *  floating toggle (11) it covers, below BlockNote's own floating UI (App.css, 13300+),
  *  so a thread's card and the menus still open over it. */
 const COMMENTS_OVERLAY_Z_INDEX = 110;
 
 type CommentsSidebarProps = {
     open: boolean;
-    /** Lay the panel over the editor instead of docking it beside it: a phone. */
+    /** Lay the panel over the editor instead of docking it beside it: no room beside it. */
     overlay?: boolean;
     /** The note's project or chat is archived: say so; nobody can comment or reply (MIP-1693). */
     archived?: boolean;

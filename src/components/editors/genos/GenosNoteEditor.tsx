@@ -36,6 +36,7 @@ import { useUrlLinkModal } from "../../../hooks/common/UrlLinkModalContext";
 import { useAnchorClickIntercept } from "../../../hooks/common/useAnchorClickIntercept";
 import { useDebouncedCallback } from "../../../hooks/common/useDebouncedCallback";
 import { useIsMobile } from "../../../hooks/common/useIsMobile";
+import { useIsNarrowerThan } from "../../../hooks/common/useIsNarrowerThan";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
 import { useTranslation } from "../../../i18n";
@@ -53,7 +54,11 @@ import { logSanitizeReport, sanitizeBlocksForEditor, type SanitizeReport } from 
 import { EDITOR_BODY_SYNC_DEBOUNCE_MS } from "../sub/bodySync";
 import { CommentsWithMentions } from "../sub/CommentEditorWithMentions";
 import { CommentHostContext } from "../sub/commentMentions";
-import { COMMENTS_SIDEBAR_WIDTH, CommentsSidebar } from "../sub/CommentsSidebar";
+import {
+    COMMENTS_DOCK_MIN_PANE_WIDTH,
+    COMMENTS_SIDEBAR_WIDTH,
+    CommentsSidebar,
+} from "../sub/CommentsSidebar";
 import { CommentsSidebarToggle } from "../sub/CommentsSidebarToggle";
 import { CustomDragHandleMenu } from "../sub/CustomDragHandleMenu";
 import { NoteLinkContext, useNoteLinkApi } from "../sub/NoteLinkContext";
@@ -197,8 +202,12 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
     const [showComments, setShowComments] = useState<boolean>(false);
     // On a phone the panel is a sheet over the editor, not a column beside it (MIP-1763): the
     // title row then has no panel edge to clear. The same breakpoint as every other phone layout.
+    // A narrow note pane on a wider screen (the task preview open at 1024px) gets the sheet too,
+    // measured on the pane, not the window (MIP-2614).
     const isMobile = useIsMobile();
-    const commentsDocked = showComments && !isMobile;
+    const isPaneNarrow = useIsNarrowerThan(editorBoxRef, COMMENTS_DOCK_MIN_PANE_WIDTH);
+    const commentsOverlay = isMobile || isPaneNarrow;
+    const commentsDocked = showComments && !commentsOverlay;
     const commentsToggleRef = useRef<HTMLDivElement>(null);
     const closeComments = useCallback(() => {
         setShowComments(false);
@@ -669,7 +678,7 @@ export const GenosNoteEditor = (props: GenosNoteEditorProps) => {
                             <CommentsSidebar
                                 archived={commentsArchived}
                                 open={showComments}
-                                overlay={isMobile}
+                                overlay={commentsOverlay}
                                 onClose={closeComments}
                             />
                         )}
