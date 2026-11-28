@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { SetStateAction, useCallback, useEffect, useState } from "react";
 import { Box, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
@@ -54,7 +54,8 @@ const NOOP_TODOS_PROPS = {
 
 // Renders MessagesPane / ThreadPane against modal-local chat + thread
 // state, so the user's existing main-page selection (the real
-// useCM.currentMainChat / useCM.currentThreadChat) is left untouched.
+// useCM.currentMainChat / useCM.currentThreadChat) is left untouched:
+// their setters write the dialog's copies (MIP-2580).
 //
 // Writes (reactions, edits, replies, read-status emit, etc.) still pass
 // through to the real hooks because every setter we don't override is
@@ -86,6 +87,19 @@ export const ModalChatView = (props: ModalChatViewProps) => {
     const [modalThread, setModalThread] = useState<ThreadProps | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+
+    // What the panes get as `setCurrentMainChat` / `setCurrentThreadChat`. A write of
+    // "no chat" is ignored: the dialog is closed with its own button.
+    const setPreviewChat = useCallback((next: SetStateAction<ChatProps | undefined>) => {
+        setModalChat(
+            (prev) => (typeof next === "function" ? next(prev ?? undefined) : next) ?? prev
+        );
+    }, []);
+    const setPreviewThread = useCallback((next: SetStateAction<ThreadProps | undefined>) => {
+        setModalThread(
+            (prev) => (typeof next === "function" ? next(prev ?? undefined) : next) ?? prev
+        );
+    }, []);
 
     // Local stand-in for ChatProvider's currentThreadTaskId slot. The
     // ThreadPane subtree (ThreadChatPaneHeader, etc.) reads/writes this
@@ -320,6 +334,8 @@ export const ModalChatView = (props: ModalChatViewProps) => {
             ...useCM,
             currentMainChat: modalChat,
             currentThreadChat: modalThread,
+            setCurrentMainChat: setPreviewChat,
+            setCurrentThreadChat: setPreviewThread,
         };
         // ThreadPane (and its header) read state via `useChatContext()`,
         // which throws when no provider is above. Our modal is portaled to
@@ -363,6 +379,8 @@ export const ModalChatView = (props: ModalChatViewProps) => {
     const useCMOverride = {
         ...useCM,
         currentMainChat: modalChat,
+        setCurrentMainChat: setPreviewChat,
+        setCurrentThreadChat: setPreviewThread,
     };
     return (
         <Box sx={{ height: "100%", width: "100%" }}>

@@ -34,6 +34,7 @@ import { UserProps } from "../../../../types/admin";
 import { ChatProps, FlaggedMessageProps, MessageProps } from "../../../../types/chat";
 import { useIsChatArchived } from "../../../archive/archiveState";
 import { useAskGenosMessageItem } from "../../hooks/useAskGenosMessageItem";
+import { useHostingDialog } from "../../hooks/useHostingDialog";
 import { useHeldMessagePins } from "../../hooks/useMessagePins";
 import { useMessageReminder } from "../../hooks/useMessageReminder";
 import { deleteMessage } from "../../services/deleteMessage";
@@ -206,7 +207,13 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
         setEditTargetMessage(message);
     };
 
+    const hostingDialog = useHostingDialog();
+
     const handleOpenTaskClick = () => {
+        if (hostingDialog) {
+            hostingDialog.openTask(message.project?.projectId, message.taskId);
+            return;
+        }
         if (message.taskId !== null) {
             useCM.setIsMainChatVisible(true);
             useCM.setIsThreadVisible(false);
