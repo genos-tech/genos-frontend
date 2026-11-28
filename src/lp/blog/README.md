@@ -1,21 +1,25 @@
 # LP Blog (`src/lp/blog/`)
 
-English-only public blog for genosai.dev. Japanese marketing drafts in
-`genos-docs/marketing` (note / Zenn) stay platform-specific and are **not**
+English-only public blog for genosai.dev. Its posts live in
+`genos-docs/marketing/blog/`. The platform drafts beside that folder are **not**
 synced here.
+
+A post is picture first and short: a real app screenshot (from the demo
+workspace) or a ` ```flow ` block (one box per line) comes first, then a few
+lines, under 150 words. Check every product claim against the app.
 
 ## Add a post
 
-1. Write the English draft under `genos-docs/marketing/`.
+1. Write the English draft under `genos-docs/marketing/blog/`.
 2. Append one object to [`articles.json`](./articles.json):
     - `slug` — URL segment (`/blog/<slug>`)
-    - `source` — filename in genos-docs/marketing
+    - `source` — path under genos-docs/marketing, e.g. `blog/<slug>.md`
     - `bodyHeading` — markdown heading that starts the publishable body
       (e.g. `## Article body`)
     - optional `stopHeading` — cut the body before this heading
     - `title`, `excerpt`, `category`, `publishedAt` (`YYYY-MM-DD`)
     - `language` must be `"en"`
-    - optional `featured: true` for the index highlight grid
+    - `cover` (a picture under `public/`) or `coverFlow` (2-4 short labels)
 3. From `genos-frontend/` (with sibling `genos-docs` present):
 
 ```bash
