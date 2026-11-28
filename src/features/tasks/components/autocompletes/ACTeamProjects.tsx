@@ -1,11 +1,13 @@
-import { AutocompleteOption } from "@mui/joy";
+import { AutocompleteOption, Box } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
-import { TaskProps } from "../../../../types/tasks";
+import { g, type } from "../../../../theme/tokens";
+import { ProjectProps, TaskProps } from "../../../../types/tasks";
 import { projectAvatarSrc } from "../../utils/projectAvatar";
 import { ProjectIdentityDecorator, ProjectIdentityRow } from "../ProjectIdentityRow";
+import { PickerField, pickerInputProps } from "./pickerField";
 
 type ACTeamProjectsProps = {
     taskContent: TaskProps;
@@ -13,7 +15,7 @@ type ACTeamProjectsProps = {
     isOpenProjectList: boolean;
     setIsOpenProjectList: (value: boolean) => void;
     setTaskUpdated?: (value: boolean) => void;
-    usePM: ProjectManagementState;
+    usePM: Pick<ProjectManagementState, "teamProjects" | "setCurrentProject">;
     /** Create-form mounts set this: milestone/sprint are project-scoped,
      * so switching the project invalidates the current picker selection —
      * and the parent/root ids the milestone picker derived from it. If
@@ -28,10 +30,15 @@ type ACTeamProjectsProps = {
     /** Chat list, used to resolve each project's avatar from its PM
      *  chat. Optional: without it the options still render, just with
      *  the generic project icon instead of the uploaded image. */
-    useCM?: ChatManagementState;
+    useCM?: Pick<ChatManagementState, "allChats">;
     /** Read-only mount. Set for sub-tasks, whose project is their parent's
      *  — see `TaskMainBlock`, which owns that rule and explains it. */
     disabled?: boolean;
+    /** What the field says with no project picked. */
+    placeholder?: string;
+    /** Why a project cannot be picked: it stays listed, with this under its name. */
+    disabledReason?: (project: ProjectProps) => string | undefined;
+    field?: PickerField;
 };
 export const ACTeamProjects = (props: ACTeamProjectsProps) => {
     const {
@@ -44,6 +51,9 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
         resetMilestoneOnChange = false,
         useCM,
         disabled = false,
+        placeholder,
+        disabledReason,
+        field,
     } = props;
 
     const selectedProject = taskContent.project?.projectId ? taskContent.project : undefined;
@@ -62,17 +72,19 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
         <Autocomplete
             key={taskContent.id}
             disabled={disabled}
+            error={field?.invalid}
+            getOptionDisabled={(option) => Boolean(disabledReason?.(option))}
+            getOptionLabel={(option) => option.projectName}
+            slotProps={{ input: pickerInputProps(field) }}
             // Still the plain name: this is what type-to-filter matches
             // on, and — the field being a text input — all the closed
             // state can display. The richer content below is presentation
             // only; `startDecorator` puts as much of it as fits back
             // beside the name once a project is picked.
-            getOptionLabel={(option) => option.projectName}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
             options={usePM.teamProjects}
+            placeholder={placeholder}
             size="sm"
-            sx={{ width: "100%" }}
-            value={selectedProject}
             renderOption={(optionProps, option) => (
                 // Joy's own option component, NOT a bespoke <li>: it
                 // brings the padding, hover, focus and selected states
@@ -91,6 +103,11 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                         maxLabels={2}
                         project={option}
                     />
+                    {disabledReason?.(option) && (
+                        <Box component="span" sx={{ ...type("body-xs"), color: g.text.tertiary }}>
+                            {disabledReason(option)}
+                        </Box>
+                    )}
                 </AutocompleteOption>
             )}
             startDecorator={
@@ -143,6 +160,9 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                     }
                 }
             }}
+            sx={{ width: "100%" }}
+            // `null` keeps an empty field controlled.
+            value={selectedProject ?? (placeholder ? null : undefined)}
         />
     );
 };

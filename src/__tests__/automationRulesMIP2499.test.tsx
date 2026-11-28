@@ -16,12 +16,13 @@ import {
     withDestination,
     withTarget,
 } from "../features/tasks/automation/draft";
-import { statusOptions } from "../features/tasks/automation/lookups";
+import { statusPickOf } from "../features/tasks/automation/lookups";
 import type { AutomationRule } from "../features/tasks/automation/types";
 import { wordsFor } from "../features/tasks/automation/words";
 import { ModalProjectStatuses } from "../features/tasks/components/statuses/ModalProjectStatuses";
 import { __resetProjectStatusesStore } from "../hooks/tasks/useProjectStatuses";
 import { en } from "../i18n/locales/en";
+import { UserProps } from "../types/admin";
 import { ProjectProps, ProjectStatusDef } from "../types/tasks";
 
 vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => null }));
@@ -35,6 +36,9 @@ vi.mock("../features/tasks/services/projectStatuses", () => ({
 }));
 vi.mock("../features/tasks/services/projectCustomFields", () => ({
     loadProjectCustomFields: vi.fn().mockResolvedValue({ fields: [], canManage: true }),
+}));
+vi.mock("../features/tasks/sprint-milestone/services/loadProjectSprints", () => ({
+    loadProjectSprints: vi.fn().mockResolvedValue({ sprints: [] }),
 }));
 vi.mock("../features/tasks/sprint-milestone/services/loadProjectMilestones", () => ({
     loadProjectMilestones: vi.fn().mockResolvedValue({ milestones: [] }),
@@ -96,7 +100,9 @@ const open = () =>
                     automation={{
                         projects: [project(7, "Intake"), project(8, "Delivery")],
                         members: [],
-                        myUserId: "me",
+                        myself: { userId: "me", userName: "Me" } as UserProps,
+                        profiles: {},
+                        chats: [],
                     }}
                     open
                     onClose={vi.fn()}
@@ -183,28 +189,16 @@ describe("what a draft sends", () => {
         expect(missingParts(emptyDraft())).toEqual(["trigger", "move"]);
     });
 
-    it("offers a category's built-in as the category and any other row by itself", () => {
-        const row = (statusId: number, name: string, builtinKey: string | null) =>
-            ({
-                statusId,
-                name,
-                builtinKey,
-                category: "WIP",
-                color: "",
-                sortOrder: statusId,
-                isDefault: false,
-                isArchived: false,
-            }) as ProjectStatusDef;
-        const picks = statusOptions([row(1, "WIP", "WIP"), row(2, "Code review", null)]).map(
-            (o) => o.pick.customStatusId
-        );
-        expect(picks).toEqual([null, 2]);
-        expect(statusOptions([]).map((o) => o.pick.category)).toContain("Closed");
-        expect(statusOptions([]).map((o) => o.pick.category)).toContain("Rejected");
-        const rejected = { ...row(3, "Won't do", null), category: "Rejected" };
-        expect(statusOptions([rejected]).map((o) => o.pick)).toEqual([
-            { category: "Rejected", customStatusId: 3 },
-        ]);
+    it("saves a category's built-in as the category and any other row by itself", () => {
+        const row = (statusId: number, builtinKey: string | null) =>
+            ({ statusId, builtinKey, category: "WIP" }) as ProjectStatusDef;
+        const rows = [row(1, "WIP"), row(2, null)];
+        expect(statusPickOf("WIP", 1, rows)).toEqual({ category: "WIP", customStatusId: null });
+        expect(statusPickOf("WIP", 2, rows)).toEqual({ category: "WIP", customStatusId: 2 });
+        expect(statusPickOf("Closed", undefined, [])).toEqual({
+            category: "Closed",
+            customStatusId: null,
+        });
     });
 });
 

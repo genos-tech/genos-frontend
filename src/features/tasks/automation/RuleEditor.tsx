@@ -5,7 +5,6 @@
 import { ReactNode, useEffect, useId, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import {
     Alert,
     Box,
@@ -23,12 +22,8 @@ import { MenuRow, MenuSurface } from "../../../components/ui/MoreMenu";
 import { useAuth } from "../../../context/authState";
 import { useProjectMemberIds } from "../../../hooks/tasks/useProjectMemberIds";
 import { useProjectStatuses } from "../../../hooks/tasks/useProjectStatuses";
-import { fmt, useTranslation } from "../../../i18n";
+import { fmt } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
-import { StatusLabel } from "../components/meta/StatusLabel";
-import { PRIORITY_NAMES } from "../meta/taskTone";
-import { statusRowName } from "../utils/projectStatus";
-import { taskMetaLabel } from "../utils/taskMeta";
 import {
     ActionKind,
     conditionRow,
@@ -37,20 +32,21 @@ import {
     MAX_RULE_NAME,
     needsValue,
     RuleDraft,
-    StatusPick,
     withDestination,
     withTarget,
 } from "./draft";
 import { coarsePointer, fieldName, projectName } from "./helpers";
+import { statusPickOf, useLookups } from "./lookups";
 import {
-    destinationProjects,
-    refusedAsPublic,
-    statusKey,
-    statusOptions,
-    statusRowOf,
-    useLookups,
-} from "./lookups";
-import { SlotAutocomplete, SlotOption, SlotSelect } from "./slots";
+    CustomFieldSlot,
+    MemberSlot,
+    MilestoneSlot,
+    PrioritySlot,
+    ProjectSlot,
+    StatusSlot,
+    TagSlot,
+} from "./pickers";
+import { SlotOption, SlotSelect } from "./slots";
 import type { ConditionField, ConditionOp, RuleTarget, TriggerType } from "./types";
 import { useLater } from "./useLater";
 import { useAutomationWords } from "./words";
@@ -254,7 +250,6 @@ export const RuleEditor = ({
 }) => {
     const words = useAutomationWords(draft.appliesTo);
     const milestone = draft.appliesTo === "milestone";
-    const { t } = useTranslation();
     const lookups = useLookups();
     const { accessToken } = useAuth();
     const later = useLater();
@@ -269,62 +264,40 @@ export const RuleEditor = ({
     const target = lookups.projects.find((p) => p.projectId === targetId);
     const targetStatuses = useProjectStatuses(targetId).statuses;
 
-    const members: SlotOption[] = lookups.members.map((m) => ({
-        value: m.userId,
-        label: m.userName,
-    }));
     // A private project's tasks can only be given to its own people.
     const memberIds = useProjectMemberIds(target?.isPrivate ? targetId : null, accessToken, {
-        userId: lookups.myUserId,
+        userId: lookups.myself.userId,
     });
     const refreshMembers = memberIds.refresh;
     useEffect(() => refreshMembers(), [refreshMembers]);
-    const assignable = memberIds.ids
-        ? members.filter((m) => memberIds.ids!.includes(m.value))
-        : members;
-    const tagsOf = (tags: { tagName: string }[] | undefined): SlotOption[] =>
-        (tags ?? []).map((tag) => ({ value: tag.tagName, label: tag.tagName }));
-    const statusSlots = (rows: typeof lookups.statuses, picked: StatusPick | null) => {
-        const options = statusOptions(rows);
-        const key = picked ? statusKey(picked) : "";
-        // A saved pick the list no longer offers (turned off) is still shown.
-        const kept = picked && !options.some((o) => o.key === key) && statusRowOf(picked, rows);
-        const all = kept ? [...options, { key, pick: picked, row: kept }] : options;
-        return {
-            value: key,
-            options: all.map((o) => ({
-                value: o.key,
-                label: statusRowName(o.row as never, t.tasks),
-                node: <StatusLabel row={o.row} status={o.row.category} />,
-            })),
-            pickOf: (value: string) => all.find((o) => o.key === value)?.pick ?? null,
-        };
-    };
+    const picker = (part: string, label: string, slotId: string = part) => ({
+        label,
+        slotId,
+        invalid: Boolean(errors[part]),
+        describedBy: describe(part),
+    });
 
     const triggerSlot = () => {
         if (draft.triggerType === "status_changed") {
-            const picked = draft.triggerStatus;
-            const slots = statusSlots(lookups.statuses, picked);
             return (
-                <SlotSelect
-                    describedBy={describe("trigger")}
-                    invalid={Boolean(errors.trigger)}
-                    label={words.fieldStatus}
-                    options={slots.options}
-                    slotId="trigger"
-                    value={slots.value}
-                    onChange={(value) => patch({ triggerStatus: slots.pickOf(value) })}
+                <StatusSlot
+                    field={picker("trigger", words.fieldStatus)}
+                    projectId={lookups.projectId}
+                    rows={lookups.statuses}
+                    value={draft.triggerStatus}
+                    onChange={({ category }, statusId) =>
+                        patch({
+                            triggerStatus: statusPickOf(category, statusId, lookups.statuses),
+                        })
+                    }
                 />
             );
         }
         if (draft.triggerType === "tag_added") {
             return (
-                <SlotAutocomplete
-                    describedBy={describe("trigger")}
-                    invalid={Boolean(errors.trigger)}
-                    label={words.fieldTag}
-                    options={tagsOf(lookups.current?.projectTags)}
-                    slotId="trigger"
+                <TagSlot
+                    field={picker("trigger", words.fieldTag)}
+                    tags={lookups.current?.projectTags ?? []}
                     value={draft.triggerTag}
                     onChange={(triggerTag) => patch({ triggerTag })}
                 />
@@ -332,14 +305,11 @@ export const RuleEditor = ({
         }
         if (draft.triggerType === "assignee_changed") {
             return (
-                <SlotAutocomplete
-                    label={words.fieldAssignee}
-                    options={[{ value: "anyone", label: words.anyone }, ...members]}
-                    value={draft.triggerAssignee || "anyone"}
-                    people
-                    onChange={(value) =>
-                        patch({ triggerAssignee: value === "anyone" ? "" : value })
-                    }
+                <MemberSlot
+                    field={picker("trigger", words.fieldAssignee)}
+                    placeholder={words.anyone}
+                    value={draft.triggerAssignee}
+                    onChange={(triggerAssignee) => patch({ triggerAssignee })}
                 />
             );
         }
@@ -369,75 +339,47 @@ export const RuleEditor = ({
 
     const conditionValue = (c: DraftCondition) => {
         const part = `condition:${c.key}`;
-        const common = {
-            describedBy: describe(part),
-            invalid: Boolean(errors[part]),
-            label: words.valueLabel,
+        const slot = {
+            field: picker(part, words.valueLabel, `condition-value-${c.key}`),
             value: c.value,
             onChange: (value: string) => setCondition(c.key, { value }),
         };
         const field = lookups.fields.find((f) => f.fieldId === c.fieldId);
         if (c.field === "tag") {
-            return <SlotAutocomplete {...common} options={tagsOf(lookups.current?.projectTags)} />;
+            return <TagSlot {...slot} tags={lookups.current?.projectTags ?? []} />;
         }
-        if (c.field === "assignee" || c.field === "reporter" || field?.fieldType === "member") {
-            return <SlotAutocomplete {...common} options={members} people />;
-        }
-        if (c.field === "priority") {
-            return (
-                <SlotSelect
-                    {...common}
-                    options={PRIORITY_NAMES.map((p) => ({
-                        value: p,
-                        label: taskMetaLabel(p, t.tasks.filters),
-                    }))}
-                />
-            );
-        }
-        if (c.field === "milestone") {
-            return (
-                <SlotAutocomplete
-                    {...common}
-                    options={lookups.milestones.map((m) => ({
-                        value: String(m.milestoneId),
-                        label: m.title,
-                    }))}
-                />
-            );
-        }
+        if (c.field === "assignee" || c.field === "reporter") return <MemberSlot {...slot} />;
+        if (c.field === "priority") return <PrioritySlot {...slot} />;
+        if (c.field === "milestone") return <MilestoneSlot {...slot} />;
         if (c.field === "custom_status") {
+            const row = lookups.statuses.find((r) => String(r.statusId) === c.value);
             return (
-                <SlotSelect
-                    {...common}
-                    options={lookups.statuses
-                        .filter((r) => !r.isArchived || String(r.statusId) === c.value)
-                        .map((r) => ({
-                            value: String(r.statusId),
-                            label: statusRowName(r, t.tasks),
-                            node: <StatusLabel row={r} status={r.category} />,
-                        }))}
+                <StatusSlot
+                    field={slot.field}
+                    projectId={lookups.projectId}
+                    rows={lookups.statuses}
+                    value={row ? { category: row.category, customStatusId: row.statusId } : null}
+                    // This condition names a status by itself, a built-in one too.
+                    onChange={(_pick, statusId) =>
+                        slot.onChange(statusId == null ? "" : String(statusId))
+                    }
                 />
             );
         }
-        if (field?.fieldType === "tag") {
-            return (
-                <SlotAutocomplete
-                    {...common}
-                    options={field.options.map((o) => ({ value: o.id, label: o.label }))}
-                />
-            );
+        if (field?.fieldType === "tag" || field?.fieldType === "member") {
+            return <CustomFieldSlot {...slot} def={field} />;
         }
         return (
             <Input
-                error={common.invalid}
+                error={slot.field.invalid}
                 size="sm"
-                sx={textSx(common.invalid)}
+                sx={textSx(Boolean(slot.field.invalid))}
                 type={field?.fieldType === "date" ? "date" : "text"}
                 value={c.value}
                 slotProps={{
                     input: {
                         "aria-label": words.valueLabel,
-                        "aria-describedby": common.describedBy,
+                        "aria-describedby": slot.field.describedBy,
                         maxLength: 200,
                     },
                 }}
@@ -508,20 +450,8 @@ export const RuleEditor = ({
         );
     };
 
-    const destinations: SlotOption[] = destinationProjects(lookups).map((p) => ({
-        value: String(p.projectId),
-        label: p.projectName,
-        node: (
-            <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 0.5 }}>
-                {p.projectName}
-                {p.isPrivate && <LockOutlinedIcon sx={{ fontSize: 14 }} />}
-            </Box>
-        ),
-        disabledReason: refusedAsPublic(lookups, p) ? words.privateOnly : undefined,
-    }));
-
-    const moveDestination = (value: string) => {
-        const next = withDestination(draft, value ? Number(value) : null);
+    const moveDestination = (destinationId: number) => {
+        const next = withDestination(draft, destinationId);
         const cleared = Boolean(draft.addTag) || draft.setStatus?.customStatusId != null;
         onChange(next);
         if (cleared && next !== draft) onAnnounce(words.cleared);
@@ -541,48 +471,43 @@ export const RuleEditor = ({
     };
 
     const actionSlot = (kind: ActionKind) => {
-        const common = {
-            describedBy: describe(kind),
-            invalid: Boolean(errors[kind]),
-            label: actionLabel[kind],
-            slotId: kind,
-        };
+        const field = picker(kind, actionLabel[kind]);
         if (kind === "move") {
             return (
-                <SlotAutocomplete
-                    {...common}
-                    options={destinations}
-                    value={draft.destinationId != null ? String(draft.destinationId) : ""}
+                <ProjectSlot
+                    field={field}
+                    value={draft.destinationId}
                     onChange={moveDestination}
                 />
             );
         }
         if (kind === "status") {
-            const slots = statusSlots(targetStatuses, draft.setStatus);
             return (
-                <SlotSelect
-                    {...common}
-                    options={slots.options}
-                    value={slots.value}
-                    onChange={(value) => patch({ setStatus: slots.pickOf(value) })}
+                <StatusSlot
+                    field={field}
+                    projectId={targetId}
+                    rows={targetStatuses}
+                    value={draft.setStatus}
+                    onChange={({ category }, statusId) =>
+                        patch({ setStatus: statusPickOf(category, statusId, targetStatuses) })
+                    }
                 />
             );
         }
         if (kind === "assignee") {
             return (
-                <SlotAutocomplete
-                    {...common}
-                    options={assignable}
+                <MemberSlot
+                    field={field}
+                    memberIds={memberIds.ids}
                     value={draft.assigneeId}
-                    people
                     onChange={(assigneeId) => patch({ assigneeId })}
                 />
             );
         }
         return (
-            <SlotAutocomplete
-                {...common}
-                options={tagsOf(target?.projectTags)}
+            <TagSlot
+                field={field}
+                tags={target?.projectTags ?? []}
                 value={draft.addTag}
                 onChange={(addTag) => patch({ addTag })}
             />

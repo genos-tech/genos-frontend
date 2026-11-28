@@ -12,6 +12,7 @@ import { keptCustomStatusId } from "../../utils/projectStatus";
 import { statuses, taskMetaLabel } from "../../utils/taskMeta";
 import { StatusLabel } from "../meta/StatusLabel";
 import { GroupedStatusPicker } from "../statuses/GroupedStatusPicker";
+import { PickerField, pickerInputProps } from "./pickerField";
 
 type ACTaskStatusProps = {
     socket: Socket | null;
@@ -27,10 +28,12 @@ type ACTaskStatusProps = {
      * offered.
      */
     onDeleteTask?: () => void;
+    field?: PickerField;
 };
 export const ACTaskStatus = (props: ACTaskStatusProps) => {
     const { taskContent, setTaskContent, setTaskUpdated, setTaskStatusUpdated, onDeleteTask } =
         props;
+    const { field } = props;
 
     const { t } = useTranslation();
     const options = useMemo(
@@ -78,6 +81,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
             <GroupedStatusPicker
                 key={taskContent.id}
                 customStatusId={taskContent.customStatusId}
+                field={field}
                 offerDelete={!!onDeleteTask}
                 rows={projectStatuses}
                 status={taskContent.status?.status ?? ""}
@@ -93,13 +97,16 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
         <Fragment>
             <Autocomplete
                 key={taskContent.id}
+                error={field?.invalid}
                 getOptionLabel={(option) => taskMetaLabel(option.status, t.tasks.filters)}
                 isOptionEqualToValue={(option, value) => option.status === value.status}
                 options={options}
                 placeholder={t.tasks.autocomplete.statusPlaceholder}
                 size="sm"
+                slotProps={{ input: pickerInputProps(field) }}
                 sx={{ width: "100%" }}
-                value={taskContent ? [taskContent.status] : []}
+                // No status yet (a rule being written) is an empty field, not an empty chip.
+                value={taskContent?.status?.status ? [taskContent.status] : []}
                 renderOption={(props, option) => (
                     <AutocompleteOption {...props} key={option.status}>
                         <ListItemContent sx={{ fontSize: "sm" }}>

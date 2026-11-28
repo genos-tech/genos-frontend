@@ -6,6 +6,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { useTranslation } from "../../../../i18n";
 import { TagListProps, TaskProps } from "../../../../types/tasks";
 import { ProjectTagChip } from "../ProjectTagChip";
+import { PickerField, pickerInputProps } from "./pickerField";
 
 type ACProjectTagsProps = {
     projectTags: TagListProps[];
@@ -14,6 +15,7 @@ type ACProjectTagsProps = {
     isOpenTagList: boolean;
     setIsOpenTagList: (value: boolean) => void;
     setTaskUpdated?: (value: boolean) => void;
+    field?: PickerField;
 };
 export const ACProjectTags = (props: ACProjectTagsProps) => {
     const {
@@ -23,6 +25,7 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
         isOpenTagList,
         setIsOpenTagList,
         setTaskUpdated,
+        field,
     } = props;
 
     const { mode } = useColorScheme();
@@ -31,12 +34,14 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
     return (
         <Autocomplete
             key={`ac-project-tags-${taskContent.id}`}
+            error={field?.invalid}
             getOptionLabel={(option) => option.tagName}
             isOptionEqualToValue={(option, value) => option.tagName === value.tagName}
             limitTags={3}
             options={projectTags}
             placeholder={t.tasks.autocomplete.tagsPlaceholder}
             size="sm"
+            slotProps={{ input: pickerInputProps(field) }}
             sx={{ width: "100%" }}
             value={taskContent ? taskContent.tags : []}
             renderOption={(props, option) => (

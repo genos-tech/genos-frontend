@@ -4780,7 +4780,6 @@ export const ar: DeepPartial<Messages> = {
             optAssignee: "يتغيّر المكلَّف",
             anyone: "أي شخص",
             choose: "اختر…",
-            noOptions: "لا يوجد ما تختاره",
             everyTask: "كل المهام",
             addCondition: "إضافة شرط",
             conditionLimit: "10 شروط كحد أقصى.",

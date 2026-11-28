@@ -7,6 +7,7 @@ import { AvatarGroup, BaseAvatar } from "../../../../components/ui/avatars/BaseA
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { useTranslation } from "../../../../i18n";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
+import { PickerField, pickerInputProps } from "../../components/autocompletes/pickerField";
 import { StatusLabel } from "../../components/meta/StatusLabel";
 import { SprintStatusLabel } from "../../components/meta/ToneLabel";
 import { isFinishedStatus } from "../../meta/taskStatuses";
@@ -24,7 +25,10 @@ type MilestoneOption = {
 
 type Props = {
     projectId: number | undefined;
-    useSM: SprintMilestoneManagementState;
+    useSM: Pick<
+        SprintMilestoneManagementState,
+        "projectSprints" | "projectMilestones" | "isMilestoneFavorited"
+    >;
     sprintId: number | null | undefined;
     milestoneId: number | null | undefined;
     onChangeSprint: (sprintId: number | null) => void;
@@ -48,6 +52,10 @@ type Props = {
     showMilestone?: boolean;
     disabled?: boolean;
     size?: "sm" | "md";
+    /** For a field that must name a milestone: no "No milestone" row, and this while empty. */
+    milestonePlaceholder?: string;
+    /** Names the milestone field. */
+    field?: PickerField;
 };
 
 const makeNoSprint = (label: string): SprintOption => ({
@@ -75,6 +83,8 @@ export const SprintMilestonePicker = ({
     showMilestone = true,
     disabled,
     size = "sm",
+    milestonePlaceholder,
+    field,
 }: Props) => {
     const { t } = useTranslation();
     const NO_SPRINT = useMemo(() => makeNoSprint(t.tasks.picker.noSprintLabel), [t]);
@@ -133,7 +143,7 @@ export const SprintMilestonePicker = ({
             milestoneId != null ? milestones.filter((m) => m.milestoneId === milestoneId) : [];
         const list = [...current, ...visible.filter((m) => m.milestoneId !== milestoneId)];
         return [
-            NO_MILESTONE,
+            ...(milestonePlaceholder ? [] : [NO_MILESTONE]),
             ...list.map<MilestoneOption>((m) => ({
                 kind: "milestone",
                 id: m.milestoneId,
@@ -141,11 +151,19 @@ export const SprintMilestonePicker = ({
                 milestone: m,
             })),
         ];
-    }, [milestones, sprints, milestoneId, NO_MILESTONE, useSM.isMilestoneFavorited]);
+    }, [
+        milestones,
+        sprints,
+        milestoneId,
+        NO_MILESTONE,
+        useSM.isMilestoneFavorited,
+        milestonePlaceholder,
+    ]);
 
     const selectedSprint = sprintOptions.find((o) => o.id === (sprintId ?? null)) ?? NO_SPRINT;
     const selectedMilestone =
-        milestoneOptions.find((o) => o.id === (milestoneId ?? null)) ?? NO_MILESTONE;
+        milestoneOptions.find((o) => o.id === (milestoneId ?? null)) ??
+        (milestonePlaceholder ? null : NO_MILESTONE);
 
     return (
         <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
@@ -201,11 +219,15 @@ export const SprintMilestonePicker = ({
             )}
             {showMilestone && (
                 <Autocomplete
+                    disableClearable={!milestonePlaceholder}
                     disabled={disabled}
+                    error={field?.invalid}
                     getOptionLabel={(o) => o.label}
+                    isOptionEqualToValue={(a, b) => a.id === b.id}
                     options={milestoneOptions}
+                    placeholder={milestonePlaceholder}
                     size={size}
-                    slotProps={OPTION_LISTBOX_SLOT_PROPS}
+                    slotProps={{ ...OPTION_LISTBOX_SLOT_PROPS, input: pickerInputProps(field) }}
                     sx={{ flex: 1, minWidth: 0 }}
                     value={selectedMilestone}
                     renderOption={(props, option) => {
@@ -283,7 +305,6 @@ export const SprintMilestonePicker = ({
                             </li>
                         );
                     }}
-                    disableClearable
                     onChange={(_, v) => {
                         // The sprint follows the milestone, so it goes up with
                         // the pick in a SINGLE callback (see `onChangeMilestone`

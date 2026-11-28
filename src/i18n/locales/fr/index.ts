@@ -7259,7 +7259,6 @@ export const fr: DeepPartial<Messages> = {
             optAssignee: "Le responsable change",
             anyone: "N’importe qui",
             choose: "Choisir…",
-            noOptions: "Rien à choisir",
             everyTask: "Toutes les tâches",
             addCondition: "Ajouter une condition",
             conditionLimit: "10 conditions au maximum.",
