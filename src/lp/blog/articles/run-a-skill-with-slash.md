@@ -33,7 +33,7 @@ Some examples of steps worth keeping:
 
 - **The same instructions every time**, without remembering the wording.
 - **Less setup.** The steps are already there; you add only what is different today, such as a project name.
-- **A shared way of doing it.** Share a skill with your team or with chosen people, and they run the version you published. Fix a step once and publish it again.
+- **A shared way of doing it.** Share a skill with your team or with chosen people; they install it and run the version you published. Fix a step and publish again; people who installed it are told, and take the update when they choose.
 - **Runs on a schedule.** A schedule can run your skill at set times and put the result in your Inbox. A scheduled run only reads; it changes nothing.
 
 Running a skill is asking Genos, so it uses your AI allowance. Proposing changes needs Core or above, and so do schedules.

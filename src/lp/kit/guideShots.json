@@ -304,5 +304,26 @@
             "height": 320,
             "pins": [[0.226, 0.631]]
         }
+    },
+    "blog-status-board": {
+        "en": {
+            "width": 1000,
+            "height": 550,
+            "pins": []
+        }
+    },
+    "blog-rules": {
+        "en": {
+            "width": 640,
+            "height": 628,
+            "pins": []
+        }
+    },
+    "blog-pins": {
+        "en": {
+            "width": 1000,
+            "height": 656,
+            "pins": []
+        }
     }
 }
