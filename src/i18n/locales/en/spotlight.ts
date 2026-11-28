@@ -32,6 +32,8 @@ export const spotlight = {
         noAnswer: "(no answer)",
         cancelledBeforeAnswer: "This ask was cancelled before an answer.",
         notDecided: "This ask was not approved or rejected.",
+        approvalExpired: "This ask expired before it was approved or rejected.",
+        notAnswered: "This ask couldn't be answered.",
     },
     // What the server could not use of what an ask pointed at (the `dropped_references` of the
     // `done` event, and of the approval card's event on a run that pauses, MIP-1058, MIP-1585).

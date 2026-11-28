@@ -110,15 +110,20 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         itemId?: number;
     } | null>(() => {
         if (hostedInModal) return null;
+        // Read only: React may throw this render away and run it again (MIP-2600), so
+        // the target is used up by the effect below, once the pane is really on screen.
         const raw = sessionStorage.getItem("todoDeepLinkTarget");
         if (!raw) return null;
-        sessionStorage.removeItem("todoDeepLinkTarget");
         try {
             return JSON.parse(raw) as { localDate: string; itemId?: number };
         } catch {
             return null;
         }
     });
+    useEffect(() => {
+        if (!hostedInModal) sessionStorage.removeItem("todoDeepLinkTarget");
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     // What the pane has already acted on for the current target (the two effects further down).
     const scrolledFocusRef = useRef<string | null>(null);
     const tabFlipHandledRef = useRef<string | null>(null);

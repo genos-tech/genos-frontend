@@ -31,7 +31,8 @@ vi.mock("../features/chat/components/sidebar/activity/ActivityContent", () => ({
     ActivityContent: () => <span>content</span>,
 }));
 vi.mock("../features/chat/components/sidebar/activity/ActivityHeader", () => ({
-    ActivityHeader: () => <span>the card</span>,
+    // The header's title names the row button (MIP-2605).
+    ActivityHeader: ({ ids }: { ids: { title: string } }) => <span id={ids.title}>the card</span>,
 }));
 vi.mock("../features/notes/common/services/loadSpecificNote", () => ({
     loadSpecificNote: (...args: unknown[]) => loadSpecificNoteMock(...args),

@@ -8,9 +8,14 @@ import { undoStepsFromSession } from "./undoSteps";
 
 // Why a persisted run has no answer, when the server's status says (MIP-2604).
 export const unansweredReason = (turn: AgentSessionTurn): UnansweredReason | undefined => {
+    // Said even when the ask wrote some text before it paused: without the line, that text reads as
+    // if the write had been made (MIP-2613).
+    if (turn.status === "awaiting_approval" && turn.approval_expired) return "expired";
     if (turn.answer || turn.error) return undefined;
     if (turn.status === "cancelled") return "cancelled";
     if (turn.status === "awaiting_approval") return "notDecided";
+    // Ended as an error with no message: refused before it began (MIP-2609).
+    if (turn.status === "error") return "refused";
     return undefined;
 };
 

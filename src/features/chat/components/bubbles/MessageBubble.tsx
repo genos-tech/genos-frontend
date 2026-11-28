@@ -14,8 +14,6 @@ import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../hooks/common/bubbleStylePreferenceState";
 import { useDoubleClickTodoPreference } from "../../../../hooks/common/doubleClickTodoPreferenceState";
-import { useIsMobile } from "../../../../hooks/common/useIsMobile";
-import { useLongPress } from "../../../../hooks/common/useLongPress";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -40,6 +38,7 @@ import { BubbleMoreMenu } from "./BubbleMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
 import { RepliedToThreadLine } from "./RepliedToThreadLine";
+import { useBubbleToolbar } from "./useBubbleToolbar";
 
 // Chat type → URL path segment. Module constant so it isn't rebuilt on
 // every bubble render.
@@ -148,7 +147,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         // A long-press on mobile fires a synthetic click on touchend.
         // Swallow it so the bubble doesn't ALSO navigate to the
         // message URL — the long-press only meant "show the toolbar".
-        if (longPress.consumedTap()) {
+        if (consumedTap()) {
             e.preventDefault();
             e.stopPropagation();
             return;
@@ -285,22 +284,9 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     };
 
     // Reaction handling
-    // On mobile the toolbar is summoned by a long-press (~500ms hold)
-    // on the bubble — there's no hover signal on touch, but always-on
-    // is visually noisy. Long-press → toolbar appears for that bubble;
-    // tapping anywhere outside (or sending one of its actions)
-    // dismisses it. Desktop keeps the existing hover-driven behavior.
-    const isMobile = useIsMobile();
-    const [showUnderBarHovered, setShowUnderBarOption] = useState(false);
-    const [mobileToolbarOpen, setMobileToolbarOpen] = useState(false);
-    // While the More menu is open we (a) keep the toolbar mounted even
-    // after the cursor leaves the bubble — otherwise `showUnderBarOption`
-    // flips false and unmounts the menu out from under the user — and
-    // (b) force the bubble tooltip closed so it can't overlap the menu.
-    const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
-    const showUnderBarOption =
-        (isMobile ? mobileToolbarOpen : showUnderBarHovered) || isMoreMenuOpen;
-    const longPress = useLongPress(() => setMobileToolbarOpen(true), { threshold: 500 });
+    const bubbleRef = useRef<HTMLDivElement>(null);
+    const { showUnderBarOption, isMoreMenuOpen, setIsMoreMenuOpen, consumedTap, rowHandlers } =
+        useBubbleToolbar(bubbleRef);
     const [reactions, setReactions] = useState<ReactionProps[]>([]);
     const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
     const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
@@ -317,7 +303,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         .join(" ");
 
     // Dynamic positioning for emoji picker
-    const bubbleRef = useRef<HTMLDivElement>(null);
     const toolbarRef = useRef<HTMLDivElement>(null);
     const [pickerBottomPosition, setPickerBottomPosition] = useState<number>(40);
     const [pickerTopPosition, setPickerTopPosition] = useState<number | string>("auto");
@@ -368,25 +353,6 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     useEffect(() => {
         setReactions(message.reactions || []);
     }, [message]);
-
-    // Dismiss the mobile long-press toolbar when the user taps anywhere
-    // that isn't the bubble itself. Without this the toolbar would stay
-    // sticky forever (no hover-out signal on touch).
-    useEffect(() => {
-        if (!mobileToolbarOpen) return;
-        const handler = (e: TouchEvent | MouseEvent) => {
-            const target = e.target as Node | null;
-            if (!target) return;
-            if (bubbleRef.current && bubbleRef.current.contains(target)) return;
-            setMobileToolbarOpen(false);
-        };
-        document.addEventListener("touchstart", handler, { passive: true });
-        document.addEventListener("mousedown", handler);
-        return () => {
-            document.removeEventListener("touchstart", handler);
-            document.removeEventListener("mousedown", handler);
-        };
-    }, [mobileToolbarOpen]);
 
     useEffect(() => {
         if (selectedEmoji === null) return;
@@ -767,12 +733,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             suppressTouchCallout
             onClick={handleMessageClick}
             onDoubleClick={doubleClickTodoEnabled ? handleAddMessageToToDo : undefined}
-            onMouseEnter={() => setShowUnderBarOption(true)}
-            onMouseLeave={() => setShowUnderBarOption(false)}
-            onTouchCancel={longPress.onTouchCancel}
-            onTouchEnd={longPress.onTouchEnd}
-            onTouchMove={longPress.onTouchMove}
-            onTouchStart={longPress.onTouchStart}
+            {...rowHandlers}
         >
             {message.alsoSentFrom ? (
                 <>
@@ -780,7 +741,7 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                         preview={message.alsoSentFrom.rootPreview}
                         onOpen={(e) => {
                             // The click that ends a long-press only meant "show the toolbar".
-                            if (longPress.consumedTap()) return;
+                            if (consumedTap()) return;
                             replayHandler(e);
                         }}
                     />
