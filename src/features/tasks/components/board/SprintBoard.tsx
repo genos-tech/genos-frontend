@@ -301,7 +301,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
         const destColumnConfig = shownColumns.find((col) => col.id === destColumn);
         const newStatus = destColumnConfig?.status || movedTask.status;
         // A status column names the status itself (MIP-2495), which is a write even when the
-        // category stays: Open to In Review.
+        // category stays: Open to Ready.
         const pickedStatusId = destColumnConfig?.row?.statusId;
         const customStatusIdAfter = (previous: TaskTableProps) =>
             pickedStatusId ??

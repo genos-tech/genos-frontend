@@ -16,13 +16,19 @@ import { statusTone, toneCss } from "../meta/taskTone";
 /** The categories a project status can belong to, in order. */
 export const STATUS_CATEGORIES: readonly string[] = WORKFLOW_STATUS_NAMES;
 
+/** The built-in between Open and WIP. The key is the server's identifier and does not change;
+ *  its name is "Ready" (it was "In Review" until MIP-2602). */
 export const IN_REVIEW_KEY = "In Review";
 
-/** The built-in statuses a project is set up with: each category's own, and In Review. */
+/** The name a built-in row is written with: its key, except where the default was renamed
+ *  (mirrors `builtin_name` in genos-api's `project_statuses`). */
+export const builtinName = (key: string): string => (key === IN_REVIEW_KEY ? "Ready" : key);
+
+/** The built-in statuses a project is set up with: each category's own, and Ready. */
 export const BUILTIN_STATUSES: readonly { key: string; category: string }[] =
     STATUS_CATEGORIES.flatMap((category) => {
         const own = [{ key: category, category }];
-        // In Review is a "not started" status, between Open and WIP.
+        // Ready is a "not started" status, between Open and WIP.
         return category === STATUS_CATEGORIES[0]
             ? [...own, { key: IN_REVIEW_KEY, category }]
             : own;
@@ -48,13 +54,13 @@ export const resolveStatusRow = (
 
 type StatusWords = {
     filters: Record<string, string>;
-    projectStatuses: { inReview: string };
+    projectStatuses: { ready: string };
 };
 
 /** The row's name: a built-in nobody renamed is translated, anything typed is shown as typed. */
 export const statusRowName = (row: ProjectStatusDef, words: StatusWords): string => {
-    if (!row.builtinKey || row.name !== row.builtinKey) return row.name;
-    if (row.builtinKey === IN_REVIEW_KEY) return words.projectStatuses.inReview;
+    if (!row.builtinKey || row.name !== builtinName(row.builtinKey)) return row.name;
+    if (row.builtinKey === IN_REVIEW_KEY) return words.projectStatuses.ready;
     return words.filters[row.builtinKey.toLowerCase()] ?? row.name;
 };
 

@@ -42,6 +42,7 @@ import {
 } from "../../services/projectStatuses";
 import {
     BUILTIN_STATUSES,
+    builtinName,
     MAX_STATUS_NAME,
     MAX_STATUSES,
     sortStatuses,
@@ -883,7 +884,7 @@ export const ModalProjectStatuses = ({
                 {BUILTIN_STATUSES.map(({ key, category }) => (
                     <StatusLabel
                         key={key}
-                        row={{ name: key, builtinKey: key, color: "", category }}
+                        row={{ name: builtinName(key), builtinKey: key, color: "", category }}
                         status={category}
                     />
                 ))}
