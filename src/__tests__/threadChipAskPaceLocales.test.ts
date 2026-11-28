@@ -20,7 +20,7 @@ describe("the thread chip", () => {
     it("is translated in every locale", () => {
         for (const [locale, messages] of Object.entries(OTHERS)) {
             for (const key of ["comments", "replies"] as const) {
-                expect(messages.chat.underBar[key], `${locale}.${key}`).not.toBe(
+                expect(messages.chat?.underBar?.[key], `${locale}.${key}`).not.toBe(
                     en.chat.underBar[key]
                 );
             }
@@ -35,7 +35,7 @@ describe("the thread chip", () => {
     });
 
     it("uses the Arabic plural forms", () => {
-        const say = (count: number) => fmt(ar.chat.underBar.replies, { count }, "ar");
+        const say = (count: number) => fmt(ar.chat!.underBar!.replies!, { count }, "ar");
         expect([1, 2, 3, 11, 100].map(say)).toEqual([
             "رد واحد",
             "ردّان",
@@ -55,8 +55,8 @@ describe('"Clear conversation"', () => {
         ["hi", hi, "बातचीत साफ़ करें"],
         ["ar", ar, "مسح المحادثة"],
     ])("is an action in %s", (_, messages, label) => {
-        expect(messages.threadAsk.conversation.clear).toBe(label);
-        expect(messages.noteAsk.conversation.clear).toBe(label);
+        expect(messages.threadAsk?.conversation?.clear).toBe(label);
+        expect(messages.noteAsk?.conversation?.clear).toBe(label);
     });
 });
 
@@ -68,7 +68,7 @@ describe("the Pace card", () => {
         ["hi", hi, ["सप्ताह", "नए", "शुरू", "बंद"]],
         ["ar", ar, ["أسبوع", "المُنشأة", "المبدوءة", "المغلقة"]],
     ])("has short natural labels in %s", (_, messages, labels) => {
-        const v = messages.tasks.dashboard.velocity;
+        const v = messages.tasks!.dashboard!.velocity!;
         expect([v.weekPrefix, v.created, v.started, v.closed]).toEqual(labels);
     });
 });
