@@ -98,6 +98,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
             <Autocomplete
                 key={taskContent.id}
                 error={field?.invalid}
+                noOptionsText={field?.noOptions}
                 getOptionLabel={(option) => taskMetaLabel(option.status, t.tasks.filters)}
                 isOptionEqualToValue={(option, value) => option.status === value.status}
                 options={options}

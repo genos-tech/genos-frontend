@@ -8,6 +8,8 @@ export type PickerField = {
     describedBy?: string;
     /** `data-slot`: what the form moves the focus to. */
     slotId?: string;
+    /** What an empty list says, in the form's words. */
+    noOptions?: string;
 };
 
 /** For the Autocomplete's `slotProps.input`; nothing without a `field`. */

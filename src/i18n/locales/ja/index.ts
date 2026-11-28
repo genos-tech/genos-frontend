@@ -7146,6 +7146,7 @@ export const ja: DeepPartial<Messages> = {
             optAssignee: "担当者が変わる",
             anyone: "だれでも",
             choose: "選択…",
+            noOptions: "選べる項目がありません",
             everyTask: "すべてのタスク",
             addCondition: "条件を追加",
             conditionLimit: "条件は10件までです。",

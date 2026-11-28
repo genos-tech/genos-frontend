@@ -4127,6 +4127,7 @@ export const hi: DeepPartial<Messages> = {
             optAssignee: "जिम्मेदार बदले",
             anyone: "कोई भी",
             choose: "चुनें…",
+            noOptions: "चुनने के लिए कुछ नहीं",
             everyTask: "हर टास्क",
             addCondition: "शर्त जोड़ें",
             conditionLimit: "अधिकतम 10 शर्तें।",

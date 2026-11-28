@@ -39,6 +39,8 @@ type ACTeamProjectsProps = {
     /** Why a project cannot be picked: it stays listed, with this under its name. */
     disabledReason?: (project: ProjectProps) => string | undefined;
     field?: PickerField;
+    /** The clear button was pressed. Without it the pick stays, as a task keeps its project. */
+    onClear?: () => void;
 };
 export const ACTeamProjects = (props: ACTeamProjectsProps) => {
     const {
@@ -54,6 +56,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
         placeholder,
         disabledReason,
         field,
+        onClear,
     } = props;
 
     const selectedProject = taskContent.project?.projectId ? taskContent.project : undefined;
@@ -73,6 +76,7 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
             key={taskContent.id}
             disabled={disabled}
             error={field?.invalid}
+            noOptionsText={field?.noOptions}
             getOptionDisabled={(option) => Boolean(disabledReason?.(option))}
             getOptionLabel={(option) => option.projectName}
             slotProps={{ input: pickerInputProps(field) }}
@@ -125,7 +129,8 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
             }
             onOpen={() => setIsOpenProjectList(!isOpenProjectList)}
             onChange={(event, value) => {
-                if (value !== null) {
+                if (value === null) onClear?.();
+                else {
                     const isActualChange = value.projectId !== taskContent.project?.projectId;
                     setTaskContent({
                         ...taskContent,

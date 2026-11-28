@@ -841,6 +841,7 @@ export const tasks = {
         optAssignee: "Assignee changes",
         anyone: "Anyone",
         choose: "Choose…",
+        noOptions: "Nothing to choose",
         everyTask: "Every task",
         addCondition: "Add condition",
         conditionLimit: "Up to 10 conditions.",

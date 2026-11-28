@@ -264,4 +264,35 @@ describe("the rule builder's pickers", { timeout: 30_000 }, () => {
             { field_id: 6, value: "bo" },
         ]);
     });
+
+    it("reads a deleted value as Unknown, not as an empty field", async () => {
+        await openEditor(
+            projects,
+            rule({
+                conditions: [
+                    { field: "custom_field", field_id: 5, op: "is", value: "gone" },
+                    { field: "custom_field", field_id: 6, op: "is", value: "left" },
+                ],
+            })
+        );
+        await waitFor(() => expect(conditionSlot(1)?.value).toBe(words.unknown));
+        expect(screen.getByTestId("rule-clauses").textContent).toContain(words.unknown);
+    });
+
+    it("clears the destination from its clear button, and then asks for one", async () => {
+        await openEditor(projects);
+        const root = slot("move").closest<HTMLElement>(".MuiAutocomplete-root")!;
+        fireEvent.click(root.querySelector('[title="Clear"]')!);
+        await waitFor(() => expect(slot("move").value).toBe(""));
+        fireEvent.click(screen.getByRole("button", { name: words.preview }));
+        expect(screen.getAllByText(words.errSlot).length).toBeGreaterThan(0);
+        expect(api.dryRunRule).not.toHaveBeenCalled();
+    });
+
+    it("says an empty list in the builder's words", async () => {
+        await openEditor(projects);
+        fireEvent.focus(slot("assignee"));
+        fireEvent.change(slot("assignee"), { target: { value: "zzzz" } });
+        expect(await screen.findByText(words.noOptions)).toBeTruthy();
+    });
 });

@@ -2,7 +2,7 @@
  * The editor's value pickers are the task view's own (MIP-2591). Those edit a task, so each
  * one here hands them a stand-in that holds the one value, and reads it back.
  */
-import { ReactNode, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import { Box } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 
@@ -22,6 +22,7 @@ import { destinationProjects, refusedAsPublic, statusRowOf, useLookups } from ".
 import { useAutomationWords } from "./words";
 
 const noop = () => {};
+const noFavorites = () => false;
 
 /** Only what the picker it is given to reads. */
 const standIn = (values: object): TaskProps => values as unknown as TaskProps;
@@ -59,8 +60,12 @@ export const StatusSlot = ({
     onChange: (next: StatusPick, statusId: number | undefined) => void;
     field: PickerField;
 }) => {
-    // A saved pick of a status of the project's own carries its id alone.
-    const category = value ? value.category || statusRowOf(value, rows)?.category || "" : "";
+    const words = useAutomationWords();
+    const row = value ? statusRowOf(value, rows) : undefined;
+    // A saved pick of a status of the project's own carries its id alone. One that was
+    // deleted since reads "Unknown", not like an empty field.
+    const gone = value?.customStatusId != null && !row && rows.length > 0;
+    const category = gone ? words.unknown : value ? value.category || row?.category || "" : "";
     return (
         <Slot>
             <ACTaskStatus
@@ -76,7 +81,13 @@ export const StatusSlot = ({
                     id: field.slotId,
                     project: { projectId },
                     status: statuses.find((s) => s.status === category) ?? { status: category },
-                    customStatusId: value?.customStatusId ?? null,
+                    // A whole category is its built-in row: left empty, the field would show
+                    // the project's default status of that category instead.
+                    customStatusId:
+                        value?.customStatusId ??
+                        rows.find((r) => r.category === category && r.builtinKey === category)
+                            ?.statusId ??
+                        null,
                 })}
             />
         </Slot>
@@ -194,7 +205,7 @@ export const ProjectSlot = ({
     field,
 }: {
     value: number | null;
-    onChange: (projectId: number) => void;
+    onChange: (projectId: number | null) => void;
     field: PickerField;
 }) => {
     const words = useAutomationWords();
@@ -212,6 +223,7 @@ export const ProjectSlot = ({
             <ACTeamProjects
                 field={field}
                 isOpenProjectList={open}
+                onClear={() => onChange(null)}
                 placeholder={words.choose}
                 setIsOpenProjectList={setOpen}
                 setTaskContent={(next) => onChange(next.project!.projectId!)}
@@ -240,6 +252,16 @@ export const MilestoneSlot = ({
     const words = useAutomationWords();
     const { projectId, milestones, sprints } = useLookups();
     const known = milestones.some((m) => String(m.milestoneId) === value);
+    // Stable while the lists are: the picker rebuilds its options, and drops what is being
+    // typed, when this changes.
+    const useSM = useMemo(
+        () => ({
+            projectMilestones: { [projectId]: milestones },
+            projectSprints: { [projectId]: sprints },
+            isMilestoneFavorited: noFavorites,
+        }),
+        [projectId, milestones, sprints]
+    );
     return (
         <Slot>
             <SprintMilestonePicker
@@ -249,11 +271,7 @@ export const MilestoneSlot = ({
                 projectId={projectId}
                 showSprint={false}
                 sprintId={null}
-                useSM={{
-                    projectMilestones: { [projectId]: milestones },
-                    projectSprints: { [projectId]: sprints },
-                    isMilestoneFavorited: () => false,
-                }}
+                useSM={useSM}
                 onChangeMilestone={(id) => onChange(id == null ? "" : String(id))}
                 onChangeSprint={noop}
             />
@@ -276,6 +294,9 @@ export const CustomFieldSlot = ({
     const words = useAutomationWords();
     const { mode } = useColorScheme();
     const { members } = useLookups();
+    // A deleted option, or a member who left, reads "Unknown" rather than like an empty field.
+    const goneOption = Boolean(value) && !def.options.some((o) => o.id === value);
+    const goneMember = Boolean(value) && !members.some((m) => String(m.userId) === value);
     return (
         <Slot>
             {def.fieldType === "member" ? (
@@ -284,12 +305,32 @@ export const CustomFieldSlot = ({
                     field={field}
                     placeholder={words.choose}
                     stored={value}
-                    teamMembers={members}
+                    teamMembers={
+                        goneMember
+                            ? [
+                                  ...members,
+                                  {
+                                      userId: value,
+                                      userName: words.unknown,
+                                  } as (typeof members)[number],
+                              ]
+                            : members
+                    }
                     writeValue={(_id, next) => onChange(typeof next === "string" ? next : "")}
                 />
             ) : (
                 <TagFieldEditor
-                    def={def}
+                    def={
+                        goneOption
+                            ? {
+                                  ...def,
+                                  options: [
+                                      ...def.options,
+                                      { id: value, label: words.unknown, color: "" },
+                                  ],
+                              }
+                            : def
+                    }
                     field={field}
                     isDark={mode === "dark"}
                     placeholder={words.choose}

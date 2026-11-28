@@ -92,6 +92,7 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         <Autocomplete
             key={taskContent.id}
             error={field?.invalid}
+            noOptionsText={field?.noOptions}
             filterOptions={personFilterOptions}
             getOptionLabel={(option) => personLabel(option, myself.userId, youSuffix)}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}

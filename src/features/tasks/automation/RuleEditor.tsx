@@ -273,6 +273,7 @@ export const RuleEditor = ({
     const picker = (part: string, label: string, slotId: string = part) => ({
         label,
         slotId,
+        noOptions: words.noOptions,
         invalid: Boolean(errors[part]),
         describedBy: describe(part),
     });
@@ -358,7 +359,11 @@ export const RuleEditor = ({
                     field={slot.field}
                     projectId={lookups.projectId}
                     rows={lookups.statuses}
-                    value={row ? { category: row.category, customStatusId: row.statusId } : null}
+                    value={
+                        c.value
+                            ? { category: row?.category ?? "", customStatusId: Number(c.value) }
+                            : null
+                    }
                     // This condition names a status by itself, a built-in one too.
                     onChange={(_pick, statusId) =>
                         slot.onChange(statusId == null ? "" : String(statusId))
@@ -450,7 +455,7 @@ export const RuleEditor = ({
         );
     };
 
-    const moveDestination = (destinationId: number) => {
+    const moveDestination = (destinationId: number | null) => {
         const next = withDestination(draft, destinationId);
         const cleared = Boolean(draft.addTag) || draft.setStatus?.customStatusId != null;
         onChange(next);

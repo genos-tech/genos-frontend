@@ -36,7 +36,6 @@ import type { AutomationRule, RuleList as RuleListData } from "./types";
 import { useLater } from "./useLater";
 import { reasonText, sentenceCase, useAutomationWords, wordsFor } from "./words";
 
-/** Where the preview was asked for. A switch turns the saved rule on; the others save. */
 const NO_DATA: AutomationContextData = {
     projects: [],
     members: [],
@@ -45,6 +44,7 @@ const NO_DATA: AutomationContextData = {
     chats: [],
 };
 
+/** Where the preview was asked for. A switch turns the saved rule on; the others save. */
 type PreviewFrom = "editor" | "menu" | "switch";
 
 type View =

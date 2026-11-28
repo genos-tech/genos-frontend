@@ -6874,6 +6874,7 @@ export const zh: DeepPartial<Messages> = {
             optAssignee: "负责人变化",
             anyone: "任何人",
             choose: "选择…",
+            noOptions: "没有可选项",
             everyTask: "所有任务",
             addCondition: "添加条件",
             conditionLimit: "最多 10 个条件。",

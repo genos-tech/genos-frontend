@@ -60,6 +60,7 @@ export const ProjectStatusPicker = ({
     return (
         <Autocomplete
             error={field?.invalid}
+            noOptionsText={field?.noOptions}
             getOptionLabel={name}
             isOptionEqualToValue={(option, selected) => option.key === selected.key}
             options={options}
