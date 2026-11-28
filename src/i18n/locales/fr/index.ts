@@ -7227,6 +7227,7 @@ export const fr: DeepPartial<Messages> = {
             cNotSet: "{field} est vide",
             aMove: "déplacer vers {project}",
             aMoveHidden: "déplacer vers un projet dont vous n’êtes pas membre",
+            aMoveGone: "déplacer vers un projet supprimé",
             aStatus: "définir le statut sur {status}",
             aAssign: "attribuer à {person}",
             aTag: "ajouter l’étiquette {tag}",
@@ -7328,6 +7329,7 @@ export const fr: DeepPartial<Messages> = {
             reason: {
                 destination_not_found:
                     "le projet de destination n’existe plus, ou vous n’en êtes pas membre.",
+                destination_gone: "le projet de destination a été supprimé.",
                 destination_archived: "le projet de destination est archivé.",
                 same_project: "la destination doit être un autre projet.",
                 private_to_public:

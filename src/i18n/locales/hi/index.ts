@@ -4085,6 +4085,7 @@ export const hi: DeepPartial<Messages> = {
             cNotSet: "{field} खाली है",
             aMove: "{project} में ले जाएँ",
             aMoveHidden: "ऐसे प्रोजेक्ट में ले जाएँ जिसमें आप नहीं हैं",
+            aMoveGone: "हटाए गए प्रोजेक्ट में ले जाएँ",
             aStatus: "स्थिति {status} करें",
             aAssign: "{person} को सौंपें",
             aTag: "टैग {tag} जोड़ें",
@@ -4185,6 +4186,7 @@ export const hi: DeepPartial<Messages> = {
             reason: {
                 destination_not_found:
                     "गंतव्य प्रोजेक्ट मौजूद नहीं है, या आप उसके सदस्य नहीं हैं।",
+                destination_gone: "गंतव्य प्रोजेक्ट हटा दिया गया है।",
                 destination_archived: "गंतव्य प्रोजेक्ट संग्रहीत है।",
                 same_project: "गंतव्य कोई दूसरा प्रोजेक्ट होना चाहिए।",
                 private_to_public:

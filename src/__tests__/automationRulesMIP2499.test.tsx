@@ -342,6 +342,39 @@ describe("the Automation tab", () => {
         expect(screen.queryByRole("menuitem", { name: words.preview })).toBeNull();
     });
 
+    it("says a deleted destination was deleted, and lets the rule be edited (MIP-2554)", async () => {
+        const deleted = { projectId: null, name: null, visible: false, gone: true };
+        const pane = await openRules([
+            rule({ destination: deleted }),
+            rule({
+                ruleId: 2,
+                name: "Off",
+                enabled: false,
+                disabledReason: "destination",
+                destination: deleted,
+            }),
+        ]);
+        const sentences = within(pane).getAllByTestId("rule-sentence");
+        expect(sentences[0].textContent).toContain(words.aMoveGone);
+        expect(sentences[0].textContent).not.toContain(words.aMoveHidden);
+        expect(within(pane).getByTestId("rule-turned-off").textContent).toContain(
+            words.reason.destination_gone
+        );
+        // Still enabled, never "hidden": its row opens the editor to choose a new destination.
+        fireEvent.click(rowButton()!);
+        expect(await screen.findByTestId("rule-clauses")).toBeTruthy();
+    });
+
+    it("keeps the hidden wording for a destination the reader is not on (MIP-2554)", async () => {
+        const pane = await openRules([
+            rule({
+                destination: { projectId: null, name: null, visible: false, gone: false },
+            }),
+        ]);
+        expect(within(pane).getByTestId("rule-sentence").textContent).toContain(words.aMoveHidden);
+        expect(rowButton()).toBeNull();
+    });
+
     it("drops the destination's own values when the move is removed", async () => {
         dryRun([]);
         await openRules([rule({ addTag: "tag-a" })]);

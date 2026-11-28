@@ -19,7 +19,7 @@ import { fmt, useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
 import { rowSx } from "../components/statuses/listStyles";
 import { MAX_RULES } from "./draft";
-import { forMilestones, isHidden, unnamedDestination } from "./helpers";
+import { forMilestones, isHidden, turnedOffCode, unnamedDestination } from "./helpers";
 import { useLookups } from "./lookups";
 import { RuleSummary } from "./RuleSentence";
 import type { AutomationRule } from "./types";
@@ -292,7 +292,7 @@ export const RuleList = (props: Props) => {
                         >
                             <WarningAmberRoundedIcon sx={{ fontSize: 14, color: "inherit" }} />
                             {fmt(words.turnedOff, {
-                                reason: reasonText(words, rule.disabledReason),
+                                reason: reasonText(words, turnedOffCode(rule)),
                             })}
                         </Box>
                     )}

@@ -4746,6 +4746,7 @@ export const ar: DeepPartial<Messages> = {
             cNotSet: "{field} فارغ",
             aMove: "انقل إلى {project}",
             aMoveHidden: "انقل إلى مشروع لست عضوًا فيه",
+            aMoveGone: "انقل إلى مشروع محذوف",
             aStatus: "اجعل الحالة {status}",
             aAssign: "أسندها إلى {person}",
             aTag: "أضف الوسم {tag}",
@@ -4844,6 +4845,7 @@ export const ar: DeepPartial<Messages> = {
             stSkipped: "متخطاة",
             reason: {
                 destination_not_found: "مشروع الوجهة غير موجود، أو لست عضوًا فيه.",
+                destination_gone: "حُذف مشروع الوجهة.",
                 destination_archived: "مشروع الوجهة مؤرشف.",
                 same_project: "يجب أن تكون الوجهة مشروعًا آخر.",
                 private_to_public: "هذا المشروع خاص، لذا لا يمكن نقل مهامه إلى مشروع عام.",
