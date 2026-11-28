@@ -452,7 +452,11 @@ const MilestoneCard = ({
                                 ))}
                             </AvatarGroup>
                         )}
-                        <StatusLabel status={milestone.status} />
+                        <StatusLabel
+                            customStatusId={milestone.customStatusId}
+                            projectId={milestone.projectId}
+                            status={milestone.status}
+                        />
                     </Stack>
                 }
             >

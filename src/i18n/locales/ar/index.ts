@@ -3001,6 +3001,25 @@ export const ar: DeepPartial<Messages> = {
                 "Google انتهت صلاحية اتصال التقويم — أعد الاتصال لاستخدام Quick Meet.",
             quickMeetReconnect: "أعد الاتصال",
         },
+        // Messages pinned in a chat for everyone (MIP-2487).
+        pinnedMessages: {
+            tabsAria: "طرق عرض المحادثة",
+            messagesTab: "الرسائل",
+            pinnedTab: "المثبّتة",
+            listAria: "الرسائل المثبّتة",
+            pinnedBy: "ثبّتها {name}",
+            pinnedByDeleted: "ثبّتها حساب محذوف",
+            unpin: "إلغاء التثبيت للجميع",
+            pinForEveryone: "تثبيت للجميع",
+            unpinForEveryone: "إلغاء التثبيت للجميع",
+            hiddenOne: "رسالة مثبّتة أقدم ({count}) خارج سجل خطتك.",
+            hiddenMany: "رسائل مثبّتة أقدم ({count}) خارج سجل خطتك.",
+            pinFailed: "تعذّر تثبيت الرسالة. حاول مرة أخرى.",
+            unpinFailed: "تعذّر إلغاء تثبيت الرسالة. حاول مرة أخرى.",
+            limitReached:
+                "تحتوي هذه المحادثة بالفعل على {count} رسالة مثبّتة. ألغِ تثبيت إحداها أولاً.",
+            jumpFailed: "تعذّر فتح تلك الرسالة.",
+        },
         threadTabs: {
             ariaLabel: "أقسام سلسلة الرسائل",
             comments: "التعليقات",
@@ -3885,6 +3904,8 @@ export const ar: DeepPartial<Messages> = {
             quickAddHiddenByFilters: "تم إنشاء {id}، لكن عوامل التصفية الحالية تخفيه.",
             quickAddOpen: "فتح",
             quickAddDismiss: "إغلاق",
+            statusColumnLabel: "{name} · {category} · المهام: {count}",
+            statusOffTooltip: "معطّلة. انقل هذه المهام إلى حالة أخرى.",
         },
         subTasks: {
             loadFailed: "تعذّر تحميل المهام الفرعية",
@@ -3918,6 +3939,7 @@ export const ar: DeepPartial<Messages> = {
             folder: "المجلد",
         },
         filters: {
+            statusInCategory: "{name} ضمن {category}",
             all: "الكل",
             open: "مفتوحة",
             wip: "قيد التنفيذ",
@@ -4672,6 +4694,10 @@ export const ar: DeepPartial<Messages> = {
             deleteInUse: "عدد المهام التي تستخدم هذه الحالة: {count}. انقلها إلى:",
             replacementLabel: "نقل إلى",
             deleteAndMove: "نقل وحذف",
+            boardColumnsTitle: "عمود في اللوحة لكل حالة",
+            boardColumnsHint: "عمود لكل حالة بدلاً من عمود لكل فئة، لجميع أعضاء المشروع.",
+            boardColumnsOn: "تعرض اللوحة عمودًا لكل حالة.",
+            boardColumnsOff: "تعرض اللوحة عمودًا لكل فئة.",
         },
         automation: {
             tabsLabel: "أقسام إعدادات المشروع",

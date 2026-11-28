@@ -200,7 +200,11 @@ const SprintRow = ({
                                 <Typography level="body-sm" sx={{ flex: 1 }}>
                                     {m.title}
                                 </Typography>
-                                <StatusLabel status={m.status as string} />
+                                <StatusLabel
+                                    customStatusId={m.customStatusId}
+                                    projectId={m.projectId}
+                                    status={m.status as string}
+                                />
                                 <Select
                                     placeholder={t.tasks.sprintManager.moveToPlaceholder}
                                     size="sm"

@@ -266,9 +266,9 @@ export const offerExternalShare = async (
 /**
  * PUT — change what a guest team may hand its own people. Host managers.
  *
- * Raising it promotes the people already admitted; lowering it does not
- * demote them (see `set_role_ceiling`). Both halves of that are the
- * server's decision, so nothing here tries to predict the new roster.
+ * Raising it promotes the people already admitted; lowering it to viewer stops
+ * their changes at once (see `set_role_ceiling` and `share_roles` in the api).
+ * Both are the server's decision, so nothing here tries to predict the roster.
  */
 export const setShareRoleCeiling = async (
     accessToken: string | null,

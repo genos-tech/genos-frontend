@@ -129,6 +129,8 @@ export type MilestoneFavorite = {
     displayId: string | null;
     title: string;
     status: string;
+    /** The project's own status name for it (MIP-2495). */
+    customStatusId?: number | null;
     projectId: number;
     /** Empty on a star just added in this tab, until the list is re-read. */
     projectName: string;

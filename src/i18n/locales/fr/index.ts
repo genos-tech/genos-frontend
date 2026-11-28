@@ -1640,6 +1640,27 @@ export const fr: DeepPartial<Messages> = {
                 "La connexion Google Calendar a expiré : reconnectez-vous pour utiliser Quick Meet.",
             quickMeetReconnect: "Reconnecter",
         },
+        // Messages pinned in a chat for everyone (MIP-2487).
+        pinnedMessages: {
+            tabsAria: "Vues de la discussion",
+            messagesTab: "Messages",
+            pinnedTab: "Épinglés",
+            listAria: "Messages épinglés",
+            pinnedBy: "Épinglé par {name}",
+            pinnedByDeleted: "Épinglé par un compte supprimé",
+            unpin: "Désépingler pour tous",
+            pinForEveryone: "Épingler pour tous",
+            unpinForEveryone: "Désépingler pour tous",
+            hiddenOne:
+                "{count} message épinglé plus ancien dépasse l’historique de votre forfait.",
+            hiddenMany:
+                "{count} messages épinglés plus anciens dépassent l’historique de votre forfait.",
+            pinFailed: "Impossible d’épingler le message. Réessayez.",
+            unpinFailed: "Impossible de désépingler le message. Réessayez.",
+            limitReached:
+                "Cette discussion a déjà {count} messages épinglés. Désépinglez-en un d’abord.",
+            jumpFailed: "Impossible d’ouvrir ce message.",
+        },
         threadTabs: {
             ariaLabel: "Sections du fil",
             comments: "Commentaires",
@@ -7069,6 +7090,9 @@ export const fr: DeepPartial<Messages> = {
             quickAddHiddenByFilters: "{id} a été créée, mais vos filtres actuels la masquent.",
             quickAddOpen: "Ouvrir",
             quickAddDismiss: "Fermer",
+            statusColumnLabel:
+                "{name} · {category} · {count, plural, one {# tâche} other {# tâches}}",
+            statusOffTooltip: "Désactivé. Déplacez ces tâches vers un autre statut.",
         },
         subTasks: {
             loadFailed: "Impossible de charger les sous-tâches",
@@ -7147,6 +7171,11 @@ export const fr: DeepPartial<Messages> = {
                 "{count, plural, one {# tâche utilise ce statut. La déplacer vers :} other {# tâches utilisent ce statut. Les déplacer vers :}}",
             replacementLabel: "Déplacer vers",
             deleteAndMove: "Déplacer et supprimer",
+            boardColumnsTitle: "Une colonne de tableau par statut",
+            boardColumnsHint:
+                "Une colonne par statut au lieu d'une par catégorie, pour tout le projet.",
+            boardColumnsOn: "Le tableau affiche une colonne par statut.",
+            boardColumnsOff: "Le tableau affiche une colonne par catégorie.",
         },
         automation: {
             tabsLabel: "Sections des réglages du projet",
@@ -7380,6 +7409,7 @@ export const fr: DeepPartial<Messages> = {
                 "Le filtrage par jalon spécifique l'ouvre automatiquement afin que vous puissiez voir ses tâches. D'autres filtres laissent les lignes réduites.",
         },
         filters: {
+            statusInCategory: "{name}, dans {category}",
             all: "Toutes",
             open: "Ouvert",
             wip: "En cours",

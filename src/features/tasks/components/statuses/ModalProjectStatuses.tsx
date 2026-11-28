@@ -9,7 +9,8 @@ import DriveFileRenameOutlineRoundedIcon from "@mui/icons-material/DriveFileRena
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import ToggleOffRoundedIcon from "@mui/icons-material/ToggleOffRounded";
 import ToggleOnRoundedIcon from "@mui/icons-material/ToggleOnRounded";
-import { Alert, Box, Button, Chip, Input, Option, Select } from "@mui/joy";
+import ViewWeekRoundedIcon from "@mui/icons-material/ViewWeekRounded";
+import { Alert, Box, Button, Chip, Input, Option, Select, Switch } from "@mui/joy";
 
 import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
 import { SkeletonRows, Spinner } from "../../../../components/ui/feedback/Skeleton";
@@ -35,6 +36,7 @@ import {
     createProjectStatus,
     deleteProjectStatus,
     reorderProjectStatuses,
+    setBoardColumnsPerStatus,
     StatusWriteResult,
     updateProjectStatus,
 } from "../../services/projectStatuses";
@@ -484,8 +486,84 @@ export const ModalProjectStatuses = ({
 
     const atLimit = rows.length >= MAX_STATUSES;
 
+    // "One column per status" (MIP-2495): shown as picked while it is being saved, and put
+    // back by the stored value if the save fails.
+    const [pendingBoard, setPendingBoard] = useState<boolean | null>(null);
+    const boardPerStatus = pendingBoard ?? entry.boardColumnsPerStatus === true;
+    const toggleBoard = async (on: boolean) => {
+        setPendingBoard(on);
+        const result = await save("board", () =>
+            setBoardColumnsPerStatus(projectId, on, accessToken)
+        );
+        setPendingBoard(null);
+        if (result.ok) {
+            setAnnouncement(on ? words.boardColumnsOn : words.boardColumnsOff);
+        }
+    };
+
+    // The whole row is the switch's label.
+    const boardOption = () => (
+        <Box>
+            <Box
+                component="label"
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.25,
+                    minHeight: 44,
+                    px: 1.5,
+                    py: 1,
+                    border: `1px solid ${g.border.subtle}`,
+                    borderRadius: g.radius.md,
+                    cursor: "pointer",
+                }}
+            >
+                <ViewWeekRoundedIcon
+                    aria-hidden="true"
+                    sx={{ fontSize: 16, color: g.text.secondary, flexShrink: 0 }}
+                />
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Box
+                        id={`${errorId}-board`}
+                        sx={{ ...type("body-md"), color: g.text.primary }}
+                    >
+                        {words.boardColumnsTitle}
+                    </Box>
+                    <Box
+                        id={`${errorId}-board-hint`}
+                        sx={{ ...type("body-xs"), color: g.text.tertiary }}
+                    >
+                        {words.boardColumnsHint}
+                    </Box>
+                </Box>
+                <Switch
+                    checked={boardPerStatus}
+                    disabled={pendingBoard != null}
+                    size="sm"
+                    slotProps={{
+                        input: {
+                            role: "switch",
+                            "aria-labelledby": `${errorId}-board`,
+                            "aria-describedby": `${errorId}-board-hint`,
+                        },
+                    }}
+                    onChange={(event) => void toggleBoard(event.target.checked)}
+                />
+            </Box>
+            {error?.at === "board" && (
+                <Box
+                    role="alert"
+                    sx={{ ...type("body-xs"), color: g.danger.text, px: 1, pt: 0.5 }}
+                >
+                    {error.text}
+                </Box>
+            )}
+        </Box>
+    );
+
     const groups = () => (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, pb: 2 }}>
+            {boardOption()}
             <Box
                 sx={{
                     ...type("body-xs"),

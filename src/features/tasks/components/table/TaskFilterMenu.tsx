@@ -17,6 +17,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { TaskFilterMenuStyles } from "../../../../components/ui/styles/commonStyle";
+import { useProjectStatuses } from "../../../../hooks/tasks/useProjectStatuses";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../../i18n";
@@ -51,12 +52,24 @@ import {
     selectMilestoneRowsForSelection,
     selectMilestonesWithMatchingChildren,
 } from "../../utils/milestoneChildFilter";
+import { statusRowName } from "../../utils/projectStatus";
 import { scopeCovers, scopeKey, statusesNeeded } from "../../utils/projectStatusScope";
 import {
     buildSavedFilterPayload,
     resolveSavedFilter,
     savedFilterMatchesSelection,
 } from "../../utils/savedFilterPayload";
+import {
+    orderStatusSelection,
+    pickedStatusId,
+    pruneStatusPicks,
+    restoreStatusSelection,
+    splitStatusSelection,
+    statusMatcher,
+    statusScopeLabels,
+    toggleCategory,
+    toggleStatus,
+} from "../../utils/statusFilter";
 import {
     remapTagSelection,
     sameTagSelection,
@@ -70,7 +83,7 @@ import {
     StoredTaskFilters,
     writeStoredFilters,
 } from "../../utils/taskFilterStorage";
-import { taskMetaLabel } from "../../utils/taskMeta";
+import { ProjectStatusName } from "../statuses/ProjectStatusName";
 import { splitFilterLabel } from "./filterBarHelpers";
 import {
     BarChip,
@@ -81,6 +94,7 @@ import {
     FilterMenuItem,
 } from "./filterBarParts";
 import { SavedFiltersMenu } from "./SavedFiltersMenu";
+import { StatusFilterGroupedMenu } from "./StatusFilterGroupedMenu";
 
 // Default status selection = the "ongoing" statuses (Open, WIP, Blocked,
 // Pending) — everything except Closed / Expired / Deleted. Derived by label
@@ -278,7 +292,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             milestoneKeys: sel.milestoneKeys,
             priorities: sel.priorities.map((f) => f.label),
             sprintKeys: sel.sprintKeys,
-            status: sel.status.map((f) => f.label),
+            ...splitStatusSelection(sel.status),
             tags: sel.tags.map((f) => f.label),
         });
     };
@@ -299,7 +313,12 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     const [selectedStatus, setSelectedStatus] = React.useState<FilterProps[]>(() =>
         hideStatusFilter
             ? [predefinedStatusFilters[0]]
-            : rehydrateFilters(stored.status, predefinedStatusFilters, defaultStatusFilters)
+            : restoreStatusSelection(
+                  stored.status,
+                  stored.statusIds,
+                  predefinedStatusFilters,
+                  defaultStatusFilters
+              )
     );
     const [openStatusFilter, setOpenStatusFilter] = React.useState(false);
     const handleCloseStatusFilter = (status: FilterProps) => {
@@ -326,9 +345,26 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
             setOpenStatusFilter(false);
         }
 
+        chooseStatuses(newStatuses);
+    };
+    const chooseStatuses = (newStatuses: FilterProps[]) => {
+        setSelectedStatus(newStatuses);
         applyFilters({ ...selection, status: newStatuses });
         persistFilters({ ...selection, status: newStatuses });
     };
+    // The project's own statuses (MIP-2495): none for a project that set up none, and then
+    // the filter is the flat list it always was.
+    const projectStatuses = useProjectStatuses(hideStatusFilter ? null : savedFiltersProjectId);
+    const statusRows = projectStatuses.statuses;
+    const statusFilterName = (f: FilterProps): string => {
+        const id = pickedStatusId(f);
+        if (id == null) return filterLabel(f);
+        const row = statusRows.find((r) => r.statusId === id);
+        return row ? statusRowName(row, t.tasks) : "…";
+    };
+    const shownStatusSelection = statusRows.length
+        ? orderStatusSelection(selectedStatus, statusRows)
+        : selectedStatus;
 
     // Tags filter
     const [selectedTags, setSelectedTags] = React.useState<FilterProps[]>(
@@ -462,7 +498,12 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         const next = filterStorageKey ? readStoredFilters(filterStorageKey) : null;
         const nextStatus = hideStatusFilter
             ? [predefinedStatusFilters[0]]
-            : rehydrateFilters(next?.status, predefinedStatusFilters, defaultStatusFilters);
+            : restoreStatusSelection(
+                  next?.status,
+                  next?.statusIds,
+                  predefinedStatusFilters,
+                  defaultStatusFilters
+              );
         const nextPriorities = rehydrateFilters(next?.priorities, predefinedPriorityFilters, [
             predefinedPriorityFilters[0],
         ]);
@@ -984,10 +1025,13 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                                       const tone = getMilestoneStatusChipColor(m.status as string);
                                       return (
                                           <BarChip
-                                              label={taskMetaLabel(
-                                                  m.status as string,
-                                                  t.tasks.filters
-                                              )}
+                                              label={
+                                                  <ProjectStatusName
+                                                      customStatusId={m.customStatusId}
+                                                      projectId={m.projectId}
+                                                      status={m.status as string}
+                                                  />
+                                              }
                                               sx={{
                                                   height: 16,
                                                   fontSize: "9px",
@@ -1181,8 +1225,10 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     // never fetched again: turning Closed off and on costs nothing.
     const projectScope = useProjectStatusScope(savedFiltersProjectId);
     const scopeMilestoneId = useTM.tableMilestoneFilterId;
+    // Null while the category of a picked status is not read yet: nothing to ask for.
+    const scopeLabels = statusScopeLabels(selectedStatus, statusRows);
     const statusNeed = statusesNeeded({
-        labels: selectedStatus.map((f) => f.label),
+        labels: scopeLabels ?? [],
         // A past milestone's full history (Closed included) bypasses the status filter.
         showsFullHistory:
             (scopeMilestoneId != null && outdatedMilestoneIds.has(scopeMilestoneId)) ||
@@ -1204,12 +1250,21 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
     };
     // A layout effect: the skeleton must stand in before the frame in which the filter has
     // changed but its rows are not there, or the table flashes "no tasks".
+    const scopeUnknown = scopeLabels === null;
     React.useLayoutEffect(() => {
         if (savedFiltersProjectId == null) return;
         if (selectionKey !== filterStorageKey) return;
+        if (scopeUnknown) return;
         void useTM.ensureProjectStatuses(savedFiltersProjectId, statusNeed);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [savedFiltersProjectId, statusNeedKey, heldStatusKey, selectionKey, filterStorageKey]);
+    }, [
+        savedFiltersProjectId,
+        statusNeedKey,
+        heldStatusKey,
+        selectionKey,
+        filterStorageKey,
+        scopeUnknown,
+    ]);
 
     // Apply filters — single-pass walk over allTasks. Previously this was
     // 5-6 chained `.filter()` calls allocating intermediate arrays plus a
@@ -1245,19 +1300,9 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         // the original branching (length===1 with "Expired" alone = all
         // statuses but only expired due dates; length>1 with Expired in
         // the mix = status in selection AND expired due date).
-        let statusStringFilter: Set<string> | null = null;
-        let requireExpired = false;
-        if (statuses.length === 1) {
-            const label = statuses[0].label;
-            if (label === "Expired") {
-                requireExpired = true;
-            } else if (label !== "All") {
-                statusStringFilter = new Set([label]);
-            }
-        } else if (statuses.length > 1) {
-            statusStringFilter = new Set(statuses.map((s) => s.label));
-            requireExpired = statuses.some((s) => s.label === "Expired");
-        }
+        // Categories and the project's own statuses are a union (MIP-2495).
+        const matchesStatus = statusMatcher(statuses, statusRows);
+        const requireExpired = statuses.some((s) => s.label === "Expired");
 
         // --- Tag predicate ---
         let tagLabels: string[] | null = null;
@@ -1407,8 +1452,8 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     milestoneIdSet.has(task.milestoneId));
             if (!bypassStatus) {
                 if (
-                    statusStringFilter !== null &&
-                    !statusStringFilter.has(effectiveStatus ?? "")
+                    matchesStatus !== null &&
+                    !matchesStatus(effectiveStatus ?? "", task.customStatusId)
                 ) {
                     continue;
                 }
@@ -1735,6 +1780,24 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
         selectedMemberKeys,
         outdatedMilestoneKey,
     ]);
+
+    // Once the statuses are read, a pick of one that was deleted is dropped (never before:
+    // a reload would lose the selection), and the rows are filtered by the names just read.
+    // Declared after the effect that applies on a row change, so on one commit this wins.
+    const filteredByRef = React.useRef<unknown>(null);
+    React.useEffect(() => {
+        if (hideStatusFilter || !projectStatuses.loaded || projectStatuses.failed) return;
+        if (selectionKey !== filterStorageKey) return;
+        const kept = pruneStatusPicks(selectedStatus, statusRows, defaultStatusFilters);
+        // A click has already filtered; only a newly read list filters again.
+        const newlyRead = filteredByRef.current !== projectStatuses;
+        filteredByRef.current = projectStatuses;
+        if (kept !== selectedStatus) chooseStatuses(kept);
+        else if (newlyRead && selectedStatus.some((f) => pickedStatusId(f) != null)) {
+            applyFilters(selection);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [projectStatuses, selectedStatus, selectionKey, filterStorageKey]);
 
     // MIP-1751: a sidebar milestone scope (`tableMilestoneFilterId`) and the
     // header's milestone multi-select are ANDed by `applyFilters`, so a stale
@@ -2435,108 +2498,140 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                     <>
                         <FilterDropdown open={openStatusFilter} onOpenChange={setOpenStatusFilter}>
                             <AppTooltip
-                                title={selectedStatus
-                                    .map((status) => filterLabel(status))
-                                    .join(", ")}
+                                title={shownStatusSelection.map(statusFilterName).join(", ")}
                             >
                                 <FilterChipButton
                                     active={!(selectedStatus[0].label === "All")}
                                     extra={selectedStatus.length - 1}
-                                    value={filterLabel(selectedStatus[0])}
+                                    value={statusFilterName(shownStatusSelection[0])}
                                     field={
                                         splitFilterLabel(t.tasks.filterButtons.status, "").field
                                     }
                                 />
                             </AppTooltip>
-                            <FilterMenu minWidth="160px">
-                                {predefinedStatusFilters.map((status) => {
-                                    const isSelected = selectedStatus.some(
-                                        (items) => items.label === status.label
-                                    );
-                                    return (
-                                        <FilterMenuItem
-                                            key={status.label}
-                                            sx={{
-                                                borderRadius: "8px",
-                                                mx: 0.5,
-                                                my: 0.25,
-                                                transition: "all 0.2s ease",
-                                                "&:hover": {
-                                                    background: styles.buttonHoverBg,
-                                                },
-                                            }}
-                                            onClick={() => handleCloseStatusFilter(status)}
-                                        >
-                                            <Box
+                            <FilterMenu minWidth={statusRows.length ? "240px" : "160px"}>
+                                {statusRows.length > 0 && (
+                                    <StatusFilterGroupedMenu
+                                        countOf={notLoadedStatusCount}
+                                        rows={statusRows}
+                                        selection={selectedStatus}
+                                        onFilter={handleCloseStatusFilter}
+                                        onCategory={(category) =>
+                                            chooseStatuses(
+                                                toggleCategory(
+                                                    selectedStatus,
+                                                    statusRows,
+                                                    category
+                                                )
+                                            )
+                                        }
+                                        onStatus={(row) =>
+                                            chooseStatuses(
+                                                toggleStatus(
+                                                    selectedStatus,
+                                                    statusRows,
+                                                    row,
+                                                    new Set(
+                                                        useTM.allTasks.flatMap(
+                                                            (task) => task.customStatusId ?? []
+                                                        )
+                                                    )
+                                                )
+                                            )
+                                        }
+                                    />
+                                )}
+                                {(statusRows.length ? [] : predefinedStatusFilters).map(
+                                    (status) => {
+                                        const isSelected = selectedStatus.some(
+                                            (items) => items.label === status.label
+                                        );
+                                        return (
+                                            <FilterMenuItem
+                                                key={status.label}
                                                 sx={{
-                                                    width: "100%",
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: 1,
+                                                    borderRadius: "8px",
+                                                    mx: 0.5,
+                                                    my: 0.25,
+                                                    transition: "all 0.2s ease",
+                                                    "&:hover": {
+                                                        background: styles.buttonHoverBg,
+                                                    },
                                                 }}
+                                                onClick={() => handleCloseStatusFilter(status)}
                                             >
                                                 <Box
                                                     sx={{
-                                                        width: 8,
-                                                        height: 8,
-                                                        borderRadius: "50%",
-                                                        background: isDark
-                                                            ? status.darkModeColor
-                                                            : status.lightModeColor,
-                                                        boxShadow: `0 0 6px ${isDark ? status.darkModeColor : status.lightModeColor}`,
-                                                    }}
-                                                />
-                                                <Typography
-                                                    sx={{
-                                                        fontSize: "13px",
-                                                        fontWeight: isSelected ? 700 : 500,
-                                                        color: isSelected
-                                                            ? isDark
-                                                                ? status.darkModeColor
-                                                                : status.lightModeColor
-                                                            : styles.textColor,
-                                                        flex: 1,
+                                                        width: "100%",
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: 1,
                                                     }}
                                                 >
-                                                    {filterLabel(status)}
-                                                </Typography>
-                                                {notLoadedStatusCount(status.label) !== null && (
-                                                    <Typography
-                                                        data-status-count={status.label}
-                                                        sx={{
-                                                            fontSize: "12px",
-                                                            color: styles.textColor,
-                                                            opacity: 0.6,
-                                                            fontVariantNumeric: "tabular-nums",
-                                                        }}
-                                                    >
-                                                        {notLoadedStatusCount(status.label)}
-                                                    </Typography>
-                                                )}
-                                                {isSelected && (
                                                     <Box
                                                         sx={{
-                                                            width: 16,
-                                                            height: 16,
-                                                            borderRadius: "4px",
+                                                            width: 8,
+                                                            height: 8,
+                                                            borderRadius: "50%",
                                                             background: isDark
                                                                 ? status.darkModeColor
                                                                 : status.lightModeColor,
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            fontSize: "10px",
-                                                            color: "#fff",
-                                                            fontWeight: 700,
+                                                            boxShadow: `0 0 6px ${isDark ? status.darkModeColor : status.lightModeColor}`,
+                                                        }}
+                                                    />
+                                                    <Typography
+                                                        sx={{
+                                                            fontSize: "13px",
+                                                            fontWeight: isSelected ? 700 : 500,
+                                                            color: isSelected
+                                                                ? isDark
+                                                                    ? status.darkModeColor
+                                                                    : status.lightModeColor
+                                                                : styles.textColor,
+                                                            flex: 1,
                                                         }}
                                                     >
-                                                        ✓
-                                                    </Box>
-                                                )}
-                                            </Box>
-                                        </FilterMenuItem>
-                                    );
-                                })}
+                                                        {filterLabel(status)}
+                                                    </Typography>
+                                                    {notLoadedStatusCount(status.label) !==
+                                                        null && (
+                                                        <Typography
+                                                            data-status-count={status.label}
+                                                            sx={{
+                                                                fontSize: "12px",
+                                                                color: styles.textColor,
+                                                                opacity: 0.6,
+                                                                fontVariantNumeric: "tabular-nums",
+                                                            }}
+                                                        >
+                                                            {notLoadedStatusCount(status.label)}
+                                                        </Typography>
+                                                    )}
+                                                    {isSelected && (
+                                                        <Box
+                                                            sx={{
+                                                                width: 16,
+                                                                height: 16,
+                                                                borderRadius: "4px",
+                                                                background: isDark
+                                                                    ? status.darkModeColor
+                                                                    : status.lightModeColor,
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                fontSize: "10px",
+                                                                color: "#fff",
+                                                                fontWeight: 700,
+                                                            }}
+                                                        >
+                                                            ✓
+                                                        </Box>
+                                                    )}
+                                                </Box>
+                                            </FilterMenuItem>
+                                        );
+                                    }
+                                )}
                             </FilterMenu>
                         </FilterDropdown>
                     </>

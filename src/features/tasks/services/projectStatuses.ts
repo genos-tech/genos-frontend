@@ -10,7 +10,12 @@ const QUIET = { suppressErrorToast: true } as const;
 // `/api/v2/projects/<id>/statuses/` (MIP-2492). Any member reads; the owner or an editor
 // changes. Reading writes nothing: a project nobody set up lists no statuses.
 
-export type ProjectStatusesPayload = { statuses: ProjectStatusDef[]; canManage: boolean };
+export type ProjectStatusesPayload = {
+    statuses: ProjectStatusDef[];
+    canManage: boolean;
+    /** The board draws one column per status (MIP-2495); off unless the project set it. */
+    boardColumnsPerStatus?: boolean;
+};
 
 export type StatusWriteResult =
     | { ok: true; data: ProjectStatusesPayload }
@@ -21,6 +26,7 @@ const toPayload = (data: unknown): ProjectStatusesPayload => {
     return {
         statuses: Array.isArray(payload.statuses) ? payload.statuses : [],
         canManage: payload.canManage === true,
+        boardColumnsPerStatus: payload.boardColumnsPerStatus === true,
     };
 };
 
@@ -88,6 +94,16 @@ export const createProjectStatus = async (
         return failure(error);
     }
 };
+
+/** One board column per status, for everyone in the project (MIP-2495). */
+export const setBoardColumnsPerStatus = (
+    projectId: number,
+    on: boolean,
+    accessToken: string | null
+) =>
+    write(accessToken, (api) =>
+        api.patch(url(projectId), { board_columns_per_status: on }, QUIET)
+    );
 
 export const updateProjectStatus = (
     projectId: number,

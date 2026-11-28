@@ -233,7 +233,13 @@ export const SprintMilestonePicker = ({
                                         >
                                             {option.label}
                                         </Typography>
-                                        {m && <StatusLabel status={m.status as string} />}
+                                        {m && (
+                                            <StatusLabel
+                                                customStatusId={m.customStatusId}
+                                                projectId={m.projectId}
+                                                status={m.status as string}
+                                            />
+                                        )}
                                     </Stack>
                                     {m && (
                                         <Stack
