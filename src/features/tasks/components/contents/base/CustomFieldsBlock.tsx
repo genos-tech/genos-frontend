@@ -182,10 +182,10 @@ export const TagFieldEditor = ({
     return (
         <Autocomplete
             error={field?.invalid}
-            noOptionsText={field?.noOptions}
             getOptionLabel={(option) => option.label}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             limitTags={3}
+            noOptionsText={field?.noOptions}
             options={def.options}
             placeholder={selected.length === 0 ? placeholder : ""}
             size="sm"
@@ -253,8 +253,8 @@ export const MemberFieldEditor = ({
             )}
             <Autocomplete
                 error={field?.invalid}
-                noOptionsText={field?.noOptions}
                 getOptionLabel={(option) => option.userName || option.userEmail || ""}
+                noOptionsText={field?.noOptions}
                 options={teamMembers}
                 placeholder={stored === "" ? placeholder : ""}
                 size="sm"

@@ -76,19 +76,22 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
             key={taskContent.id}
             disabled={disabled}
             error={field?.invalid}
-            noOptionsText={field?.noOptions}
             getOptionDisabled={(option) => Boolean(disabledReason?.(option))}
-            getOptionLabel={(option) => option.projectName}
-            slotProps={{ input: pickerInputProps(field) }}
             // Still the plain name: this is what type-to-filter matches
             // on, and — the field being a text input — all the closed
             // state can display. The richer content below is presentation
             // only; `startDecorator` puts as much of it as fits back
             // beside the name once a project is picked.
+            getOptionLabel={(option) => option.projectName}
             isOptionEqualToValue={(option, value) => option.projectId === value.projectId}
+            noOptionsText={field?.noOptions}
             options={usePM.teamProjects}
             placeholder={placeholder}
             size="sm"
+            slotProps={{ input: pickerInputProps(field) }}
+            sx={{ width: "100%" }}
+            // `null` keeps an empty field controlled.
+            value={selectedProject ?? (placeholder ? null : undefined)}
             renderOption={(optionProps, option) => (
                 // Joy's own option component, NOT a bespoke <li>: it
                 // brings the padding, hover, focus and selected states
@@ -165,9 +168,6 @@ export const ACTeamProjects = (props: ACTeamProjectsProps) => {
                     }
                 }
             }}
-            sx={{ width: "100%" }}
-            // `null` keeps an empty field controlled.
-            value={selectedProject ?? (placeholder ? null : undefined)}
         />
     );
 };

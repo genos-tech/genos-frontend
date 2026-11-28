@@ -117,9 +117,9 @@ export const TagSlot = ({
                 isOpenTagList={open}
                 projectTags={tags}
                 setIsOpenTagList={setOpen}
-                taskContent={standIn({ id: field.slotId, tags: picked })}
                 // One tag: the latest pick replaces the one before.
                 setTaskContent={(next) => onChange(next.tags.slice(-1)[0]?.tagName ?? "")}
+                taskContent={standIn({ id: field.slotId, tags: picked })}
             />
         </Slot>
     );
@@ -223,17 +223,17 @@ export const ProjectSlot = ({
             <ACTeamProjects
                 field={field}
                 isOpenProjectList={open}
-                onClear={() => onChange(null)}
                 placeholder={words.choose}
                 setIsOpenProjectList={setOpen}
                 setTaskContent={(next) => onChange(next.project!.projectId!)}
                 taskContent={standIn({ id: field.slotId, project: picked })}
-                disabledReason={(p) =>
-                    refusedAsPublic(lookups, p) ? words.privateOnly : undefined
-                }
                 useCM={{ allChats: lookups.chats }}
                 // A rule's draft must not move the app's current project.
                 usePM={{ teamProjects: destinations, setCurrentProject: noop }}
+                disabledReason={(p) =>
+                    refusedAsPublic(lookups, p) ? words.privateOnly : undefined
+                }
+                onClear={() => onChange(null)}
             />
         </Slot>
     );
@@ -305,6 +305,7 @@ export const CustomFieldSlot = ({
                     field={field}
                     placeholder={words.choose}
                     stored={value}
+                    writeValue={(_id, next) => onChange(typeof next === "string" ? next : "")}
                     teamMembers={
                         goneMember
                             ? [
@@ -316,10 +317,13 @@ export const CustomFieldSlot = ({
                               ]
                             : members
                     }
-                    writeValue={(_id, next) => onChange(typeof next === "string" ? next : "")}
                 />
             ) : (
                 <TagFieldEditor
+                    field={field}
+                    isDark={mode === "dark"}
+                    placeholder={words.choose}
+                    values={value ? { [String(def.fieldId)]: [value] } : undefined}
                     def={
                         goneOption
                             ? {
@@ -331,10 +335,6 @@ export const CustomFieldSlot = ({
                               }
                             : def
                     }
-                    field={field}
-                    isDark={mode === "dark"}
-                    placeholder={words.choose}
-                    values={value ? { [String(def.fieldId)]: [value] } : undefined}
                     writeValue={(_id, next) =>
                         onChange(Array.isArray(next) ? (next.slice(-1)[0] ?? "") : "")
                     }
