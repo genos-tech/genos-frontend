@@ -4,13 +4,11 @@ import { Socket } from "socket.io-client";
 import { cacheFullTask, invalidateCachedFullTask } from "../../../db/services/task-full.service";
 import { getMessages } from "../../../i18n";
 import { authApi } from "../../../services/api";
-import { channelService } from "../../../services/channel/channelService";
 import { emitRequestError } from "../../../services/requestErrorNotifier";
 import { UserProps } from "../../../types/admin";
 import { TaskProps } from "../../../types/tasks";
 import { collaboratorRefusalText, refusedCollaboratorId } from "../utils/collaboratorRefusal";
 import { toServerTimestamp } from "../utils/serverTimestamp";
-import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
 import { collaboratorsAfterMove } from "./collaboratorsAfterMove";
 import { forgetCachedSubtree } from "./forgetCachedSubtree";
@@ -75,16 +73,12 @@ export const sendUpdatedSpecificTask = async (
     socket: Socket | null,
     myself: UserProps,
     updatedTask: TaskProps,
-    // Sync the PM task-card header (rebuild its body + broadcast) ONLY on a
-    // metadata save — status / title / assignee / priority / effort / due —
-    // NOT on body autosaves or switch-persist saves, whose card fields are
-    // unchanged so the rewrite would be identical churn. The CALLER knows
-    // which path it is. This deliberately replaces the old
-    // `taskBodyEdited === false` proxy: `taskBodyEdited` is unreliable — the
-    // collaborative editor's Yjs initial-sync `onChange` spuriously flips it
-    // true after every task load, which skipped the card sync on the FIRST
-    // metadata edit after opening a task (the "PM card stays stale" bug).
-    syncCard: boolean,
+    // True ONLY on a metadata save (status / title / assignee / priority /
+    // effort / due), not on body autosaves or switch-persist saves: what shows
+    // this task is told to re-read it. The CALLER knows which path it is;
+    // `taskBodyEdited` cannot say, as the collaborative editor's Yjs
+    // initial-sync `onChange` flips it after every task load.
+    metadataSave: boolean,
     accessToken: string | null,
     setErrorMessage?: (value: string) => void,
     options?: {
@@ -315,7 +309,8 @@ export const sendUpdatedSpecificTask = async (
                 }
             }
 
-            // Notify the PM channel only on a metadata save (`syncCard`).
+            // A metadata save: what shows this task re-reads it. The
+            // project chat's card is rewritten and pushed by the api (MIP-2483).
             // Attachments and the IDB row mirror live OUTSIDE this guard —
             // they must always run, including for body-edit saves and saves
             // where the editor's Yjs initial-sync onChange spuriously marked
@@ -324,37 +319,8 @@ export const sendUpdatedSpecificTask = async (
             // with no POST in backend" bug: the PUT succeeded but
             // `uploadTaskAttachments` was skipped, then `useSendUpdatedTask`'s
             // post-save merge stripped the now-orphaned negative-id rows.
-            if (res && syncCard && staleProjectId == null) {
+            if (res && metadataSave && staleProjectId == null) {
                 emitTaskMetadataSaved();
-                const updatedTaskMessage = taskMessageTemplate(myself, updatedTask);
-                // Rewrite the PM task-card header so the status / title /
-                // priority / assignee change fans out to every viewer of the
-                // PM channel (and this editor's own pane) in real time. The
-                // server rewrites the stored card body and broadcasts
-                // `message.updated`; the returned row is also applied locally
-                // by `updateTaskCard` for an instant self-update.
-                //
-                // Replaces the pre-v3 `socket.emit("message", {methodType:
-                // "PUT"})`, whose Flask handler was removed in the v3
-                // migration — leaving the card frozen at creation time.
-                // Fire-and-forget: a failure here must not block the save
-                // (the task PUT already persisted; the next PM-channel delta
-                // sync reconciles the card).
-                if (updatedTask.id != null) {
-                    void channelService
-                        .updateTaskCard(updatedTask.id, updatedTaskMessage, updatedTask.title, {
-                            taskId: updatedTask.id,
-                            displayId: updatedTask.displayId,
-                            taskStatus: updatedTask.status.status,
-                            systemUserId: updatedTask.project.systemUserId,
-                        })
-                        .catch((e) => {
-                            console.error(
-                                "[sendUpdatedSpecificTask] PM task-card sync failed:",
-                                e
-                            );
-                        });
-                }
             }
 
             if (res && updatedTask && staleProjectId == null) {

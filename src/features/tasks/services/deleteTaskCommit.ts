@@ -1,12 +1,8 @@
 import { invalidateCachedFullTask } from "../../../db/services/task-full.service";
-import { channelService } from "../../../services/channel/channelService";
-import { UserProps } from "../../../types/admin";
 import { TaskTableProps } from "../../../types/tasks";
 import { patchTaskFields } from "../diagram/services/patchTaskFields";
-import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { statuses } from "../utils/taskMeta";
 import { addTask } from "./addTask";
-import { loadSpecificTask } from "./loadSpecificTask";
 import { emitTaskMetadataSaved, emitTaskTouched } from "./taskEvents";
 import { forgetInFlightTask } from "./taskLoadInFlight";
 
@@ -94,38 +90,4 @@ export const afterTaskDeleted = (taskId: number, row: TaskTableProps | null): vo
     // The write added activity rows; Recents reloads on a metadata save.
     emitTaskTouched(taskId, "update");
     emitTaskMetadataSaved();
-};
-
-/**
- * The PM channel's task card shows the status, and the server does not rewrite
- * it (the card body is built by the client and sent over the socket,
- * `task_card.updated`): the edit paths do it through `syncCard`. Built from the
- * server's own copy, which already says Deleted, never from a snapshot of the
- * click. Fire and forget: the task is deleted either way.
- */
-export const syncDeletedTaskCard = async (
-    myself: UserProps,
-    projectId: number,
-    taskId: number,
-    accessToken: string | null
-): Promise<void> => {
-    try {
-        const [task] = await loadSpecificTask(myself, projectId, taskId, accessToken, {
-            forceRefresh: true,
-        });
-        if (!task || task.id == null) return;
-        await channelService.updateTaskCard(
-            task.id,
-            taskMessageTemplate(myself, task),
-            task.title,
-            {
-                taskId: task.id,
-                displayId: task.displayId,
-                taskStatus: task.status.status,
-                systemUserId: task.project?.systemUserId,
-            }
-        );
-    } catch (e) {
-        console.error("[deleteTask] PM task-card sync failed:", e);
-    }
 };

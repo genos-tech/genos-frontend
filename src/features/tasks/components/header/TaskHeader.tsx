@@ -357,6 +357,11 @@ export const TaskHeader = ({
             {currentProjectId != null && openStatuses && (
                 <ModalProjectStatuses
                     projectId={currentProjectId}
+                    automation={{
+                        projects: usePM.teamProjects,
+                        members: useTEM.teamMembers,
+                        myUserId: myself.userId,
+                    }}
                     open
                     onClose={() => setOpenStatuses(false)}
                 />

@@ -1,26 +1,14 @@
 /**
- * MIP-1729: a task or milestone whose reporter row is gone still gets its PM card.
+ * MIP-1729: a task or milestone whose reporter row is gone.
  *
  * `tasks.reporter` is SET_NULL, so a hard-deleted account leaves a task with no reporter.
- * `GET /task/getTask/` sends exactly that, `"reporter": null` (the same way it sends a
- * missing assignee), and `loadSpecificTask` passes the payload through untouched, although
- * `TaskProps.reporter` is typed non-null. Two paths feed such a task to the card template:
- *
- *   - `syncDeletedTaskCard`, which re-reads the server's copy (`forceRefresh`) and rewrites the card;
- *   - a table inline edit (`updateTaskFromTable`), which spreads the loaded task into
- *     `sendUpdatedSpecificTask` -> PUT, then `taskMessageTemplate`.
- *
- * Before: `mentionNode(myself, null)` read `null.userEmail` (the delete's card rewrite was
- * swallowed by its catch and the card kept its old status), and the save threw earlier still, at
- * `updatedTask.reporter.userId`, before the PUT. Now the card says "Deleted user" in the muted
- * italic the server writes for it (genos-api `task_card._person`), and the save goes out with
- * the reporter left alone (a null in the PUT is dropped by the server's None-strip).
- *
- * A task that HAS a reporter is pinned unchanged.
+ * `GET /task/getTask/` sends exactly that, `"reporter": null`, although `TaskProps.reporter`
+ * is typed non-null. A save of such a task must go out (it once threw at
+ * `updatedTask.reporter.userId`, before the PUT), and the thread reply's template says
+ * "Deleted user" in the muted italic the server writes on the card.
  */
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { syncDeletedTaskCard } from "../features/tasks/services/deleteTaskCommit";
 import { sendUpdatedSpecificTask } from "../features/tasks/services/sendUpdatedSpecificTask";
 import {
     milestoneMessageTemplate,
@@ -30,8 +18,6 @@ import { UserProps } from "../types/admin";
 import { TaskProps } from "../types/tasks";
 
 const put = vi.fn();
-const updateTaskCard = vi.fn(async () => undefined);
-const loadSpecificTask = vi.fn();
 
 vi.mock("../services/api", () => ({ authApi: () => ({ put }) }));
 vi.mock("../db/services/task-full.service", () => ({
@@ -48,12 +34,6 @@ vi.mock("../features/tasks/services/taskEvents", () => ({
     emitTasksBulkChanged: vi.fn(),
     emitTaskMetadataSaved: vi.fn(),
     emitTaskTouched: vi.fn(),
-}));
-vi.mock("../features/tasks/services/loadSpecificTask", () => ({
-    loadSpecificTask: (...a: unknown[]) => loadSpecificTask(...a),
-}));
-vi.mock("../services/channel/channelService", () => ({
-    channelService: { updateTaskCard: (...a: unknown[]) => updateTaskCard(...(a as [])) },
 }));
 
 const myself = {
@@ -186,52 +166,17 @@ describe("the milestone card names a reporter whose account is gone", () => {
     });
 });
 
-describe("a deleted task whose reporter is gone still gets its card rewritten", () => {
-    beforeEach(() => {
-        updateTaskCard.mockClear();
-        loadSpecificTask.mockReset();
-    });
-
-    it("sends the card with Deleted user for the reporter", async () => {
-        loadSpecificTask.mockResolvedValue([serverTask(null)]);
-        await syncDeletedTaskCard(myself, 1, 42, "tok");
-        expect(updateTaskCard).toHaveBeenCalledTimes(1);
-        const [taskId, body, title, meta] = updateTaskCard.mock.calls[0] as unknown as [
-            number,
-            unknown[],
-            string,
-            Record<string, unknown>,
-        ];
-        expect(taskId).toBe(42);
-        expect(title).toBe("A task");
-        expect(meta).toMatchObject({ taskId: 42, taskStatus: "Deleted" });
-        expect(reporterRow(body)[1]).toEqual(DELETED_USER_NODE);
-    });
-
-    it("still sends a task that has a reporter, with a mention", async () => {
-        loadSpecificTask.mockResolvedValue([serverTask(person("u-bo", "Bo"))]);
-        await syncDeletedTaskCard(myself, 1, 42, "tok");
-        expect(updateTaskCard).toHaveBeenCalledTimes(1);
-        const body = (updateTaskCard.mock.calls[0] as unknown[])[1] as unknown[];
-        expect(reporterRow(body)[1].type).toBe("mention");
-    });
-});
-
 describe("a save of a task whose reporter is gone", () => {
     beforeEach(() => {
         put.mockReset();
         put.mockResolvedValue({ data: { task: { ts_updated_at: "now" } } });
-        updateTaskCard.mockClear();
     });
 
-    it("goes out with a null reporter (the server drops it) and rewrites the card", async () => {
+    it("goes out with a null reporter (the server drops it)", async () => {
         await sendUpdatedSpecificTask(null, myself, serverTask(null), true, "tok");
         expect(put).toHaveBeenCalledTimes(1);
         const body = put.mock.calls[0][1] as Record<string, unknown>;
         expect(body.reporter).toBeNull();
-        expect(updateTaskCard).toHaveBeenCalledTimes(1);
-        const card = (updateTaskCard.mock.calls[0] as unknown[])[1] as unknown[];
-        expect(reporterRow(card)[1]).toEqual(DELETED_USER_NODE);
     });
 
     it("still sends the reporter's id when there is one", async () => {

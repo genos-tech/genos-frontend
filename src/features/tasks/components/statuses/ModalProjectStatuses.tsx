@@ -13,6 +13,7 @@ import { Alert, Box, Button, Chip, Input, Option, Select } from "@mui/joy";
 
 import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
 import { SkeletonRows, Spinner } from "../../../../components/ui/feedback/Skeleton";
+import { TabStrip } from "../../../../components/ui/feedback/TabStrip";
 import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import {
     MODAL_FRAME_DEFAULT_Z_INDEX,
@@ -28,6 +29,8 @@ import {
 import { fmt, useTranslation } from "../../../../i18n";
 import { focusRing, g, type } from "../../../../theme/tokens";
 import { ProjectStatusDef } from "../../../../types/tasks";
+import type { AutomationContextData } from "../../automation/lookups";
+import { useAutomationPane } from "../../automation/useAutomationPane";
 import {
     createProjectStatus,
     deleteProjectStatus,
@@ -44,6 +47,7 @@ import {
     statusRowName,
 } from "../../utils/projectStatus";
 import { StatusLabel } from "../meta/StatusLabel";
+import { rowSx, srOnly } from "./listStyles";
 import { CategoryHeading } from "./statusChoices";
 import { StatusColorMenu } from "./StatusColorMenu";
 import { useCategoryName } from "./useCategoryName";
@@ -54,19 +58,13 @@ type Props = {
     onClose: () => void;
     /** The layer of the surface that opened this, when it is itself a dialog. */
     hostZIndex?: number;
+    /** What the automation rules need (MIP-2499). Without it the dialog is the statuses alone. */
+    automation?: AutomationContextData;
 };
 
-type Deleting = { row: ProjectStatusDef; inUse: number | null; replacementId: number | null };
+export type ProjectSettingsTab = "statuses" | "automation";
 
-const rowSx = {
-    display: "flex",
-    alignItems: "center",
-    gap: 1,
-    minHeight: 44,
-    paddingInlineStart: 0.75,
-    paddingInlineEnd: 0.5,
-    "&:not(:first-of-type)": { borderTop: `1px solid ${g.border.subtle}` },
-} as const;
+type Deleting = { row: ProjectStatusDef; inUse: number | null; replacementId: number | null };
 
 const nameButtonSx = {
     ...type("body-md"),
@@ -88,15 +86,6 @@ const nameButtonSx = {
     "&:focus:not(:focus-visible)": { outline: "none" },
     "&:focus-visible": focusRing,
     "@media (pointer: coarse)": { minHeight: 44 },
-} as const;
-
-const srOnly = {
-    position: "absolute",
-    width: "1px",
-    height: "1px",
-    overflow: "hidden",
-    clipPath: "inset(50%)",
-    whiteSpace: "nowrap",
 } as const;
 
 const NameInput = ({
@@ -182,7 +171,13 @@ const NameInput = ({
  * A project's statuses (MIP-2493): grouped by the five categories that automations read, where
  * the team renames, recolours, adds, orders, turns off and deletes. Every action saves at once.
  */
-export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: Props) => {
+export const ModalProjectStatuses = ({
+    projectId,
+    open,
+    onClose,
+    hostZIndex,
+    automation,
+}: Props) => {
     const { t } = useTranslation();
     const words = t.tasks.projectStatuses;
     const categoryName = useCategoryName();
@@ -199,10 +194,30 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
     const [deleting, setDeleting] = useState<Deleting | null>(null);
     const [announcement, setAnnouncement] = useState("");
 
+    const [tab, setTab] = useState<ProjectSettingsTab>("statuses");
+    const rules = useAutomationPane({
+        projectId,
+        data: automation,
+        active: open,
+        popupZ: layer + 10,
+        onLeave: onClose,
+    });
+    const onRules = automation != null && tab === "automation";
+    const panelA11y =
+        automation && !(onRules && rules.subView)
+            ? {
+                  role: "tabpanel",
+                  "aria-label": onRules
+                      ? t.tasks.automation.tabAutomation
+                      : t.tasks.automation.tabStatuses,
+              }
+            : {};
+
     // A teammate may have changed the list since it was first read.
     useEffect(() => {
         if (open) void refreshProjectStatuses(projectId, accessToken);
         else {
+            setTab("statuses");
             setError(null);
             setEditingId(null);
             setAddingTo(null);
@@ -666,34 +681,104 @@ export const ModalProjectStatuses = ({ projectId, open, onClose, hostZIndex }: P
     return (
         <>
             <ModalFrame
-                description={words.description}
+                actions={onRules ? rules.actions : undefined}
+                description={onRules ? t.tasks.automation.description : words.description}
                 hostZIndex={hostZIndex}
                 icon={<DonutLargeRoundedIcon sx={{ color: g.accent.text }} />}
                 open={open}
                 size="lg"
-                title={words.title}
+                title={automation ? words.menuItem : words.title}
                 fullScreenOnMobile
-                onClose={onClose}
+                // An unsaved rule is asked about first.
+                onClose={() => rules.guard(onClose)}
             >
-                <Box ref={body} aria-busy={busyId != null} data-testid="project-statuses">
-                    {!entry.loaded ? (
-                        <SkeletonRows count={6} label={words.title} />
-                    ) : entry.failed ? (
-                        <ErrorState
-                            size="sm"
-                            title={words.loadFailed}
-                            onRetry={() => void refreshProjectStatuses(projectId, accessToken)}
-                        />
-                    ) : rows.length === 0 ? (
-                        intro()
+                {automation && (
+                    <Box
+                        sx={{
+                            position: "sticky",
+                            top: "-8px",
+                            zIndex: 2,
+                            background: g.surface.raised,
+                            mt: -1,
+                            mb: 1.5,
+                        }}
+                    >
+                        {onRules && rules.subView ? (
+                            rules.backRow
+                        ) : (
+                            <TabStrip
+                                ariaLabel={t.tasks.automation.tabsLabel}
+                                size="sm"
+                                value={tab}
+                                tabs={[
+                                    {
+                                        id: "statuses",
+                                        label: t.tasks.automation.tabStatuses,
+                                        panelId: "project-settings-panel",
+                                    },
+                                    {
+                                        id: "automation",
+                                        label: (
+                                            <>
+                                                {t.tasks.automation.tabAutomation}
+                                                {rules.needsFix > 0 && (
+                                                    <Box component="span" sx={srOnly}>
+                                                        {fmt(t.tasks.automation.needsFixTitle, {
+                                                            n: rules.needsFix,
+                                                        })}
+                                                    </Box>
+                                                )}
+                                            </>
+                                        ),
+                                        panelId: "project-settings-panel",
+                                        count: rules.needsFix,
+                                        attention: true,
+                                        title: rules.needsFix
+                                            ? fmt(t.tasks.automation.needsFixTitle, {
+                                                  n: rules.needsFix,
+                                              })
+                                            : undefined,
+                                    },
+                                ]}
+                                onChange={(id) => setTab(id as ProjectSettingsTab)}
+                            />
+                        )}
+                    </Box>
+                )}
+                {/* The dialog must not jump in height between the tabs, and past the list
+                    the tabs are gone, and with them the panel. */}
+                <Box
+                    id={automation ? "project-settings-panel" : undefined}
+                    sx={automation ? { minHeight: { sm: 420 } } : undefined}
+                    {...panelA11y}
+                >
+                    {onRules ? (
+                        rules.body
                     ) : (
-                        groups()
+                        <Box ref={body} aria-busy={busyId != null} data-testid="project-statuses">
+                            {!entry.loaded ? (
+                                <SkeletonRows count={6} label={words.title} />
+                            ) : entry.failed ? (
+                                <ErrorState
+                                    size="sm"
+                                    title={words.loadFailed}
+                                    onRetry={() =>
+                                        void refreshProjectStatuses(projectId, accessToken)
+                                    }
+                                />
+                            ) : rows.length === 0 ? (
+                                intro()
+                            ) : (
+                                groups()
+                            )}
+                        </Box>
                     )}
                 </Box>
                 <Box aria-live="polite" sx={srOnly}>
-                    {announcement}
+                    {onRules ? rules.announcement : announcement}
                 </Box>
             </ModalFrame>
+            {rules.dialogs}
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
                 confirmDisabled={deleting?.inUse != null && deleting.replacementId == null}
