@@ -2882,6 +2882,11 @@ export const zh: DeepPartial<Messages> = {
             defaultEmptyTitle: "全部处理完毕！",
             defaultEmptySubtitle: "挑一个任务来做，或者休息一下。",
         },
+        // The "Unread" filter's empty state (MIP-2597); its chip is `chat.sidebar.unreadFilter`.
+        unreadFilter: {
+            emptyTitle: "没有未读内容",
+            showAll: "显示全部",
+        },
         emptyStates: {
             activitiesTitle: "暂无动态",
             activitiesSubtitle: "被指派任务或被@提及后，更新会显示在这里。",

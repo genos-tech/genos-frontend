@@ -6017,6 +6017,11 @@ export const ar: DeepPartial<Messages> = {
             defaultEmptyTitle: "أنجزت كل شيء!",
             defaultEmptySubtitle: "اختر مهمة للعمل عليها أو خذ استراحة.",
         },
+        // The "Unread" filter's empty state (MIP-2597); its chip is `chat.sidebar.unreadFilter`.
+        unreadFilter: {
+            emptyTitle: "لا توجد عناصر غير مقروءة",
+            showAll: "عرض الكل",
+        },
         emptyStates: {
             activitiesTitle: "لا توجد أنشطة بعد",
             activitiesSubtitle: "عند إسناد مهمة إليك أو الإشارة إليك بـ @ ستصلك التحديثات هنا.",

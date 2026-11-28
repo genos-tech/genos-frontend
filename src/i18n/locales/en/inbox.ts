@@ -179,6 +179,11 @@ export const inbox = {
         defaultEmptyTitle: "All caught up!",
         defaultEmptySubtitle: "Pick a task to work on, or take a break.",
     },
+    // The "Unread" filter's empty state (MIP-2597); its chip is `chat.sidebar.unreadFilter`.
+    unreadFilter: {
+        emptyTitle: "No unread items",
+        showAll: "Show all",
+    },
     emptyStates: {
         activitiesTitle: "No activities yet",
         activitiesSubtitle: "Get assigned a task or @mentioned and updates land here.",

@@ -6091,6 +6091,11 @@ export const hi: DeepPartial<Messages> = {
             defaultEmptyTitle: "सब कुछ पूरा!",
             defaultEmptySubtitle: "काम करने के लिए कोई टास्क चुनें या थोड़ा आराम करें।",
         },
+        // The "Unread" filter's empty state (MIP-2597); its chip is `chat.sidebar.unreadFilter`.
+        unreadFilter: {
+            emptyTitle: "कोई अपठित आइटम नहीं",
+            showAll: "सभी दिखाएँ",
+        },
         emptyStates: {
             activitiesTitle: "अभी कोई गतिविधि नहीं",
             activitiesSubtitle: "टास्क असाइन होने या @ से मेंशन होने पर अपडेट यहाँ मिलेंगे।",

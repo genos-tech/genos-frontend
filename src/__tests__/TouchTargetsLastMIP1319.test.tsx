@@ -103,7 +103,11 @@ describe("a 44px target on a touch screen, by source", () => {
         const text = source("features/chat/components/sidebar/ChatSidebar.tsx");
         expect(text).toContain('...touchTargetSx("&")');
         expect(text).toContain("sx={headerTouchTargetsSx}");
-        expect(text).toContain("...chipHitAreaSx(26)");
+        // The Unread chip is shared with the Inbox (MIP-2597).
+        expect(text).toContain("<UnreadFilterChip");
+        expect(source("features/chat/components/UnreadFilterChip.tsx")).toContain(
+            "...chipHitAreaSx(26)"
+        );
     });
 
     it("graph node actions (open, add) and the status picker are 44px taps, drawn the same", () => {

@@ -158,7 +158,9 @@ describe("Inbox", () => {
             <InboxHeader
                 activityItems={[]}
                 myself={{ userId: "u1", teamId: "t1" } as never}
+                unreadOnly={false}
                 onItemsChanged={vi.fn()}
+                onToggleUnreadOnly={vi.fn()}
             />
         );
         expect(document.querySelector("[data-page-header]")).not.toBeNull();
