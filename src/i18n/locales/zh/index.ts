@@ -7625,6 +7625,7 @@ export const zh: DeepPartial<Messages> = {
                     customField: "{by} 更改了{name}",
                     customFieldGeneric: "{by} 更改了自定义字段",
                     fieldChanged: "{by} 更改了{field}：{old} → {new}",
+                    fieldEdited: "{by} 更改了{field}",
                     noteEdited: "{by} 编辑了笔记",
                     noteRestored: "{by} 恢复了早期版本",
                     fields: {

@@ -1694,6 +1694,7 @@ export const tasks = {
                 customField: "{by} changed {name}",
                 customFieldGeneric: "{by} changed a custom field",
                 fieldChanged: "{by} changed {field}: {old} → {new}",
+                fieldEdited: "{by} changed {field}",
                 noteEdited: "{by} edited the note",
                 noteRestored: "{by} restored an earlier version",
                 fields: {

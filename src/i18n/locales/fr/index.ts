@@ -8069,6 +8069,7 @@ export const fr: DeepPartial<Messages> = {
                     customField: "{by} a modifié {name}",
                     customFieldGeneric: "{by} a modifié un champ personnalisé",
                     fieldChanged: "{by} a modifié {field} : {old} → {new}",
+                    fieldEdited: "{by} a modifié {field}",
                     noteEdited: "{by} a modifié la note",
                     noteRestored: "{by} a restauré une version antérieure",
                     fields: {
