@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 
+import { useLatestRef } from "../../../../hooks/common/useLatestRef";
 import { UserProps } from "../../../../types/admin";
 import { TaskProps } from "../../../../types/tasks";
 import { keepIfEqual } from "../../../../utils/keepIfEqual";
@@ -61,6 +62,9 @@ export const useTaskPreview = ({
         }
     };
 
+    // Re-created on every render, and the load below must not re-run for that.
+    const setPreviewTaskRef = useLatestRef(setPreviewTask);
+
     useEffect(() => {
         // Loads the task that backs the note header's project avatar +
         // task pill. Scoped to the notes section so the task page and the
@@ -81,11 +85,15 @@ export const useTaskPreview = ({
             return;
         }
         let cancelled = false;
-        void setPreviewTask(currentTaskNote.projectId, currentTaskNote.taskId, () => !cancelled);
+        void setPreviewTaskRef.current(
+            currentTaskNote.projectId,
+            currentTaskNote.taskId,
+            () => !cancelled
+        );
         return () => {
             cancelled = true;
         };
-    }, [currentTaskNote, onNotesRoute, accessToken]);
+    }, [currentTaskNote, onNotesRoute, accessToken, setPreviewTaskRef]);
 
     return {
         currentTask,
