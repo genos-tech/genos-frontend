@@ -45,11 +45,11 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
         <div>
             <Clickable
                 height={_avatarSize}
+                position="relative"
+                width={_avatarSize}
                 label={fmt(t.chat.avatarButtons.projectProfile, {
                     name: pmChat.chatName || pmChat.project?.projectName || "",
                 })}
-                position="relative"
-                width={_avatarSize}
                 onActivate={() => setOpenModalProjectProfile(true)}
             >
                 <ProjectChatAvatar
