@@ -4397,7 +4397,7 @@ export const hi: DeepPartial<Messages> = {
                 allMembers: "सभी सदस्य",
                 empty: "इस अवधि में अभी कोई टास्क गतिविधि नहीं है।",
                 barTooltip: "{count} {series} · {date}",
-                totals: "इस अवधि में: {created} नए, {started} शुरू, {closed} बंद, {updated} अपडेट",
+                totals: "इस अवधि में — नए: {created} · शुरू: {started} · बंद: {closed} · अपडेट: {updated}",
             },
             member: "मेंबर",
             open: "ओपन",

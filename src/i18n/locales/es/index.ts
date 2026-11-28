@@ -4197,7 +4197,7 @@ export const es: DeepPartial<Messages> = {
                 allMembers: "Todos los miembros",
                 empty: "Aún no hay actividad de tareas en este periodo.",
                 barTooltip: "{count} {series} · {date}",
-                totals: "En este periodo: {created} creadas, {started} iniciadas, {closed} cerradas, {updated} actualizadas",
+                totals: "En este periodo — Creadas: {created} · Iniciadas: {started} · Cerradas: {closed} · Actualizadas: {updated}",
             },
             moreCount: "+{count} más",
             noOverdueTasks: "Sin tareas atrasadas",

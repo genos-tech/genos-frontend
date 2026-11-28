@@ -7536,7 +7536,7 @@ export const fr: DeepPartial<Messages> = {
                 allMembers: "Tous les membres",
                 empty: "Aucune activité sur les tâches pour cette période.",
                 barTooltip: "{count} {series} · {date}",
-                totals: "Sur la période : {created} créées, {started} démarrées, {closed} fermées, {updated} mises à jour",
+                totals: "Sur la période — Créées : {created} · Démarrées : {started} · Fermées : {closed} · Mises à jour : {updated}",
             },
             member: "Membre",
             open: "Ouvert",
