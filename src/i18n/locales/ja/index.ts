@@ -7096,6 +7096,7 @@ export const ja: DeepPartial<Messages> = {
             cNotSet: "{field}が空",
             aMove: "{project} に移動する",
             aMoveHidden: "参加していないプロジェクトに移動する",
+            aMoveGone: "削除されたプロジェクトに移動する",
             aStatus: "ステータスを {status} にする",
             aAssign: "{person} を担当にする",
             aTag: "タグ {tag} を追加する",
@@ -7195,6 +7196,7 @@ export const ja: DeepPartial<Messages> = {
             stSkipped: "スキップ",
             reason: {
                 destination_not_found: "移動先プロジェクトがないか、参加していません。",
+                destination_gone: "移動先プロジェクトは削除されました。",
                 destination_archived: "移動先プロジェクトはアーカイブされています。",
                 same_project: "移動先は別のプロジェクトにしてください。",
                 private_to_public:

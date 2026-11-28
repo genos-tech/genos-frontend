@@ -808,6 +808,7 @@ export const tasks = {
         cNotSet: "{field} is empty",
         aMove: "move to {project}",
         aMoveHidden: "move to a project you're not in",
+        aMoveGone: "move to a deleted project",
         aStatus: "set status to {status}",
         aAssign: "assign to {person}",
         aTag: "add tag {tag}",
@@ -909,6 +910,7 @@ export const tasks = {
         reason: {
             destination_not_found:
                 "the destination project is gone, or you're not a member of it.",
+            destination_gone: "the destination project was deleted.",
             destination_archived: "the destination project is archived.",
             same_project: "the destination must be a different project.",
             private_to_public:
