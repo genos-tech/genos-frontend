@@ -2652,6 +2652,11 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# टिप्पणी} other {# टिप्पणियाँ}}",
+            replies: "{count, plural, one {# जवाब} other {# जवाब}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -2659,6 +2664,11 @@ export const hi: DeepPartial<Messages> = {
             attachment: "अटैचमेंट भेजा",
             listLabel: "संदेश",
             threadListLabel: "थ्रेड के जवाब",
+        },
+        ruleMoveNotice: {
+            line: "नियम “{rule}” ने {task} को {project} में ले जाया।",
+            aTask: "एक टास्क",
+            anotherProject: "दूसरा प्रोजेक्ट",
         },
         retentionBanner:
             "आपकी योजना में {days} दिनों से पुराने संदेश छिपे हुए हैं। पूरा इतिहास देखने के लिए अपग्रेड करें।",
@@ -4262,6 +4272,23 @@ export const hi: DeepPartial<Messages> = {
                 milestoneAssigneeRemoved: "निकाला गया",
                 prUnlinked: "यह लिंक हटाया:",
             },
+            automation: {
+                moved: "नियम “{rule}” ने इसे स्थानांतरित किया",
+                changed: "नियम “{rule}” ने इसे बदला",
+                notApplied: "नियम “{rule}” लागू नहीं हुआ: {reason}",
+                notAppliedPlain: "नियम “{rule}” लागू नहीं हुआ",
+                reasons: {
+                    destination: "टास्क को नियम के गंतव्य प्रोजेक्ट में नहीं ले जाया जा सकता",
+                    owner: "नियम का मालिक अब इसे नहीं चला सकता",
+                    plan: "नियम के मालिक के प्लान में ऑटोमेशन नियम शामिल नहीं हैं",
+                    nested: "सब-टास्क केवल अपने पैरेंट के साथ ही स्थानांतरित होता है",
+                    rate_limited: "थोड़े समय में नियमों ने इस टास्क पर बहुत बार कार्रवाई की",
+                    error: "कुछ गड़बड़ हो गई",
+                    bad_status: "नियम जो स्थिति सेट करता है वह अब उपलब्ध नहीं है",
+                    assignee_not_allowed:
+                        "नियम जिस व्यक्ति को असाइन करता है उसे वहाँ असाइन नहीं किया जा सकता",
+                },
+            },
             via: {
                 mcp: "MCP के ज़रिए",
                 apiKey: "API कुंजी के ज़रिए",
@@ -4602,19 +4629,19 @@ export const hi: DeepPartial<Messages> = {
             velocity: {
                 loadFailed: "रफ़्तार का चार्ट लोड नहीं हो सका",
                 title: "रफ़्तार",
-                subtitle: "समय के साथ कार्य बनाए गए, प्रारंभ किए गए, बंद किए गए और अद्यतन किए गए",
+                subtitle: "समय के साथ बने, शुरू हुए, बंद हुए और अपडेट हुए टास्क",
                 day: "दिन",
                 week: "सप्ताह",
-                created: "बनाया था",
-                started: "शुरू कर दिया",
-                closed: "बंद किया हुआ",
-                updated: "अद्यतन",
-                weekPrefix: "डब्ल्यू का",
+                created: "नए",
+                started: "शुरू",
+                closed: "बंद",
+                updated: "अपडेट",
+                weekPrefix: "सप्ताह",
                 memberLabel: "सदस्य",
                 allMembers: "सभी सदस्य",
-                empty: "इस विंडो में अभी तक कोई कार्य गतिविधि नहीं है.",
+                empty: "इस अवधि में अभी कोई टास्क गतिविधि नहीं है।",
                 barTooltip: "{count} {series} · {date}",
-                totals: "दृश्य में - {created} बनाया गया, {started} प्रारंभ हुआ, {closed} बंद हुआ, {updated} अद्यतन किया गया",
+                totals: "इस अवधि में — नए: {created} · शुरू: {started} · बंद: {closed} · अपडेट: {updated}",
             },
             member: "मेंबर",
             open: "ओपन",
@@ -6446,7 +6473,7 @@ export const hi: DeepPartial<Messages> = {
             placeholder: "इस धागे के बारे में कुछ भी पूछें...",
             send: "भेजना",
             cancel: "रद्द करना",
-            clear: "स्पष्ट बातचीत",
+            clear: "बातचीत साफ़ करें",
         },
         mentions: {
             ariaLabel: "सुझावों का उल्लेख करें",
@@ -6540,7 +6567,7 @@ export const hi: DeepPartial<Messages> = {
             placeholder: "इस नोट के बारे में कुछ भी पूछें...",
             send: "भेजना",
             cancel: "रद्द करना",
-            clear: "स्पष्ट बातचीत",
+            clear: "बातचीत साफ़ करें",
         },
         mentions: {
             ariaLabel: "सुझावों का उल्लेख करें",

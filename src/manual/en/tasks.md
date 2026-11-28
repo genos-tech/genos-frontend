@@ -17,7 +17,7 @@ A project holds tasks, milestones and sprints, and it has its own chat. Create o
 
 - **Customize Task Fields** sets which fields are required and their default values for new tasks and milestones. Only the project owner and editors can change these.
 - **Custom fields** (Tag, Text, Date or Member) apply to every task, sub-task and milestone in the project. They show in the task panel and as table columns. Owners and editors manage them.
-- **Statuses and automation** (the project's "…" menu, owner and editors) lets a project name and colour its own statuses. **Set up statuses** adds the built-ins, including **In Review**; then add, rename, recolour, order, set a default, turn off (In Review, WIP and Pending) or delete. Every status belongs to Open, WIP, Blocked, Pending or Closed, which board columns, filters and automations keep using. Automation rules are not there yet.
+- **Statuses and automation** (the project's "…" menu, owner and editors) lets a project name and colour its own statuses. **Set up statuses** adds the built-ins, including **In Review**; then add, rename, recolour, order, set a default, turn off (In Review, WIP and Pending) or delete. Every status belongs to Open, WIP, Blocked, Pending or Closed, which board columns, filters and automations keep using. Its **Automation** tab holds the project's automation rules, described below.
 - **Templates:** any project member can add task and milestone templates for the project.
 - **Labels:** project labels group projects in the Tasks sidebar, and you can filter the sidebar by label.
 - **Import tasks from CSV…** brings in tasks from a CSV file. A Jira or Notion export is recognized, and a Jira JSON export also brings comments. Only the owner or an editor of the project can import.
@@ -40,6 +40,22 @@ A project holds tasks, milestones and sprints, and it has its own chat. Create o
 - **Views:** the **Sprint Board** shows tasks in columns by status. The **Task Table** is a sortable, filterable grid. Both work from the keyboard (see Settings → Shortcuts).
 - **Saved filters:** **Saved Filters** saves the current filters under a name. Everyone in the project can use it.
 - **Quick add:** in the task table, a quick task needs only a title. To apply the project's required fields there too, turn on Settings → Tasks → Quick task creation.
+
+## Automation rules and guards
+
+A project can have **automation rules**: when something happens to one of its tasks, Genos can move the task to another project, set its status, assign it or add a tag. Rules need the Core plan or higher. The project's owner and editors write them: open the project's "…" menu → **Statuses and automation** → **Automation** → **New rule**.
+
+- **Writing a rule:** name it, then fill the sentence. **When** (the status becomes, a task is created, a tag is added, the assignee changes), **If** (conditions that must all hold; with none, every task) and **Then** (move to another project, set a status, assign someone, add a tag).
+- **Preview before it is on:** **Preview matches** lists the tasks that match right now and what the rule would do to each, with the reason where it would not. Nothing changes until the next change that fits. Then **Save and turn on** or **Save, keep off**.
+- **Order and on/off:** rules are listed in the order they are tried. Move one from its "…" menu or with Alt+↑ / Alt+↓. The switch turns a rule off at once; turning it on shows the preview first. **Recent runs** says what a rule did lately.
+
+- **What sets a rule off:** a task is created, its status or assignee changes, or a tag is added. A rule can also ask for conditions, such as a tag, the assignee, the priority or the milestone.
+- **One rule per change:** rules are tried in order, and only the first one that matches acts. What a rule does never sets off another rule.
+- **Who it acts as:** a rule runs as the person who last saved it, who must be the project's owner or an editor and a member of the destination project.
+- **What moves:** the task takes its sub-tasks, comments, notes and chat card with it. It gets a new ID, and the old ID still works. Tags carry over when the destination has a tag of the same name.
+- **What you see:** the task's Activity tab says it was moved by the rule, or why the rule was not applied. The old project's chat gets one line saying a rule moved a task; it names the task and the new project only to people who can open them. The assignee is told.
+
+**Guards.** A rule never moves a task to another team, or to a project that somebody could read who cannot read this one, so a private project's tasks never move to a public one. A sub-task does not move without its parent. A task that rules have acted on several times within an hour is left alone for a while. A rule whose owner can no longer run it is turned off. Milestones are not moved by rules.
 
 ## GitHub and Google Calendar
 

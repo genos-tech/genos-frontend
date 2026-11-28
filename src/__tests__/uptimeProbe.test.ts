@@ -167,7 +167,9 @@ describe("a run", () => {
     let logs: string[];
 
     beforeEach(() => {
-        vi.useFakeTimers({ toFake: ["setTimeout"], now: NOW });
+        // `Date` too: `now` alone moves nothing, and the fixture certificate is judged against it
+        // (MIP-2533: the run started failing once the real date came near NOW + 60 days).
+        vi.useFakeTimers({ toFake: ["setTimeout", "Date"], now: NOW });
         dir = fs.mkdtempSync(path.join(os.tmpdir(), "uptime-"));
         vi.stubEnv("STATE_FILE", path.join(dir, "state.json"));
         vi.stubEnv("GITHUB_STEP_SUMMARY", path.join(dir, "summary.md"));

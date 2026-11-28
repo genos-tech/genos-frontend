@@ -1219,6 +1219,11 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# 件のコメント} other {# 件のコメント}}",
+            replies: "{count, plural, one {# 件の返信} other {# 件の返信}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -1226,6 +1231,11 @@ export const ja: DeepPartial<Messages> = {
             attachment: "添付ファイルを送信しました",
             listLabel: "メッセージ",
             threadListLabel: "スレッドの返信",
+        },
+        ruleMoveNotice: {
+            line: "ルール「{rule}」が{task}を{project}に移動しました。",
+            aTask: "タスク",
+            anotherProject: "別のプロジェクト",
         },
         retentionBanner:
             "プランの制限により、{days} 日より前のメッセージは非表示になっています。アップグレードすると全履歴を表示できます。",
@@ -3272,7 +3282,7 @@ export const ja: DeepPartial<Messages> = {
             placeholder: "このノートについて何でも聞いてください…",
             send: "送信",
             cancel: "キャンセル",
-            clear: "明確な会話",
+            clear: "会話を消去",
         },
         mentions: {
             ariaLabel: "提案についてメンションする",
@@ -7315,6 +7325,22 @@ export const ja: DeepPartial<Messages> = {
                 milestoneAssigneeRemoved: "削除されました",
                 prUnlinked: "次のリンクを削除しました:",
             },
+            automation: {
+                moved: "ルール「{rule}」により移動されました",
+                changed: "ルール「{rule}」により変更されました",
+                notApplied: "ルール「{rule}」は適用されませんでした：{reason}",
+                notAppliedPlain: "ルール「{rule}」は適用されませんでした",
+                reasons: {
+                    destination: "ルールの移動先プロジェクトにはこのタスクを移動できません",
+                    owner: "ルールの所有者がこのルールを実行できなくなりました",
+                    plan: "ルール所有者のプランに自動化ルールが含まれていません",
+                    nested: "サブタスクは親タスクと一緒にのみ移動します",
+                    rate_limited: "短時間にルールがこのタスクを何度も操作しました",
+                    error: "問題が発生しました",
+                    bad_status: "ルールが設定するステータスは利用できなくなりました",
+                    assignee_not_allowed: "ルールが割り当てる人は移動先で担当者にできません",
+                },
+            },
         },
         dynamicUrl: {
             urlPlaceholder: "URLを貼り付け",
@@ -8335,7 +8361,7 @@ export const ja: DeepPartial<Messages> = {
             placeholder: "このスレッドについて何でも質問してください...",
             send: "送信",
             cancel: "キャンセル",
-            clear: "明確な会話",
+            clear: "会話を消去",
         },
         mentions: {
             ariaLabel: "提案についてメンションする",
