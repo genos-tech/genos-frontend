@@ -45,8 +45,8 @@ export const QuickStatusButtons = ({
     const { t } = useTranslation();
     const { accessToken } = useAuth();
     const statuses = useProjectStatuses(projectId, customStatusId);
-    const entry = useProjectStatusActions(projectId, accessToken);
     const archived = useIsProjectArchived(projectId);
+    const entry = useProjectStatusActions(projectId, accessToken, archived);
 
     // Not until both lists are in: a button that changes under the pointer is worse than one
     // that arrives a moment later.

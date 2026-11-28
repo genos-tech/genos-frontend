@@ -15,6 +15,7 @@ import {
 } from "../features/tasks/utils/quickActions";
 import {
     __resetProjectStatusActionsStore,
+    refreshProjectStatusActions,
     setProjectStatusActions,
 } from "../hooks/tasks/useProjectStatusActions";
 import {
@@ -38,8 +39,9 @@ const create = vi.fn();
 const update = vi.fn();
 const remove = vi.fn();
 const reorder = vi.fn();
+const load = vi.fn();
 vi.mock("../features/tasks/services/projectStatusActions", () => ({
-    loadProjectStatusActions: vi.fn().mockResolvedValue(null),
+    loadProjectStatusActions: (...args: unknown[]) => load(...args),
     createProjectStatusAction: (...args: unknown[]) => create(...args),
     updateProjectStatusAction: (...args: unknown[]) => update(...args),
     deleteProjectStatusAction: (...args: unknown[]) => remove(...args),
@@ -134,6 +136,7 @@ const serve = (actions = ACTIONS, rows = ROWS, canAct = true) => {
 beforeEach(() => {
     __resetProjectStatusesStore();
     __resetProjectStatusActionsStore();
+    load.mockReset().mockResolvedValue(null);
     create.mockReset();
     update.mockReset();
     remove.mockReset();
@@ -240,7 +243,45 @@ describe("the header button", () => {
     });
 });
 
+describe("reading the list", () => {
+    const button = () => (
+        <QuickStatusButtons kind="task" projectId={7} status="Open" onPick={vi.fn()} />
+    );
+
+    it("tries again when a header next shows after a failed read", async () => {
+        setProjectStatuses(7, { statuses: ROWS, canManage: true });
+        const answer = { actions: ACTIONS, canManage: true, canAct: true };
+        load.mockResolvedValueOnce(null).mockResolvedValue(answer);
+        wrap(button());
+        await vi.waitFor(() => expect(load).toHaveBeenCalledTimes(1));
+        // The refused read has been put away before the next header shows.
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        expect(screen.queryByTestId("quick-status-button")).toBeNull();
+        cleanup();
+        wrap(button());
+        expect(await screen.findByRole("button", { name: "Start Task" })).toBeTruthy();
+    });
+
+    it("does not let a read asked before a change land on it", async () => {
+        let answerOld: (value: unknown) => void = () => {};
+        load.mockReturnValueOnce(new Promise((resolve) => (answerOld = resolve)));
+        const reading = refreshProjectStatusActions(7, "t");
+        serve();
+        answerOld({ actions: [], canManage: true, canAct: true });
+        await reading;
+        wrap(button());
+        expect(screen.getByRole("button", { name: "Start Task" })).toBeTruthy();
+    });
+});
+
 describe("the Quick actions tab", () => {
+    it("offers a retry, not an endless wait, when the rows cannot be read after a set-up", async () => {
+        serve(COMPUTED, ROWS);
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
+        fireEvent.click(screen.getByRole("tab", { name: en.tasks.quickActions.tab }));
+        expect(await screen.findByText(en.tasks.quickActions.loadFailed)).toBeTruthy();
+    });
+
     const openTab = () => {
         wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
         fireEvent.click(screen.getByRole("tab", { name: en.tasks.quickActions.tab }));

@@ -355,8 +355,11 @@ export const QuickActionsPane = ({
     // computed defaults their rows.
     const hasRows = rows.length > 0;
     useEffect(() => {
-        void refreshProjectStatusActions(projectId, accessToken);
+        void refreshProjectStatusActions(projectId, accessToken, { afterChange: true });
     }, [projectId, accessToken, hasRows]);
+    // Set up, but the list in hand is still the computed one: its rows are not read yet.
+    const awaitingRows = hasRows && actions.some((a) => a.actionId == null);
+    const unreadable = entry.failed && (awaitingRows || actions.length === 0);
 
     const errorText = (code: string) =>
         code === "duplicate"
@@ -420,7 +423,7 @@ export const QuickActionsPane = ({
             )
         );
         if (!result.ok) {
-            void refreshProjectStatusActions(projectId, accessToken);
+            void refreshProjectStatusActions(projectId, accessToken, { afterChange: true });
             return;
         }
         focusLater(menuSelector(action.actionId));
@@ -834,15 +837,19 @@ export const QuickActionsPane = ({
         <Box ref={body} data-testid="quick-actions">
             {!entry.loaded ? (
                 <SkeletonRows count={6} label={words.tab} />
-            ) : entry.failed ? (
+            ) : unreadable ? (
                 <ErrorState
                     size="sm"
                     title={words.loadFailed}
-                    onRetry={() => void refreshProjectStatusActions(projectId, accessToken)}
+                    onRetry={() =>
+                        void refreshProjectStatusActions(projectId, accessToken, {
+                            afterChange: true,
+                        })
+                    }
                 />
             ) : !hasRows ? (
                 defaults()
-            ) : actions.some((a) => a.actionId == null) ? (
+            ) : awaitingRows ? (
                 // Set up a moment ago: the defaults' own rows are being read.
                 <SkeletonRows count={6} label={words.tab} />
             ) : (

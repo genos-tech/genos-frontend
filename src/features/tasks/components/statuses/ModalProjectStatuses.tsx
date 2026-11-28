@@ -873,6 +873,16 @@ export const ModalProjectStatuses = ({
         </Box>
     );
 
+    const setUp = async () => {
+        const result = await save("setup", () =>
+            reorderProjectStatuses(projectId, [], accessToken)
+        );
+        // The default quick actions were written with the statuses (MIP-2603).
+        if (result.ok) {
+            void refreshProjectStatusActions(projectId, accessToken, { afterChange: true });
+        }
+    };
+
     const intro = () => (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pb: 2 }}>
             <Box
@@ -914,9 +924,7 @@ export const ModalProjectStatuses = ({
                     alignSelf: { xs: "stretch", sm: "flex-end" },
                     "@media (pointer: coarse)": { minHeight: 44 },
                 }}
-                onClick={() =>
-                    void save("setup", () => reorderProjectStatuses(projectId, [], accessToken))
-                }
+                onClick={() => void setUp()}
             >
                 {words.setUp}
             </Button>
@@ -949,7 +957,7 @@ export const ModalProjectStatuses = ({
         if (result.ok) {
             setDeleting(null);
             // Its quick actions went with it (MIP-2603).
-            void refreshProjectStatusActions(projectId, accessToken);
+            void refreshProjectStatusActions(projectId, accessToken, { afterChange: true });
             focusLater(neighbour ? menuSelector(neighbour.statusId) : "[data-add-status]");
             return;
         }
@@ -1063,6 +1071,14 @@ export const ModalProjectStatuses = ({
                 <Box id="project-settings-panel" sx={{ minHeight: { sm: 420 } }} {...panelA11y}>
                     {onRules ? (
                         rules.body
+                    ) : onQuick && !entry.loaded ? (
+                        <SkeletonRows count={6} label={t.tasks.quickActions.tab} />
+                    ) : onQuick && entry.failed ? (
+                        <ErrorState
+                            size="sm"
+                            title={words.loadFailed}
+                            onRetry={() => void refreshProjectStatuses(projectId, accessToken)}
+                        />
                     ) : onQuick ? (
                         <QuickActionsPane
                             layer={layer}
@@ -1070,11 +1086,7 @@ export const ModalProjectStatuses = ({
                             rows={rows}
                             settingUp={busyId === "setup"}
                             setUpFailed={error?.at === "setup"}
-                            onSetUp={() =>
-                                void save("setup", () =>
-                                    reorderProjectStatuses(projectId, [], accessToken)
-                                )
-                            }
+                            onSetUp={() => void setUp()}
                         />
                     ) : (
                         <Box ref={body} aria-busy={busyId != null} data-testid="project-statuses">
