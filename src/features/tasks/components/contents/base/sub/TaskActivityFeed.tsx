@@ -1,7 +1,8 @@
-import { useId, useMemo, useState, type ReactElement } from "react";
+import { useId, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import AssignmentIndRoundedIcon from "@mui/icons-material/AssignmentIndRounded";
 import AttachFileRoundedIcon from "@mui/icons-material/AttachFileRounded";
+import BoltRoundedIcon from "@mui/icons-material/BoltRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import CallSplitRoundedIcon from "@mui/icons-material/CallSplitRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
@@ -452,6 +453,87 @@ const PrMergeCloseActivityRow = ({
                     level="body-xs"
                     sx={{
                         color: isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)",
+                        whiteSpace: "nowrap",
+                    }}
+                >
+                    {formatRelative(activity.tsCreatedAt, t.tasks.activity, locale)}
+                </Typography>
+            </Box>
+        </Stack>
+    );
+};
+
+/** The sentence of a row a project rule wrote (MIP-2500), with the rule's name isolated: a name
+ *  in another script cannot reorder the words around it. */
+const automationSentence = (
+    activity: TaskActivityProps,
+    messages: ActivityMessages
+): ReactNode[] => {
+    const metadata = activity.metadata ?? {};
+    const rule = typeof metadata.ruleName === "string" ? metadata.ruleName : "";
+    const code = typeof metadata.reason === "string" ? metadata.reason : "";
+    const reason = Object.prototype.hasOwnProperty.call(messages.automation.reasons, code)
+        ? messages.automation.reasons[code as keyof ActivityMessages["automation"]["reasons"]]
+        : "";
+    let template: string;
+    if (activity.actionType === "automation_applied") {
+        template =
+            metadata.toProjectId != null ? messages.automation.moved : messages.automation.changed;
+    } else {
+        template = reason ? messages.automation.notApplied : messages.automation.notAppliedPlain;
+    }
+    // Split first, so a rule's name cannot add a placeholder.
+    return template.split(/(\{rule\}|\{reason\})/).map((part, index) => {
+        if (part === "{rule}") return <bdi key={index}>{rule}</bdi>;
+        return part === "{reason}" ? reason : part;
+    });
+};
+
+// A project rule acted, or could not (`automation_applied` / `automation_refused`). The row is
+// attributed to the rule, not to its owner, who did nothing at that moment.
+const AutomationActivityRow = ({ activity }: { activity: TaskActivityProps }) => {
+    const { t, locale } = useTranslation();
+    return (
+        <Stack
+            alignItems="center"
+            data-automation-row=""
+            direction="row"
+            spacing={1.25}
+            sx={{
+                py: 1,
+                px: 1,
+                borderRadius: "8px",
+                "&:hover": { background: g.hover },
+            }}
+        >
+            <BaseAvatar>
+                <BoltRoundedIcon sx={{ fontSize: 18 }} />
+            </BaseAvatar>
+            <Box
+                sx={{
+                    flex: 1,
+                    minWidth: 0,
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    gap: 0.75,
+                    flexWrap: "wrap",
+                }}
+            >
+                <Typography
+                    level="body-sm"
+                    sx={{
+                        color: g.text.secondary,
+                        overflowWrap: "anywhere",
+                    }}
+                >
+                    {automationSentence(activity, t.tasks.activity)}
+                </Typography>
+                <Box sx={{ flexGrow: 1 }} />
+                <Typography
+                    level="body-xs"
+                    sx={{
+                        color: g.text.tertiary,
                         whiteSpace: "nowrap",
                     }}
                 >
@@ -1076,6 +1158,9 @@ export const TaskActivityFeed = ({
         // task's display id) gets a GitHub-styled link row.
         if (row.actionType === "pr_linked") {
             return <PrLinkActivityRow key={row.activityId} activity={row} isDark={isDark} />;
+        }
+        if (row.actionType === "automation_applied" || row.actionType === "automation_refused") {
+            return <AutomationActivityRow key={row.activityId} activity={row} />;
         }
         // A status change tagged as an automatic PR-merge close
         // gets its own attribution row (the underlying actor is

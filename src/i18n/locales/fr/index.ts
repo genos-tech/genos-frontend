@@ -1246,6 +1246,11 @@ export const fr: DeepPartial<Messages> = {
             listLabel: "Messages",
             threadListLabel: "Réponses du fil",
         },
+        ruleMoveNotice: {
+            line: "La règle « {rule} » a déplacé {task} vers {project}.",
+            aTask: "une tâche",
+            anotherProject: "un autre projet",
+        },
         retentionBanner:
             "Les messages de plus de {days} jours sont masqués avec votre forfait. Passez à un forfait supérieur pour voir tout l'historique.",
         composer: {
@@ -7181,6 +7186,25 @@ export const fr: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "ajouté",
                 milestoneAssigneeRemoved: "supprimé",
                 prUnlinked: "a retiré le lien vers",
+            },
+            automation: {
+                moved: "Déplacée par la règle « {rule} »",
+                changed: "Modifiée par la règle « {rule} »",
+                notApplied: "Règle « {rule} » non appliquée : {reason}",
+                notAppliedPlain: "Règle « {rule} » non appliquée",
+                reasons: {
+                    destination:
+                        "la tâche ne peut pas être déplacée vers le projet de destination de la règle",
+                    owner: "le propriétaire de la règle ne peut plus l’exécuter",
+                    plan: "l’offre du propriétaire de la règle n’inclut pas les règles d’automatisation",
+                    nested: "une sous-tâche ne se déplace qu’avec sa tâche parente",
+                    rate_limited:
+                        "les règles ont agi trop souvent sur cette tâche en peu de temps",
+                    error: "une erreur s’est produite",
+                    bad_status: "le statut défini par la règle n’est plus disponible",
+                    assignee_not_allowed:
+                        "la personne que la règle assigne ne peut pas être assignée là-bas",
+                },
             },
             via: {
                 mcp: "via MCP",

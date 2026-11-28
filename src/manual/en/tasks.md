@@ -40,6 +40,18 @@ A project holds tasks, milestones and sprints, and it has its own chat. Create o
 - **Saved filters:** **Saved Filters** saves the current filters under a name. Everyone in the project can use it.
 - **Quick add:** in the task table, a quick task needs only a title. To apply the project's required fields there too, turn on Settings → Tasks → Quick task creation.
 
+## Automation rules and guards
+
+A project can have **automation rules**: when something happens to one of its tasks, Genos can move the task to another project, set its status, assign it or add a tag. Rules need the Core plan or higher. The app does not have a screen for writing rules yet.
+
+- **What sets a rule off:** a task is created, its status or assignee changes, or a tag is added. A rule can also ask for conditions, such as a tag, the assignee, the priority or the milestone.
+- **One rule per change:** rules are tried in order, and only the first one that matches acts. What a rule does never sets off another rule.
+- **Who it acts as:** a rule runs as the person who last saved it, who must be the project's owner or an editor and a member of the destination project.
+- **What moves:** the task takes its sub-tasks, comments, notes and chat card with it. It gets a new ID, and the old ID still works. Tags carry over when the destination has a tag of the same name.
+- **What you see:** the task's Activity tab says it was moved by the rule, or why the rule was not applied. The old project's chat gets one line saying a rule moved a task; it names the task and the new project only to people who can open them. The assignee is told.
+
+**Guards.** A rule never moves a task to another team, or to a project that somebody could read who cannot read this one, so a private project's tasks never move to a public one. A sub-task does not move without its parent. A task that rules have acted on several times within an hour is left alone for a while. A rule whose owner can no longer run it is turned off. Milestones are not moved by rules.
+
 ## GitHub and Google Calendar
 
 - Connect GitHub in Settings → Integrations. When your Genos has the GitHub App turned on:

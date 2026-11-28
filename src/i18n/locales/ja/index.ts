@@ -1232,6 +1232,11 @@ export const ja: DeepPartial<Messages> = {
             listLabel: "メッセージ",
             threadListLabel: "スレッドの返信",
         },
+        ruleMoveNotice: {
+            line: "ルール「{rule}」が{task}を{project}に移動しました。",
+            aTask: "タスク",
+            anotherProject: "別のプロジェクト",
+        },
         retentionBanner:
             "プランの制限により、{days} 日より前のメッセージは非表示になっています。アップグレードすると全履歴を表示できます。",
         composer: {
@@ -7095,6 +7100,22 @@ export const ja: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "追加した",
                 milestoneAssigneeRemoved: "削除されました",
                 prUnlinked: "次のリンクを削除しました:",
+            },
+            automation: {
+                moved: "ルール「{rule}」により移動されました",
+                changed: "ルール「{rule}」により変更されました",
+                notApplied: "ルール「{rule}」は適用されませんでした：{reason}",
+                notAppliedPlain: "ルール「{rule}」は適用されませんでした",
+                reasons: {
+                    destination: "ルールの移動先プロジェクトにはこのタスクを移動できません",
+                    owner: "ルールの所有者がこのルールを実行できなくなりました",
+                    plan: "ルール所有者のプランに自動化ルールが含まれていません",
+                    nested: "サブタスクは親タスクと一緒にのみ移動します",
+                    rate_limited: "短時間にルールがこのタスクを何度も操作しました",
+                    error: "問題が発生しました",
+                    bad_status: "ルールが設定するステータスは利用できなくなりました",
+                    assignee_not_allowed: "ルールが割り当てる人は移動先で担当者にできません",
+                },
             },
         },
         dynamicUrl: {

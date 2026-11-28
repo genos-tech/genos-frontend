@@ -2685,6 +2685,11 @@ export const es: DeepPartial<Messages> = {
             listLabel: "Mensajes",
             threadListLabel: "Respuestas del hilo",
         },
+        ruleMoveNotice: {
+            line: "La regla «{rule}» movió {task} a {project}.",
+            aTask: "una tarea",
+            anotherProject: "otro proyecto",
+        },
         retentionBanner:
             "Los mensajes de hace más de {days} días están ocultos en tu plan. Mejora tu plan para ver el historial completo.",
         composer: {
@@ -4765,6 +4770,23 @@ export const es: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "agregado",
                 milestoneAssigneeRemoved: "remoto",
                 prUnlinked: "quitó el vínculo con",
+            },
+            automation: {
+                moved: "Movida por la regla «{rule}»",
+                changed: "Cambiada por la regla «{rule}»",
+                notApplied: "No se aplicó la regla «{rule}»: {reason}",
+                notAppliedPlain: "No se aplicó la regla «{rule}»",
+                reasons: {
+                    destination: "la tarea no puede moverse al proyecto de destino de la regla",
+                    owner: "el propietario de la regla ya no puede ejecutarla",
+                    plan: "el plan del propietario de la regla no incluye reglas de automatización",
+                    nested: "una subtarea solo se mueve con su tarea principal",
+                    rate_limited:
+                        "las reglas han actuado demasiadas veces sobre esta tarea en poco tiempo",
+                    error: "algo salió mal",
+                    bad_status: "el estado que establece la regla ya no está disponible",
+                    assignee_not_allowed: "la persona que asigna la regla no puede asignarse allí",
+                },
             },
             via: {
                 mcp: "vía MCP",
