@@ -209,6 +209,7 @@ export const AgentQAConversation = ({
                     selection={ask.askedSelection}
                     sourcesById={sourcesById}
                     toolEvents={ask.toolEvents}
+                    undoSteps={ask.carriedUndo}
                     isCurrent
                     onApprove={state.onApprove}
                     onFeedback={onFeedback}

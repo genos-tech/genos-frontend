@@ -63,7 +63,7 @@ import {
     type UseAgentQAArgs,
     type UseAgentQAReturn,
 } from "./types";
-import { undoStepsFromToolEvents, type UndoRequest } from "./undoSteps";
+import { mergeUndoSteps, type UndoRequest } from "./undoSteps";
 import { runUndo } from "./undoStore";
 
 // An edit patch worth sending: a plain `{path: value}` object with at least one
@@ -89,7 +89,7 @@ const appendTurn = (turns: CompletedTurn[], turn: CompletedTurn): CompletedTurn[
 const snapshotTurn = (ask: AskState): CompletedTurn => {
     // The turn's undoable writes, kept as data of their own: Spotlight persists
     // turns without their tool events, and the list has to outlive that.
-    const undo = undoStepsFromToolEvents(ask.toolEvents, ask.runId);
+    const undo = [...mergeUndoSteps(ask.toolEvents, ask.carriedUndo, ask.runId)];
     return {
         id: ask.turnId,
         askedQuery: ask.askedQuery,
@@ -213,7 +213,9 @@ export const useAgentQA = ({
                 Boolean(prev.askError) ||
                 // A run that ended with nothing to show still has to say it could not use what the
                 // member pointed at (MIP-1058): the note is the turn's content then.
-                Boolean(prev.droppedReferences?.length);
+                Boolean(prev.droppedReferences?.length) ||
+                // A restored card's earlier write keeps its Undo (MIP-2627).
+                Boolean(prev.carriedUndo);
             if (hasContent) {
                 const snapshot = snapshotTurn(prev);
                 setTurns((prevTurns) => appendTurn(prevTurns, snapshot));
@@ -861,7 +863,8 @@ export const useAgentQA = ({
                     prev.answerSources.length > 0 ||
                     // A card cancelled before anything else arrived (a restored one has no
                     // tool events, MIP-2604): the question must not vanish with it.
-                    prev.pendingApproval !== null;
+                    prev.pendingApproval !== null ||
+                    Boolean(prev.carriedUndo);
                 if (hasContent) {
                     const snapshot = waitingSnapshot(prev);
                     setTurns((prevTurns) => appendTurn(prevTurns, snapshot));
@@ -962,6 +965,10 @@ export const useAgentQA = ({
                     answerSources: pending.turn.answerSources,
                     askedMentions: pending.turn.mentions,
                     pendingApproval: pending.card,
+                    ...(pending.turn.undo ? { carriedUndo: pending.turn.undo } : {}),
+                    ...(pending.turn.droppedReferences
+                        ? { droppedReferences: pending.turn.droppedReferences }
+                        : {}),
                 };
             }
             return {

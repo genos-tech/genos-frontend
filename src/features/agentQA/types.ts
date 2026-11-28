@@ -103,6 +103,10 @@ export interface AskState {
     // which may add to it (MIP-1585): the union of what each said, each kind once. Absent when
     // nothing was dropped and with the server flag off. Drives the calm notice under the answer.
     droppedReferences?: DroppedReference[];
+    // Writes this run had already made before the live stream began: a restored approval card
+    // whose run approved an earlier write (MIP-2627). The live tool events do not have them, so
+    // their Undo is shown from here and kept on the turn after the next decision.
+    carriedUndo?: UndoStepRef[];
 }
 
 // Immutable snapshot of a finished turn. Promoted into the `turns` array
