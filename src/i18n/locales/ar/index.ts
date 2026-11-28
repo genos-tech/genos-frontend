@@ -2633,6 +2633,8 @@ export const ar: DeepPartial<Messages> = {
             listLabel: "الرسائل",
             threadListLabel: "ردود المحادثة الفرعية",
         },
+        // The line a closed task leaves in the thread it was made from (MIP-2553).
+        taskClosedNotice: "أصبحت حالة المهمة {task} الآن «{status}».",
         ruleMoveNotice: {
             line: "نقلت القاعدة «{rule}» {task} إلى {project}.",
             aTask: "مهمة",

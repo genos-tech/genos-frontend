@@ -1167,6 +1167,8 @@ export const zh: DeepPartial<Messages> = {
             listLabel: "消息",
             threadListLabel: "主题回复",
         },
+        // The line a closed task leaves in the thread it was made from (MIP-2553).
+        taskClosedNotice: "任务 {task} 现在为“{status}”。",
         ruleMoveNotice: {
             line: "规则“{rule}”已将{task}移至{project}。",
             aTask: "一个任务",
