@@ -30,11 +30,10 @@ import {
 import { useNotificationsContext } from "../../services/notifications/notificationsContextState";
 import {
     deletionCoversSession,
-    sessionTurnToCompleted,
+    restoreSessionTurns,
     useAgentQA,
     useAgentSessionsDeleted,
     type AgentRunResult,
-    type CompletedTurn,
     type UseAgentQAReturn,
 } from "../agentQA";
 
@@ -189,13 +188,11 @@ export const useNoteAsk = ({ accessToken, teamId }: UseNoteAskArgs): UseNoteAskR
                     // in-progress local turns (matches the threadAsk
                     // pattern; open() handles the genuine clear-on-
                     // switch case).
-                    const restored: CompletedTurn[] = (data.turns || []).map(
-                        sessionTurnToCompleted
-                    );
-                    if (restored.length > 0 || data.agent_session_id) {
+                    const restored = restoreSessionTurns(data.turns || []);
+                    if (data.turns?.length || data.agent_session_id) {
                         agentQA.reset({
                             sessionId: data.agent_session_id,
-                            turns: restored,
+                            ...restored,
                         });
                     }
                 } catch (err) {

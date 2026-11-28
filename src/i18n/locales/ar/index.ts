@@ -6070,6 +6070,8 @@ export const ar: DeepPartial<Messages> = {
             archived: "مؤرشف",
             untitled: "(بدون عنوان)",
             noAnswer: "(لا توجد إجابة)",
+            cancelledBeforeAnswer: "أُلغي هذا السؤال قبل ظهور الإجابة.",
+            notDecided: "لم تتم الموافقة على هذا السؤال ولا رفضه.",
         },
         dropped: {
             message: "لم يتمكن Genos من استخدام الرسالة التي حددتها، فأجاب من دونها.",

@@ -78,6 +78,7 @@ import {
     SelectedTextQuote,
     turnFrameSx,
     turnLabelSx,
+    unansweredReason,
     useAgentMentionDraft,
     useAgentMentionSources,
     type AgentMentionCandidate,
@@ -1822,6 +1823,7 @@ const ConversationPanel = memo(
                                 runId={turn.runId}
                                 selection={turn.selection}
                                 toolEvents={turn.toolEvents}
+                                unanswered={turn.unanswered}
                                 undoSteps={turn.undo}
                                 onFeedback={onFeedback}
                                 onPreview={onPreview}
@@ -2108,7 +2110,8 @@ const HistoryArchiveTurn = ({
         [turn.answer, sourcesById]
     );
 
-    const showFeedback = !turn.error && Boolean(onFeedback);
+    const unanswered = unansweredReason(turn);
+    const showFeedback = !turn.error && !unanswered && Boolean(onFeedback);
 
     // The live turn's frame, label type and colors (`AgentTurn`); only the
     // content differs: no steps, sources or copy / retry, because an archived
@@ -2166,6 +2169,12 @@ const HistoryArchiveTurn = ({
                         {turn.error ? (
                             <Typography level="body-md" sx={{ color: g.danger.text }}>
                                 {turn.error}
+                            </Typography>
+                        ) : unanswered ? (
+                            <Typography level="body-md" sx={{ color: g.text.secondary }}>
+                                {unanswered === "cancelled"
+                                    ? ts.states.cancelledBeforeAnswer
+                                    : ts.states.notDecided}
                             </Typography>
                         ) : (
                             <Box sx={markdownAnswerSx()}>

@@ -179,6 +179,7 @@ export const AgentQAConversation = ({
                     selection={turn.selection}
                     sourcesById={sourcesById}
                     toolEvents={turn.toolEvents}
+                    unanswered={turn.unanswered}
                     undoSteps={turn.undo}
                     onFeedback={onFeedback}
                     onPreview={onPreview}

@@ -63,7 +63,7 @@ import { useShortcut } from "../../shortcuts";
 import {
     deletionCoversSession,
     MAX_TURNS_IN_HISTORY,
-    sessionTurnToCompleted,
+    restoreSessionTurns,
     useAgentSessionsDeleted,
     type AgentMentionRef,
     type AgentRunResult,
@@ -1005,7 +1005,7 @@ export const useSpotlight = ({
                     const recent = (detail.turns || []).slice(-MAX_TURNS_IN_HISTORY);
                     resetConversation({
                         sessionId: detail.session_id,
-                        turns: recent.map(sessionTurnToCompleted),
+                        ...restoreSessionTurns(recent),
                     });
                     setHistoryMode("closed");
                     setHistoryDetail(null);

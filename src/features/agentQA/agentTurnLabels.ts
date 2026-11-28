@@ -47,6 +47,9 @@ export interface AgentTurnLabels {
         answeredIn: string;
         // A finished turn with no answer text.
         noAnswer: string;
+        // A restored turn with no answer, when the reason is known (MIP-2604).
+        cancelledBeforeAnswer: string;
+        notDecided: string;
     };
     actions: {
         approve: string;
@@ -104,6 +107,8 @@ export const buildAgentTurnLabels = (t: Messages, host: AgentTurnHost): AgentTur
             awaitingApproval: sp.states.awaitingApproval,
             answeredIn: own ? own.states.answeredIn : sp.conversation.answeredIn,
             noAnswer: sp.states.noAnswer,
+            cancelledBeforeAnswer: sp.states.cancelledBeforeAnswer,
+            notDecided: sp.states.notDecided,
         },
         actions: {
             approve: own ? own.actions.approve : sp.actions.approve,
