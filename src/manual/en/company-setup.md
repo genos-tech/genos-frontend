@@ -30,7 +30,7 @@ Create the projects (Tasks sidebar → New Project) and put the department's tag
 
 ## 6. Invite people
 
-Open the Team menu (top left), choose Show Team Profile, then click Invite members. Then add each person to their department's mention group, folder, chat and projects. Guests are invited to one project only, from that project ("Invite guests"); they do not see the rest of the workspace.
+Open the Team menu (top left), choose Show Team Profile, then click Invite members. Then add each person to their department's mention group, folder, chat and projects. Guests are invited project by project, from each project ("Invite guests"); they see only the projects they were invited to, not the rest of the workspace.
 
 ## 7. Teach three habits
 

@@ -45,7 +45,7 @@ describe("projects and teams pages", () => {
     it("stale tasks are not a per-task review in the UI", () => {
         expect(PROJECTS).not.toContain("stale tasks, and throughput");
         expect(PROJECTS).not.toContain("stale task、throughput");
-        expect(PROJECTS).toContain("stalled milestones and velocity; ask Genos for stale tasks");
+        expect(PROJECTS).toContain("stalled milestones and pace; ask Genos for stale tasks");
         expect(PROJECTS).toContain("停滞中のマイルストーン");
     });
 
