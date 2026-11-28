@@ -4805,15 +4805,13 @@ export const es: DeepPartial<Messages> = {
             limitHint: "{max} de {max} reglas. Elimina una para añadir otra.",
             emptyTitle: "Aún no hay reglas",
             emptyBody:
-                "Las reglas mueven o actualizan tareas cuando ocurre algo. Por ejemplo: cuando una tarea con la etiqueta «design» pasa a WIP, muévela a otro proyecto como Open.",
+                "Las reglas mueven o actualizan tareas o hitos cuando ocurre algo. Por ejemplo: cuando una tarea con la etiqueta «design» pasa a WIP, muévela a otro proyecto como Open.",
             loadFailed: "No se pudieron cargar las reglas",
             loading: "Cargando reglas",
             planTitle: "Reglas de automatización",
-            planBody: "Las reglas mueven y actualizan tareas por ti cuando ocurre algo.",
+            planBody: "Las reglas mueven y actualizan tareas e hitos por ti cuando ocurre algo.",
             planKept: "Tus reglas se conservan. Puedes desactivarlas o eliminarlas.",
             planSwitchHint: "Para activar reglas necesitas Core o superior.",
-            milestoneRule:
-                "Actúa sobre hitos. No se puede editar aquí; puedes desactivarla o eliminarla.",
             hiddenHint:
                 "No estás en el proyecto de destino de esta regla, así que no puedes cambiarla. Puedes desactivarla o eliminarla.",
             turnedOff: "Desactivada: {reason}",
@@ -4939,6 +4937,47 @@ export const es: DeepPartial<Messages> = {
             stApplied: "Hecha",
             stRefused: "Rechazada",
             stSkipped: "Omitida",
+            targetLabel: "Se aplica a",
+            targetTasks: "Tareas",
+            targetMilestones: "Hitos",
+            milestoneAssignNotice:
+                "«Asignar a» sustituye a todas las personas asignadas al hito por esta.",
+            milestoneConditionRemoved:
+                "Se quitó la condición de hito: solo vale en reglas de tareas.",
+            forMilestone: {
+                trStatus: "el estado de un hito pasa a {status}",
+                trCreated: "se crea un hito",
+                trTag: "se añade la etiqueta {tag} a un hito",
+                trAssigneeAny: "cambian las personas asignadas a un hito",
+                trAssigneeTo: "se asigna un hito a {person}",
+                aMove: "moverlo con sus tareas a {project}",
+                aAssign: "dejar a {person} como única persona asignada",
+                everyTask: "Todos los hitos",
+                optAssignee: "Cambian las personas asignadas",
+                optCreated: "Se crea un hito",
+                privateOnly:
+                    "Este proyecto es privado, así que sus hitos solo pueden ir a proyectos privados.",
+                moveNotice:
+                    "El hito se mueve con todas sus tareas. Reciben un ID nuevo en {project}; el anterior sigue abriéndolas. Las etiquetas se emparejan por nombre allí y se quitan el sprint y la carpeta. Un hito con más de 200 tareas no se mueve.",
+                matched:
+                    "{matched, plural, one {# hito coincide ahora} other {# hitos coinciden ahora}}",
+                noneTitle: "Ningún hito coincide ahora",
+                checking: "Revisando hitos",
+                scanCap: "Solo se revisaron los 2000 hitos actualizados más recientemente.",
+                previewFailed: "No se pudieron revisar los hitos",
+                hiddenTask: "Un hito que no puedes abrir",
+                deleteBody: "Los hitos y tareas que ya cambió se quedan como están.",
+                reason: {
+                    move_not_allowed: "este hito no puede moverse a ese proyecto.",
+                    assignee_not_on_destination:
+                        "alguien asignado al hito o a una de sus tareas no está en el proyecto de destino ni en su equipo.",
+                    too_many_tasks:
+                        "tiene más de 200 tareas, demasiadas para que lo mueva una regla. Muévelo a mano.",
+                    rate_limited:
+                        "en pausa: las reglas cambiaron este hito dos veces en la última hora.",
+                    error: "algo falló con este hito.",
+                },
+            },
             reason: {
                 destination_not_found: "el proyecto de destino ya no existe o no eres miembro.",
                 destination_gone: "se eliminó el proyecto de destino.",
