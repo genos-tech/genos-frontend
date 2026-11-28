@@ -1,12 +1,8 @@
 import { RefObject, useEffect, useState } from "react";
-import { useMediaQuery } from "@mui/material";
 
 import { useIsMobile } from "../../../../hooks/common/useIsMobile";
+import { useIsTouch } from "../../../../hooks/common/useIsTouch";
 import { useLongPress } from "../../../../hooks/common/useLongPress";
-
-// A mouse or trackpad. A phone matches neither half, so the "mouse enter" some
-// mobile browsers send on a tap does not open the toolbar there.
-const MOUSE_QUERY = "(hover: hover) and (pointer: fine)";
 
 /**
  * When a message bubble's action toolbar is on screen (main chat and thread).
@@ -17,7 +13,7 @@ const MOUSE_QUERY = "(hover: hover) and (pointer: fine)";
  */
 export const useBubbleToolbar = (bubbleRef: RefObject<HTMLElement | null>) => {
     const isMobile = useIsMobile();
-    const hasMouse = useMediaQuery(MOUSE_QUERY);
+    const isTouch = useIsTouch();
     const [isHovered, setIsHovered] = useState(false);
     const [mobileToolbarOpen, setMobileToolbarOpen] = useState(false);
     // While the More menu — or a dialog it opened — is on screen, keep the
@@ -27,8 +23,9 @@ export const useBubbleToolbar = (bubbleRef: RefObject<HTMLElement | null>) => {
     const [isMoreMenuOpen, setIsMoreMenuOpen] = useState(false);
     const longPress = useLongPress(() => setMobileToolbarOpen(true), { threshold: 500 });
 
-    // A narrow window with a mouse has the phone layout but can still hover.
-    const hoverShows = isHovered && (!isMobile || hasMouse);
+    // A narrow window with a mouse has the phone layout but can still hover. On a
+    // phone, the "mouse enter" some browsers send on a tap must not open the toolbar.
+    const hoverShows = isHovered && (!isMobile || !isTouch);
     const showUnderBarOption = hoverShows || (isMobile && mobileToolbarOpen) || isMoreMenuOpen;
 
     // Without this the long-press toolbar would stay forever (no hover-out on touch).

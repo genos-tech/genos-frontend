@@ -45,7 +45,7 @@ vi.mock("../hooks/common/bubbleStylePreferenceState", () => ({
 
 const mouseWindow = (hasMouse: boolean) => {
     window.matchMedia = ((query: string) => ({
-        matches: hasMouse && query.includes("pointer: fine"),
+        matches: !hasMouse && query === "(hover: none)",
         media: query,
         addEventListener: () => {},
         removeEventListener: () => {},
