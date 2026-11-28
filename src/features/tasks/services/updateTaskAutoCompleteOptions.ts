@@ -31,8 +31,12 @@ type UpdateProjectOptions = {
 };
 export const updateProjectOptions = async (props: UpdateProjectOptions) => {
     const { myself, accessToken, setTeamProjects } = props;
-    const loadedTeamProjects: ProjectProps[] = await loadTeamProjects(myself, accessToken);
-    if (loadedTeamProjects.length > 0) {
+    // Resolves to undefined when the request fails (or no team yet): keep what is there.
+    const loadedTeamProjects: ProjectProps[] | undefined = await loadTeamProjects(
+        myself,
+        accessToken
+    );
+    if (loadedTeamProjects?.length) {
         setTeamProjects(loadedTeamProjects);
     }
 };
@@ -46,12 +50,13 @@ type UpdateTagOptions = {
 };
 export const updateTagOptions = async (props: UpdateTagOptions) => {
     const { myself, accessToken, projectId, setProjectTags } = props;
-    const loadedProjectTags: TagListProps[] = await loadProjectTags(
+    // Resolves to undefined when the request fails.
+    const loadedProjectTags: TagListProps[] | undefined = await loadProjectTags(
         myself,
         projectId || -1,
         accessToken
     );
-    if (loadedProjectTags.length > 0) {
+    if (loadedProjectTags?.length) {
         setProjectTags(loadedProjectTags);
     }
 };
