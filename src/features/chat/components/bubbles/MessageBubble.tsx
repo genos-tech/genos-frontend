@@ -31,6 +31,7 @@ import { ReactionProps } from "../../../../types/common";
 import { TaskCommentProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
 import { isRealTaskId } from "../../../tasks/utils/taskPreviewPaneVisibility";
+import { useHostingDialog } from "../../hooks/useHostingDialog";
 import { loadV3SpecificThreadMessages } from "../../services/loadV3SpecificThreadMessages";
 import { TaskMessageCard } from "../../taskCards/TaskMessageCard";
 import { askMessageProps } from "../../utils/messageSelection";
@@ -115,7 +116,14 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     // latter should hide the slot.
     const hideAvatarSlot = chat.chatType === 3 || (chat.chatType === 4 && isSystemUser);
 
+    // Inside the link-preview dialog nothing may move the page behind (MIP-2580).
+    const hostingDialog = useHostingDialog();
+
     const handleOpenTaskClick = () => {
+        if (hostingDialog) {
+            hostingDialog.openTask(message.project?.projectId, message.taskId);
+            return;
+        }
         if (message.taskId !== null) {
             useCM.setIsMainChatVisible(true);
             useCM.setIsThreadVisible(false);
@@ -151,7 +159,8 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         }
 
         const typePath = CHAT_TYPE_PATH[chat.chatType];
-        if (typePath) {
+        // In the dialog there is no message URL to go to: the page stays.
+        if (typePath && !hostingDialog) {
             // For PM (chatType 3), use taskId instead of messageId to match the indexMap key format
             // The indexMap for PM uses messageIdWithChatId = `${chatId}-${taskId}`
             const messageIdentifier =
@@ -172,6 +181,15 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
     const replayHandler = (e?: React.MouseEvent) => {
         // Stop propagation to prevent handleMessageClick from being called
         e?.stopPropagation();
+
+        if (hostingDialog) {
+            const root = message.alsoSentFrom?.threadRootId ?? message.messageIdWithChatId;
+            const typePath = CHAT_TYPE_PATH[chat.chatType];
+            if (root && typePath) {
+                hostingDialog.openThread(typePath, String(chat.chatId), root);
+            }
+            return;
+        }
 
         // (The legacy `loadSpecificTaskByThreadId(message.messageId)`
         // pre-load is gone: it queried with the parent's SEQ where the
@@ -593,6 +611,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
                               // the task, because on the chat page a selection
                               // alone never opens it. A real task only.
                               if (isRealTaskId(message.taskId)) {
+                                  if (hostingDialog) {
+                                      handleOpenTaskClick();
+                                      return;
+                                  }
                                   useCM.setIsMainChatVisible(true);
                                   useCM.setIsThreadVisible(false);
                                   useTM.setIsCreatingTask((prev) => ({
