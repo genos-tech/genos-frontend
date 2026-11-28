@@ -63,7 +63,7 @@ import {
     type UseAgentQAArgs,
     type UseAgentQAReturn,
 } from "./types";
-import { mergeUndoSteps, type UndoRequest } from "./undoSteps";
+import { undoStepsFromToolEvents, type UndoRequest } from "./undoSteps";
 import { runUndo } from "./undoStore";
 
 // An edit patch worth sending: a plain `{path: value}` object with at least one
@@ -89,7 +89,14 @@ const appendTurn = (turns: CompletedTurn[], turn: CompletedTurn): CompletedTurn[
 const snapshotTurn = (ask: AskState): CompletedTurn => {
     // The turn's undoable writes, kept as data of their own: Spotlight persists
     // turns without their tool events, and the list has to outlive that.
-    const undo = [...mergeUndoSteps(ask.toolEvents, ask.carriedUndo, ask.runId)];
+    // Oldest first, as the tool events are: what a restored card carried comes before them.
+    const carried = ask.carriedUndo ?? [];
+    const undo = [
+        ...carried,
+        ...undoStepsFromToolEvents(ask.toolEvents, ask.runId).filter(
+            (ref) => !carried.some((known) => known.stepId === ref.stepId)
+        ),
+    ];
     return {
         id: ask.turnId,
         askedQuery: ask.askedQuery,

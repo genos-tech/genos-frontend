@@ -27,7 +27,10 @@ export const sessionTurnToCompleted = (turn: AgentSessionTurn, index: number): C
     // The only record of this turn's approved writes: it has no tool events.
     const undo = undoStepsFromSession(turn);
     const unanswered = unansweredReason(turn);
-    const dropped = asDroppedReferences(turn.dropped_references);
+    // Only a turn with a card carries them (MIP-2627).
+    const dropped = turn.dropped_references
+        ? asDroppedReferences(turn.dropped_references)
+        : undefined;
     return {
         id: index + 1,
         askedQuery: turn.query,
