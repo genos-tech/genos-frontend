@@ -126,12 +126,10 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
     const uploadingRef = useRef(new Set<string>());
 
     const sendUpdatedTask = useCallback(
-        // `syncCard` = "this is a metadata save; rebuild the PM task-card +
-        // broadcast." Passed true only by the metadata-save effect in
+        // `metadataSave` is true only from the metadata-save effect in
         // TaskPreview; body autosaves / switch-persist / close saves leave it
-        // false so the card isn't rewritten with identical content. See the
-        // `syncCard` note in `sendUpdatedSpecificTask`.
-        async (taskSwitched: boolean, syncCard: boolean = false) => {
+        // false (see `sendUpdatedSpecificTask`).
+        async (taskSwitched: boolean, metadataSave: boolean = false) => {
             flushBody?.();
             const startedAt = Date.now();
             const baseTaskContent: TaskProps = {
@@ -228,7 +226,7 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                     socket,
                     myself,
                     baseTaskContent,
-                    syncCard,
+                    metadataSave,
                     accessToken,
                     undefined,
                     {

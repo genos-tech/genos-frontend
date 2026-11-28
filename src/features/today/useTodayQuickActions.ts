@@ -4,12 +4,11 @@ import { useAuth } from "../../context/authState";
 import { runUndoable, useUndoHidden } from "../../hooks/common/useUndoableAction";
 import type { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../i18n";
-import { UserProps } from "../../types/admin";
 import { TaskTableProps } from "../../types/tasks";
 import { parseCalendarDate } from "../../utils/calendarDate";
 import { patchTaskFields } from "../tasks/diagram/services/patchTaskFields";
 import { STATUS_CLOSED } from "../tasks/meta/taskStatuses";
-import { afterTaskDeleted, syncDeletedTaskCard } from "../tasks/services/deleteTaskCommit";
+import { afterTaskDeleted } from "../tasks/services/deleteTaskCommit";
 import { statuses } from "../tasks/utils/taskMeta";
 import type { BriefingTask, BriefingToday } from "./briefingToday";
 import { applyTodayAction, nextWorkingDay, TodayAction } from "./todayActions";
@@ -115,18 +114,17 @@ const dayWords = (iso: string | null, locale: string): string => {
 
 type Deps = {
     useTM: TaskManagementState;
-    myself: UserProps;
     /** The member's today, for "tomorrow". */
     localDate: string | undefined;
     /** The loaded briefing (not the one with actions applied): what a committed action is tied to. */
     data: BriefingToday | null;
 };
 
-export const useTodayQuickActions = ({ useTM, myself, localDate, data }: Deps) => {
+export const useTodayQuickActions = ({ useTM, localDate, data }: Deps) => {
     const { accessToken } = useAuth();
     const { t, locale } = useTranslation();
-    const latest = useRef({ useTM, myself, accessToken, t, locale, localDate, data });
-    latest.current = { useTM, myself, accessToken, t, locale, localDate, data };
+    const latest = useRef({ useTM, accessToken, t, locale, localDate, data });
+    latest.current = { useTM, accessToken, t, locale, localDate, data };
 
     return useCallback((task: BriefingTask, action: TodayAction) => {
         const { t, locale, localDate } = latest.current;
@@ -137,7 +135,6 @@ export const useTodayQuickActions = ({ useTM, myself, localDate, data }: Deps) =
         // Never pull a deadline earlier: "tomorrow" is for what is due today or already late.
         if (action === "tomorrow" && (task.daysUntilDue == null || task.daysUntilDue > 0)) return;
         const id = task.taskId;
-        const projectId = task.projectId;
         const key = keyOf(id);
         const label = `${task.displayId} ${task.title}`;
         // One action per task (a double click, or "done" then "tomorrow" on its second row):
@@ -165,7 +162,7 @@ export const useTodayQuickActions = ({ useTM, myself, localDate, data }: Deps) =
             },
             commit: async () => {
                 // Read now, not at the click: the token can be refreshed in the window.
-                const { useTM, myself, accessToken } = latest.current;
+                const { useTM, accessToken } = latest.current;
                 if (action === "done") await putDone(id, accessToken);
                 else await putDue(id, due as string, accessToken);
                 // The row the table reads, the cache it reloads from, every open view.
@@ -189,7 +186,6 @@ export const useTodayQuickActions = ({ useTM, myself, localDate, data }: Deps) =
                     });
                 }
                 afterTaskDeleted(id, source ? { ...source, ...patch } : null);
-                void syncDeletedTaskCard(myself, projectId, id, accessToken);
             },
             onExit: () => {
                 const { accessToken } = latest.current;

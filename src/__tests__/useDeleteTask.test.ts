@@ -19,7 +19,6 @@ import { TaskTableProps } from "../types/tasks";
 
 const put = vi.fn();
 const addTask = vi.fn(async (_request: unknown) => null);
-const updateTaskCard = vi.fn(async () => undefined);
 const invalidateCachedFullTask = vi.fn(async (_id: number) => undefined);
 
 const auth = vi.hoisted(() => ({ token: "tok" }));
@@ -33,9 +32,7 @@ vi.mock("../db/services/task-full.service", () => ({
     cacheFullTask: vi.fn(),
     getCachedFullTask: vi.fn(async () => undefined),
 }));
-vi.mock("../services/channel/channelService", () => ({
-    channelService: { updateTaskCard: (...a: unknown[]) => updateTaskCard(...(a as [])) },
-}));
+vi.mock("../services/channel/channelService", () => ({}));
 vi.mock("../features/tasks/services/loadSpecificTask", () => ({
     loadSpecificTask: vi.fn(async () => [
         {
@@ -79,7 +76,7 @@ const flush = () =>
 const setup = async (rows = [row(1), row(2)], useSM?: unknown) => {
     const view = renderHook(() => {
         const useTM = useTaskManagement(myself, "tok");
-        const deleteTask = useDeleteTask({ useTM, useSM: useSM as never, myself });
+        const deleteTask = useDeleteTask({ useTM, useSM: useSM as never });
         return { useTM, deleteTask };
     });
     act(() => view.result.current.useTM.setAllTasks(rows));
@@ -112,7 +109,6 @@ describe("useDeleteTask", () => {
         expect(statusOf(view, "2")).toBe("Open");
         await flush();
         expect(put).not.toHaveBeenCalled();
-        expect(updateTaskCard).not.toHaveBeenCalled();
     });
 
     it("Undo sends nothing and puts the task back", async () => {
@@ -141,7 +137,7 @@ describe("useDeleteTask", () => {
         });
     });
 
-    it("the committed state reaches the raw row, the IDB row and the PM card, and the task stays deleted", async () => {
+    it("the committed state reaches the raw row and the IDB row, and the task stays deleted", async () => {
         const view = await setup();
         act(() => view.result.current.deleteTask(target));
         await act(async () => {
@@ -153,13 +149,6 @@ describe("useDeleteTask", () => {
             expect.objectContaining({ id: "1", status: "Deleted" })
         );
         expect(invalidateCachedFullTask).toHaveBeenCalledWith(1);
-        // The card is rebuilt from the server's copy, which already says Deleted.
-        expect(updateTaskCard).toHaveBeenCalledWith(
-            1,
-            expect.any(Array),
-            "Task 1",
-            expect.objectContaining({ taskId: 1, taskStatus: "Deleted" })
-        );
     });
 
     it("after the commit the task can be brought back from the status picker (not overlaid again)", async () => {
