@@ -22,6 +22,9 @@ const server = await createServer({
     logLevel: "error",
     server: { middlewareMode: true, hmr: false, watch: null },
     appType: "custom",
+    // Nothing runs in a browser here, so there is nothing to pre-bundle. Left on, the scan is
+    // still running when the server closes and prints a stack trace on a successful run.
+    optimizeDeps: { noDiscovery: true, include: [] },
 });
 
 let failed = false;
