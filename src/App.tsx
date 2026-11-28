@@ -1409,8 +1409,11 @@ const AppBody = () => {
         selfNotificationsPaused: useNotif.isPausedNow,
     });
     const urlLinkModalContextValue = useMemo(
-        () => ({ openModalByHref: urlLinkModal.openModalByHref }),
-        [urlLinkModal.openModalByHref]
+        () => ({
+            openModalByHref: urlLinkModal.openModalByHref,
+            openTodoList: urlLinkModal.openTodoList,
+        }),
+        [urlLinkModal.openModalByHref, urlLinkModal.openTodoList]
     );
 
     // if (isTooSmall) {

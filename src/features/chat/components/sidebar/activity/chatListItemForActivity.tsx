@@ -19,6 +19,7 @@ import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { NavItem } from "../../../../../components/ui/nav/NavItem";
 import { useAuth } from "../../../../../context/authState";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
+import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
 import { TeamManagementState } from "../../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../../hooks/common/useUIStateManagement";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
@@ -52,6 +53,11 @@ import {
 } from "../../../services/loadV3SpecificThreadMessages";
 import { AggregatedActivityMessage } from "../../../utils/activityAggregation";
 import { resolveV3ThreadRootUuid } from "../../../utils/channelIdResolvers";
+import {
+    isViaAiCard,
+    noteModalHref,
+    viaActivityModalHref,
+} from "../../../utils/viaActivityModalHref";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
 import { hasButtonAvatar } from "./hasButtonAvatar";
@@ -139,6 +145,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     const { accessToken } = useAuth();
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const modal = useUrlLinkModal();
     // Set when a mentioned note turns out to be inaccessible — opens the
     // request-access panel in place of dead-ending on the generic
     // permission toast.
@@ -602,10 +609,20 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     // for task / chat notes. A 403 from the fetch means the user was
     // mentioned but no longer has access — surface a console warning
     // and bail (matching chat-mention behaviour on revoked access).
-    const handleNoteActivity = async () => {
-        if (!useNM || !noteTypeForActivity) return;
+    // Which sidebar section a personal note (backend type 1) belongs to: it may be a TEAM or
+    // SHARED note, and the meta lists tell.
+    const noteBucket = (noteId: number): "my" | "shared" | "team" =>
+        useNM?.teamNoteMeta.some((n) => n.noteId === noteId)
+            ? "team"
+            : useNM?.sharedNoteMeta.some((n) => n.noteId === noteId)
+              ? "shared"
+              : "my";
+
+    // The mentioned note, or null once the reason it cannot open has been shown.
+    const loadMentionedNote = async (noteType: 1 | 2 | 3) => {
+        if (!useNM) return null;
         const noteId = activity.chatId;
-        const fetched = await loadSpecificNote(myself, noteTypeForActivity, noteId, accessToken);
+        const fetched = await loadSpecificNote(myself, noteType, noteId, accessToken);
         // A 403 means the user was mentioned in a note they can't open.
         // Bailing silently left them with only the generic "You don't
         // have permission to do that" toast and no way forward — so
@@ -614,36 +631,37 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         // panel needs; the failed fetch would only have supplied
         // deep-link coordinates we don't require here.
         if (fetched?.error === "forbidden") {
-            setDeniedNote({ noteId, noteType: noteTypeForActivity });
-            return;
+            setDeniedNote({ noteId, noteType });
+            return null;
         }
         // A 404: the note was deleted, so its mention rows are dead ends. Drop them from the feed
         // and IndexedDB instead of leaving a row that does nothing when clicked (MIP-1457). The
         // server keeps them, so this is the check that catches rows from before this session.
         if (fetched?.error === "not_found") {
             useCM.setActivityMessages(
-                withoutNoteActivities(useCM.activityMessages, noteTypeForActivity, [noteId])
+                withoutNoteActivities(useCM.activityMessages, noteType, [noteId])
             );
-            forgetNoteActivities(noteTypeForActivity, [noteId]);
+            forgetNoteActivities(noteType, [noteId]);
             toast.neutral(t.notes.placeholder.noteNotFoundTitle);
-            return;
+            return null;
         }
         // Any other non-note result (undefined = load failure) still
         // bails — the 403 marker is truthy, hence the check above.
         if (!fetched || fetched.error) {
-            return;
+            return null;
         }
+        return fetched;
+    };
+
+    const handleNoteActivity = async () => {
+        if (!useNM || !noteTypeForActivity) return;
+        const noteId = activity.chatId;
+        const fetched = await loadMentionedNote(noteTypeForActivity);
+        if (!fetched) return;
         if (noteTypeForActivity === 1) {
-            // The activity only knows backend type 1, but the note may
-            // be a TEAM or SHARED note — route to its real section when
-            // the meta lists can tell, so the header and sidebar land
-            // right immediately instead of waiting for the tab-bucket
-            // healing pass.
-            const bucket = useNM.teamNoteMeta.some((n) => n.noteId === noteId)
-                ? "team"
-                : useNM.sharedNoteMeta.some((n) => n.noteId === noteId)
-                  ? "shared"
-                  : "my";
+            // Route to the note's real section, so the header and sidebar land right
+            // immediately instead of waiting for the tab-bucket healing pass.
+            const bucket = noteBucket(noteId);
             useNM.setCurrentNoteType(bucket === "team" ? 8 : bucket === "shared" ? 4 : 1);
             useNM.setCurrentMyNote(fetched as MyNoteProps);
             navigate(`/workspace/notes/${bucket}/${noteId}`);
@@ -679,7 +697,39 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         }
     };
 
+    // MIP-1755: a card for a change made through an AI app opens what it names in the chat's
+    // preview modal, the URL staying on the chat. False when the modal cannot show it.
+    const openViaModal = async (): Promise<boolean> => {
+        if (!modal) return false;
+        if (!noteTypeForActivity) {
+            const href = viaActivityModalHref(activity, useCM.allChats);
+            if (!href) return false;
+            modal.openModalByHref(href, { fullPageHref: href });
+            return true;
+        }
+        if (!useNM) return false;
+        const fetched = await loadMentionedNote(noteTypeForActivity);
+        if (!fetched) return true;
+        const href = noteModalHref(
+            noteTypeForActivity,
+            activity.chatId,
+            fetched,
+            noteBucket(activity.chatId)
+        );
+        if (!href) return false;
+        modal.openModalByHref(href, { fullPageHref: href });
+        return true;
+    };
+
     const onClickHandler = async () => {
+        if (isViaAiCard(activity) && modal) {
+            setSelectedActivityId(activity.activityId);
+            if (await openViaModal()) {
+                if (activity.isRead === false) updateActivityReadStatus();
+                return;
+            }
+        }
+
         // set to true to not move chat pane type
         useCM.setNotMoveChatPaneType(true);
 
