@@ -26,6 +26,7 @@ import { prefetchTaskCards } from "../../taskCards/taskCardStore";
 import { computeMessageItemMetas } from "../../utils/messageItemMetas";
 import { MessageBubble } from "../bubbles/MessageBubble";
 import { RuleMoveNoticeRow } from "../bubbles/RuleMoveNoticeRow";
+import { TaskClosedNoticeRow } from "../bubbles/TaskClosedNoticeRow";
 import { ThreadMessageBubble } from "../bubbles/ThreadMessageBubble";
 import { ChatHistoryLoadFailed } from "./ChatHistoryLoadFailed";
 import { ChatLiveAnnouncer } from "./ChatLiveAnnouncer";
@@ -416,6 +417,9 @@ export const MessageListRenderer = ({
             const isFocused = resolveFocusedState(message);
             const meta = itemMetas[index];
             const ruleMove = isThread ? undefined : (message as MessageProps).ruleMove;
+            const closedTaskId = isThread
+                ? (message as ThreadMessageProps).closedTaskId
+                : undefined;
             const dateSeparator = meta.showDateSeparator ? (
                 <div style={{ padding: "0.5rem 0" }}>
                     <div style={{ textAlign: "center", fontWeight: 300 }}>
@@ -454,6 +458,8 @@ export const MessageListRenderer = ({
                     {dateSeparator}
                     {ruleMove ? (
                         <RuleMoveNoticeRow notice={ruleMove} />
+                    ) : closedTaskId ? (
+                        <TaskClosedNoticeRow displayId={closedTaskId} />
                     ) : (
                         <Stack
                             direction="row"

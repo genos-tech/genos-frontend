@@ -1167,6 +1167,8 @@ export const zh: DeepPartial<Messages> = {
             listLabel: "消息",
             threadListLabel: "主题回复",
         },
+        // The line a closed task leaves in the thread it was made from (MIP-2553).
+        taskClosedNotice: "任务 {task} 现在为“{status}”。",
         ruleMoveNotice: {
             line: "规则“{rule}”已将{task}移至{project}。",
             aTask: "一个任务",
@@ -6830,6 +6832,7 @@ export const zh: DeepPartial<Messages> = {
             cNotSet: "{field}为空",
             aMove: "移动到 {project}",
             aMoveHidden: "移动到你未加入的项目",
+            aMoveGone: "移动到已删除的项目",
             aStatus: "将状态设为 {status}",
             aAssign: "分配给 {person}",
             aTag: "添加标签 {tag}",
@@ -6927,6 +6930,7 @@ export const zh: DeepPartial<Messages> = {
             stSkipped: "已跳过",
             reason: {
                 destination_not_found: "目标项目不存在,或你不是其成员。",
+                destination_gone: "目标项目已被删除。",
                 destination_archived: "目标项目已归档。",
                 same_project: "目标必须是另一个项目。",
                 private_to_public: "此项目是私有的,其任务不能移动到公开项目。",
@@ -7629,6 +7633,7 @@ export const zh: DeepPartial<Messages> = {
                     customField: "{by} 更改了{name}",
                     customFieldGeneric: "{by} 更改了自定义字段",
                     fieldChanged: "{by} 更改了{field}：{old} → {new}",
+                    fieldEdited: "{by} 更改了{field}",
                     noteEdited: "{by} 编辑了笔记",
                     noteRestored: "{by} 恢复了早期版本",
                     fields: {

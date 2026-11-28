@@ -90,6 +90,20 @@ function ruleMoveField(m: Pick<Message, "metadata" | "sender">): { ruleMove?: Ru
 }
 
 /**
+ * "Task PRJ-12 is now Closed." in the thread the task was made from (MIP-1283). The API stores
+ * it in English (the agent reads it), so the thread draws its own line. Only a message with NO
+ * sender is one: a member's own message has one. Without the display id the stored text stays.
+ */
+function closedTaskField(m: Pick<Message, "metadata" | "sender">): { closedTaskId?: string } {
+    const meta = (m.metadata ?? {}) as Record<string, unknown>;
+    const { closedTaskDisplayId, systemNotice } = meta;
+    if (m.sender || systemNotice !== "task_closed") return {};
+    return typeof closedTaskDisplayId === "string" && closedTaskDisplayId
+        ? { closedTaskId: closedTaskDisplayId }
+        : {};
+}
+
+/**
  * Normalize a v3 Message body for the legacy renderer. A stored body ends with
  * a blank paragraph, which `BnChatPreview` drops (only when blank, since
  * MIP-1039). Defensive coercion + tail pad so a malformed body (a string, an
@@ -853,6 +867,7 @@ export function v3ThreadMessageToLegacy(args: {
         attachment: v3AttachmentToLegacy(m.attachments),
         ...viaAppField(m),
         ...(m.alsoInChannel ? { alsoInChannel: true } : {}),
+        ...closedTaskField(m),
     };
 }
 

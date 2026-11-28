@@ -1,5 +1,7 @@
 export const chat = {
     // The line a project rule leaves in the old project's chat (MIP-2500).
+    // The line a closed task leaves in the thread it was made from (MIP-2553).
+    taskClosedNotice: "Task {task} is now {status}.",
     ruleMoveNotice: {
         line: "Rule “{rule}” moved {task} to {project}.",
         aTask: "a task",

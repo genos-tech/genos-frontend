@@ -15,7 +15,7 @@ import { useCoveredOverlay } from "./overlayStack";
  * theme, a coloured glow, radius 12 / 16 / xl, each with its own shadow.
  * This is the flat version the design system settled on: a solid raised
  * surface, one thin neutral border, `radius.lg`, `shadow.lg`, and nothing
- * else. Only the backdrop blurs.
+ * else. Only what is behind the dialog blurs, once.
  *
  * Layout: header (icon, title, description, close) / scrolling body /
  * footer actions. Only the body scrolls, so the actions never leave the
@@ -243,8 +243,9 @@ export const ModalFrame = ({
                 backdrop: {
                     sx: {
                         backgroundColor: g.scrim,
-                        // Joy's backdrop blurs by default.
-                        ...(covered && { backdropFilter: "none" }),
+                        // Joy's backdrop blurs by default (8px): off, or the page is blurred
+                        // twice on every frame (MIP-2563). The one blur is the root's.
+                        backdropFilter: "none",
                     },
                 },
             }}

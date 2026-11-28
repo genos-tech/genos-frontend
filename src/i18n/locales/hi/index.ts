@@ -2665,6 +2665,8 @@ export const hi: DeepPartial<Messages> = {
             listLabel: "संदेश",
             threadListLabel: "थ्रेड के जवाब",
         },
+        // The line a closed task leaves in the thread it was made from (MIP-2553).
+        taskClosedNotice: "टास्क {task} अब {status} है।",
         ruleMoveNotice: {
             line: "नियम “{rule}” ने {task} को {project} में ले जाया।",
             aTask: "एक टास्क",
@@ -4089,6 +4091,7 @@ export const hi: DeepPartial<Messages> = {
             cNotSet: "{field} खाली है",
             aMove: "{project} में ले जाएँ",
             aMoveHidden: "ऐसे प्रोजेक्ट में ले जाएँ जिसमें आप नहीं हैं",
+            aMoveGone: "हटाए गए प्रोजेक्ट में ले जाएँ",
             aStatus: "स्थिति {status} करें",
             aAssign: "{person} को सौंपें",
             aTag: "टैग {tag} जोड़ें",
@@ -4189,6 +4192,7 @@ export const hi: DeepPartial<Messages> = {
             reason: {
                 destination_not_found:
                     "गंतव्य प्रोजेक्ट मौजूद नहीं है, या आप उसके सदस्य नहीं हैं।",
+                destination_gone: "गंतव्य प्रोजेक्ट हटा दिया गया है।",
                 destination_archived: "गंतव्य प्रोजेक्ट संग्रहीत है।",
                 same_project: "गंतव्य कोई दूसरा प्रोजेक्ट होना चाहिए।",
                 private_to_public:
@@ -4916,6 +4920,7 @@ export const hi: DeepPartial<Messages> = {
                     customField: "{by} ने {name} बदला",
                     customFieldGeneric: "{by} ने एक कस्टम फ़ील्ड बदला",
                     fieldChanged: "{by} ने {field} बदला: {old} → {new}",
+                    fieldEdited: "{by} ने {field} बदला",
                     noteEdited: "{by} ने नोट संपादित किया",
                     noteRestored: "{by} ने पिछला संस्करण बहाल किया",
                     fields: {

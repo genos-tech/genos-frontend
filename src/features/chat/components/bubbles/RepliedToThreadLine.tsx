@@ -18,7 +18,7 @@ const PREVIEW_SLOT = "\u0000";
 /**
  * The line above a main-chat message that is really a thread reply also sent to the chat
  * (MIP-2486): "Replied to a thread: <first line of the thread>", a button that opens it.
- * It reads as a link at rest (thread icon and link colour): a phone has no hover.
+ * It reads as a link at rest (thread icon and accent colour): a phone has no hover.
  * Clicks stop here, so they do not also select the message or add it to the to-do list.
  */
 export const RepliedToThreadLine = ({ preview, onOpen }: RepliedToThreadLineProps) => {
@@ -58,7 +58,7 @@ export const RepliedToThreadLine = ({ preview, onOpen }: RepliedToThreadLineProp
             }}
         >
             {/* The icon of the thread pane's "Thread" chip. */}
-            <ReplyRoundedIcon aria-hidden sx={{ fontSize: "1.2em", flexShrink: 0 }} />
+            <ReplyRoundedIcon sx={{ fontSize: "1.2em", flexShrink: 0 }} aria-hidden />
             <Box
                 component="span"
                 sx={{

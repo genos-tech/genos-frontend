@@ -1246,6 +1246,8 @@ export const fr: DeepPartial<Messages> = {
             listLabel: "Messages",
             threadListLabel: "Réponses du fil",
         },
+        // The line a closed task leaves in the thread it was made from (MIP-2553).
+        taskClosedNotice: "La tâche {task} est maintenant « {status} ».",
         ruleMoveNotice: {
             line: "La règle « {rule} » a déplacé {task} vers {project}.",
             aTask: "une tâche",
@@ -7231,6 +7233,7 @@ export const fr: DeepPartial<Messages> = {
             cNotSet: "{field} est vide",
             aMove: "déplacer vers {project}",
             aMoveHidden: "déplacer vers un projet dont vous n’êtes pas membre",
+            aMoveGone: "déplacer vers un projet supprimé",
             aStatus: "définir le statut sur {status}",
             aAssign: "attribuer à {person}",
             aTag: "ajouter l’étiquette {tag}",
@@ -7332,6 +7335,7 @@ export const fr: DeepPartial<Messages> = {
             reason: {
                 destination_not_found:
                     "le projet de destination n’existe plus, ou vous n’en êtes pas membre.",
+                destination_gone: "le projet de destination a été supprimé.",
                 destination_archived: "le projet de destination est archivé.",
                 same_project: "la destination doit être un autre projet.",
                 private_to_public:
@@ -8073,6 +8077,7 @@ export const fr: DeepPartial<Messages> = {
                     customField: "{by} a modifié {name}",
                     customFieldGeneric: "{by} a modifié un champ personnalisé",
                     fieldChanged: "{by} a modifié {field} : {old} → {new}",
+                    fieldEdited: "{by} a modifié {field}",
                     noteEdited: "{by} a modifié la note",
                     noteRestored: "{by} a restauré une version antérieure",
                     fields: {

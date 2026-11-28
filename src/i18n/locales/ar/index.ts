@@ -2633,6 +2633,8 @@ export const ar: DeepPartial<Messages> = {
             listLabel: "الرسائل",
             threadListLabel: "ردود المحادثة الفرعية",
         },
+        // The line a closed task leaves in the thread it was made from (MIP-2553).
+        taskClosedNotice: "أصبحت حالة المهمة {task} الآن «{status}».",
         ruleMoveNotice: {
             line: "نقلت القاعدة «{rule}» {task} إلى {project}.",
             aTask: "مهمة",
@@ -4352,6 +4354,7 @@ export const ar: DeepPartial<Messages> = {
                     customField: "غيّر {by} {name}",
                     customFieldGeneric: "غيّر {by} حقلًا مخصصًا",
                     fieldChanged: "غيّر {by} {field}: {old} ← {new}",
+                    fieldEdited: "غيّر {by} {field}",
                     noteEdited: "عدّل {by} الملاحظة",
                     noteRestored: "استعاد {by} إصدارًا سابقًا",
                     fields: {
@@ -4750,6 +4753,7 @@ export const ar: DeepPartial<Messages> = {
             cNotSet: "{field} فارغ",
             aMove: "انقل إلى {project}",
             aMoveHidden: "انقل إلى مشروع لست عضوًا فيه",
+            aMoveGone: "انقل إلى مشروع محذوف",
             aStatus: "اجعل الحالة {status}",
             aAssign: "أسندها إلى {person}",
             aTag: "أضف الوسم {tag}",
@@ -4848,6 +4852,7 @@ export const ar: DeepPartial<Messages> = {
             stSkipped: "متخطاة",
             reason: {
                 destination_not_found: "مشروع الوجهة غير موجود، أو لست عضوًا فيه.",
+                destination_gone: "حُذف مشروع الوجهة.",
                 destination_archived: "مشروع الوجهة مؤرشف.",
                 same_project: "يجب أن تكون الوجهة مشروعًا آخر.",
                 private_to_public: "هذا المشروع خاص، لذا لا يمكن نقل مهامه إلى مشروع عام.",
