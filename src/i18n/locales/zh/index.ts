@@ -6790,7 +6790,8 @@ export const zh: DeepPartial<Messages> = {
             countsAsNew: "视为",
             countsAsHint: "“视为”决定筛选、逾期、进度和自动化如何处理该状态。",
             countsAsInUse:
-                "{count, plural, other {有 # 个任务使用此状态。请先将它们移到其他状态，再更改“视为”。}}",
+                "{count, plural, other {有 # 个任务或里程碑使用此状态。请先将它们移到其他状态，再更改“视为”。}}",
+            countsAsChanged: "“{name}”现在视为{category}。",
             countsAsInRules: "有自动化规则使用此状态。请先修改规则。",
             addStatus: "添加状态",
         },

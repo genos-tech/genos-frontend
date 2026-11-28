@@ -761,7 +761,8 @@ export const tasks = {
         countsAsHint:
             "“Counts as” tells filters, overdue, progress and automations how to treat a status.",
         countsAsInUse:
-            "{count, plural, one {# task uses this status. Move it to another status to change what it counts as.} other {# tasks use this status. Move them to another status to change what it counts as.}}",
+            "{count, plural, one {# task or milestone uses this status. Move it to another status to change what it counts as.} other {# tasks or milestones use this status. Move them to another status to change what it counts as.}}",
+        countsAsChanged: "{name} now counts as {category}.",
         countsAsInRules: "An automation rule uses this status. Change the rule first.",
         addStatus: "Add status",
     },

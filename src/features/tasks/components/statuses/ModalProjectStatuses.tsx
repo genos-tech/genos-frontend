@@ -266,7 +266,7 @@ const AddStatusForm = ({
                 // The dialog must not close with it; an open list closes alone.
                 e.preventDefault();
                 e.stopPropagation();
-                if (!listWasOpen.current) onCancel();
+                if (!listWasOpen.current && !saving) onCancel();
             }}
             onKeyDownCapture={(e: KeyboardEvent<HTMLFormElement>) => {
                 const target = e.target as HTMLElement;
@@ -314,6 +314,7 @@ const AddStatusForm = ({
             <Box sx={{ display: "flex", gap: 1, marginInlineStart: "auto" }}>
                 <Button
                     color="neutral"
+                    disabled={saving}
                     size="sm"
                     sx={touchSx}
                     type="button"
@@ -484,6 +485,19 @@ export const ModalProjectStatuses = ({
             updateProjectStatus(projectId, row.statusId, change, accessToken)
         );
 
+    const recount = async (row: ProjectStatusDef, category: string) => {
+        const result = await patch(row, { category });
+        focusLater(`[data-status-id="${row.statusId}"] [role="combobox"]`);
+        if (result.ok) {
+            setAnnouncement(
+                fmt(words.countsAsChanged, {
+                    name: nameOf(row),
+                    category: categoryName(category),
+                })
+            );
+        }
+    };
+
     const menuFor = (row: ProjectStatusDef, index: number): MoreMenuItem[] => [
         {
             id: "rename",
@@ -557,8 +571,9 @@ export const ModalProjectStatuses = ({
                     sx={{ ...rowSx, "&:not(:first-of-type)": undefined }}
                     onKeyDown={(e: KeyboardEvent<HTMLDivElement>) => {
                         if (!e.altKey || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
-                        // In the name field the arrows are the field's.
-                        if ((e.target as HTMLElement).tagName === "INPUT") return;
+                        // In the name field and the "Counts as" select the arrows are theirs.
+                        const target = e.target as HTMLElement;
+                        if (target.closest('input, [role="combobox"], [role="listbox"]')) return;
                         e.preventDefault();
                         void move(row, e.key === "ArrowUp" ? -1 : 1);
                     }}
@@ -624,7 +639,7 @@ export const ModalProjectStatuses = ({
                                 value={row.category}
                                 zIndex={layer + 10}
                                 plain
-                                onChange={(category) => void patch(row, { category })}
+                                onChange={(category) => void recount(row, category)}
                             />
                         )}
                     </Box>

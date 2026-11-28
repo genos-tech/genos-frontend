@@ -7186,7 +7186,8 @@ export const fr: DeepPartial<Messages> = {
             countsAsHint:
                 "« Compte comme » indique comment les filtres, les retards, l’avancement et les automatisations traitent un statut.",
             countsAsInUse:
-                "{count, plural, one {# tâche utilise ce statut. Déplacez-la vers un autre statut pour changer comment il compte.} other {# tâches utilisent ce statut. Déplacez-les vers un autre statut pour changer comment il compte.}}",
+                "{count, plural, one {# tâche ou jalon utilise ce statut. Déplacez-le vers un autre statut pour changer comment il compte.} other {# tâches ou jalons utilisent ce statut. Déplacez-les vers un autre statut pour changer comment il compte.}}",
+            countsAsChanged: "{name} compte désormais comme {category}.",
             countsAsInRules:
                 "Une règle d’automatisation utilise ce statut. Modifiez d’abord la règle.",
             addStatus: "Ajouter un statut",

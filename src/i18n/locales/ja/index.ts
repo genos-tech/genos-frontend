@@ -7058,7 +7058,8 @@ export const ja: DeepPartial<Messages> = {
             countsAsHint:
                 "「扱い」は、フィルタ・期限超過・進捗・自動化がステータスをどう扱うかを決めます。",
             countsAsInUse:
-                "{count, plural, other {#件のタスクがこのステータスを使っています。扱いを変えるには、先に別のステータスへ移してください。}}",
+                "{count, plural, other {#件のタスクまたはマイルストーンがこのステータスを使っています。扱いを変えるには、先に別のステータスへ移してください。}}",
+            countsAsChanged: "「{name}」の扱いを{category}に変更しました。",
             countsAsInRules:
                 "このステータスは自動化ルールで使われています。先にルールを変更してください。",
             addStatus: "ステータスを追加",

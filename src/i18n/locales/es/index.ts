@@ -4788,7 +4788,8 @@ export const es: DeepPartial<Messages> = {
             countsAsHint:
                 "«Cuenta como» indica cómo tratan un estado los filtros, los atrasos, el progreso y las automatizaciones.",
             countsAsInUse:
-                "{count, plural, one {# tarea usa este estado. Muévela a otro estado para cambiar cómo cuenta.} other {# tareas usan este estado. Muévelas a otro estado para cambiar cómo cuenta.}}",
+                "{count, plural, one {# tarea o hito usa este estado. Muévelo a otro estado para cambiar cómo cuenta.} other {# tareas o hitos usan este estado. Muévelos a otro estado para cambiar cómo cuenta.}}",
+            countsAsChanged: "{name} ahora cuenta como {category}.",
             countsAsInRules:
                 "Una regla de automatización usa este estado. Cambia primero la regla.",
             addStatus: "Añadir estado",

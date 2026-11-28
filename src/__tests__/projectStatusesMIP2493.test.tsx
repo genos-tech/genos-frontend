@@ -266,6 +266,35 @@ describe("the editor", () => {
         await vi.waitFor(() =>
             expect(update).toHaveBeenCalledWith(7, 4, { category: "Closed" }, "t")
         );
-        expect(await screen.findByText(/2 tasks use this status/)).toBeTruthy();
+        expect(await screen.findByText(/2 tasks or milestones use this status/)).toBeTruthy();
+    });
+
+    it("leaves Alt+arrows on the select to the select, and says what changed", async () => {
+        setProjectStatuses(7, { statuses: ROWS, canManage: true });
+        update.mockResolvedValue({ ok: true, data: { statuses: ROWS, canManage: true } });
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
+        const select = screen.getByRole("combobox", { name: "What Code review counts as" });
+        reorder.mockResolvedValue({ ok: true, data: { statuses: ROWS, canManage: true } });
+        fireEvent.keyDown(select, { key: "ArrowDown", altKey: true });
+        expect(reorder).not.toHaveBeenCalled();
+        if (select.getAttribute("aria-expanded") !== "true") fireEvent.click(select);
+        fireEvent.click(screen.getByRole("option", { name: "Closed" }));
+        expect(await screen.findByText("Code review now counts as Closed.")).toBeTruthy();
+    });
+
+    it("cannot cancel an add that is being saved", async () => {
+        setProjectStatuses(7, { statuses: ROWS, canManage: true });
+        create.mockReturnValue(new Promise(() => undefined));
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
+        fireEvent.click(screen.getByRole("button", { name: en.tasks.projectStatuses.addStatus }));
+        const field = screen.getByRole("textbox", { name: en.tasks.projectStatuses.nameLabel });
+        fireEvent.change(field, { target: { value: "QA" } });
+        fireEvent.submit(field.closest("form")!);
+        const cancel = screen.getByRole("button", { name: en.common.actions.cancel });
+        await vi.waitFor(() => expect((cancel as HTMLButtonElement).disabled).toBe(true));
+        fireEvent.keyDown(field, { key: "Escape" });
+        expect(screen.getByRole("textbox", { name: en.tasks.projectStatuses.nameLabel })).toBe(
+            field
+        );
     });
 });
