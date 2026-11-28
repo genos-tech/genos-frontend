@@ -1622,6 +1622,26 @@ export const ja: DeepPartial<Messages> = {
                 "Google カレンダーの接続が期限切れになりました - Quick Meet を使用するには再接続してください。",
             quickMeetReconnect: "再接続",
         },
+        // Messages pinned in a chat for everyone (MIP-2487).
+        pinnedMessages: {
+            tabsAria: "チャットの表示",
+            messagesTab: "メッセージ",
+            pinnedTab: "ピン留め",
+            listAria: "ピン留めされたメッセージ",
+            pinnedBy: "{name}さんがピン留め",
+            pinnedByDeleted: "削除されたアカウントがピン留め",
+            unpin: "ピン留めを解除（全員）",
+            pinForEveryone: "全員にピン留め",
+            unpinForEveryone: "ピン留めを解除（全員）",
+            hiddenOne: "ピン留めされた古いメッセージ{count}件は、ご利用プランの履歴の対象外です。",
+            hiddenMany:
+                "ピン留めされた古いメッセージ{count}件は、ご利用プランの履歴の対象外です。",
+            pinFailed: "メッセージをピン留めできませんでした。もう一度お試しください。",
+            unpinFailed: "ピン留めを外せませんでした。もう一度お試しください。",
+            limitReached:
+                "このチャットにはすでに{count}件ピン留めされています。先にどれかを外してください。",
+            jumpFailed: "そのメッセージを開けませんでした。",
+        },
         threadTabs: {
             ariaLabel: "スレッドのセクション",
             comments: "コメント",

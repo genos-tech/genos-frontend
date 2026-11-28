@@ -3001,6 +3001,25 @@ export const ar: DeepPartial<Messages> = {
                 "Google انتهت صلاحية اتصال التقويم — أعد الاتصال لاستخدام Quick Meet.",
             quickMeetReconnect: "أعد الاتصال",
         },
+        // Messages pinned in a chat for everyone (MIP-2487).
+        pinnedMessages: {
+            tabsAria: "طرق عرض المحادثة",
+            messagesTab: "الرسائل",
+            pinnedTab: "المثبّتة",
+            listAria: "الرسائل المثبّتة",
+            pinnedBy: "ثبّتها {name}",
+            pinnedByDeleted: "ثبّتها حساب محذوف",
+            unpin: "إلغاء التثبيت للجميع",
+            pinForEveryone: "تثبيت للجميع",
+            unpinForEveryone: "إلغاء التثبيت للجميع",
+            hiddenOne: "رسالة مثبّتة أقدم ({count}) خارج سجل خطتك.",
+            hiddenMany: "رسائل مثبّتة أقدم ({count}) خارج سجل خطتك.",
+            pinFailed: "تعذّر تثبيت الرسالة. حاول مرة أخرى.",
+            unpinFailed: "تعذّر إلغاء تثبيت الرسالة. حاول مرة أخرى.",
+            limitReached:
+                "تحتوي هذه المحادثة بالفعل على {count} رسالة مثبّتة. ألغِ تثبيت إحداها أولاً.",
+            jumpFailed: "تعذّر فتح تلك الرسالة.",
+        },
         threadTabs: {
             ariaLabel: "أقسام سلسلة الرسائل",
             comments: "التعليقات",

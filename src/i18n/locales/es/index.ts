@@ -3059,6 +3059,25 @@ export const es: DeepPartial<Messages> = {
                 "La conexión Google Calendar expiró: vuelva a conectarse para usar Quick Meet.",
             quickMeetReconnect: "Reconectar",
         },
+        // Messages pinned in a chat for everyone (MIP-2487).
+        pinnedMessages: {
+            tabsAria: "Vistas del chat",
+            messagesTab: "Mensajes",
+            pinnedTab: "Fijados",
+            listAria: "Mensajes fijados",
+            pinnedBy: "Fijado por {name}",
+            pinnedByDeleted: "Fijado por una cuenta eliminada",
+            unpin: "Desfijar para todos",
+            pinForEveryone: "Fijar para todos",
+            unpinForEveryone: "Desfijar para todos",
+            hiddenOne: "{count} mensaje fijado anterior queda fuera del historial de tu plan.",
+            hiddenMany:
+                "{count} mensajes fijados anteriores quedan fuera del historial de tu plan.",
+            pinFailed: "No se pudo fijar el mensaje. Inténtalo de nuevo.",
+            unpinFailed: "No se pudo desfijar el mensaje. Inténtalo de nuevo.",
+            limitReached: "Este chat ya tiene {count} mensajes fijados. Desfija uno primero.",
+            jumpFailed: "No se pudo abrir ese mensaje.",
+        },
         threadTabs: {
             ariaLabel: "Secciones del hilo",
             comments: "Comentarios",

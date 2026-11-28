@@ -70,7 +70,8 @@ export const useScrollManagement = ({
                 ? `${currentChat.chatId}:${(currentChat as ThreadProps).threadId}`
                 : String(currentChat.chatId);
             const targetKey = currentChat.moveToSpecificIndex
-                ? `${chatKey}:${currentChat.moveToSpecificIndex}`
+                ? // The nonce makes asking for the same message again a new jump.
+                  `${chatKey}:${currentChat.moveToSpecificIndex}:${(currentChat as ChatProps).jumpNonce ?? ""}`
                 : null;
             const action = resolveJumpScroll({
                 lastHandledKey: lastHandledJumpRef.current,

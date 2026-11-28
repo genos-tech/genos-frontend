@@ -126,7 +126,7 @@ describe("registerSocketRouter", () => {
         expect(V3_NAMESPACE).toBe("/v3");
     });
 
-    it("registers exactly one handler per server event (25 events)", () => {
+    it("registers exactly one handler per server event (27 events)", () => {
         const expected = [
             "message.created",
             "message.updated",
@@ -143,6 +143,8 @@ describe("registerSocketRouter", () => {
             "membership.removed",
             "channel.appeared",
             "resync.batch",
+            "message_pin.added",
+            "message_pin.removed",
             "pin.added",
             "pin.removed",
             "flag.added",
@@ -156,7 +158,7 @@ describe("registerSocketRouter", () => {
         ];
         expect([...env.handlers.keys()].sort()).toEqual([...expected].sort());
         expect(env.socket.on).toHaveBeenCalledTimes(expected.length);
-        expect(expected).toHaveLength(25);
+        expect(expected).toHaveLength(27);
     });
 
     // ---- inbox.changed (MIP-1627) -----------------------------------------
@@ -511,13 +513,13 @@ describe("registerSocketRouter", () => {
         }
     });
 
-    it("a second registerSocketRouter call is independent: its teardown removes only its own 25 handlers", () => {
+    it("a second registerSocketRouter call is independent: its teardown removes only its own 27 handlers", () => {
         // Sanity: registering twice produces independent handler sets; the
         // second registration's teardown only removes its own handlers.
         const env2 = makeFakeSocket();
         const teardown2 = registerSocketRouter(env2.socket);
-        expect(env2.socket.on).toHaveBeenCalledTimes(25);
+        expect(env2.socket.on).toHaveBeenCalledTimes(27);
         teardown2();
-        expect(env2.socket.off).toHaveBeenCalledTimes(25);
+        expect(env2.socket.off).toHaveBeenCalledTimes(27);
     });
 });

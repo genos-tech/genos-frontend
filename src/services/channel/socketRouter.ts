@@ -110,6 +110,14 @@ export function registerSocketRouter(socket: Socket): () => void {
         emoji: string;
     }>("reaction.removed", (e) => channelService.handleReactionRemoved(e));
 
+    // Messages pinned for everyone (MIP-2487): ids only, so the list is read again.
+    on<{ channelId: string }>("message_pin.added", (e) =>
+        channelService.handleMessagePinChanged(e.channelId)
+    );
+    on<{ channelId: string }>("message_pin.removed", (e) =>
+        channelService.handleMessagePinChanged(e.channelId)
+    );
+
     on<ReadAdvancedPayload>("read.advanced", ({ readActivityIds, ...cursor }) => {
         // Advance the cursor (drives the unread badge). `readActivityIds`
         // is peeled off first so the transient clear list never lands on
