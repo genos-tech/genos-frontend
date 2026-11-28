@@ -763,20 +763,8 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 shared NavItem; the card content below is the feed's own. */}
             <NavItem
                 as="div"
-                interactiveContent={
-                    !chatRemoved &&
-                    (flaggedMessage.chatType === CHAT_TYPES.GM ||
-                        flaggedMessage.chatType === CHAT_TYPES.MDM)
-                }
                 data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
                 lines={2}
-                selected={isSelected}
-                // Active-flag indicator bar: not shown in the past view (those
-                // flags are completed, not outstanding).
-                unread={Boolean(tmpIsFlagged) && viewMode === "active"}
-                // Complete / Reopen / Unflag live in the row's actions slot, beside the card and
-                // not inside the row's own button. They are always shown (the keep class): a flag's
-                // actions are its main controls, not a hover extra.
                 actions={
                     <>
                         {viewMode === "active" ? (
@@ -849,13 +837,25 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         </AppTooltip>
                     </>
                 }
+                selected={isSelected}
+                // Active-flag indicator bar: not shown in the past view (those
+                // flags are completed, not outstanding).
+                unread={Boolean(tmpIsFlagged) && viewMode === "active"}
+                // Complete / Reopen / Unflag live in the row's actions slot, beside the card and
+                // not inside the row's own button. They are always shown (the keep class): a flag's
+                // actions are its main controls, not a hover extra.
+                interactiveContent={
+                    !chatRemoved &&
+                    (flaggedMessage.chatType === CHAT_TYPES.GM ||
+                        flaggedMessage.chatType === CHAT_TYPES.MDM)
+                }
                 sx={{
                     mx: 1,
                     height: "auto",
                     py: 0.75,
                     opacity: navigationDisabled ? 0.65 : 1,
                     ...(navigationDisabled && {
-                        "& .MuiListItemButton-root": { cursor: "default" },
+                        "& .MuiListItemButton-root, & .NavItem-body": { cursor: "default" },
                     }),
                     // The three actions stack beside the card: a row of them would take
                     // the card's width, and the card is two lines tall anyway.

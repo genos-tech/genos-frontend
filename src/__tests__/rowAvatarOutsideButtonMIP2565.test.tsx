@@ -13,7 +13,7 @@ describe("NavItem with its own controls in the content", () => {
             <CssVarsProvider>
                 <NavItem
                     as="div"
-                    interactiveContent
+                    label="Bo, Cy"
                     icon={
                         <Clickable
                             label="members"
@@ -25,7 +25,7 @@ describe("NavItem with its own controls in the content", () => {
                             x
                         </Clickable>
                     }
-                    label="Bo, Cy"
+                    interactiveContent
                     onClick={onRow}
                 />
             </CssVarsProvider>

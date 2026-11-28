@@ -516,12 +516,12 @@ export const HistoryModal = ({
                     <HistoryRow
                         key={`chat-${entry.chatType}-${entry.chatId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark)}
+                        avatarIsButton={entry.chatType === 4 && !!chat}
                         isDark={isDark}
                         label={entry.label}
                         relativeMessages={t.history.relative}
                         subtitle={subtitle}
                         timestamp={entry.openedAt}
-                        avatarIsButton={entry.chatType === 4 && !!chat}
                         onClick={() => onOpenChat(entry)}
                     />
                 );
@@ -541,6 +541,7 @@ export const HistoryModal = ({
                     <HistoryRow
                         key={`thread-${entry.chatType}-${entry.chatId}-${entry.threadId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark)}
+                        avatarIsButton={entry.chatType === 4 && !!chat}
                         isDark={isDark}
                         label={entry.label}
                         relativeMessages={t.history.relative}
@@ -555,7 +556,6 @@ export const HistoryModal = ({
                             />
                         }
                         chipsBeforeLabel
-                        avatarIsButton={entry.chatType === 4 && !!chat}
                         onClick={() => onOpenThread(entry)}
                     />
                 );
@@ -663,6 +663,12 @@ export const HistoryModal = ({
                         relativeMessages={t.history.relative}
                         subtitle={subtitle || undefined}
                         timestamp={entry.openedAt}
+                        avatarIsButton={
+                            entry.noteType === 3 &&
+                            entry.chatType === 4 &&
+                            entry.chatId != null &&
+                            !!findChat(4, entry.chatId)
+                        }
                         chips={
                             visual || isHtmlNote(entry) ? (
                                 <>
@@ -679,12 +685,6 @@ export const HistoryModal = ({
                             ) : null
                         }
                         chipsBeforeLabel
-                        avatarIsButton={
-                            entry.noteType === 3 &&
-                            entry.chatType === 4 &&
-                            entry.chatId != null &&
-                            !!findChat(4, entry.chatId)
-                        }
                         onClick={() => onOpenNote(entry)}
                     />
                 );
