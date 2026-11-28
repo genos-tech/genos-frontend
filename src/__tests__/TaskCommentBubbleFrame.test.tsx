@@ -103,6 +103,30 @@ describe("TaskCommentBubble on the Bubble frame", () => {
         }
     );
 
+    // MIP-2598. jsdom has no layout, so this pins the rules that put the hover
+    // bar at the end edge; the look was checked in a real browser.
+    it.each([
+        ["my", "u1"],
+        ["another member's", "u2"],
+    ])("bubble look: the hover bar is at the top end of %s comment", (_, senderId) => {
+        style = "bubble";
+        const { container } = render(tree(comment({ senderId })));
+        const root = container.querySelector("[data-bubble-layout]") as HTMLElement;
+        fireEvent.mouseEnter(root.lastElementChild as HTMLElement);
+        const toolbar = container.querySelector(".bubble-toolbar") as HTMLElement;
+        const cls = Array.from(toolbar.classList).find((c) => c.startsWith("css-"));
+        const css = Array.from(document.querySelectorAll("style"))
+            .map((s) => s.textContent ?? "")
+            .join("")
+            .split("}")
+            .filter((r) => r.includes(`.${cls}`))
+            .join("}");
+        expect(css).toContain("inset-inline-end");
+        // A received balloon's box spans it, and the bar is pushed to the end.
+        if (senderId === "u2") expect(css).toContain("margin-inline-start:auto");
+        else expect(css).not.toContain("inset-inline-start");
+    });
+
     it("labels an edited comment with the localized word", () => {
         render(tree(comment({ tsUpdated: "2026-07-18T00:00:00Z" })));
         expect(screen.getByText(/ Edited$/)).toBeInTheDocument();
