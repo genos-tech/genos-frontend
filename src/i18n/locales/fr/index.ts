@@ -1233,6 +1233,11 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# commentaire} other {# commentaires}}",
+            replies: "{count, plural, one {# réponse} other {# réponses}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -1240,6 +1245,11 @@ export const fr: DeepPartial<Messages> = {
             attachment: "a envoyé une pièce jointe",
             listLabel: "Messages",
             threadListLabel: "Réponses du fil",
+        },
+        ruleMoveNotice: {
+            line: "La règle « {rule} » a déplacé {task} vers {project}.",
+            aTask: "une tâche",
+            anotherProject: "un autre projet",
         },
         retentionBanner:
             "Les messages de plus de {days} jours sont masqués avec votre forfait. Passez à un forfait supérieur pour voir tout l'historique.",
@@ -3312,7 +3322,7 @@ export const fr: DeepPartial<Messages> = {
             placeholder: "Demandez n'importe quoi à propos de cette note…",
             send: "Envoyer",
             cancel: "Annuler",
-            clear: "Conversation claire",
+            clear: "Effacer la conversation",
         },
         mentions: {
             ariaLabel: "Mentionner les suggestions",
@@ -7227,6 +7237,25 @@ export const fr: DeepPartial<Messages> = {
                 milestoneAssigneeRemoved: "supprimé",
                 prUnlinked: "a retiré le lien vers",
             },
+            automation: {
+                moved: "Déplacée par la règle « {rule} »",
+                changed: "Modifiée par la règle « {rule} »",
+                notApplied: "Règle « {rule} » non appliquée : {reason}",
+                notAppliedPlain: "Règle « {rule} » non appliquée",
+                reasons: {
+                    destination:
+                        "la tâche ne peut pas être déplacée vers le projet de destination de la règle",
+                    owner: "le propriétaire de la règle ne peut plus l’exécuter",
+                    plan: "l’offre du propriétaire de la règle n’inclut pas les règles d’automatisation",
+                    nested: "une sous-tâche ne se déplace qu’avec sa tâche parente",
+                    rate_limited:
+                        "les règles ont agi trop souvent sur cette tâche en peu de temps",
+                    error: "une erreur s’est produite",
+                    bad_status: "le statut défini par la règle n’est plus disponible",
+                    assignee_not_allowed:
+                        "la personne que la règle assigne ne peut pas être assignée là-bas",
+                },
+            },
             via: {
                 mcp: "via MCP",
                 apiKey: "via une clé API",
@@ -7572,16 +7601,16 @@ export const fr: DeepPartial<Messages> = {
                 subtitle: "Tâches créées, démarrées, fermées et mises à jour au fil du temps",
                 day: "Jour",
                 week: "Semaine",
-                created: "Créé",
-                started: "Démarré",
-                closed: "Fermé",
-                updated: "Mis à jour",
-                weekPrefix: "O de",
+                created: "Créées",
+                started: "Démarrées",
+                closed: "Fermées",
+                updated: "Mises à jour",
+                weekPrefix: "Sem.",
                 memberLabel: "Membre",
                 allMembers: "Tous les membres",
-                empty: "Aucune activité de tâche pour le moment dans cette fenêtre.",
+                empty: "Aucune activité sur les tâches pour cette période.",
                 barTooltip: "{count} {series} · {date}",
-                totals: "En vue — {created} créé, {started} démarré, {closed} fermé, {updated} mis à jour",
+                totals: "Sur la période — Créées : {created} · Démarrées : {started} · Fermées : {closed} · Mises à jour : {updated}",
             },
             member: "Membre",
             open: "Ouvert",
@@ -8289,7 +8318,7 @@ export const fr: DeepPartial<Messages> = {
             placeholder: "Demandez n'importe quoi sur ce fil…",
             send: "Envoyer",
             cancel: "Annuler",
-            clear: "Conversation claire",
+            clear: "Effacer la conversation",
         },
         mentions: {
             ariaLabel: "Mentionner les suggestions",

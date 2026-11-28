@@ -1,7 +1,9 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Link, Navigate, useLocation, useParams } from "react-router-dom";
 
 import { DOCS_COPY, type DocsCopy } from "./copy/docs";
+import { guideCover, GUIDES } from "./guides/guides";
+import { VisualGuide } from "./guides/VisualGuide";
 import { LpShell } from "./kit/LpShell";
 import type { Lang } from "./lpLang";
 import { loadManual, type LoadedManual } from "./manual/loadManual";
@@ -156,6 +158,19 @@ function Status({
     );
 }
 
+/** The first picture of the topic's guide, so the hub can be scanned by eye. */
+function Cover({ topic, lang }: { topic: string; lang: Lang }) {
+    const cover = guideCover(topic);
+    if (!cover) return null;
+    const src = cover.shot
+        ? `/lp/guide/${lang}/${cover.shot}.webp`
+        : `/lp/shots/${lang}/${cover.lpShot}.webp`;
+    // Decoration: the card's title says what it is.
+    return (
+        <img alt="" className="lp-docs-topic-cover" decoding="async" loading="lazy" src={src} />
+    );
+}
+
 function Hub({ lang, loaded }: { lang: Lang; loaded: LoadedManual }) {
     const c = DOCS_COPY[lang];
     const groups = useMemo(() => groupTopics(loaded.manual.topics), [loaded]);
@@ -168,6 +183,7 @@ function Hub({ lang, loaded }: { lang: Lang; loaded: LoadedManual }) {
                         {group.topics.map((topic) => (
                             <li key={topic.id}>
                                 <Link to={`/docs/${topic.id}`}>
+                                    <Cover lang={lang} topic={topic.id} />
                                     <span className="lp-docs-topic-title">{topic.title}</span>
                                     <span className="lp-docs-topic-summary lp-small">
                                         {topicSummary(topic)}
@@ -232,6 +248,7 @@ function TopicNav({ c, loaded, current }: { c: DocsCopy; loaded: LoadedManual; c
 function Topic({ lang, loaded, topicId }: { lang: Lang; loaded: LoadedManual; topicId: string }) {
     const c = DOCS_COPY[lang];
     const { hash } = useLocation();
+    const full = useRef<HTMLDetailsElement>(null);
     const order = useMemo(() => topicOrder(loaded.manual.topics), [loaded]);
     const index = order.findIndex((t) => t.id === topicId);
     const topic = order[index];
@@ -256,11 +273,31 @@ function Topic({ lang, loaded, topicId }: { lang: Lang; loaded: LoadedManual; to
         } catch {
             target = null;
         }
-        if (target) target.scrollIntoView();
-        else window.scrollTo(0, 0);
+        if (target) {
+            if (full.current?.contains(target)) full.current.open = true;
+            target.scrollIntoView();
+        } else window.scrollTo(0, 0);
     }, [topic, hash]);
 
     if (!topic) return <Navigate to="/docs" replace />;
+    const guided = GUIDES[topic.id] !== undefined;
+    const text = (
+        <>
+            {outline.length > 1 && (
+                <nav aria-label={c.onThisPage} className="lp-docs-toc">
+                    <p className="lp-docs-nav-group">{c.onThisPage}</p>
+                    <ul>
+                        {outline.map((o) => (
+                            <li key={o.id}>
+                                <a href={`#${o.id}`}>{o.text}</a>
+                            </li>
+                        ))}
+                    </ul>
+                </nav>
+            )}
+            <ManualMarkdown markdown={topic.markdown} />
+        </>
+    );
     const prev = order[index - 1];
     const next = order[index + 1];
 
@@ -270,19 +307,18 @@ function Topic({ lang, loaded, topicId }: { lang: Lang; loaded: LoadedManual; to
                 <TopicNav c={c} current={topicId} loaded={loaded} />
                 <article className="lp-prose lp-docs-article" lang={loaded.shown}>
                     <h1 className="lp-docs-h1">{topic.title}</h1>
-                    {outline.length > 1 && (
-                        <nav aria-label={c.onThisPage} className="lp-docs-toc">
-                            <p className="lp-docs-nav-group">{c.onThisPage}</p>
-                            <ul>
-                                {outline.map((o) => (
-                                    <li key={o.id}>
-                                        <a href={`#${o.id}`}>{o.text}</a>
-                                    </li>
-                                ))}
-                            </ul>
-                        </nav>
+                    {guided ? (
+                        <>
+                            <VisualGuide lang={lang} topic={topic.id} />
+                            {/* A link to a section (a search result) opens the text. */}
+                            <details ref={full} className="lp-docs-full">
+                                <summary>{c.fullDetails}</summary>
+                                {text}
+                            </details>
+                        </>
+                    ) : (
+                        text
                     )}
-                    <ManualMarkdown markdown={topic.markdown} />
                     <nav aria-label={c.topicsHeading} className="lp-docs-pager">
                         {prev ? (
                             <Link rel="prev" to={`/docs/${prev.id}`}>

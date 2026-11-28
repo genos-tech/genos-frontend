@@ -64,7 +64,15 @@ const Kbd = ({ children }: { children: ReactNode }) => (
 
 /** The caps of one shortcut. They read left to right in every language when `ltr`. */
 const Caps = ({ combo, ltr }: { combo: string[]; ltr: boolean }) => (
-    <Stack alignItems="center" dir={ltr ? "ltr" : undefined} direction="row" spacing={0.5}>
+    <Stack
+        alignItems="center"
+        dir={ltr ? "ltr" : undefined}
+        direction="row"
+        spacing={0.5}
+        // `gap`, not margins: the right-to-left style flip would put an LTR row's margins on the
+        // wrong side, and the first "+" would stick to its key cap (MIP-2479).
+        useFlexGap
+    >
         {combo.map((key, i) => (
             <Fragment key={`${key}-${i}`}>
                 <Kbd>{key}</Kbd>
