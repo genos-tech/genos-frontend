@@ -20,6 +20,7 @@ import {
     FormControl,
     FormHelperText,
     Input,
+    ListSubheader,
     Option,
     Select,
     Typography,
@@ -267,7 +268,14 @@ export const effortSelectNode = (level: string) => <EffortLabel level={level} />
 
 // ── ChipSelect: a Select whose value and options are chips ────────────────────
 
-export type ChipSelectOption = { value: string; node: ReactNode };
+export type ChipSelectOption = {
+    value: string;
+    node: ReactNode;
+    /** What typing in the open list matches; the value when absent. */
+    label?: string;
+    /** A group heading written above this option (not itself an option). */
+    header?: ReactNode;
+};
 
 export const ChipSelect = ({
     value,
@@ -350,16 +358,27 @@ export const ChipSelect = ({
                 if (!isOpen) onClose?.();
             }}
         >
-            {all.map((opt) => (
-                <Option
-                    key={opt.value || "__empty"}
-                    label={opt.value}
-                    sx={optionSx}
-                    value={opt.value}
-                >
-                    {opt.node}
-                </Option>
-            ))}
+            {all.flatMap((opt) => {
+                const option = (
+                    <Option
+                        key={opt.value || "__empty"}
+                        label={opt.label ?? opt.value}
+                        sx={optionSx}
+                        value={opt.value}
+                    >
+                        {opt.node}
+                    </Option>
+                );
+                // Side by side, never in a fragment: Joy clones the Select's children.
+                return opt.header
+                    ? [
+                          <ListSubheader key={`header-${opt.value}`} role="presentation" sticky>
+                              {opt.header}
+                          </ListSubheader>,
+                          option,
+                      ]
+                    : [option];
+            })}
         </Select>
     );
 };

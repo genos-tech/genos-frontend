@@ -3,9 +3,14 @@ import { Socket } from "socket.io-client";
 
 import { UserProps } from "../../../types/admin";
 import { TaskProps, TaskTableProps } from "../../../types/tasks";
+import { keptCustomStatusId } from "../utils/projectStatus";
 import { loadSpecificTask } from "./loadSpecificTask";
 import { sendUpdatedSpecificTask } from "./sendUpdatedSpecificTask";
 import { TaskSaveRefusedError } from "./taskSaveRefusedError";
+
+/** The row without a status pick, which must not ride along on its next edit (MIP-2493). */
+const withoutPick = (row: TaskTableProps): TaskTableProps =>
+    row.customStatusPick == null ? row : { ...row, customStatusPick: undefined };
 
 /**
  * Updates a task from table edits
@@ -46,7 +51,7 @@ export const updateTaskFromTable = async (
             fullTask = _fullTask[0];
         } else {
             console.error("Failed to load task for update");
-            return updatedRow;
+            return withoutPick(updatedRow);
         }
 
         // Tags are editable inline from the table too. The row carries the
@@ -70,6 +75,15 @@ export const updateTaskFromTable = async (
         const updatedTask: TaskProps = {
             ...fullTask,
             title: updatedRow.title || "",
+            // Picked in the table, or the stored one while the category stands (MIP-2493).
+            customStatusId:
+                updatedRow.customStatusPick ??
+                keptCustomStatusId(
+                    fullTask.status.status,
+                    updatedRow.status,
+                    fullTask.customStatusId
+                ),
+            customStatusPick: updatedRow.customStatusPick,
             status: {
                 ...fullTask.status,
                 status: updatedRow.status,
@@ -132,6 +146,8 @@ export const updateTaskFromTable = async (
 
         return {
             ...updatedRow,
+            customStatusId: updatedTask.customStatusId,
+            customStatusPick: undefined,
             tags: nextTags,
             concatTags: nextConcatTags,
             customFieldValues: updatedTask.customFieldValues,
@@ -147,6 +163,6 @@ export const updateTaskFromTable = async (
         // and the board's rollback (a `catch` around this call) never ran.
         if (error instanceof TaskSaveRefusedError) throw error;
         console.error("Error updating task from table:", error);
-        return updatedRow;
+        return withoutPick(updatedRow);
     }
 };
