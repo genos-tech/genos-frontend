@@ -2,8 +2,17 @@
 // a host that has to reserve room for the stack (a report row) can size its slot from the same
 // numbers without loading the component.
 
-/** How many members the stack shows: the rest are not drawn. */
+/** How many circles the stack draws at most, the "+N" one included. */
 export const MDM_MAX_VISIBLE = 3;
+
+/** What a stack of `total` members draws: every face while they fit, otherwise one face fewer
+ *  and a "+N" circle for the rest, so `faces + overflow` is always the member total
+ *  (MIP-2549). Either way it is at most `MDM_MAX_VISIBLE` circles wide. */
+export const mdmFaces = (total: number): { faces: number; overflow: number } => {
+    if (total <= MDM_MAX_VISIBLE) return { faces: Math.max(total, 0), overflow: 0 };
+    const faces = MDM_MAX_VISIBLE - 1;
+    return { faces, overflow: total - faces };
+};
 
 /** How far each face sits from the one before it, as a share of the face's size. */
 export const MDM_STEP = 0.55;

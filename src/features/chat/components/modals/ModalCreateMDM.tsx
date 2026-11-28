@@ -17,6 +17,7 @@ import { UserProps } from "../../../../types/admin";
 import { ownTeamOnly } from "../../../../utils/teamRoster";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { createMDMChatGroup } from "../../services/createMDMChatGroup";
+import { MDM_MAX_MEMBERS } from "../../utils/mdmLimit";
 
 type Props = {
     socket: Socket | null;
@@ -86,11 +87,16 @@ export const ModalCreateMDM: React.FC<Props> = ({
             const isSelected = prev.some((m) => m.userId === member.userId);
             if (isSelected) {
                 return prev.filter((m) => m.userId !== member.userId);
+            } else if (prev.length >= MDM_MAX_MEMBERS - 1) {
+                // Ten people with you in it (MIP-2549).
+                return prev;
             } else {
                 return [...prev, member];
             }
         });
     };
+
+    const atCap = selectedMembers.length >= MDM_MAX_MEMBERS - 1;
 
     const handleRemoveMember = (memberId: string) => {
         setSelectedMembers((prev) => prev.filter((m) => m.userId !== memberId));
@@ -146,6 +152,19 @@ export const ModalCreateMDM: React.FC<Props> = ({
             }
             onClose={() => setOpen(false)}
         >
+            <Typography
+                level="body-xs"
+                role="status"
+                sx={{ mb: 2, color: atCap ? g.warning.text : g.text.secondary }}
+            >
+                {fmt(
+                    atCap
+                        ? t.chat.modals.mdmMembers.limitReached
+                        : t.chat.modals.mdmMembers.createMaxHint,
+                    { max: MDM_MAX_MEMBERS }
+                )}
+            </Typography>
+
             {/* Selected Members Chips */}
             {selectedMembers.length > 0 && (
                 <Box
@@ -211,17 +230,20 @@ export const ModalCreateMDM: React.FC<Props> = ({
                 ) : (
                     filteredMembers.map((member) => {
                         const isSelected = selectedMembers.some((m) => m.userId === member.userId);
+                        const blocked = atCap && !isSelected;
                         return (
                             <Clickable
                                 key={member.userId}
                                 aria-checked={isSelected}
+                                aria-disabled={blocked || undefined}
                                 role="checkbox"
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
                                     gap: 1.5,
                                     p: 1.5,
-                                    cursor: "pointer",
+                                    cursor: blocked ? "not-allowed" : "pointer",
+                                    opacity: blocked ? 0.5 : 1,
                                     borderBottom: `1px solid ${g.border.subtle}`,
                                     backgroundColor: isSelected ? g.accent.subtle : "transparent",
                                     "&:hover": {

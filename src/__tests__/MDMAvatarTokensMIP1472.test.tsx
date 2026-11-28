@@ -52,10 +52,27 @@ describe("MDMAvatar", () => {
         expect(container.querySelector('svg[data-testid="PeopleRoundedIcon"]')).not.toBeNull();
     });
 
-    it("up to three members show as their initials", () => {
+    it.each([
+        [2, "UU"],
+        [3, "UUU"],
+        // Four or more: two faces and the rest, so the shown faces and N add up to the total.
+        [4, "UU+2"],
+        [10, "UU+8"],
+    ])("%i members read %s", (n, text) => {
         const { container } = render(
             <CssVarsProvider>
-                <MDMAvatar members={members(4)} />
+                <MDMAvatar members={members(n)} />
+            </CssVarsProvider>
+        );
+        expect(container.textContent).toBe(text);
+    });
+
+    it("a deleted account is neither drawn nor counted", () => {
+        const people = members(4);
+        people[0].userName = "Deleted user";
+        const { container } = render(
+            <CssVarsProvider>
+                <MDMAvatar members={people} />
             </CssVarsProvider>
         );
         expect(container.textContent).toBe("UUU");
