@@ -927,6 +927,23 @@ export const tasks = {
             milestoneAssigneeRemoved: "removed",
             prUnlinked: "removed the link to",
         },
+        // History rows a project rule writes (MIP-2500). Reasons are the server's coarse codes.
+        automation: {
+            moved: "Moved by rule “{rule}”",
+            changed: "Changed by rule “{rule}”",
+            notApplied: "Rule “{rule}” not applied: {reason}",
+            notAppliedPlain: "Rule “{rule}” not applied",
+            reasons: {
+                destination: "the task cannot move to the rule’s destination project",
+                owner: "the rule’s owner can no longer run it",
+                plan: "the rule owner’s plan does not include automation rules",
+                nested: "a sub-task only moves with its parent",
+                rate_limited: "rules have acted on this task too often in a short time",
+                error: "something went wrong",
+                bad_status: "the status the rule sets is no longer available",
+                assignee_not_allowed: "the person the rule assigns cannot be assigned there",
+            },
+        },
     },
 
     // Comments / DynamicURLManager / sub-components.

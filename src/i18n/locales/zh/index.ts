@@ -1154,6 +1154,11 @@ export const zh: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# 条评论} other {# 条评论}}",
+            replies: "{count, plural, one {# 条回复} other {# 条回复}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -1161,6 +1166,11 @@ export const zh: DeepPartial<Messages> = {
             attachment: "发送了一个附件",
             listLabel: "消息",
             threadListLabel: "主题回复",
+        },
+        ruleMoveNotice: {
+            line: "规则“{rule}”已将{task}移至{project}。",
+            aTask: "一个任务",
+            anotherProject: "另一个项目",
         },
         retentionBanner: "根据你的套餐，超过 {days} 天的消息已被隐藏。升级后可查看完整历史记录。",
         composer: {
@@ -6831,6 +6841,22 @@ export const zh: DeepPartial<Messages> = {
                 milestoneAssigneeRemoved: "已删除",
                 prUnlinked: "移除了以下链接：",
             },
+            automation: {
+                moved: "由规则“{rule}”移动",
+                changed: "由规则“{rule}”更改",
+                notApplied: "规则“{rule}”未执行：{reason}",
+                notAppliedPlain: "规则“{rule}”未执行",
+                reasons: {
+                    destination: "任务无法移至规则指定的目标项目",
+                    owner: "规则所有者已无法运行该规则",
+                    plan: "规则所有者的套餐不包含自动化规则",
+                    nested: "子任务只能随父任务一起移动",
+                    rate_limited: "规则在短时间内对此任务操作过于频繁",
+                    error: "出现了问题",
+                    bad_status: "规则要设置的状态已不可用",
+                    assignee_not_allowed: "规则指定的负责人无法在那里被指派",
+                },
+            },
             via: {
                 mcp: "通过 MCP",
                 apiKey: "通过 API 密钥",
@@ -7160,19 +7186,19 @@ export const zh: DeepPartial<Messages> = {
             velocity: {
                 loadFailed: "无法加载节奏图表",
                 title: "节奏",
-                subtitle: "随着时间的推移创建、启动、关闭和更新的任务",
-                day: "天",
-                week: "星期",
-                created: "已创建",
+                subtitle: "任务的创建、开始、关闭和更新趋势",
+                day: "日",
+                week: "周",
+                created: "创建",
                 started: "开始",
                 closed: "关闭",
-                updated: "已更新",
-                weekPrefix: "的W",
+                updated: "更新",
+                weekPrefix: "周",
                 memberLabel: "成员",
                 allMembers: "所有成员",
-                empty: "此窗口中还没有任务活动。",
+                empty: "这段时间还没有任务动态。",
                 barTooltip: "{count} {series} · {date}",
-                totals: "视图中 — {created} 创建，{started} 启动，{closed} 关闭，{updated} 更新",
+                totals: "当前范围：创建 {created}，开始 {started}，关闭 {closed}，更新 {updated}",
             },
             member: "成员",
             open: "待处理",

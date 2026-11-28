@@ -3,6 +3,7 @@ import { Socket } from "socket.io-client";
 
 import { BubbleMeta } from "../../../../components/ui/bubble";
 import { ShowEmojiReaction } from "../../../../components/ui/emoji/ShowEmojiReaction";
+import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
@@ -48,6 +49,7 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
         replayHandler,
         isThread,
     } = props;
+    const { t } = useTranslation();
 
     // Pick the right counter for this bubble:
     //   - PM (chatType === 3): the task's LIVE comment count
@@ -60,8 +62,6 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
     //   - Other chats: thread replies.
     const isPm = chatType === 3;
     const chipCount = isPm ? (taskCommentCount ?? numReplies ?? 0) : numReplies;
-    const chipNoun = isPm ? "comment" : "reply";
-    const chipNounPlural = isPm ? "comments" : "replies";
 
     // Only render if there are reactions or chip-worthy items to show
     const hasReactions = reactions && reactions.length > 0;
@@ -123,7 +123,9 @@ export const BubbleUnderBar = (props: BubbleUnderBarTypes) => {
                         onClick={replayHandler}
                     >
                         <BubbleMeta sx={{ color: g.accent.text, fontWeight: 600 }}>
-                            {chipCount === 1 ? `1 ${chipNoun}` : `${chipCount} ${chipNounPlural}`}
+                            {fmt(isPm ? t.chat.underBar.comments : t.chat.underBar.replies, {
+                                count: chipCount,
+                            })}
                         </BubbleMeta>
                     </Box>
                 )}

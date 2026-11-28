@@ -1,4 +1,10 @@
 export const chat = {
+    // The line a project rule leaves in the old project's chat (MIP-2500).
+    ruleMoveNotice: {
+        line: "Rule “{rule}” moved {task} to {project}.",
+        aTask: "a task",
+        anotherProject: "another project",
+    },
     // Tier retention strip (RetentionBanner) — shown when the viewer's
     // plan hides part of this channel's history.
     retentionBanner:
@@ -568,6 +574,11 @@ export const chat = {
             joinRequestPrefix: "You sent a request to join ",
             joinRequestSuffix: ".",
         },
+    },
+    // The thread chip under a message: task comments in a project chat, replies elsewhere.
+    underBar: {
+        comments: "{count, plural, one {# comment} other {# comments}}",
+        replies: "{count, plural, one {# reply} other {# replies}}",
     },
     // TODO(copy): MIP-1956 — draft wording for a native reader.
     liveRegion: {

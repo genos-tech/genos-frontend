@@ -2618,6 +2618,13 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments:
+                "{count, plural, zero {# تعليق} one {تعليق واحد} two {تعليقان} few {# تعليقات} many {# تعليقًا} other {# تعليق}}",
+            replies:
+                "{count, plural, zero {# رد} one {رد واحد} two {ردّان} few {# ردود} many {# ردًا} other {# رد}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -2625,6 +2632,11 @@ export const ar: DeepPartial<Messages> = {
             attachment: "أرسل مرفقًا",
             listLabel: "الرسائل",
             threadListLabel: "ردود المحادثة الفرعية",
+        },
+        ruleMoveNotice: {
+            line: "نقلت القاعدة «{rule}» {task} إلى {project}.",
+            aTask: "مهمة",
+            anotherProject: "مشروع آخر",
         },
         retentionBanner:
             "الرسائل الأقدم من {days} يومًا مخفية في خطتك. قم بالترقية لعرض السجل الكامل.",
@@ -4104,19 +4116,19 @@ export const ar: DeepPartial<Messages> = {
             velocity: {
                 loadFailed: "تعذّر تحميل مخطط الوتيرة",
                 title: "الوتيرة",
-                subtitle: "المهام التي تم إنشاؤها وبدأت وإغلاقها وتحديثها بمرور الوقت",
+                subtitle: "المهام المُنشأة والمبدوءة والمغلقة والمُحدَّثة بمرور الوقت",
                 day: "يوم",
                 week: "أسبوع",
-                created: "مخلوق",
-                started: "بدأت",
-                closed: "مغلق",
-                updated: "تم التحديث",
-                weekPrefix: "دبليو من",
+                created: "المُنشأة",
+                started: "المبدوءة",
+                closed: "المغلقة",
+                updated: "المُحدَّثة",
+                weekPrefix: "أسبوع",
                 memberLabel: "عضو",
                 allMembers: "جميع الأعضاء",
-                empty: "لا يوجد نشاط مهمة في هذه النافذة حتى الآن.",
+                empty: "لا يوجد نشاط للمهام في هذه الفترة بعد.",
                 barTooltip: "{count} {series} · {date}",
-                totals: "ضمن العرض — أُنشئت {created}، وبدأت {started}، وأُغلقت {closed}، وحُدّثت {updated}",
+                totals: "في هذه الفترة: المُنشأة {created}، المبدوءة {started}، المغلقة {closed}، المُحدَّثة {updated}",
             },
             moreCount: "+{count} المزيد",
             noOverdueTasks: "لا توجد مهام متأخرة",
@@ -4732,6 +4744,22 @@ export const ar: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "وأضاف",
                 milestoneAssigneeRemoved: "تمت إزالته",
                 prUnlinked: "أزال الرابط إلى",
+            },
+            automation: {
+                moved: "نُقلت بواسطة القاعدة «{rule}»",
+                changed: "غُيّرت بواسطة القاعدة «{rule}»",
+                notApplied: "لم تُطبَّق القاعدة «{rule}»: {reason}",
+                notAppliedPlain: "لم تُطبَّق القاعدة «{rule}»",
+                reasons: {
+                    destination: "لا يمكن نقل المهمة إلى مشروع الوجهة المحدد في القاعدة",
+                    owner: "لم يعد بإمكان مالك القاعدة تشغيلها",
+                    plan: "خطة مالك القاعدة لا تتضمن قواعد الأتمتة",
+                    nested: "المهمة الفرعية لا تنتقل إلا مع مهمتها الأم",
+                    rate_limited: "طُبّقت القواعد على هذه المهمة مرات كثيرة خلال وقت قصير",
+                    error: "حدث خطأ ما",
+                    bad_status: "الحالة التي تضبطها القاعدة لم تعد متاحة",
+                    assignee_not_allowed: "لا يمكن إسناد المهمة هناك إلى الشخص الذي تحدده القاعدة",
+                },
             },
             via: {
                 mcp: "عبر MCP",
@@ -7972,7 +8000,7 @@ export const ar: DeepPartial<Messages> = {
             placeholder: "اسأل أي شيء عن هذه المذكرة...",
             send: "إرسال",
             cancel: "إلغاء",
-            clear: "محادثة واضحة",
+            clear: "مسح المحادثة",
         },
         mentions: {
             ariaLabel: "اذكر الاقتراحات",
@@ -8058,7 +8086,7 @@ export const ar: DeepPartial<Messages> = {
             placeholder: "اسأل أي شيء عن هذا الموضوع...",
             send: "إرسال",
             cancel: "إلغاء",
-            clear: "محادثة واضحة",
+            clear: "مسح المحادثة",
         },
         mentions: {
             ariaLabel: "اذكر الاقتراحات",
