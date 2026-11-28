@@ -44,6 +44,7 @@ import type {
     Channel,
     ChannelKind,
     ChannelMember,
+    ChannelMessagePins,
     ChannelRetention,
     ChannelShare,
     DeltaEnvelope,
@@ -109,6 +110,11 @@ export type DeletedChannel = {
     deletedAt: string;
     memberCount: number;
 };
+
+/** How far back a jump to an old pinned message pages, 500 messages at a time (MIP-2487). */
+const MAX_OLDER_PAGES = 10;
+/** The rows a chat's first load holds (`MAX_MESSAGES_PER_DELTA` in genos-api). */
+const FIRST_LOAD_SIZE = 500;
 
 /**
  * Errors raised by `ChannelService` REST + socket methods.
@@ -277,6 +283,10 @@ export interface ChannelStoreSnapshot {
     /** Monotonic version of the reminder state, for the same reason
      *  `flagsVersion` exists — the Map is mutated in place. */
     remindersVersion: number;
+    /** The messages pinned for everyone in each chat this session has asked about (MIP-2487).
+     *  No entry = not read yet, or a server without the feature. Entries are replaced, never
+     *  mutated, so one is a stable `useSyncExternalStore` value. Memory only. */
+    messagePinsByChannel: ReadonlyMap<string, ChannelMessagePins>;
     /** Monotonic version of the chat-LIST inputs: `channels`,
      *  `membersByChannel`, and pins. Message-only events (reactions,
      *  edits of non-latest rows, thread replies, read cursors that
@@ -418,6 +428,9 @@ export class ChannelService {
      *  subscribers can detect flag-only changes without relying on Map
      *  reference identity (the Maps are mutated in place). */
     private _flagsVersion = 0;
+    private _messagePinsByChannel = new Map<string, ChannelMessagePins>();
+    /** The latest read of each chat's pins, so an older answer never overwrites a newer one. */
+    private _messagePinsRequest = new Map<string, number>();
     /** Pending message reminders, keyed by message id. See the snapshot
      *  field doc. Not persisted to IDB: it is one small GET at boot, and
      *  a stale cached reminder would claim a nudge is coming that the
@@ -484,6 +497,7 @@ export class ChannelService {
             flagsVersion: this._flagsVersion,
             reminderByMessageId: this._reminderByMessageId,
             remindersVersion: this._remindersVersion,
+            messagePinsByChannel: this._messagePinsByChannel,
             channelsVersion: this._channelsVersion,
             idbHealth: {
                 status: this._idbErrorCount > 0 ? "degraded" : "ok",
@@ -625,6 +639,8 @@ export class ChannelService {
         this._flags.clear();
         this._pinByChannelId.clear();
         this._flagByMessageId.clear();
+        this._messagePinsByChannel.clear();
+        this._messagePinsRequest.clear();
         this._flagsVersion += 1;
         this._reminderByMessageId.clear();
         this._remindersVersion += 1;
@@ -709,6 +725,8 @@ export class ChannelService {
         this._pinByChannelId.clear();
         this._flags.clear();
         this._flagByMessageId.clear();
+        this._messagePinsByChannel.clear();
+        this._messagePinsRequest.clear();
         this._flagsVersion += 1;
         // Reminders are per-message and a message belongs to one team, so
         // they are as team-scoped as the flags they ride on. Re-read by
@@ -1121,6 +1139,106 @@ export class ChannelService {
         this._notify();
         void this._persistMessage(msg);
         return msg;
+    }
+
+    // ---- Messages pinned for everyone (MIP-2487) ---------------------------
+
+    /** Read a chat's pinned messages. A failure keeps what is held: a server without the
+     *  feature leaves the chat with no entry, and the UI offers nothing. */
+    async fetchMessagePins(channelId: string): Promise<void> {
+        const request = (this._messagePinsRequest.get(channelId) ?? 0) + 1;
+        this._messagePinsRequest.set(channelId, request);
+        let data: ChannelMessagePins;
+        try {
+            const res = await this.api().get<ChannelMessagePins>(
+                `/api/v3/channels/${channelId}/message_pins/`
+            );
+            data = res.data;
+        } catch {
+            return;
+        }
+        if (this._messagePinsRequest.get(channelId) !== request) return;
+        if (!Array.isArray(data?.pins)) return;
+        this._messagePinsByChannel.set(channelId, data);
+        this._notify();
+    }
+
+    /** `message_pin.added` / `.removed`, and a reconnect: re-read a chat already asked about.
+     *  The events carry ids only, and the read applies this person's history window. */
+    handleMessagePinChanged(channelId: string): void {
+        if (this._messagePinsRequest.has(channelId)) void this.fetchMessagePins(channelId);
+    }
+
+    refreshMessagePins(): void {
+        for (const channelId of this._messagePinsRequest.keys()) {
+            void this.fetchMessagePins(channelId);
+        }
+    }
+
+    /** Pin or unpin a message for everyone in its chat. Rejects with the server's refusal. */
+    async setMessagePinned(channelId: string, messageId: string, pinned: boolean): Promise<void> {
+        await this.socketEmitOrThrow<void>(pinned ? "message_pin.add" : "message_pin.remove", {
+            message_id: messageId,
+        });
+        await this.fetchMessagePins(channelId);
+    }
+
+    /** A deleted message is not pinned any more: drop it without waiting for a read. */
+    private _dropMessagePins(channelId: string, messageIds: ReadonlySet<string>): void {
+        const held = this._messagePinsByChannel.get(channelId);
+        if (!held) return;
+        const pins = held.pins.filter((pin) => !messageIds.has(pin.messageId));
+        if (pins.length === held.pins.length) return;
+        this._messagePinsByChannel.set(channelId, { ...held, pins });
+    }
+
+    /**
+     * Make sure a top-level message and everything after it is in the store, so a jump to it
+     * lands among its neighbours. The first load holds the newest 500 only, so this pages back
+     * from below that block: the 500th newest held, else the newest. Never from the oldest held,
+     * since a single message fetched for a flag can sit far below the loaded block. After
+     * `MAX_OLDER_PAGES`, or on an error, it brings in
+     * the message alone. False when the message cannot be read at all.
+     */
+    async loadMessagesBackTo(channelId: string, messageId: string): Promise<boolean> {
+        const held = () => this._messages.get(channelId) ?? [];
+        if (held().some((m) => m.id === messageId)) return true;
+        const top = held().filter((m) => !m.isThreadReply);
+        let before: string | undefined = (top[top.length - FIRST_LOAD_SIZE] ?? top[top.length - 1])
+            ?.id;
+        for (let page = 0; before && page < MAX_OLDER_PAGES; page += 1) {
+            let data: { messages: Message[]; hasMore: boolean };
+            try {
+                const res = await this.api().get<{ messages: Message[]; hasMore: boolean }>(
+                    `/api/v3/channels/${channelId}/messages/older/`,
+                    { params: { before } }
+                );
+                data = res.data;
+            } catch {
+                break;
+            }
+            this._mergeOlderMessages(channelId, data.messages);
+            if (data.messages.some((m) => m.id === messageId)) return true;
+            before = data.hasMore ? data.messages[0]?.id : undefined;
+        }
+        return (await this.fetchMessageById(messageId)) !== null;
+    }
+
+    /** Add older rows under one notify. Rows already held are newer knowledge: they stay. */
+    private _mergeOlderMessages(channelId: string, messages: readonly Message[]): void {
+        const prev = this._messages.get(channelId) ?? [];
+        const known = new Set(prev.map((m) => m.id));
+        const added = messages.filter((m) => !known.has(m.id));
+        if (added.length === 0) return;
+        rememberPeople(added.flatMap((m) => (m.sender ? [m.sender] : [])));
+        this._messages.set(
+            channelId,
+            [...added, ...prev].sort((a, b) =>
+                a.tsSent < b.tsSent ? -1 : a.tsSent > b.tsSent ? 1 : 0
+            )
+        );
+        if (added.some((m) => this._flagByMessageId.has(m.id))) this._flagsVersion += 1;
+        this._notify();
     }
 
     /**
@@ -2869,6 +2987,12 @@ export class ChannelService {
 
     handleMessageUpdated(message: Message): void {
         this._upsertMessage(message);
+        if (message.deletedAt) {
+            this._dropMessagePins(message.channelId, new Set([message.id]));
+        } else if (this._isMessagePinned(message.channelId, message.id)) {
+            // An edit: the pinned list shows the message's text.
+            this.handleMessagePinChanged(message.channelId);
+        }
         // If this is the channel's currently-latest message, refresh
         // the channel's latestMessage cache. We compare by id rather
         // than seq because soft-delete-by-edit (rare) could still be
@@ -2925,7 +3049,13 @@ export class ChannelService {
         this._notify();
     }
 
+    private _isMessagePinned(channelId: string, messageId: string): boolean {
+        const held = this._messagePinsByChannel.get(channelId);
+        return held?.pins.some((pin) => pin.messageId === messageId) ?? false;
+    }
+
     handleMessageDeleted(event: MessageDeletedPayload): void {
+        this._dropMessagePins(event.channelId, new Set([event.id]));
         const arr = this._messages.get(event.channelId);
         if (arr) {
             const next = arr.map((m) =>
@@ -2947,6 +3077,7 @@ export class ChannelService {
     handleMessagesDeleted(event: MessagesDeletedPayload): void {
         const ids = new Set(event.messageIds);
         if (ids.size === 0) return;
+        this._dropMessagePins(event.channelId, ids);
         const now = new Date().toISOString();
         const blank = (m: Message): Message => ({
             ...m,

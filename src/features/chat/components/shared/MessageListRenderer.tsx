@@ -354,12 +354,8 @@ export const MessageListRenderer = ({
         () =>
             isThread
                 ? (useCM.currentThreadChat?.moveToSpecificIndex ?? null)
-                : (useCM.currentMainChat?.moveToSpecificIndex ?? null),
-        [
-            isThread,
-            useCM.currentThreadChat?.moveToSpecificIndex,
-            useCM.currentMainChat?.moveToSpecificIndex,
-        ]
+                : (chat.moveToSpecificIndex ?? null),
+        [isThread, useCM.currentThreadChat?.moveToSpecificIndex, chat.moveToSpecificIndex]
     );
     const threadActiveTarget = useMemo<{
         threadId: number | null | undefined;

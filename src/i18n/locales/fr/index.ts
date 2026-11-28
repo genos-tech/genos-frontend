@@ -1640,6 +1640,27 @@ export const fr: DeepPartial<Messages> = {
                 "La connexion Google Calendar a expiré : reconnectez-vous pour utiliser Quick Meet.",
             quickMeetReconnect: "Reconnecter",
         },
+        // Messages pinned in a chat for everyone (MIP-2487).
+        pinnedMessages: {
+            tabsAria: "Vues de la discussion",
+            messagesTab: "Messages",
+            pinnedTab: "Épinglés",
+            listAria: "Messages épinglés",
+            pinnedBy: "Épinglé par {name}",
+            pinnedByDeleted: "Épinglé par un compte supprimé",
+            unpin: "Désépingler pour tous",
+            pinForEveryone: "Épingler pour tous",
+            unpinForEveryone: "Désépingler pour tous",
+            hiddenOne:
+                "{count} message épinglé plus ancien dépasse l’historique de votre forfait.",
+            hiddenMany:
+                "{count} messages épinglés plus anciens dépassent l’historique de votre forfait.",
+            pinFailed: "Impossible d’épingler le message. Réessayez.",
+            unpinFailed: "Impossible de désépingler le message. Réessayez.",
+            limitReached:
+                "Cette discussion a déjà {count} messages épinglés. Désépinglez-en un d’abord.",
+            jumpFailed: "Impossible d’ouvrir ce message.",
+        },
         threadTabs: {
             ariaLabel: "Sections du fil",
             comments: "Commentaires",

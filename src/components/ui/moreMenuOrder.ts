@@ -42,6 +42,7 @@ export const MORE_MENU_GROUPS = [
     {
         group: "organize",
         kinds: [
+            "pinForEveryone",
             "rename",
             "move",
             "convert",

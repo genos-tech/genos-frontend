@@ -178,6 +178,8 @@ export function useChannelServiceBootstrap(
                     // A flag set or removed on another device during the gap is a per-user
                     // broadcast the server does not buffer.
                     void channelService.fetchActiveFlags();
+                    // Pins made or removed during the gap are not replayed either.
+                    channelService.refreshMessagePins();
                     // Same for a to-do written meanwhile over MCP or from another device: the
                     // `todo.changed` push is not buffered either (MIP-1626).
                     handleV3TodoChanged({});
