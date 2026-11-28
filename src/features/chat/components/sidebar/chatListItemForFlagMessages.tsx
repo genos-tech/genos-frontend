@@ -181,6 +181,9 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     // Same legacy-slot cast as every other read of this field below: the
     // v3 message UUID, which is also the key reminders are stored under.
     const reminder = useMessageReminder(flaggedMessage.messageId as unknown as string);
+    // The row button is named by the card's text, never by its avatar button (MIP-2605).
+    const rowId = React.useId();
+    const nameIds = { title: `${rowId}-title`, time: `${rowId}-time`, body: `${rowId}-body` };
 
     const isYou = myself.userId === flaggedMessage.dmPartnerUser.userId;
     const [tmpIsFlagged, setTmpIsFlagged] = useState(true);
@@ -765,6 +768,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             {/* The row shell (selection, active-flag bar, focus, hover) is the
                 shared NavItem; the card content below is the feed's own. */}
             <NavItem
+                aria-labelledby={Object.values(nameIds).join(" ")}
                 as="div"
                 data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
                 // Every avatar here is a button of its own, but a removed chat's picture.
@@ -878,6 +882,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                                 alignItems="center"
                                 direction="row"
                                 flexWrap="wrap"
+                                id={nameIds.title}
                                 spacing={0.5}
                             >
                                 {renderChatNameChip()}
@@ -896,7 +901,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                         </Stack>
 
                         {/* Right-aligned content */}
-                        <Stack alignItems="center" direction="row" spacing={1}>
+                        <Stack alignItems="center" direction="row" id={nameIds.time} spacing={1}>
                             <Typography
                                 level="body-xs"
                                 sx={{
@@ -911,7 +916,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     </Stack>
 
                     {/* Message content */}
-                    <Box sx={{ pl: "44px" }}>
+                    <Box id={nameIds.body} sx={{ pl: "44px" }}>
                         <Typography
                             level="body-sm"
                             sx={{

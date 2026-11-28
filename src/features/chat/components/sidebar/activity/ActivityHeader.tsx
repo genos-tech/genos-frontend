@@ -24,6 +24,8 @@ interface ActivityHeaderProps {
     isYou: boolean;
     chatTypeLookup: { [key: number]: string };
     useCM: ChatManagementState;
+    /** Ids for the header's text, which names the row button (MIP-2605). */
+    ids?: { title: string; chips: string; time: string };
 }
 
 export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
@@ -36,6 +38,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
     isYou,
     chatTypeLookup,
     useCM,
+    ids,
 }) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -104,6 +107,7 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                     activity.chatType === 2 ||
                     activity.chatType >= 5) && (
                     <Typography
+                        id={ids?.title}
                         level="title-sm"
                         sx={{
                             fontWeight: 600,
@@ -120,11 +124,19 @@ export const ActivityHeader: React.FC<ActivityHeaderProps> = ({
                     </Typography>
                 )}
 
-                <ActivityTypeChips activity={activity} chatTypeLookup={chatTypeLookup} />
+                <Box id={ids?.chips} sx={{ display: "contents" }}>
+                    <ActivityTypeChips activity={activity} chatTypeLookup={chatTypeLookup} />
+                </Box>
             </Stack>
 
             {/* Right-aligned timestamp and unread indicator */}
-            <Stack alignItems="center" direction="row" spacing={1} sx={{ flexShrink: 0, ml: 1 }}>
+            <Stack
+                alignItems="center"
+                direction="row"
+                id={ids?.time}
+                spacing={1}
+                sx={{ flexShrink: 0, ml: 1 }}
+            >
                 {/* Made through the official Claude / ChatGPT app (MIP-1573): its
                     round mark sits by the time. Only when the API named the family;
                     any other connected app, an API key and older rows show nothing
