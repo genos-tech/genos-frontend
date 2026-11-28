@@ -17,10 +17,12 @@ import type { TaskProps } from "../types/tasks";
 
 const loaded = vi.hoisted(() => ({
     calls: [] as Array<[number, number]>,
+    who: [] as string[],
     answer: (p: number, t: number): unknown[] => [{ id: t, projectId: p, title: `Task ${t}` }],
 }));
 vi.mock("../features/tasks/services/loadSpecificTask", () => ({
-    loadSpecificTask: vi.fn(async (_me: unknown, projectId: number, taskId: number) => {
+    loadSpecificTask: vi.fn(async (me: unknown, projectId: number, taskId: number) => {
+        loaded.who.push((me as { userId: string }).userId);
         loaded.calls.push([projectId, taskId]);
         return loaded.answer(projectId, taskId);
     }),
@@ -66,6 +68,7 @@ const go = (to: string) => act(async () => probe.navigate(to));
 
 beforeEach(() => {
     loaded.calls.length = 0;
+    loaded.who.length = 0;
     loaded.answer = (p, t) => [{ id: t, projectId: p, title: `Task ${t}` }];
     probe.renders = 0;
     probe.shown = undefined;
@@ -141,5 +144,36 @@ describe("a reload that answers with the task that is already shown", () => {
         await settle();
         expect(probe.shown).not.toBe(first);
         expect(probe.shown?.title).toBe("Renamed");
+    });
+});
+
+describe("the effect and the member (MIP-2229)", () => {
+    const Member = ({ userId, taskId }: { userId: string; taskId: number }) => {
+        const [note] = useState(() => new Map<number, { projectId: number; taskId: number }>());
+        if (!note.has(taskId)) note.set(taskId, { projectId: 1, taskId });
+        useTaskPreview({
+            currentTaskNote: note.get(taskId)!,
+            myself: { teamId: "team-1", userId } as UserProps,
+            accessToken: "tok",
+            setCurrentPreviewTask: () => {},
+        });
+        return null;
+    };
+    const view = (userId: string, taskId: number) => (
+        <MemoryRouter initialEntries={["/workspace/notes/task/5"]}>
+            <Member taskId={taskId} userId={userId} />
+        </MemoryRouter>
+    );
+
+    it("does not load again for a new member object, and the next load uses the newest", async () => {
+        const { rerender } = render(view("u1", 50));
+        await settle();
+        rerender(view("u2", 50));
+        await settle();
+        expect(loaded.who).toEqual(["u1"]);
+
+        rerender(view("u2", 51));
+        await settle();
+        expect(loaded.who).toEqual(["u1", "u2"]);
     });
 });
