@@ -43,9 +43,11 @@ export const RepliedToThreadLine = ({ preview, onOpen }: RepliedToThreadLineProp
                 width: "100%",
                 textAlign: "start",
                 marginBottom: "2px",
-                // The link roles hold AA on every bubble fill, the sent tint included.
-                color: g.link.default,
-                "&:hover": { color: g.link.hover, textDecoration: "underline" },
+                // `accent.text`, not the chat's link role: in dark that one is nearly white
+                // and would not read as clickable. The icon follows the text (Joy greys it).
+                color: g.accent.text,
+                "--Icon-color": "currentColor",
+                "&:hover": { textDecoration: "underline" },
                 // WCAG's smallest finger target, on a touch screen only.
                 "@media (pointer: coarse)": { minHeight: 28 },
             }}
