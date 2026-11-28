@@ -1,4 +1,4 @@
-import type { Message } from "../../../types/channel";
+import { isInMainTimeline, type Message } from "../../../types/channel";
 import type { PreviewMediaKind } from "../../../types/chat";
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "./common";
 
@@ -13,7 +13,7 @@ export const ANNOUNCE_PREVIEW_MAX = 100;
 export const matchesConversation = (m: Message, scope: AnnouncerScope): boolean =>
     scope.threadId
         ? m.isThreadReply && m.threadRootId === scope.threadId
-        : !m.isThreadReply && m.channelId === scope.chatId;
+        : isInMainTimeline(m) && m.channelId === scope.chatId;
 
 type PreviewLabels = {
     attachment: string;

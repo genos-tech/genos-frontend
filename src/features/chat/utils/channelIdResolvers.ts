@@ -13,6 +13,7 @@
  */
 
 import { channelService } from "../../../services/channel/channelService";
+import { isInMainTimeline } from "../../../types/channel";
 
 /**
  * UUID → legacy integer chat id. Returns null when:
@@ -115,7 +116,8 @@ export function resolveV3MessageUuid(
     const messages = channelService.getSnapshot().messagesByChannel.get(channelUuid);
     if (!messages) return null;
     for (const m of messages) {
-        if (m.isThreadReply) continue;
+        // A reply also sent to the chat (MIP-2486) has a row there too.
+        if (!isInMainTimeline(m)) continue;
         if (isPm) {
             if (m.taskId === messageIdOrTaskId) return m.id;
         } else {

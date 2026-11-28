@@ -3,7 +3,7 @@ import "@blocknote/mantine/style.css";
 
 import { useEffect, useRef, useState } from "react";
 import { BlockNoteView } from "@blocknote/mantine";
-import { Box } from "@mui/joy";
+import { Box, Checkbox } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -18,15 +18,17 @@ import { useAnchorClickIntercept } from "../../hooks/common/useAnchorClickInterc
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { TeamManagementState } from "../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../hooks/common/useUIStateManagement";
-import { useTranslation } from "../../i18n";
+import { fmt, useTranslation } from "../../i18n";
 import { channelService } from "../../services/channel/channelService";
 import { emitRequestError } from "../../services/requestErrorNotifier";
 import { UserProps } from "../../types/admin";
 import { ChatProps, ThreadProps } from "../../types/chat";
+import { resolveDisplayName } from "../ui/avatars/avatarContextHelpers";
 import { EmojiPicker } from "../ui/emoji/EmojiPicker";
 import { FileSizeRejectionSnackbar } from "../ui/feedback/FileSizeRejectionSnackbar";
 import { FileUploadOverlay, FileUploadStatusBadge } from "../ui/feedback/FileUploadProgress";
 import { GifPicker } from "../ui/gif/GifPicker";
+import { TOUCH_TARGET } from "../ui/touchTargets";
 import { useBlockNoteDictionary } from "./blockNoteI18n";
 import { useChatComposer } from "./composer/useChatComposer";
 import { insertEmojiValue } from "./customEmojiHelpers";
@@ -34,6 +36,12 @@ import { useGenosSchema } from "./genos/genosSchema";
 import { GenosSuggestionMenus } from "./genos/GenosSuggestionMenus";
 import { GenosChatToolbar } from "./genos/GenosToolbars";
 import { EditorSendButton } from "./sub/EditorSendButton";
+
+// "Also send to <chat>" (MIP-2486): direct messages, group chats and multi-person DMs. A
+// project chat's threads are task comments, so it has no such choice.
+const ALSO_SEND_CHAT_TYPES = [1, 2, 4];
+// A multi-person DM is named by its members, as its header does: a few, then "+N".
+const MDM_NAMES_SHOWN = 3;
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
 // legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
@@ -109,6 +117,40 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
 
     const dictionary = useBlockNoteDictionary();
 
+    // "Also send to <chat>": off for each reply. The ref is what `submit` reads, so a send
+    // fired from a stale closure still sees the box as it is now.
+    const threadKey = `${thread.chatId}:${thread.threadId}`;
+    const [alsoSendFor, setAlsoSendFor] = useState<string | null>(null);
+    const alsoSendForRef = useRef(alsoSendFor);
+    const chooseAlsoSend = (key: string | null) => {
+        alsoSendForRef.current = key;
+        setAlsoSendFor(key);
+    };
+    // Opening another thread leaves the box off, also when coming back.
+    useEffect(() => {
+        chooseAlsoSend(null);
+    }, [threadKey]);
+    const canAlsoSend = ALSO_SEND_CHAT_TYPES.includes(thread.chatType);
+    const alsoSendName = (): string => {
+        const nameOf = (userId: string, fallback: string) =>
+            resolveDisplayName(userId, fallback, myself, useTEM.teamMemberProfiles);
+        if (thread.chatType === 1 && thread.dmPartnerUser?.userId) {
+            return nameOf(thread.dmPartnerUser.userId, thread.chatName ?? "");
+        }
+        if (thread.chatType === 4) {
+            const members = useCM.allChats?.find(
+                (c) => String(c.chatId) === String(thread.chatId) && c.chatType === 4
+            )?.mdmMembers;
+            if (members?.length) {
+                const names = members.map((m) => nameOf(m.userId, m.userName));
+                const shown = names.slice(0, MDM_NAMES_SHOWN).join(", ");
+                const more = names.length - MDM_NAMES_SHOWN;
+                return more > 0 ? `${shown} +${more}` : shown;
+            }
+        }
+        return thread.chatName ?? "";
+    };
+
     // Upload pipeline, `pendingFiles` drop queue, draft, canSend and the send flow are the
     // shared composer hook's (see `composer/useChatComposer`). A reply is emptied from the
     // composer BEFORE the server answers and put back if the send fails.
@@ -147,6 +189,11 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             const bodyText: string = getFirstLine(content[0]);
             const channelUuid = String(thread.chatId);
             const threadRootUuid = String(thread.threadId);
+            // Unticked at once, like the text: the next reply starts plain. Put back if the
+            // send fails.
+            const sentFor = alsoSendForRef.current;
+            const alsoInChannel = canAlsoSend && sentFor === `${channelUuid}:${threadRootUuid}`;
+            if (alsoInChannel) chooseAlsoSend(null);
             try {
                 // `echo`: optimistic local row so the reply renders in the
                 // thread pane immediately instead of after the server ack
@@ -156,6 +203,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 await channelService.send(channelUuid, withTrailingBlank(content), {
                     parentId: threadRootUuid,
                     bodyText,
+                    alsoInChannel,
                     echo: {
                         sender: {
                             avatarImgPath: myself.avatarImgPath || null,
@@ -170,6 +218,7 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
             } catch (e) {
                 console.error("[bnThreadEditor] channelService.send failed:", e);
                 emitRequestError("messageSendFailed");
+                if (alsoInChannel) chooseAlsoSend(sentFor);
                 return false;
             }
         },
@@ -231,68 +280,95 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                 showGifPicker={showGifPicker}
                 onSelect={insertGif}
             />
-            {/* data-fab-avoid: the floating "Open Genos" button rises above this box
-                instead of covering Send (MIP-1403). */}
-            <Box
-                ref={editorBoxRef}
-                className={bnBoxClassName}
-                data-fab-avoid="composer"
-                sx={{ position: "relative" }}
-            >
-                <FileUploadStatusBadge count={composer.editorUploadCount} />
-                <FileUploadOverlay
-                    detail={composer.overlay.detail}
-                    label={t.common.ui.fileUpload.uploadingDroppedFiles}
-                    open={composer.overlay.open}
-                />
-                <BlockNoteView
-                    className="bn-box"
-                    editor={editor}
-                    emojiPicker={false}
-                    // A custom "/" SuggestionMenuController is mounted below —
-                    // the built-in menu must be off or BOTH render on "/",
-                    // stacking duplicate group labels (the "Media x3" bug).
-                    formattingToolbar={false}
-                    sideMenu={false} // false for Chat/comment, true for Task content
-                    slashMenu={false}
-                    theme={mode === "dark" ? "dark" : "light"}
-                    data-changing-font-demo // custom font
-                    onChange={composer.viewProps.onChange}
-                    onKeyDown={composer.viewProps.onKeyDown}
-                >
-                    <EditorSendButton disabled={composer.sendDisabled} onSend={composer.send} />
-
-                    <Box
-                        className="bn-editor-toolbar"
-                        sx={{
-                            position: "absolute",
-                            top: "1%",
-                            left: "0.5%",
-                            zIndex: 1,
-                            p: 0.7,
-                        }}
-                    >
-                        <GenosChatToolbar
-                            editor={editor}
-                            isMobile={isMobile}
-                            setShowEmojiPicker={setShowEmojiPicker}
-                            setShowGifPicker={setShowGifPicker}
-                            wrapToggles={{ unwrapAll, setUnwrapAll, unwrapCode, setUnwrapCode }}
-                            onAttach={composer.openAttach}
-                        />
-                    </Box>
-
-                    <GenosSuggestionMenus
-                        editor={editor}
-                        slash={{ preset: "chat", setShowGifPicker }}
-                        getMentionSources={() => ({
-                            teamMemberProfiles: teamMemberProfilesRef.current,
-                            teamMembers: teamMembersRef.current,
-                            myselfUserId: myself.userId,
-                            mentionGroups,
-                        })}
+            {/* data-fab-avoid: the floating "Open Genos" button rises above the composer
+                instead of covering Send (MIP-1403) or the checkbox. */}
+            <Box data-fab-avoid="composer">
+                <Box ref={editorBoxRef} className={bnBoxClassName} sx={{ position: "relative" }}>
+                    <FileUploadStatusBadge count={composer.editorUploadCount} />
+                    <FileUploadOverlay
+                        detail={composer.overlay.detail}
+                        label={t.common.ui.fileUpload.uploadingDroppedFiles}
+                        open={composer.overlay.open}
                     />
-                </BlockNoteView>
+                    <BlockNoteView
+                        className="bn-box"
+                        editor={editor}
+                        emojiPicker={false}
+                        // A custom "/" SuggestionMenuController is mounted below —
+                        // the built-in menu must be off or BOTH render on "/",
+                        // stacking duplicate group labels (the "Media x3" bug).
+                        formattingToolbar={false}
+                        sideMenu={false} // false for Chat/comment, true for Task content
+                        slashMenu={false}
+                        theme={mode === "dark" ? "dark" : "light"}
+                        data-changing-font-demo // custom font
+                        onChange={composer.viewProps.onChange}
+                        onKeyDown={composer.viewProps.onKeyDown}
+                    >
+                        <EditorSendButton
+                            disabled={composer.sendDisabled}
+                            onSend={composer.send}
+                        />
+
+                        <Box
+                            className="bn-editor-toolbar"
+                            sx={{
+                                position: "absolute",
+                                top: "1%",
+                                left: "0.5%",
+                                zIndex: 1,
+                                p: 0.7,
+                            }}
+                        >
+                            <GenosChatToolbar
+                                editor={editor}
+                                isMobile={isMobile}
+                                setShowEmojiPicker={setShowEmojiPicker}
+                                setShowGifPicker={setShowGifPicker}
+                                wrapToggles={{
+                                    unwrapAll,
+                                    setUnwrapAll,
+                                    unwrapCode,
+                                    setUnwrapCode,
+                                }}
+                                onAttach={composer.openAttach}
+                            />
+                        </Box>
+
+                        <GenosSuggestionMenus
+                            editor={editor}
+                            slash={{ preset: "chat", setShowGifPicker }}
+                            getMentionSources={() => ({
+                                teamMemberProfiles: teamMemberProfilesRef.current,
+                                teamMembers: teamMembersRef.current,
+                                myselfUserId: myself.userId,
+                                mentionGroups,
+                            })}
+                        />
+                    </BlockNoteView>
+                </Box>
+                {canAlsoSend && (
+                    <Checkbox
+                        checked={alsoSendFor === threadKey}
+                        label={fmt(t.chat.thread.alsoSendTo, { chatName: alsoSendName() })}
+                        size="sm"
+                        // The whole row is the target, padding included.
+                        overlay
+                        sx={{
+                            // `overlay` reaches to the nearest positioned box: without this it
+                            // lies over the editor and takes its clicks.
+                            position: "relative",
+                            mt: 0.75,
+                            mx: 0.5,
+                            maxWidth: "100%",
+                            alignItems: "center",
+                            wordBreak: "break-word",
+                            // A finger needs a bigger row.
+                            "@media (pointer: coarse)": { minHeight: TOUCH_TARGET },
+                        }}
+                        onChange={(e) => chooseAlsoSend(e.target.checked ? threadKey : null)}
+                    />
+                )}
             </Box>
         </Box>
     );

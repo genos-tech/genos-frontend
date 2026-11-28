@@ -305,6 +305,47 @@ describe.each([
                     });
                 });
 
+                it("can also send the reply to the chat, once (MIP-2486)", async () => {
+                    mount();
+                    const box = () => screen.getByRole("checkbox") as HTMLInputElement;
+                    expect(box().checked).toBe(false);
+                    fireEvent.click(box());
+                    typeInto("hello");
+                    await pressChord({ metaKey: true });
+                    await flush();
+                    expect((send.mock.calls[0] as any[])[2].alsoInChannel).toBe(true);
+                    expect(box().checked).toBe(false);
+
+                    typeInto("again");
+                    await pressChord({ metaKey: true });
+                    await flush();
+                    expect((send.mock.calls[1] as any[])[2].alsoInChannel).toBe(false);
+                });
+
+                it("keeps the box ticked when that send fails (MIP-2486)", async () => {
+                    send.mockRejectedValue(new Error("nope"));
+                    mount();
+                    fireEvent.click(screen.getByRole("checkbox"));
+                    typeInto("hello");
+                    await pressChord({ metaKey: true });
+                    await flush();
+                    expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(true);
+                });
+
+                it("leaves the box off in another thread, and again on the way back", () => {
+                    const view = mount();
+                    fireEvent.click(screen.getByRole("checkbox"));
+                    remount(view, otherTarget);
+                    expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(false);
+                    remount(view, {});
+                    expect((screen.getByRole("checkbox") as HTMLInputElement).checked).toBe(false);
+                });
+
+                it("offers no such box in a project chat (MIP-2486)", () => {
+                    mount({ thread: { ...threadA, chatType: 3 } });
+                    expect(screen.queryByRole("checkbox")).toBeNull();
+                });
+
                 it("sends without a socket (v3 path needs none)", async () => {
                     mount({ socket: null });
                     typeInto("hello");

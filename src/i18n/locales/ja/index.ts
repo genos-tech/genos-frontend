@@ -1388,6 +1388,7 @@ export const ja: DeepPartial<Messages> = {
         thread: {
             replyPlaceholder: "スレッドに返信…",
             newThread: "スレッドを開始",
+            alsoSendTo: "{chatName}にも送信する",
         },
         attachments: {
             uploading: "添付ファイルをアップロード中…",
@@ -1646,6 +1647,9 @@ export const ja: DeepPartial<Messages> = {
         bubble: {
             clickToOpenTask: "クリックでタスクを開く",
             clickToOpenThread: "{modKey}＋クリックでスレッドを開く",
+            repliedToThread: "スレッドへの返信",
+            repliedToThreadWithPreview: "スレッドへの返信: {preview}",
+            alsoSentToChat: "チャットにも送信済み",
             updated: "更新済み",
             edited: "編集済み",
         },

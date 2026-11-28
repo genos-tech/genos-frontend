@@ -252,7 +252,19 @@ export type RuleMoveNotice = {
     milestone?: boolean;
 };
 
+/** Where a main-chat row that is really a thread reply came from (MIP-2486). */
+export type AlsoSentFrom = {
+    /** The thread's root message id. */
+    threadRootId: string;
+    /** The root's per-channel number (the thread URL); null when the root is not loaded. */
+    rootSeq: number | null;
+    /** The root's first line; null when it has none, was deleted or is not loaded. */
+    rootPreview: string | null;
+};
+
 export type MessageProps = {
+    /** Set on a thread reply that was also sent to the chat. */
+    alsoSentFrom?: AlsoSentFrom;
     chatType: number;
     messageIdWithChatId?: string;
     chatId: number;
@@ -297,6 +309,8 @@ export type MessageProps = {
 };
 
 export type ThreadMessageProps = {
+    /** This reply was also sent to the chat (MIP-2486). */
+    alsoInChannel?: boolean;
     /** A task's or milestone's card message, drawn from the live task (MIP-2484). */
     isTaskCard?: boolean;
     chatType: number;

@@ -1403,6 +1403,7 @@ export const fr: DeepPartial<Messages> = {
         thread: {
             replyPlaceholder: "Répondre dans le fil…",
             newThread: "Démarrer un fil",
+            alsoSendTo: "Envoyer aussi à {chatName}",
         },
         attachments: {
             uploading: "Importation des pièces jointes…",
@@ -1664,6 +1665,9 @@ export const fr: DeepPartial<Messages> = {
         bubble: {
             clickToOpenTask: "Cliquer pour ouvrir la tâche",
             clickToOpenThread: "{modKey}+clic pour ouvrir le fil",
+            repliedToThread: "A répondu à un fil",
+            repliedToThreadWithPreview: "A répondu à un fil : {preview}",
+            alsoSentToChat: "Également envoyé dans la discussion",
             updated: "Mis à jour",
             edited: "Modifié",
         },

@@ -38,6 +38,7 @@ import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleMoreMenu } from "./BubbleMoreMenu";
 import { BubbleUnderBar } from "./BubbleUnderBar";
 import { BubbleUserName } from "./BubbleUserName";
+import { RepliedToThreadLine } from "./RepliedToThreadLine";
 
 // Chat type → URL path segment. Module constant so it isn't rebuilt on
 // every bubble render.
@@ -199,8 +200,10 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
         // and navigate to the URL.
         //
         // `message.messageIdWithChatId` is the parent's v3 UUID (set
-        // by the v3 → legacy adapter). That's the thread root.
-        const threadRootUuid = message.messageIdWithChatId;
+        // by the v3 → legacy adapter). That's the thread root. A row
+        // that is itself a reply also sent to the chat (MIP-2486)
+        // opens the thread it belongs to.
+        const threadRootUuid = message.alsoSentFrom?.threadRootId ?? message.messageIdWithChatId;
         if (!threadRootUuid) {
             return;
         }
@@ -250,9 +253,14 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             // `resolveV3ThreadRootUuid(isPm=true)` lookup. Other kinds
             // use the parent's per-channel seq.
             const typePath = CHAT_TYPE_PATH[chat.chatType];
-            if (typePath) {
+            // The URL names a thread by its ROOT's number; with the root not
+            // loaded the pane opens without one.
+            const rootNumber = message.alsoSentFrom
+                ? message.alsoSentFrom.rootSeq
+                : message.messageId;
+            if (typePath && rootNumber !== null) {
                 const threadIdentifier =
-                    chat.chatType === 3 && message.taskId ? message.taskId : message.messageId;
+                    chat.chatType === 3 && message.taskId ? message.taskId : rootNumber;
                 navigate(`/workspace/chat/${typePath}/${chat.chatId}/thread/${threadIdentifier}`);
             }
         })();
@@ -744,7 +752,21 @@ const MessageBubbleImpl = (props: MessageBubbleProps) => {
             onTouchMove={longPress.onTouchMove}
             onTouchStart={longPress.onTouchStart}
         >
-            {body}
+            {message.alsoSentFrom ? (
+                <>
+                    <RepliedToThreadLine
+                        preview={message.alsoSentFrom.rootPreview}
+                        onOpen={(e) => {
+                            // The click that ends a long-press only meant "show the toolbar".
+                            if (longPress.consumedTap()) return;
+                            replayHandler(e);
+                        }}
+                    />
+                    {body}
+                </>
+            ) : (
+                body
+            )}
         </Bubble>
     );
 };

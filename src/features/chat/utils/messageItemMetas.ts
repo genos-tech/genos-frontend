@@ -12,6 +12,9 @@ export type MessageItemMeta = {
 type MetaSourceMessage = {
     tsSent: string;
     sender: { userId: UserProps["userId"] };
+    /** A thread reply also sent to the chat (MIP-2486): it never groups, so it names its
+     *  author, and the message after it does not join it. */
+    alsoSentFrom?: unknown;
 };
 
 // Two consecutive messages from the same sender within this window
@@ -41,6 +44,7 @@ export const computeMessageItemMetas = (
     let prevEpoch = 0;
     let prevDayKey = -1;
     let prevSenderId: UserProps["userId"] | null = null;
+    let prevAlsoSent = false;
     for (let i = 0; i < messages.length; i++) {
         const msg = messages[i];
         // Same parse as `dateUtils.convertAlmostIsoUtcToLocalFormatted`:
@@ -60,7 +64,9 @@ export const computeMessageItemMetas = (
             i > 0 &&
             prevSenderId === msg.sender.userId &&
             Math.abs(epoch - prevEpoch) < SIMPLE_BUBBLE_WINDOW_MS &&
-            (isThread || chatType !== 3);
+            (isThread || chatType !== 3) &&
+            !msg.alsoSentFrom &&
+            !prevAlsoSent;
 
         let paddingBottom = 0.3;
         if (i === messages.length - 1) paddingBottom += 3;
@@ -75,6 +81,7 @@ export const computeMessageItemMetas = (
         prevEpoch = epoch;
         prevDayKey = dayKey;
         prevSenderId = msg.sender.userId;
+        prevAlsoSent = Boolean(msg.alsoSentFrom);
     }
     return out;
 };

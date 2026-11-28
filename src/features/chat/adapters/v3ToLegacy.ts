@@ -21,6 +21,7 @@
 import type { UserProps } from "../../../types/admin";
 import {
     ChannelKind,
+    isInMainTimeline,
     type Channel,
     type ChannelMember,
     type Flag,
@@ -611,9 +612,37 @@ export function v3MessageToLegacy(args: {
 }
 
 /**
- * Plural form. Filters thread replies out (the legacy `ChatProps.messages`
- * slot is top-level only; thread replies render through a different
- * surface). Sorts by `tsSent` asc to mirror the legacy delta ordering.
+ * For a thread reply also sent to the chat (MIP-2486), where it came from. `roots` finds the
+ * thread's root among the loaded messages; it is built once per pass, and only if needed.
+ */
+function alsoSentRootFinder(messages: readonly Message[]): (m: Message) => Message | undefined {
+    let byId: Map<string, Message> | null = null;
+    return (m) => {
+        if (!m.isThreadReply || !m.threadRootId) return undefined;
+        byId ??= new Map(messages.map((x) => [x.id, x]));
+        return byId.get(m.threadRootId);
+    };
+}
+
+function alsoSentFromField(
+    m: Message,
+    root: Message | undefined
+): Pick<MessageProps, "alsoSentFrom"> {
+    if (!m.isThreadReply || !m.threadRootId) return {};
+    const preview = root && !root.deletedAt ? (root.bodyText ?? "").trim() : "";
+    return {
+        alsoSentFrom: {
+            threadRootId: m.threadRootId,
+            rootSeq: root?.seq ?? null,
+            rootPreview: preview || null,
+        },
+    };
+}
+
+/**
+ * Plural form. Filters plain thread replies out (the legacy `ChatProps.messages`
+ * slot is the main timeline: top-level rows and replies also sent to the chat; other
+ * replies render through a different surface). Sorts by `tsSent` asc to mirror the legacy delta ordering.
  */
 export function v3MessagesToLegacy(args: {
     messages: readonly Message[];
@@ -635,9 +664,10 @@ export function v3MessagesToLegacy(args: {
     // them so the PM pane only renders real task cards. Other kinds
     // (DM/GM/MDM) keep every top-level non-deleted row.
     const isPm = chatType === 3;
+    const rootOf = alsoSentRootFinder(messages);
     const out: MessageProps[] = [];
     for (const m of messages) {
-        if (m.isThreadReply) continue;
+        if (!isInMainTimeline(m)) continue;
         if (m.deletedAt) continue;
         if (!Number.isNaN(cutoffMs) && m.tsSent && Date.parse(m.tsSent) < cutoffMs) continue;
         // Adapt FIRST, then filter on the *resolved* taskId. The server
@@ -651,7 +681,10 @@ export function v3MessagesToLegacy(args: {
         // though `v3MessageToLegacy` already coalesces `m.taskId ??
         // metadata.taskId`. Reusing the adapter's resolved value keeps
         // the filter and the resolver from ever diverging again.
-        const adapted = v3MessageToLegacy({ message: m, channelId, chatType, flaggedMessageIds });
+        const adapted = {
+            ...v3MessageToLegacy({ message: m, channelId, chatType, flaggedMessageIds }),
+            ...alsoSentFromField(m, rootOf(m)),
+        };
         if (isPm && adapted.taskId == null && !adapted.ruleMove) continue;
         out.push(adapted);
     }
@@ -689,30 +722,40 @@ export function createCachedMessagesAdapter(): (args: {
     flaggedMessageIds?: { has(id: string): boolean };
     retentionCutoff?: string;
 }) => MessageProps[] {
-    const cache = new Map<string, { src: Message; flagged: boolean; out: MessageProps }>();
+    // `root` is the thread root of a reply also sent to the chat: its row shows the root's
+    // first line, so an edit of the root re-adapts it.
+    const cache = new Map<
+        string,
+        { src: Message; root: Message | undefined; flagged: boolean; out: MessageProps }
+    >();
     let lastResult: MessageProps[] | null = null;
     return (args) => {
         const { messages, channelId, chatType, flaggedMessageIds, retentionCutoff } = args;
         const cutoffMs = retentionCutoff ? Date.parse(retentionCutoff) : NaN;
         const isPm = chatType === 3;
+        const rootOf = alsoSentRootFinder(messages);
         const out: MessageProps[] = [];
         for (const m of messages) {
-            if (m.isThreadReply) continue;
+            if (!isInMainTimeline(m)) continue;
             if (m.deletedAt) continue;
             if (!Number.isNaN(cutoffMs) && m.tsSent && Date.parse(m.tsSent) < cutoffMs) continue;
             const flagged = flaggedMessageIds?.has(m.id) ?? false;
+            const root = rootOf(m);
             const hit = cache.get(m.id);
             let adapted: MessageProps;
-            if (hit && hit.src === m && hit.flagged === flagged) {
+            if (hit && hit.src === m && hit.root === root && hit.flagged === flagged) {
                 adapted = hit.out;
             } else {
-                adapted = v3MessageToLegacy({
-                    message: m,
-                    channelId,
-                    chatType,
-                    flaggedMessageIds,
-                });
-                cache.set(m.id, { flagged, out: adapted, src: m });
+                adapted = {
+                    ...v3MessageToLegacy({
+                        message: m,
+                        channelId,
+                        chatType,
+                        flaggedMessageIds,
+                    }),
+                    ...alsoSentFromField(m, root),
+                };
+                cache.set(m.id, { flagged, out: adapted, root, src: m });
             }
             // Same PM orphan-row filter as `v3MessagesToLegacy` — on the
             // RESOLVED taskId, see the rationale there.
@@ -809,6 +852,7 @@ export function v3ThreadMessageToLegacy(args: {
                   meta.taskCommentId === undefined,
         attachment: v3AttachmentToLegacy(m.attachments),
         ...viaAppField(m),
+        ...(m.alsoInChannel ? { alsoInChannel: true } : {}),
     };
 }
 

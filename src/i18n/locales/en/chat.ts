@@ -165,6 +165,7 @@ export const chat = {
     thread: {
         replyPlaceholder: "Reply in thread…",
         newThread: "Start a thread",
+        alsoSendTo: "Also send to {chatName}",
     },
     attachments: {
         uploading: "Uploading attachments…",
@@ -426,6 +427,9 @@ export const chat = {
     bubble: {
         clickToOpenTask: "Click to open task",
         clickToOpenThread: "{modKey}+Click to open thread",
+        repliedToThread: "Replied to a thread",
+        repliedToThreadWithPreview: "Replied to a thread: {preview}",
+        alsoSentToChat: "Also sent to the chat",
         updated: "Updated",
         edited: "Edited",
     },

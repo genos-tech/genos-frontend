@@ -1317,6 +1317,7 @@ export const zh: DeepPartial<Messages> = {
         thread: {
             replyPlaceholder: "在话题中回复…",
             newThread: "发起话题",
+            alsoSendTo: "同时发送到 {chatName}",
         },
         attachments: {
             uploading: "正在上传附件…",
@@ -1569,6 +1570,9 @@ export const zh: DeepPartial<Messages> = {
         bubble: {
             clickToOpenTask: "点击打开任务",
             clickToOpenThread: "{modKey}+点击打开话题",
+            repliedToThread: "回复了话题",
+            repliedToThreadWithPreview: "回复了话题：{preview}",
+            alsoSentToChat: "已同时发送到聊天",
             updated: "已更新",
             edited: "已编辑",
         },

@@ -2822,6 +2822,7 @@ export const hi: DeepPartial<Messages> = {
         thread: {
             replyPlaceholder: "थ्रेड में जवाब दें…",
             newThread: "एक थ्रेड शुरू करें",
+            alsoSendTo: "{chatName} में भी भेजें",
         },
         attachments: {
             uploading: "अटैचमेंट अपलोड हो रहे हैं…",
@@ -3079,6 +3080,9 @@ export const hi: DeepPartial<Messages> = {
         bubble: {
             clickToOpenTask: "टास्क खोलने के लिए क्लिक करें",
             clickToOpenThread: "थ्रेड खोलने के लिए {modKey}+क्लिक",
+            repliedToThread: "थ्रेड में जवाब दिया",
+            repliedToThreadWithPreview: "थ्रेड में जवाब दिया: {preview}",
+            alsoSentToChat: "चैट में भी भेजा गया",
             updated: "अपडेट किया गया",
             edited: "संपादित",
         },
