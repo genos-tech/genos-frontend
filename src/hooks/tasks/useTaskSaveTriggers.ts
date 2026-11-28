@@ -17,13 +17,12 @@ import { TaskEditStateManagement } from "../../types/taskEditState";
  */
 export const useTaskSaveTriggers = (
     taskEditState: TaskEditStateManagement,
-    sendUpdatedTask: (taskSwitched: boolean, syncCard?: boolean) => Promise<void>
+    sendUpdatedTask: (taskSwitched: boolean, metadataSave?: boolean) => Promise<void>
 ) => {
     useEffect(() => {
         // Save updated task (title, assignee, status, ..., but not task body).
-        // `syncCard = true`: this is the metadata-save path, so rebuild the PM
-        // task-card header + broadcast it so every PM viewer's card updates
-        // live (the body autosave / switch / close saves pass false).
+        // `metadataSave = true`: this is the metadata-save path (the body
+        // autosave / switch / close saves pass false).
         //
         // Keyed on `taskUpdateSeq`, NOT on the `taskUpdated` boolean. React
         // coalesces `setTaskUpdated(true)` while the flag is already true, so

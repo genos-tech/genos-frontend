@@ -4,13 +4,11 @@ import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { getMessages } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { UserProps } from "../../../types/admin";
-import { ChannelKind } from "../../../types/channel";
 import { TaskProps } from "../../../types/tasks";
 import { ASSIGNEE_NOT_ON_DESTINATION } from "../utils/moveRefusal";
 import { toServerTimestamp } from "../utils/serverTimestamp";
 import { taskMessageTemplate } from "../utils/TaskMessageTemplate";
 import { addTask } from "./addTask";
-import { findPmChannelForProject } from "./findPmChannel";
 
 const base_url = import.meta.env.VITE_API_BASE_URL;
 
@@ -25,7 +23,7 @@ type uploadTaskProps = {
     setCurrentPreviewTaskId: (value: number) => void;
 };
 
-/** The "task created" cards are live-sync extras: `channelService.send` only
+/** The "task created" reply in the origin thread is a live-sync extra: `channelService.send` only
  *  settles on the realtime socket's ack, and while the socket is down it
  *  stays queued (flushed on reconnect) and never resolves. The task is
  *  already saved by the PUT, so finishing the create must not wait on it.
@@ -44,8 +42,9 @@ export type UploadNewTaskResult = { ok: true; taskId: number } | { ok: false };
 
 /**
  * Finalize the create form's scaffold row into a real task: PUT the user's
- * content over it, upload the staged attachments, then fan the "task
- * created" card out to the project's PM channel.
+ * content over it, upload the staged attachments, then reply with the task's
+ * summary in the DM or group thread it was made from. The project chat's card
+ * is posted by the api.
  *
  * **Failure keeps the form open.** The reason goes to the error snackbar
  * and `ok: false` tells `TaskCreateFooter` to leave the draft alone, so a
@@ -53,8 +52,7 @@ export type UploadNewTaskResult = { ok: true; taskId: number } | { ok: false };
  * `task_id`, so it rewrites that one row rather than creating a second.
  *
  * Retrying PAST a successful PUT (i.e. an attachment failed) does re-run
- * the attachment uploads and the PM card send, so an already-uploaded file
- * can duplicate and the channel can get a second card. That's the accepted
+ * the attachment uploads, so an already-uploaded file can duplicate. That's the accepted
  * cost of not silently discarding the user's staged files; the alternative
  * — closing the form on a partial failure — loses them outright.
  */
@@ -316,82 +314,10 @@ export const uploadNewTask = async (props: uploadTaskProps): Promise<UploadNewTa
                     sprintId: taskContent.sprintId ?? null,
                 });
 
-                // Post "task created" messages via v3 channelService.
-                // The legacy `socket.emit("join" / "message" / "thread_message")`
-                // path went to the deleted `/` namespace handlers; the v3
-                // replacement is `channelService.send(channelUuid, body,
-                // { bodyText, parentId, metadata })`. PM channel UUID is
-                // looked up by scanning the channelService snapshot for
-                // `kind=PM` + matching `projectId`.
+                // The project chat's card is the api's (it posts one for every
+                // create, MIP-2483): the app sends only the reply into the thread
+                // the task was made from.
                 const createTaskMessage = taskMessageTemplate(myself, taskContent);
-                if (taskContent.project && createTaskMessage) {
-                    const projectId = taskContent.project.projectId;
-                    let pmChannel = findPmChannelForProject(
-                        channelService.getSnapshot().channels.values(),
-                        projectId
-                    );
-                    // PM channels for the snapshot are seeded once on app boot
-                    // (useChatManagement → loadV3Chats) and from IDB, so the
-                    // snapshot can be stale — the project's PM channel may have
-                    // been created/joined after that load, or the boot fetch
-                    // raced/failed. Re-fetch the channel list once, register the
-                    // PM row we need, and retry before giving up. Capture the
-                    // API's PM rows so a surviving failure is self-diagnosing.
-                    let pmChannelsFromApi: Array<{ id: string; projectId: number | null }> | null =
-                        null;
-                    if (!pmChannel) {
-                        try {
-                            const fresh = await channelService.listChannels();
-                            pmChannelsFromApi = fresh
-                                .filter((ch) => ch.kind === ChannelKind.PM)
-                                .map((ch) => ({ id: ch.id, projectId: ch.projectId }));
-                            const freshPm = findPmChannelForProject(fresh, projectId);
-                            if (freshPm) {
-                                channelService.handleChannelCreated(freshPm);
-                                pmChannel = freshPm;
-                            }
-                        } catch (e) {
-                            console.error(
-                                "uploadNewTask: failed to refresh channels for PM lookup",
-                                e
-                            );
-                        }
-                    }
-
-                    if (!pmChannel) {
-                        // Still nothing after a fresh fetch → the user genuinely
-                        // has no PM channel for this project in their channel
-                        // list (not a member, or the row carries a null
-                        // projectId). The dump distinguishes that from a
-                        // transient miss.
-                        console.error(
-                            "uploadNewTask: PM channel not found in channelService snapshot",
-                            {
-                                projectId,
-                                projectIdType: typeof projectId,
-                                pmChannelsFromApi,
-                            }
-                        );
-                    } else {
-                        const taskMetadata = {
-                            taskId: taskCreateData.task.task_id,
-                            displayId: taskCreateData.task.displayId,
-                            taskStatus: taskCreateData.task.status,
-                            systemUserId: taskContent.project.systemUserId,
-                        };
-                        // Top-level "task created" card in the PM channel.
-                        // No thread follow-up is posted: the task thread's
-                        // Activities tab renders the structured audit log
-                        // (`/task/activity/`) rather than system bubbles.
-                        postCardWithoutWaiting(
-                            channelService.send(pmChannel.id, createTaskMessage, {
-                                bodyText: taskContent.title,
-                                metadata: taskMetadata,
-                            }),
-                            "uploadNewTask: failed to post PM task message"
-                        );
-                    }
-                }
 
                 // When the task was created FROM a DM/GM/MDM thread, post
                 // the task summary as a reply in THAT thread so the

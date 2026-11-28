@@ -25,7 +25,6 @@ const patch = vi.hoisted(() => vi.fn());
 vi.mock("../features/tasks/diagram/services/patchTaskFields", () => ({ patchTaskFields: patch }));
 vi.mock("../features/tasks/services/deleteTaskCommit", () => ({
     afterTaskDeleted: vi.fn(),
-    syncDeletedTaskCard: vi.fn(async () => undefined),
 }));
 vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "tok" }) }));
 vi.mock("../features/tasks/components/TaskMentionHoverCard", () => ({
@@ -114,7 +113,6 @@ const setup = () => {
             } as BriefingTodayView;
             const run = useTodayQuickActions({
                 useTM,
-                myself: { userId: "u" } as never,
                 localDate: "2026-11-20",
                 data,
             });

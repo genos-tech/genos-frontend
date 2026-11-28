@@ -1051,9 +1051,8 @@ export const CreateTaskForm = (props: CreateTaskProps) => {
             // page refresh. `refreshProjectTasks` reloads unconditionally,
             // which is what this call always meant to do.
             await usePM.refreshProjectTasks(projectId);
-            // Mirror the "task created" socket fan-out for milestones so
-            // teammates see a chat bubble in the project's PM channel
-            // (and any open thread) when a new milestone lands. Wrapped
+            // A milestone made from a chat thread leaves a reply there (the
+            // project chat's card is the api's). Wrapped
             // defensively because a chat hiccup must not block the
             // milestone preview from opening below.
             try {
