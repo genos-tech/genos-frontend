@@ -295,6 +295,8 @@ export type MessageProps = {
 };
 
 export type ThreadMessageProps = {
+    /** A task's or milestone's card message, drawn from the live task (MIP-2484). */
+    isTaskCard?: boolean;
     chatType: number;
     messageIdWithChatIdAndThreadId: string;
     systemUserId?: string;

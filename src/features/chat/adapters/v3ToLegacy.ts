@@ -786,6 +786,18 @@ export function v3ThreadMessageToLegacy(args: {
         reactions: (m.reactions ?? []).map(v3ReactionToLegacy),
         taskExist: taskId != null,
         isFlagged: flaggedMessageIds?.has(m.id) ?? false,
+        // A task's card (MIP-2484): the root of a project-chat thread, or the copy posted
+        // into the DM / group thread the task was made from. That copy is the reply whose
+        // metadata names the task with its status or the project's system user (what the
+        // posting code writes); a task comment mirrored into a thread names the task with
+        // its `taskCommentId`.
+        isTaskCard:
+            chatType === 3
+                ? !m.isThreadReply && taskId != null
+                : m.isThreadReply &&
+                  typeof meta.taskId === "number" &&
+                  (meta.taskStatus !== undefined || meta.systemUserId !== undefined) &&
+                  meta.taskCommentId === undefined,
         attachment: v3AttachmentToLegacy(m.attachments),
         ...viaAppField(m),
     };
