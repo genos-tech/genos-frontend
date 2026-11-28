@@ -42,6 +42,18 @@ import { EditorSendButton } from "./sub/EditorSendButton";
 const ALSO_SEND_CHAT_TYPES = [1, 2, 4];
 // A multi-person DM is named by its members, as its header does: a few, then "+N".
 const MDM_NAMES_SHOWN = 3;
+const ALSO_SEND_SX = {
+    // The checkbox's `overlay` reaches to the nearest positioned box: without this it lies
+    // over the editor and takes its clicks.
+    position: "relative",
+    mt: 0.75,
+    mx: 0.5,
+    maxWidth: "100%",
+    alignItems: "center",
+    wordBreak: "break-word",
+    // A finger needs a bigger row.
+    "@media (pointer: coarse)": { minHeight: TOUCH_TARGET },
+} as const;
 
 // Chat attachment upload uses channelService.uploadInlineFile (v3); the
 // legacy VITE_API_BASE_URL / VITE_DJANGO_URL upload consts were removed.
@@ -351,19 +363,8 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     <Checkbox
                         checked={alsoSendFor === threadKey}
                         label={fmt(t.chat.thread.alsoSendTo, { chatName: alsoSendName() })}
-                        sx={{
-                            // `overlay` reaches to the nearest positioned box: without this it
-                            // lies over the editor and takes its clicks.
-                            position: "relative",
-                            mt: 0.75,
-                            mx: 0.5,
-                            maxWidth: "100%",
-                            alignItems: "center",
-                            wordBreak: "break-word",
-                            // A finger needs a bigger row.
-                            "@media (pointer: coarse)": { minHeight: TOUCH_TARGET },
-                        }}
                         size="sm"
+                        sx={ALSO_SEND_SX}
                         // The whole row is the target, padding included.
                         overlay
                         onChange={(e) => chooseAlsoSend(e.target.checked ? threadKey : null)}
