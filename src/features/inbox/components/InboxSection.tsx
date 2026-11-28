@@ -96,12 +96,12 @@ export const InboxSection = ({
                     computeItemKey={(_, item) => item.itemId}
                     data={items}
                     firstItemIndex={firstItemIndex}
+                    style={{ height: "100%" }}
                     // Mount-only: a list that opens on a linked card starts there. A
                     // `scrollToIndex` before Virtuoso has measured its rows is lost.
                     initialTopMostItemIndex={
                         selectedIndex > 0 ? { index: selectedIndex, align: "center" } : 0
                     }
-                    style={{ height: "100%" }}
                     itemContent={(virtualIndex, item) => {
                         const index = virtualIndex - firstItemIndex;
                         const isSelected = selectedItemId === item.itemId;
