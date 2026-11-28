@@ -2788,6 +2788,7 @@ export const ar: DeepPartial<Messages> = {
         thread: {
             replyPlaceholder: "ردّ في الموضوع…",
             newThread: "ابدأ موضوعًا",
+            alsoSendTo: "إرسال أيضًا إلى {chatName}",
         },
         attachments: {
             uploading: "جارٍ رفع المرفقات…",
@@ -3046,6 +3047,9 @@ export const ar: DeepPartial<Messages> = {
         bubble: {
             clickToOpenTask: "انقر لفتح المهمة",
             clickToOpenThread: "{modKey}+انقر لفتح الموضوع",
+            repliedToThread: "ردّ في موضوع",
+            repliedToThreadWithPreview: "ردّ في موضوع: {preview}",
+            alsoSentToChat: "أُرسل أيضًا إلى المحادثة",
             updated: "محدّث",
             edited: "تم التعديل",
         },

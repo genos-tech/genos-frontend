@@ -319,7 +319,12 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
                     message.messageIdWithChatId!,
                     !isPinnedForEveryone
                 ),
-            visible: !archived && messagePins != null && Boolean(message.messageIdWithChatId),
+            // A reply also sent to the chat is still a thread reply, which cannot be pinned.
+            visible:
+                !archived &&
+                !message.alsoSentFrom &&
+                messagePins != null &&
+                Boolean(message.messageIdWithChatId),
         },
         {
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,

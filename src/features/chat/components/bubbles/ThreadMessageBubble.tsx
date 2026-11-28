@@ -5,7 +5,7 @@ import { Socket } from "socket.io-client";
 
 import { MessageBody } from "../../../../components/messageBody/MessageBody";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
-import { Bubble } from "../../../../components/ui/bubble";
+import { Bubble, BubbleMeta } from "../../../../components/ui/bubble";
 import { EmojiPicker } from "../../../../components/ui/emoji/EmojiPicker";
 import { EmojiReaction } from "../../../../components/ui/emoji/EmojiReaction";
 import { useAuth } from "../../../../context/authState";
@@ -17,6 +17,7 @@ import type { ProjectManagementState } from "../../../../hooks/common/useProject
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
+import { useTranslation } from "../../../../i18n";
 import { channelService } from "../../../../services/channel/channelService";
 import { notifyActionError } from "../../../../services/requestErrorNotifier";
 import { UserProps } from "../../../../types/admin";
@@ -92,6 +93,7 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
         setTodoFromMessageBubble,
     } = props;
     const urlLinkModal = useUrlLinkModal();
+    const { t } = useTranslation();
 
     const { accessToken } = useAuth();
     const navigate = useNavigate();
@@ -528,7 +530,16 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                     : undefined
             }
         >
-            {body}
+            {message.alsoInChannel ? (
+                <>
+                    <BubbleMeta sx={{ display: "block", mb: 0.25 }}>
+                        {t.chat.bubble.alsoSentToChat}
+                    </BubbleMeta>
+                    {body}
+                </>
+            ) : (
+                body
+            )}
         </Bubble>
     );
 };

@@ -39,24 +39,25 @@ import { CheckpointRepository } from "../../db/repositories/checkpoints";
 import { markChannelArchived, setArchivedChannelIds } from "../../features/archive/archiveState";
 import { reminderSweepDelayMs } from "../../features/chat/utils/reminderSweep";
 import { requestInboxResync } from "../../features/inbox/inboxResyncEvent";
-import type {
-    Ack,
-    Channel,
-    ChannelKind,
-    ChannelMember,
-    ChannelMessagePins,
-    ChannelRetention,
-    ChannelShare,
-    DeltaEnvelope,
-    Flag,
-    Message,
-    MessageAttachment,
-    MessageReaction,
-    MessageReminder,
-    MessagesDeltaData,
-    Pin,
-    ReadCursor,
-    UserLite,
+import {
+    isInMainTimeline,
+    type Ack,
+    type Channel,
+    type ChannelKind,
+    type ChannelMember,
+    type ChannelMessagePins,
+    type ChannelRetention,
+    type ChannelShare,
+    type DeltaEnvelope,
+    type Flag,
+    type Message,
+    type MessageAttachment,
+    type MessageReaction,
+    type MessageReminder,
+    type MessagesDeltaData,
+    type Pin,
+    type ReadCursor,
+    type UserLite,
 } from "../../types/channel";
 import { isV3Uuid } from "../../utils/legacyId";
 import { attachArchivedToast } from "../api";
@@ -186,6 +187,8 @@ export interface PendingMessage {
     bodyText: string;
     parentId: string | null;
     metadata: Record<string, unknown>;
+    /** A thread reply that also shows in the main chat (MIP-2486). */
+    alsoInChannel: boolean;
     /**
      * - `queued`: created but not yet emitted (socket was down).
      * - `sending`: emit has gone out, waiting on ack.
@@ -1203,7 +1206,8 @@ export class ChannelService {
     async loadMessagesBackTo(channelId: string, messageId: string): Promise<boolean> {
         const held = () => this._messages.get(channelId) ?? [];
         if (held().some((m) => m.id === messageId)) return true;
-        const top = held().filter((m) => !m.isThreadReply);
+        // The first load is the main timeline: replies also sent to the chat are in it.
+        const top = held().filter(isInMainTimeline);
         let before: string | undefined = (top[top.length - FIRST_LOAD_SIZE] ?? top[top.length - 1])
             ?.id;
         for (let page = 0; before && page < MAX_OLDER_PAGES; page += 1) {
@@ -1555,7 +1559,9 @@ export class ChannelService {
         const arr = this._messages.get(channelId) ?? [];
         const kept = arr.filter((m) => {
             if (scope === "all") return false;
-            if (scope === "threads") return !m.isThreadReply;
+            // A reply also sent to the chat (MIP-2486) comes down both streams: a threads
+            // reload keeps it, as the main stream's checkpoint is not reset with it.
+            if (scope === "threads") return isInMainTimeline(m);
             return m.isThreadReply; // scope === "top-level" → keep replies
         });
         this._messages.set(channelId, kept);
@@ -1575,7 +1581,7 @@ export class ChannelService {
                     scope === "all"
                         ? true
                         : scope === "threads"
-                          ? row.isThreadReply
+                          ? !isInMainTimeline(row)
                           : !row.isThreadReply;
                 if (matchesScope) await cursor.delete();
                 cursor = await cursor.continue();
@@ -1778,6 +1784,7 @@ export class ChannelService {
             parentId: pending.parentId,
             threadRootId: pending.parentId,
             isThreadReply: pending.parentId != null,
+            alsoInChannel: pending.alsoInChannel,
             replyCount: 0,
             reactions: [],
             mentions: [],
@@ -1793,7 +1800,7 @@ export class ChannelService {
         };
         pending.echoMessageId = echo.id;
         this._upsertMessage(echo);
-        if (!echo.isThreadReply) this._bumpChannelLatest(echo);
+        if (isInMainTimeline(echo)) this._bumpChannelLatest(echo);
         // No unread bump (self-sent), no notify (the caller notifies).
     }
 
@@ -1822,7 +1829,7 @@ export class ChannelService {
                 const rest = this._messages.get(pending.channelId) ?? [];
                 for (let i = rest.length - 1; i >= 0; i--) {
                     const m = rest[i];
-                    if (!m.isThreadReply && !m.deletedAt) {
+                    if (isInMainTimeline(m) && !m.deletedAt) {
                         latest = m;
                         break;
                     }
@@ -1867,6 +1874,8 @@ export class ChannelService {
             bodyText?: string;
             parentId?: string;
             metadata?: Record<string, unknown>;
+            /** With `parentId`: also show the reply in the main chat (MIP-2486). */
+            alsoInChannel?: boolean;
             /**
              * Opt-in optimistic local echo: insert a synthetic Message
              * row (id = correlationId, sender = `echo.sender`) into the
@@ -1888,6 +1897,7 @@ export class ChannelService {
             bodyText: opts.bodyText ?? "",
             parentId: opts.parentId ?? null,
             metadata: opts.metadata ?? {},
+            alsoInChannel: opts.parentId != null && opts.alsoInChannel === true,
             status: "queued",
             enqueuedAt: new Date().toISOString(),
             attempts: 0,
@@ -1939,6 +1949,7 @@ export class ChannelService {
                     body_text: pending.bodyText,
                     parent_id: pending.parentId,
                     metadata: pending.metadata,
+                    ...(pending.alsoInChannel ? { also_in_channel: true } : {}),
                 },
                 15000
             );
@@ -2941,13 +2952,13 @@ export class ChannelService {
         }
 
         this._upsertMessage(message);
-        // Chat-list `latestMessage` + `unreadCount` reflect TOP-LEVEL
-        // messages only — the server's ChannelListView computes both with
-        // `is_thread_reply=False`. A thread reply arriving live must not
+        // Chat-list `latestMessage` + `unreadCount` reflect the MAIN TIMELINE
+        // only — the server's ChannelListView computes both with
+        // `main_timeline_q`. A plain thread reply arriving live must not
         // bump either, or the sidebar preview shows a reply and the unread
         // badge over-counts until the next `listChannels` refresh corrects
         // the drift.
-        if (!message.isThreadReply) {
+        if (isInMainTimeline(message)) {
             this._bumpChannelLatest(message);
             // Self-sent messages must not bump unread (server only knows
             // we read up to `markRead`; if we just sent it, we trivially
@@ -2964,7 +2975,7 @@ export class ChannelService {
         this._applyMessageCreated(message);
         this._notify();
         void this._persistMessage(message);
-        if (!message.isThreadReply) {
+        if (isInMainTimeline(message)) {
             void this._persistChannelLatest(message.channelId);
         }
     }
@@ -2978,8 +2989,11 @@ export class ChannelService {
      * transaction per row, which is what made opening a busy channel
      * stutter.
      */
-    ingestMessages(messages: readonly Message[]): void {
-        if (messages.length === 0) return;
+    ingestMessages(batch: readonly Message[]): void {
+        if (batch.length === 0) return;
+        // A reply also sent to the chat (MIP-2486) comes in both the main and the thread
+        // rows of a sync: apply it once, or it would count as unread twice.
+        const messages = [...new Map(batch.map((m) => [m.id, m])).values()];
         for (const m of messages) this._applyMessageCreated(m);
         this._notify();
         void this._persistMessagesBulk(messages);
@@ -3151,26 +3165,26 @@ export class ChannelService {
             //
             // Three cases:
             //   (a) Cursor points at a message in our store: count
-            //       non-thread-reply messages with higher seq. Exact.
+            //       main-timeline messages with higher seq. Exact.
             //   (b) Cursor points at a message we haven't loaded yet
             //       (cursor advanced past our local data): fall back
             //       to the optimistic 0. The next chat-list refresh
             //       corrects.
             //   (c) Cursor is null (initial state, never read anything):
-            //       all known non-thread-reply messages are unread.
+            //       all known main-timeline messages are unread.
             const ch = this._channels.get(cursor.channelId);
             if (ch) {
                 const arr = this._messages.get(cursor.channelId) ?? [];
-                const topLevel = arr.filter((m) => !m.isThreadReply);
+                const inMain = arr.filter(isInMainTimeline);
                 let unread: number;
                 if (cursor.lastReadMessageId == null) {
-                    unread = topLevel.length;
+                    unread = inMain.length;
                 } else {
                     const cursorMsg = arr.find((m) => m.id === cursor.lastReadMessageId);
                     if (!cursorMsg) {
                         unread = 0;
                     } else {
-                        unread = topLevel.filter((m) => m.seq > cursorMsg.seq).length;
+                        unread = inMain.filter((m) => m.seq > cursorMsg.seq).length;
                     }
                 }
                 this._channels.set(cursor.channelId, { ...ch, unreadCount: unread });
@@ -3584,7 +3598,7 @@ export class ChannelService {
     }
 
     private _bumpChannelLatest(message: Message) {
-        if (message.isThreadReply) return; // thread replies don't drive the chat list
+        if (!isInMainTimeline(message)) return; // plain replies don't drive the chat list
         const ch = this._channels.get(message.channelId);
         if (!ch) return;
         if (!ch.latestMessage || ch.latestMessage.tsSent <= message.tsSent) {
@@ -3789,7 +3803,7 @@ export class ChannelService {
         }
         const channelIds = new Set<string>();
         for (const m of messages) {
-            if (!m.isThreadReply) channelIds.add(m.channelId);
+            if (isInMainTimeline(m)) channelIds.add(m.channelId);
         }
         for (const id of channelIds) void this._persistChannelLatest(id);
     }

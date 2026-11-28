@@ -93,6 +93,9 @@ export interface Message {
     parentId: string | null;
     threadRootId: string | null;
     isThreadReply: boolean;
+    /** "Also send to <chat>" (MIP-2486): a thread reply that also shows in the main chat.
+     *  Absent on rows cached before the field existed. */
+    alsoInChannel?: boolean;
     replyCount: number;
     reactions: MessageReaction[];
     mentions: MessageMention[];
@@ -120,6 +123,13 @@ export interface Message {
     tsSent: string;
     tsUpdated: string;
 }
+
+/** What a chat's main timeline shows: every top-level message, and a thread reply that was
+ *  also sent to the chat (MIP-2486). The api's `main_timeline_q`. */
+export const isInMainTimeline = (m: {
+    isThreadReply: boolean;
+    alsoInChannel?: boolean;
+}): boolean => !m.isThreadReply || m.alsoInChannel === true;
 
 export interface Channel {
     id: string;

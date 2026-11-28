@@ -18,6 +18,7 @@ The owner of a group can archive it. An archived group keeps everything but is r
 ## Everyday messaging
 
 - **Threads:** use **Reply in thread** to keep side discussions out of the main flow. A thread opens in its own pane. Cmd+click a message on a Mac (Alt+click elsewhere) to open its thread.
+- **Also send to the chat:** in a direct message, group chat or multi-person DM, tick **Also send to …** under the thread's message box to show your reply in the chat as well. It appears there with **Replied to a thread**, which opens the thread. It is one message, so editing, deleting or reacting to it changes both places. The people outside the thread are told about it as a new message, and nobody is told twice. It cannot be added after sending.
 - **Mentions:** type @ to mention someone. They are notified in the app and by push. If your Genos has email notifications turned on, they also get an email while they are away. A mention group lets one @ reach a set of people. Any team member except guests manages them in Settings → Mention groups.
 - **Reactions:** hover a message to pick one of the three quick reactions, or open the emoji picker. Change the quick three in Settings → Chat → Quick reactions.
 - **Custom emoji and GIFs:** any team member can upload custom emoji in Settings → Custom emoji (PNG, JPG, GIF, WebP or SVG, up to 512 KB). Only the person who uploaded an emoji can delete it. Type /gif in the message editor to search GIPHY, when your Genos has it turned on.
