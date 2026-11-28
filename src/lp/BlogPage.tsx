@@ -45,7 +45,9 @@ export default function BlogPage() {
                         <div className="lp-container lp-stack-m">
                             <p className="lp-kicker">Blog</p>
                             <h1 className="lp-title">What you can do with Genos</h1>
-                            <p className="lp-lead">Short posts, mostly pictures.</p>
+                            <p className="lp-lead">
+                                When each feature helps you, and what you get from it.
+                            </p>
                         </div>
                     </header>
 

@@ -1,6 +1,8 @@
 import { keyframes } from "@emotion/react";
 import { Box, Typography } from "@mui/joy";
 
+import { g } from "../../../theme/tokens";
+
 // The app's pulsing-dots loader with a caption underneath, shared by the task
 // / milestone / create pane loader (`TaskPaneLoading`, MIP-962) and the
 // service-switch loader (`ServiceSwitchLoader`, MIP-965) so the two read as
@@ -92,3 +94,49 @@ export const LoadingIndicator = ({ isDark, label, fadeInDelayMs }: LoadingIndica
         </>
     );
 };
+
+// Reduced motion: no scaling, only a slow fade. Still moving, so a wait never looks stuck.
+const dotFade = keyframes`
+    0%, 80%, 100% { opacity: 0.4; }
+    40% { opacity: 1; }
+`;
+
+/**
+ * The same pulsing dots, small and on one line with their words: for a wait at the top of a page
+ * whose shape is already drawn as a skeleton (MIP-2442). Announced once, and fades in after
+ * `LOADING_INDICATOR_DELAY_MS` so a fast answer never flashes it.
+ */
+export const LoadingDots = ({ label }: { label: string }) => (
+    <Box
+        aria-live="polite"
+        role="status"
+        sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            minWidth: 0,
+            animation: `${delayedShow} 0.2s ease-out ${LOADING_INDICATOR_DELAY_MS}ms both`,
+        }}
+    >
+        <Box aria-hidden="true" data-testid="loading-dots" sx={{ display: "flex", gap: 0.5 }}>
+            {[0, 1, 2].map((i) => (
+                <Box
+                    key={i}
+                    sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: g.radius.full,
+                        bgcolor: g.accent.solid,
+                        animation: `${dotPulse} 1.4s ease-in-out ${i * 0.16}s infinite`,
+                        "@media (prefers-reduced-motion: reduce)": {
+                            animation: `${dotFade} 2.4s ease-in-out ${i * 0.16}s infinite`,
+                        },
+                    }}
+                />
+            ))}
+        </Box>
+        <Typography level="body-sm" sx={{ color: g.text.secondary }}>
+            {label}
+        </Typography>
+    </Box>
+);

@@ -10,6 +10,7 @@ import { fmt, useTranslation } from "../../i18n";
 import { g, type } from "../../theme/tokens";
 import type { BriefingToday } from "./briefingToday";
 import type { TodayCopy } from "./briefingWords";
+import { SUMMARY_GRID_SX } from "./sectionStyles";
 import { greetingKey, progressOf, summarySentence } from "./todaySummary";
 
 type Props = {
@@ -56,19 +57,10 @@ export const TodaySummary = ({ data: d, copy: a, anchors }: Props) => {
                     {summarySentence(d, a)}
                 </Typography>
             </Box>
-            <Box
-                sx={{
-                    display: "grid",
-                    gap: 1.5,
-                    alignItems: "stretch",
-                    gridTemplateColumns: {
-                        xs: "minmax(0, 1fr)",
-                        md: "minmax(0, 3fr) minmax(0, 2fr)",
-                    },
-                }}
-            >
+            <Box sx={SUMMARY_GRID_SX}>
                 <StatStrip ariaLabel={a.heading}>
                     <StatTile
+                        edge="danger"
                         label={a.tiles.overdue}
                         raw={d.overdueCount}
                         tone="danger"
@@ -76,6 +68,7 @@ export const TodaySummary = ({ data: d, copy: a, anchors }: Props) => {
                         onClick={() => jump(anchors.overdue)}
                     />
                     <StatTile
+                        edge="warning"
                         label={a.dueToday}
                         raw={d.dueTodayCount}
                         tone="warning"
@@ -83,12 +76,15 @@ export const TodaySummary = ({ data: d, copy: a, anchors }: Props) => {
                         onClick={() => jump(anchors.dueToday)}
                     />
                     <StatTile
+                        edge="info"
                         label={a.sections.waiting}
                         raw={waiting}
+                        tone="info"
                         value={nf.number(waiting)}
                         onClick={() => jump(anchors.waiting)}
                     />
                     <StatTile
+                        edge="neutral"
                         label={a.tiles.changed}
                         raw={d.changed.total}
                         value={nf.number(d.changed.total)}

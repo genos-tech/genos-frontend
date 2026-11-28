@@ -1,8 +1,8 @@
 import articlesManifest from "./articles.json";
 
 /**
- * Public LP blog — English posts synced from genos-docs/marketing/blog. Picture first, short
- * (MIP-2416; `lpBlogVisualMIP2416.test.tsx` pins it).
+ * Public LP blog — English posts synced from genos-docs/marketing/blog. Picture first, then why
+ * the feature matters (MIP-2416; `lpBlogVisualMIP2416.test.tsx` pins it).
  *
  * To add a post:
  *   1. Write the draft in genos-docs/marketing (English).
