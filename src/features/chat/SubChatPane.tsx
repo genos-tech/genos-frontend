@@ -222,9 +222,6 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                         isThread={false}
                                         messages={messageManagement.messages}
                                         myself={myself}
-                                        setEditTargetMessage={
-                                            messageManagement.setEditTargetMessage
-                                        }
                                         setIsInEdit={messageManagement.setIsInEdit}
                                         setMyself={setMyself}
                                         setTodoFromMessageBubble={setTodoFromMessageBubble}
@@ -235,6 +232,9 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                                         useTM={useTM}
                                         useUISM={useUISM}
                                         visibleRangeRef={scrollManagement.visibleRangeRef}
+                                        setEditTargetMessage={
+                                            messageManagement.setEditTargetMessage
+                                        }
                                         virtuosoRef={
                                             scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
                                         }
