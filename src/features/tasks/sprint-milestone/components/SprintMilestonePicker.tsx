@@ -9,6 +9,7 @@ import { useTranslation } from "../../../../i18n";
 import { stripOwnerState } from "../../../../utils/joyAutocomplete";
 import { StatusLabel } from "../../components/meta/StatusLabel";
 import { SprintStatusLabel } from "../../components/meta/ToneLabel";
+import { isFinishedStatus } from "../../meta/taskStatuses";
 import { Milestone, Sprint } from "../types";
 import { selectVisibleMilestones, selectVisibleSprints } from "../utils/sortMilestones";
 import { OPTION_LISTBOX_SLOT_PROPS } from "./sprintMilestonePickerHelpers";
@@ -125,7 +126,7 @@ export const SprintMilestonePicker = ({
             milestones,
             sprints,
             useSM.isMilestoneFavorited
-        ).filter((m) => m.status !== "Closed");
+        ).filter((m) => !isFinishedStatus(m.status));
         // The task's current milestone always leads the list (even a Closed one,
         // so a Closed linkage never flips to "No milestone"), then the shared order.
         const current =

@@ -29,6 +29,7 @@ import { focusRing, g, type } from "../../../theme/tokens";
 import { DueText, type DueTone } from "../../tasks/components/card";
 import { PriorityIcon } from "../../tasks/components/meta/PriorityIcon";
 import { StatusLabel } from "../../tasks/components/meta/StatusLabel";
+import { isFinishedStatus } from "../../tasks/meta/taskStatuses";
 import { toneCss, type Tone } from "../../tasks/meta/taskTone";
 import { isInternalReportLink } from "../utils/genosReport";
 import type {
@@ -225,7 +226,7 @@ const dueFor = (
     locale: Locale
 ): { text: string; tone: DueTone } | null => {
     // A finished task has no due date worth showing.
-    if (item.status === "Closed") return null;
+    if (isFinishedStatus(item.status)) return null;
     // The server counted the days late in the member's zone at the time of the report:
     // the card shows that count, not one recomputed in this browser's zone.
     if (item.overdueDays !== null) {

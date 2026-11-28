@@ -88,6 +88,14 @@ export const predefinedStatusFilters: FilterProps[] = [
         ...filterColors(STATUS_TONE.Closed),
     },
     {
+        label: "Rejected",
+        labelKey: "rejected",
+        filterModel: {
+            items: [{ field: "status", operator: "equals", value: "Rejected" }],
+        },
+        ...filterColors(STATUS_TONE.Rejected),
+    },
+    {
         label: "Expired",
         labelKey: "expired",
         filterModel: {

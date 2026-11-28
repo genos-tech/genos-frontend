@@ -53,6 +53,7 @@ type TaskMetaLabels = Record<
     | "blocked"
     | "pending"
     | "closed"
+    | "rejected"
     | "deleted"
     | "minimal"
     | "low"

@@ -340,7 +340,14 @@ describe("enum options", () => {
     });
 
     it("a status never offers Deleted: an edit is not a delete", () => {
-        expect(enumOptions("status")).toEqual(["Open", "WIP", "Blocked", "Pending", "Closed"]);
+        expect(enumOptions("status")).toEqual([
+            "Open",
+            "WIP",
+            "Blocked",
+            "Pending",
+            "Closed",
+            "Rejected",
+        ]);
     });
 });
 

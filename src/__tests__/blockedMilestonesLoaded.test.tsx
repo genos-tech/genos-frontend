@@ -59,6 +59,7 @@ describe("milestone list loaders", () => {
             "Closed",
             "Open",
             "Pending",
+            "Rejected",
             "WIP",
         ]);
     });

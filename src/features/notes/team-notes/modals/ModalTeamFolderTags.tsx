@@ -11,6 +11,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
 import { useAuth } from "../../../../context/authState";
+import { useLatestRef } from "../../../../hooks/common/useLatestRef";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
 import { TeamNoteFolderTreeNode } from "../../../../types/notes";
@@ -75,7 +76,12 @@ export const ModalTeamFolderTags = (props: Props) => {
 
     const reload = async () => setAllTags(await loadNoteFolderTags(myself, accessToken));
 
+    // Reset and load once per opened folder: a refreshed folder list hands over a new `folder`
+    // object (and every render a new `reload`), which must not drop what is being typed.
+    const latestRef = useLatestRef({ folder, reload });
+
     useEffect(() => {
+        const { folder, reload } = latestRef.current;
         if (!open || !folder) return;
         setNewName("");
         setNewColor({ color: DEFAULT_COLOR, textColor: DEFAULT_TEXT_COLOR });
@@ -83,7 +89,7 @@ export const ModalTeamFolderTags = (props: Props) => {
         setError(null);
         setSelected(new Set(folder.tags.map((tg) => tg.tagId)));
         void reload();
-    }, [open, folder?.folderId]);
+    }, [open, folder?.folderId, latestRef]);
 
     const toggle = (tagId: number) =>
         setSelected((prev) => {

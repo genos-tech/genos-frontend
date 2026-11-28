@@ -54,7 +54,7 @@ const settle = () =>
     });
 
 /** Every live milestone status, in no particular order. */
-const EXPECTED = ["Blocked", "Closed", "Open", "Pending", "WIP"];
+const EXPECTED = ["Blocked", "Closed", "Open", "Pending", "Rejected", "WIP"];
 
 const statusesOf = (call: unknown[]): string[] =>
     [...((call[1] as { statuses: readonly string[] }).statuses ?? [])].sort();

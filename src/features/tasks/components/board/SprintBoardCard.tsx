@@ -10,6 +10,7 @@ import { useTranslation } from "../../../../i18n";
 import { focusRing, g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
+import { isFinishedStatus } from "../../meta/taskStatuses";
 import { Milestone } from "../../sprint-milestone/types";
 import { TaskCard, TaskCardFrame } from "../card";
 import { MilestoneCardBody } from "../MilestoneCardBody";
@@ -131,7 +132,7 @@ const SprintBoardCardImpl = ({
                             dragging={snapshot.isDragging}
                             headerEnd={diagramButton}
                             selected={isSelected}
-                            showDue={task.status !== "Closed" && !inClosedColumn}
+                            showDue={!isFinishedStatus(task.status) && !inClosedColumn}
                             task={task}
                         />
                     )}

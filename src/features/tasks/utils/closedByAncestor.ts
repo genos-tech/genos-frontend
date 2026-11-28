@@ -1,13 +1,15 @@
 import { TaskTableProps } from "../../../types/tasks";
+import { isFinishedStatus } from "../meta/taskStatuses";
 
 /**
- * "A Closed or Deleted parent takes everything under it with it" (MIP-1382, MIP-1389).
+ * "A Closed, Rejected or Deleted parent takes everything under it with it" (MIP-1382, MIP-1389).
  *
  * The ancestor's status wins over its children's: once a milestone or a task is
  * Closed (or Deleted), whatever is below it reads as Closed (or Deleted) however
  * its own row is set, because nobody updates every status by hand. The rows are
  * not rewritten; this is a read-side rule, so reopening the ancestor brings the
- * children back exactly as they were.
+ * children back exactly as they were. A row's own Closed or Rejected is kept under a Closed or
+ * Rejected ancestor (MIP-2494): done work under a rejected parent stays done.
  *
  * Set-based, so a surface that holds the whole list asks once and then looks rows
  * up by id. Ancestors are reached through `parentTaskId` or through `milestoneId`
@@ -17,10 +19,13 @@ import { TaskTableProps } from "../../../types/tasks";
  * per-row copy over `parentTaskId` alone, `taskAncestry.ts`).
  */
 
+export type VerdictStatus = "Closed" | "Rejected" | "Deleted";
+
 export type AncestorVerdict<T = TaskTableProps> = {
-    /** "Deleted" when some ancestor is Deleted (it beats Closed), else "Closed". */
-    status: "Closed" | "Deleted";
-    /** The nearest ancestor that decided it (the nearest Closed one for "Closed"). */
+    /** "Deleted" when some ancestor is Deleted (it beats the others), else "Closed" or
+     *  "Rejected". */
+    status: VerdictStatus;
+    /** The nearest ancestor that decided it (the nearest Closed or Rejected one). */
     ancestor: T;
 };
 
@@ -32,9 +37,9 @@ const is = (task: Pick<TaskTableProps, "status"> | undefined, wanted: string): b
     (task?.status ?? "").toLowerCase() === wanted;
 
 /**
- * `{ rowId -> verdict }` for the rows that sit under a Closed or Deleted ancestor,
- * at any depth. A row that is itself Closed or Deleted is in the map only if
- * something ABOVE it is too: its own status is never the reason.
+ * `{ rowId -> verdict }` for the rows that sit under a Closed, Rejected or Deleted ancestor,
+ * at any depth. A row is in the map only if something ABOVE it says so: its own status is never
+ * the reason.
  */
 export const selectAncestorVerdicts = <T extends Ancestry>(
     allTasks: readonly T[]
@@ -88,6 +93,8 @@ export const selectAncestorVerdicts = <T extends Ancestry>(
             if (is(parent, "deleted")) return { status: "Deleted", ancestor: parent };
             if (closed == null && is(parent, "closed")) {
                 closed = { status: "Closed", ancestor: parent };
+            } else if (closed == null && is(parent, "rejected")) {
+                closed = { status: "Rejected", ancestor: parent };
             }
             // Push the farther link first so the nearer one is popped first.
             stack.push(...parentsOf(parent).reverse());
@@ -104,24 +111,30 @@ export const selectAncestorVerdicts = <T extends Ancestry>(
 };
 
 /**
- * The status a row should be read with: its own, unless a Closed or Deleted ancestor
- * overrides it. `verdicts` comes from `selectAncestorVerdicts` over the same list.
+ * The status a row should be read with: its own, unless a finished ancestor overrides it.
+ * `verdicts` comes from `selectAncestorVerdicts` over the same list.
  */
 export const effectiveStatusOf = (
     task: Pick<TaskTableProps, "id" | "status">,
-    verdicts: ReadonlyMap<string, { status: "Closed" | "Deleted" }>
-): string | null | undefined =>
-    (task.id != null ? verdicts.get(String(task.id))?.status : undefined) ?? task.status;
+    verdicts: ReadonlyMap<string, { status: VerdictStatus }>
+): string | null | undefined => {
+    const verdict = task.id != null ? verdicts.get(String(task.id))?.status : undefined;
+    if (verdict == null) return task.status;
+    if (verdict !== "Deleted" && (isFinishedStatus(task.status) || task.status === "Deleted")) {
+        return task.status;
+    }
+    return verdict;
+};
 
-/** Some ancestor, at any depth, is Closed or Deleted. `verdicts` is `selectAncestorVerdicts`
+/** Some ancestor, at any depth, is Closed, Rejected or Deleted. `verdicts` is `selectAncestorVerdicts`
  *  over the same list. A task's own status is not an ancestor's. */
 export const isUnderClosedAncestor = (
     task: Pick<TaskTableProps, "id">,
     verdicts: ReadonlyMap<string, unknown>
 ): boolean => task.id != null && verdicts.has(String(task.id));
 
-/** Some ancestor, at any depth, is Deleted (a Closed one does not count). */
+/** Some ancestor, at any depth, is Deleted (a Closed or Rejected one does not count). */
 export const isUnderDeletedAncestor = (
     task: Pick<TaskTableProps, "id">,
-    verdicts: ReadonlyMap<string, { status: "Closed" | "Deleted" }>
+    verdicts: ReadonlyMap<string, { status: VerdictStatus }>
 ): boolean => task.id != null && verdicts.get(String(task.id))?.status === "Deleted";

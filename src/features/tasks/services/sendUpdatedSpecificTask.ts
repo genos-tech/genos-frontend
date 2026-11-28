@@ -103,6 +103,12 @@ export const sendUpdatedSpecificTask = async (
         // function swallows those failures, and a caller that cannot tell would count the words
         // in the body as saved (MIP-2443). `retry` is false when sending it again cannot help.
         onNotSaved?: (retry: boolean) => void;
+        // The PUT stored the task in `projectId` (MIP-2524): the working copy's
+        // `storedProjectId` is now that.
+        onStoredProject?: (projectId: number) => void;
+        // The task had been moved elsewhere since this copy was read: the server kept it there,
+        // saved the rest, and this copy must be reloaded from `projectId` (MIP-2524).
+        onStaleProject?: (projectId: number) => void;
     }
 ) => {
     const errMsgs = getMessages().tasks.errors;
@@ -123,6 +129,9 @@ export const sendUpdatedSpecificTask = async (
                 task_id: updatedTask.id,
                 team: myself.teamId,
                 project: updatedTask.project.projectId,
+                // What `project` was when this copy was read: equal to it means the person did
+                // not move the task, so a different stored project is not undone (MIP-2524).
+                base_project: updatedTask.storedProjectId,
                 thread_id: updatedTask.threadId,
                 parent_task_id: updatedTask.parentTaskId,
                 // Nullable per `TaskProps.assignee: UserProps | null`.
@@ -196,6 +205,12 @@ export const sendUpdatedSpecificTask = async (
             const res = await putTask(api, taskBody, setErrorMessage, updatedTask.collaborators);
             stored = true;
 
+            // MIP-2524: the task is in another project now. This copy's project, milestone,
+            // tags and so on are old: nothing of it goes to the caches or the chat card.
+            const staleProjectId: number | null = res?.data?.staleProject
+                ? (res.data.task?.project ?? null)
+                : null;
+
             // The save's own updated time, in the form the caches use. The
             // working copy's `updatedAt` is from BEFORE the save, so it is
             // only the fallback for an answer that carries no readable time.
@@ -226,7 +241,12 @@ export const sendUpdatedSpecificTask = async (
                     ? keptCollaborators
                     : null;
 
-            if (res) {
+            if (res && staleProjectId != null) {
+                if (updatedTask.id != null) {
+                    await invalidateCachedFullTask(updatedTask.id);
+                    forgetInFlightTask(updatedTask.id);
+                }
+            } else if (res) {
                 // Mirror the freshly-PUT task into the full-task IDB
                 // cache so the next `loadSpecificTask` reflects the
                 // edit without a network refetch. Covers both
@@ -247,6 +267,7 @@ export const sendUpdatedSpecificTask = async (
                 const cacheableTask = {
                     ...updatedTask,
                     customStatusPick: undefined,
+                    storedProjectId: updatedTask.project.projectId,
                     attachments: (updatedTask.attachments ?? []).filter(
                         (a) => a.attachment_id >= 0
                     ),
@@ -261,9 +282,12 @@ export const sendUpdatedSpecificTask = async (
                 // pre-save task: nobody arriving from now on may join it.
                 if (cacheableTask.id != null) forgetInFlightTask(cacheableTask.id);
                 if (prunedCollaborators) options?.onCollaboratorsPruned?.(prunedCollaborators);
+                if (movedFromProjectId != null) {
+                    options?.onStoredProject?.(updatedTask.project.projectId);
+                }
             }
 
-            if (res) {
+            if (res && staleProjectId == null) {
                 const newly_mentioned_user_ids: string[] = res.data.newly_mentioned_user_ids ?? [];
                 const all_mentioned_user_ids: string[] =
                     res.data.all_mentioned_user_ids ?? newly_mentioned_user_ids;
@@ -300,7 +324,7 @@ export const sendUpdatedSpecificTask = async (
             // with no POST in backend" bug: the PUT succeeded but
             // `uploadTaskAttachments` was skipped, then `useSendUpdatedTask`'s
             // post-save merge stripped the now-orphaned negative-id rows.
-            if (res && syncCard) {
+            if (res && syncCard && staleProjectId == null) {
                 emitTaskMetadataSaved();
                 const updatedTaskMessage = taskMessageTemplate(myself, updatedTask);
                 // Rewrite the PM task-card header so the status / title /
@@ -333,7 +357,7 @@ export const sendUpdatedSpecificTask = async (
                 }
             }
 
-            if (res && updatedTask) {
+            if (res && updatedTask && staleProjectId == null) {
                 // When the user clears the due date (TBD), the
                 // local `daysLeft` is whatever the previous due
                 // date computed to (e.g. -1 for a row that was
@@ -435,6 +459,13 @@ export const sendUpdatedSpecificTask = async (
                     // What the move cost other people (task-note owners, people
                     // who filed the moved tasks), when the server says so.
                     showMoveNotice(res.data);
+                }
+
+                if (staleProjectId != null) {
+                    // Both lists: the one that still shows the task and the one it is in.
+                    emitTasksBulkChanged(updatedTask.project.projectId);
+                    emitTasksBulkChanged(staleProjectId);
+                    options?.onStaleProject?.(staleProjectId);
                 }
 
                 return uploadAttachments;

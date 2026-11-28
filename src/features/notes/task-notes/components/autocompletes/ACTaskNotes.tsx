@@ -5,6 +5,7 @@ import Box from "@mui/joy/Box";
 
 import { Spinner } from "../../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../../context/authState";
+import { useLatestRef } from "../../../../../hooks/common/useLatestRef";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
@@ -37,6 +38,14 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
         });
     };
 
+    // One load per time the box starts loading; who asks and for which task are read then.
+    const latestRef = useLatestRef({
+        myself,
+        accessToken,
+        projectId: useNM.currentTaskNote?.projectId,
+        taskId: useNM.currentTaskNote?.taskId,
+    });
+
     useEffect(() => {
         let active = true;
 
@@ -45,11 +54,12 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
         }
 
         (async () => {
+            const { myself, accessToken, projectId, taskId } = latestRef.current;
             const loadedUsers: TaskNoteProps[] =
                 (await loadTaskNotes(
                     myself,
-                    useNM.currentTaskNote?.projectId as number,
-                    useNM.currentTaskNote?.taskId as number,
+                    projectId as number,
+                    taskId as number,
                     accessToken
                 )) ?? [];
 
@@ -61,7 +71,7 @@ export const ACTaskNotes = (props: ACTaskNotesProps) => {
         return () => {
             active = false;
         };
-    }, [loading]);
+    }, [loading, latestRef]);
 
     useEffect(() => {
         if (!open) {

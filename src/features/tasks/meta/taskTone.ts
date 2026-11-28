@@ -16,6 +16,7 @@
  * derived view of this file, so they cannot drift again.
  *
  *   Open → info (blue)      Blocked → danger (red)   Closed → success (green)
+ *   Rejected → rejected (brown)
  *   WIP → warning (amber)   Pending → neutral        Deleted → muted
  *   Critical → danger   High → warning   Normal → info
  *   Low → neutral       Minimal → muted
@@ -33,10 +34,11 @@
  */
 
 import { rgbString } from "../../../theme/tokens/color";
+import { REJECTED_CSS, REJECTED_SWATCH } from "../../../theme/tokens/rejectedHue";
 import { buildRoles, SemanticRoles } from "../../../theme/tokens/roles";
 import { STATUS_NAMES, type StatusName } from "./taskStatuses";
 
-export type Tone = "info" | "warning" | "danger" | "success" | "neutral" | "muted";
+export type Tone = "info" | "warning" | "danger" | "success" | "neutral" | "muted" | "rejected";
 
 export { STATUS_NAMES };
 export type { StatusName };
@@ -49,6 +51,8 @@ export const STATUS_TONE: Record<StatusName, Tone> = {
     Blocked: "danger",
     Pending: "neutral",
     Closed: "success",
+    // Finished but not done (MIP-2494): a warm brown, neither done's green nor an alarm.
+    Rejected: "rejected",
     // Gone from every normal view; kept apart from Blocked's red so the two
     // are never confused (their icons differ too).
     Deleted: "muted",
@@ -145,6 +149,7 @@ const SWATCH: Record<Tone, Swatch> = {
         textLight: LIGHT.textTertiary,
         textDark: DARK.textTertiary,
     },
+    rejected: REJECTED_SWATCH,
 };
 
 /** The hue's 500 stop, for tinted backgrounds and borders (any mode). */
@@ -184,6 +189,7 @@ const CSS: Record<Tone, ToneCss> = {
         subtle: "var(--g-hover)",
         border: "var(--g-border-subtle)",
     },
+    rejected: REJECTED_CSS,
 };
 
 function cssFor(key: "info" | "warning" | "danger" | "success"): ToneCss {
@@ -211,6 +217,7 @@ export const toneJoyColor = (
         success: "success",
         neutral: "neutral",
         muted: "neutral",
+        rejected: "neutral",
     })[tone] as "primary" | "warning" | "danger" | "success" | "neutral";
 
 // --- derived legacy shapes --------------------------------------------------

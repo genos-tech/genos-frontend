@@ -207,6 +207,17 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             let uploadAttachments: Awaited<ReturnType<typeof sendUpdatedSpecificTask>>;
             // Set when the PUT stored nothing: whether it is worth sending again.
             let notSaved: { retry: boolean } | null = null;
+            // Set when the task had been moved elsewhere and the server kept it there
+            // (MIP-2524): the project to reload the working copy from.
+            let staleProjectId: number | null = null;
+            const onStoredProject = (storedProjectId: number) => {
+                const stamp = (prev: TaskProps): TaskProps =>
+                    Number(prev.id) === Number(baseTaskContent.id)
+                        ? { ...prev, storedProjectId }
+                        : prev;
+                setTmpCurrentTaskContent((prev) => stamp(prev));
+                setCurrentPreviewTask((prev) => (prev ? stamp(prev) : prev));
+            };
             sentNegativeIds.forEach((id) => uploadingRef.current.add(uploadKey(id)));
             const endBodySave = trackTaskBodySave(
                 Number(baseTaskContent.id),
@@ -222,6 +233,10 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                     undefined,
                     {
                         onCollaboratorsPruned: dropPrunedCollaborators,
+                        onStoredProject,
+                        onStaleProject: (projectId) => {
+                            staleProjectId = projectId;
+                        },
                         onNotSaved: (retry) => {
                             notSaved = { retry };
                         },
@@ -496,6 +511,31 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                           })
                         : baseTaskContent
                 );
+            }
+
+            // After the writeback above, so it cannot lay the old copy over the reloaded one.
+            // Never on a switch: the incoming task is on screen, and the old one's cache is
+            // already dropped, so it reloads at its next open.
+            const movedTo = staleProjectId as number | null;
+            if (movedTo != null && !taskSwitched) {
+                const storedTask = await reloadStoredTask(
+                    myself,
+                    Number(baseTaskContent.id),
+                    movedTo,
+                    accessToken
+                );
+                if (storedTask && Number(shownTaskIdRef.current) === Number(storedTask.id)) {
+                    // The title was saved with this PUT; the body is the editor's.
+                    const reloaded = (prev: TaskProps): TaskProps => ({
+                        ...storedTask,
+                        title: prev.title,
+                        body: prev.body,
+                        attachments: prev.attachments,
+                    });
+                    setTmpCurrentTaskContent((prev) => reloaded(prev));
+                    setCurrentPreviewTask((prev) => (prev ? reloaded(prev) : prev));
+                    onStoredTaskRestored?.(storedTask);
+                }
             }
             setTaskUpdated(false);
             setTaskStatusUpdated(false);
