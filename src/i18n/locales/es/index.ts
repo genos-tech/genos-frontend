@@ -4721,6 +4721,8 @@ export const es: DeepPartial<Messages> = {
             planBody: "Las reglas mueven y actualizan tareas por ti cuando ocurre algo.",
             planKept: "Tus reglas se conservan. Puedes desactivarlas o eliminarlas.",
             planSwitchHint: "Para activar reglas necesitas Core o superior.",
+            milestoneRule:
+                "Actúa sobre hitos. No se puede editar aquí; puedes desactivarla o eliminarla.",
             hiddenHint:
                 "No estás en el proyecto de destino de esta regla, así que no puedes cambiarla. Puedes desactivarla o eliminarla.",
             turnedOff: "Desactivada: {reason}",

@@ -13,10 +13,9 @@ import { useAuth } from "../../../context/authState";
 import { useTranslation } from "../../../i18n";
 import { g, type } from "../../../theme/tokens";
 import { parseServerTime } from "../utils/relativeAge";
-import { draftOf } from "./draft";
 import { listSx } from "./helpers";
 import { useLookups } from "./lookups";
-import { RuleSentence } from "./RuleSentence";
+import { RuleSummary } from "./RuleSentence";
 import { loadRuleRuns } from "./service";
 import type { AutomationRule, RuleRun } from "./types";
 import { reasonText, sentenceCase, useAutomationWords } from "./words";
@@ -58,11 +57,7 @@ export const RuleRuns = ({ rule }: { rule: AutomationRule }) => {
     return (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5, pb: 2 }}>
             <Box sx={{ p: 1.5, borderRadius: g.radius.md, background: g.bg.subtle }}>
-                <RuleSentence
-                    destinationName={rule.destination?.name}
-                    draft={draftOf(rule)}
-                    hiddenDestination={rule.movesTask && rule.destination?.visible === false}
-                />
+                <RuleSummary rule={rule} />
             </Box>
             {runs === null ? (
                 <SkeletonRows count={3} label={words.recentRuns} />

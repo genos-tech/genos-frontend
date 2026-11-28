@@ -7121,6 +7121,8 @@ export const fr: DeepPartial<Messages> = {
                 "Les règles déplacent et mettent à jour les tâches pour vous quand quelque chose se produit.",
             planKept: "Vos règles sont conservées. Vous pouvez les désactiver ou les supprimer.",
             planSwitchHint: "Activer des règles nécessite Core ou plus.",
+            milestoneRule:
+                "Agit sur les jalons. Elle ne peut pas être modifiée ici ; vous pouvez la désactiver ou la supprimer.",
             hiddenHint:
                 "Vous n’êtes pas dans le projet de destination de cette règle, vous ne pouvez donc pas la modifier. Vous pouvez la désactiver ou la supprimer.",
             turnedOff: "Désactivée : {reason}",

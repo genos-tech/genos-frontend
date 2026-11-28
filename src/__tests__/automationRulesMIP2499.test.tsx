@@ -360,6 +360,18 @@ describe("the Automation tab", () => {
         );
     });
 
+    it("does not read a milestone rule as a task rule, and only lets it go off", async () => {
+        api.updateRule.mockResolvedValue({ ok: true, data: rule() });
+        const pane = await openRules([rule({ appliesTo: "milestone" })]);
+        expect(pane.textContent).toContain(words.milestoneRule);
+        expect(within(pane).queryByTestId("rule-sentence")).toBeNull();
+        expect(rowButton()).toBeNull();
+        fireEvent.click(screen.getByRole("switch"));
+        await waitFor(() =>
+            expect(api.updateRule).toHaveBeenCalledWith(7, 1, { enabled: false }, "t")
+        );
+    });
+
     it("on Free shows the plan note, keeps off working and offers no editing", async () => {
         api.updateRule.mockResolvedValue({ ok: true, data: rule() });
         const pane = await openRules([rule(), rule({ ruleId: 2, enabled: false })], false);

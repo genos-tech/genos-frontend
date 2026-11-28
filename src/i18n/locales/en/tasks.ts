@@ -770,6 +770,8 @@ export const tasks = {
         planBody: "Rules move and update tasks for you when something happens.",
         planKept: "Your rules are kept. You can turn them off or delete them.",
         planSwitchHint: "Turning rules on needs Core or above.",
+        milestoneRule:
+            "Acts on milestones. It can't be edited here; you can turn it off or delete it.",
         hiddenHint:
             "You're not in this rule's destination project, so you can't change it. You can turn it off or delete it.",
         turnedOff: "Turned off: {reason}",

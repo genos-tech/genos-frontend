@@ -38,6 +38,8 @@ export type AutomationRule = {
     triggerValue: TriggerValue;
     conditions: RuleCondition[];
     movesTask: boolean;
+    /** What the rule acts on (genos-api MIP-2521). This builder writes task rules only. */
+    appliesTo?: "task" | "milestone";
     /** Not named (`visible: false`) when the reader is not on the destination. */
     destination: { projectId: number | null; name: string | null; visible: boolean } | null;
     setStatus: string | null;

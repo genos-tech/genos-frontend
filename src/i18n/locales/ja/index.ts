@@ -6993,6 +6993,8 @@ export const ja: DeepPartial<Messages> = {
             planBody: "何かが起きたときに、ルールがタスクを移動・更新します。",
             planKept: "ルールは保存されています。オフにするか削除できます。",
             planSwitchHint: "ルールをオンにするには Core 以上が必要です。",
+            milestoneRule:
+                "マイルストーンが対象のルールです。ここでは編集できません。オフにするか削除できます。",
             hiddenHint:
                 "このルールの移動先プロジェクトに参加していないため変更できません。オフにするか削除できます。",
             turnedOff: "オフになりました: {reason}",

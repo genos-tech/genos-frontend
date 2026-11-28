@@ -10,10 +10,17 @@ import { useTranslation } from "../../../i18n";
 import { g, type } from "../../../theme/tokens";
 import { StatusLabel } from "../components/meta/StatusLabel";
 import { taskMetaLabel } from "../utils/taskMeta";
-import { needsValue, type DraftCondition, type RuleDraft, type StatusPick } from "./draft";
+import {
+    draftOf,
+    needsValue,
+    type DraftCondition,
+    type RuleDraft,
+    type StatusPick,
+} from "./draft";
 import { fmtNodes } from "./fmtNodes";
-import { fieldName, memberName, projectName } from "./helpers";
+import { fieldName, forMilestones, memberName, projectName } from "./helpers";
 import { statusRowOf, useLookups } from "./lookups";
+import type { AutomationRule } from "./types";
 import { useAutomationWords } from "./words";
 
 const Value = ({ children }: { children: ReactNode }) => (
@@ -201,5 +208,27 @@ export const RuleSentence = ({
                 actions: <>{list(actions.map((n, i) => <Fragment key={i}>{n}</Fragment>))}</>,
             })}
         </Box>
+    );
+};
+
+/** A saved rule's line: its sentence, or why this screen cannot say it. */
+export const RuleSummary = ({ rule }: { rule: AutomationRule }) => {
+    const words = useAutomationWords();
+    if (forMilestones(rule)) {
+        return (
+            <Box
+                component="span"
+                sx={{ ...type("body-sm"), display: "block", color: g.text.secondary }}
+            >
+                {words.milestoneRule}
+            </Box>
+        );
+    }
+    return (
+        <RuleSentence
+            destinationName={rule.destination?.name}
+            draft={draftOf(rule)}
+            hiddenDestination={rule.movesTask && rule.destination?.visible === false}
+        />
     );
 };

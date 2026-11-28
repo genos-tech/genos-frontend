@@ -6731,6 +6731,7 @@ export const zh: DeepPartial<Messages> = {
             planBody: "当发生某事时,规则会为你移动和更新任务。",
             planKept: "你的规则已保留。你可以关闭或删除它们。",
             planSwitchHint: "开启规则需要 Core 或更高方案。",
+            milestoneRule: "此规则作用于里程碑,无法在此编辑。你可以关闭或删除它。",
             hiddenHint: "你不在此规则的目标项目中,因此无法修改。可以关闭或删除它。",
             turnedOff: "已关闭:{reason}",
             moreActions: "{name} 的更多操作",
