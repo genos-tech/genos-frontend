@@ -470,3 +470,20 @@ export type ProjectStatusDef = {
     canTurnOff: boolean;
     canDelete: boolean;
 };
+
+/** A quick status button of a project (MIP-2603): "before status → after status → title". */
+export type ProjectStatusAction = {
+    /** Null on the computed defaults of a project that never set up its statuses. */
+    actionId: number | null;
+    /** Null on those too: `beforeKey` / `afterKey` stand in for the ids. */
+    beforeStatusId: number | null;
+    afterStatusId: number | null;
+    /** The built-in key of each side; null for a status the team added. */
+    beforeKey: string | null;
+    afterKey: string | null;
+    /** Null: the default title, translated for the viewer. Otherwise shown as typed. */
+    title: string | null;
+    /** What a null title is translated by; null for a pair with no default. */
+    defaultKey: "start" | "mark_ready" | "complete" | "resume" | "reopen" | null;
+    enabled: boolean;
+};

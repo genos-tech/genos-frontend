@@ -11,13 +11,11 @@ import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
-import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import StarOutlineRoundedIcon from "@mui/icons-material/StarOutlineRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
-import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
-import { Box, Button, IconButton, Stack, Typography } from "@mui/joy";
+import { Box, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
@@ -31,7 +29,7 @@ import { ConfirmDialog } from "../../../../components/ui/modal/ConfirmDialog";
 import { MODAL_CHROME_CLEARANCE } from "../../../../components/ui/modal/modalChrome";
 import { MoreMenu, MoreMenuItem } from "../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../components/ui/styles/commonStyle";
-import { headerTouchTargetsSx, touchTargetSx } from "../../../../components/ui/touchTargets";
+import { headerTouchTargetsSx } from "../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
@@ -112,10 +110,12 @@ import { dropRefusedMove } from "../../utils/moveRefusal";
 import { scopeCovers } from "../../utils/projectStatusScope";
 import { createRetryBackoff } from "../../utils/retryBackoff";
 import { getTaskKind } from "../../utils/taskKind";
+import { statuses } from "../../utils/taskMeta";
 import { getTaskPreviewPaneState } from "../../utils/taskPreviewPaneState";
 import { StatusLabel } from "../meta/StatusLabel";
 import { ModalConvertTaskMilestone } from "../modals/ModalConvertTaskMilestone";
 import { PreviewTaskIdChip } from "../PreviewTaskIdChip";
+import { QuickStatusButtons } from "../statuses/QuickStatusButtons";
 import { TaskBodyBlock } from "./base/TaskBodyBlock";
 import { TaskCustomBarBlock } from "./base/TaskCustomBarBlock";
 import { TaskMainBlock } from "./base/TaskMainBlock";
@@ -2200,11 +2200,19 @@ const MilestonePreviewInner = ({
     // record is updated; `syncMilestoneToAllTasks` then mirrors the new
     // status onto the backing task row so the table / sprint board /
     // dashboard re-render without a refresh.
-    const handleMilestoneStatusChange = async (newStatus: string) => {
+    const handleMilestoneStatusChange = async (newStatus: string, statusId?: number) => {
         if (!milestone) return;
-        if (milestone.status === newStatus) return;
+        const meta = statuses.find((s) => s.status === newStatus);
+        const statusChanges = milestone.status !== newStatus;
+        const rowChanges = statusId != null && statusId !== (milestone.customStatusId ?? null);
+        if (!meta || (!statusChanges && !rowChanges)) return;
+        // The fields the status picker sends (MIP-2603: one path for both).
         const updated = await useSM.updateExistingMilestone(
-            { milestoneId: milestone.milestoneId, status: newStatus },
+            {
+                milestoneId: milestone.milestoneId,
+                ...(statusChanges && { status: newStatus, statusCode: meta.code }),
+                ...(rowChanges && { customStatusId: statusId }),
+            },
             milestone.projectId
         );
         if (updated) {
@@ -2442,34 +2450,16 @@ const MilestonePreviewInner = ({
                         <Typography level="body-xs" sx={{ color: "neutral.500" }}>
                             {t.tasks.titleBlock.milestoneBadge}
                         </Typography>
-                        {/* Status Transition Buttons — mirror the task-
-                        header buttons (TaskTitleBlock.tsx:135) so the
-                        milestone preview gets the same one-click
-                        Open/Pending → WIP → Closed flow. */}
-                        {(milestone.status === "Open" || milestone.status === "Pending") && (
-                            <Button
-                                color="warning"
-                                size="sm"
-                                startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
-                                sx={touchTargetSx("&")}
-                                variant="soft"
-                                onClick={() => handleMilestoneStatusChange("WIP")}
-                            >
-                                {t.tasks.preview.startMilestone}
-                            </Button>
-                        )}
-                        {milestone.status === "WIP" && (
-                            <Button
-                                color="success"
-                                size="sm"
-                                startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
-                                sx={touchTargetSx("&")}
-                                variant="soft"
-                                onClick={() => handleMilestoneStatusChange("Closed")}
-                            >
-                                {t.tasks.preview.completeMilestone}
-                            </Button>
-                        )}
+                        <QuickStatusButtons
+                            customStatusId={milestone.customStatusId}
+                            hostZIndex={hostZIndex}
+                            kind="milestone"
+                            projectId={milestone.projectId}
+                            status={milestone.status}
+                            onPick={(category, statusId) =>
+                                void handleMilestoneStatusChange(category, statusId)
+                            }
+                        />
                         <PreviewTaskIdChip
                             key={`milestone-id-${milestone.milestoneId}`}
                             task={{ displayId: milestone.displayId, id: milestone.taskId }}

@@ -5,6 +5,7 @@ import {
     ProjectStatusesPayload,
 } from "../../features/tasks/services/projectStatuses";
 import { ProjectStatusDef } from "../../types/tasks";
+import { __resetProjectStatusActionsStore } from "./useProjectStatusActions";
 
 /**
  * The read store of each project's statuses (MIP-2493), shared by every status chip, picker
@@ -54,7 +55,10 @@ const setEntry = (projectId: number, entry: ProjectStatusesEntry): void => {
 export const setProjectStatusesToken = (next: string | null): void => {
     if (next === token) return;
     // Another person's lists are not this person's.
-    if (!next) store = new Map();
+    if (!next) {
+        store = new Map();
+        __resetProjectStatusActionsStore();
+    }
     token = next;
     listeners.forEach((l) => l());
 };

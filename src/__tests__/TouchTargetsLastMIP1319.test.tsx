@@ -92,11 +92,16 @@ describe("a 44px target on a touch screen, by source", () => {
         );
     });
 
-    it("Start / Complete Task and Start / Complete Milestone", () => {
-        const task = source("features/tasks/components/contents/base/TaskTitleBlock.tsx");
-        const milestone = source("features/tasks/components/contents/TaskPreview.tsx");
-        expect(task.match(/sx=\{touchTargetSx\("&"\)\}/g)?.length).toBe(2);
-        expect(milestone.match(/sx=\{touchTargetSx\("&"\)\}/g)?.length).toBe(2);
+    // One component draws both headers' buttons (MIP-2603): the button and its ▾.
+    it("the quick status buttons of the task and milestone headers", () => {
+        const buttons = source("features/tasks/components/statuses/QuickStatusButtons.tsx");
+        expect(buttons.match(/\.\.\.touchTargetSx\("&"\)/g)?.length).toBe(2);
+        for (const header of [
+            "features/tasks/components/contents/base/TaskTitleBlock.tsx",
+            "features/tasks/components/contents/TaskPreview.tsx",
+        ]) {
+            expect(source(header)).toContain("<QuickStatusButtons");
+        }
     });
 
     it("chat list header: tabs 44, More 44, Unread chip in a 44px band", () => {

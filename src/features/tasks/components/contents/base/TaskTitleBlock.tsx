@@ -11,10 +11,8 @@ import LocalOfferRoundedIcon from "@mui/icons-material/LocalOfferRounded";
 import NoteAltRoundedIcon from "@mui/icons-material/NoteAltRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import NotificationsOffRoundedIcon from "@mui/icons-material/NotificationsOffRounded";
-import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import QuestionAnswerRoundedIcon from "@mui/icons-material/QuestionAnswerRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
-import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import VisibilityOffRoundedIcon from "@mui/icons-material/VisibilityOffRounded";
 import { Box, Button, FormControl, IconButton, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
@@ -28,7 +26,7 @@ import { MODAL_CHROME_CLEARANCE } from "../../../../../components/ui/modal/modal
 import { ModalFrame } from "../../../../../components/ui/modal/ModalFrame";
 import { MoreMenu, MoreMenuItem } from "../../../../../components/ui/MoreMenu";
 import { TaskHeaderStyles } from "../../../../../components/ui/styles/commonStyle";
-import { headerTouchTargetsSx, touchTargetSx } from "../../../../../components/ui/touchTargets";
+import { headerTouchTargetsSx } from "../../../../../components/ui/touchTargets";
 import { useAuth } from "../../../../../context/authState";
 import { ChatManagementState } from "../../../../../hooks/chats/useChatManagement";
 import { useUrlLinkModal } from "../../../../../hooks/common/UrlLinkModalContext";
@@ -49,16 +47,17 @@ import { askGenosTaskRequest } from "../../../../taskAsk/taskAskLink";
 import { LazyTaskDiagram } from "../../../diagram/components/LazyTaskDiagram";
 import { DIAGRAM_LIFT } from "../../../diagram/diagramZIndex";
 import { useConvertTaskMilestone } from "../../../hooks/useConvertTaskMilestone";
-import { statusSolid } from "../../../meta/taskTone";
 import { deleteEmptyTask } from "../../../services/deleteEmptyTask";
 import { afterTaskDeleted } from "../../../services/deleteTaskCommit";
 import { emitTasksBulkChanged } from "../../../services/taskEvents";
 import { shouldFallBackToTable } from "../../../utils/mainPanelVisibility";
 import { keptCustomStatusId } from "../../../utils/projectStatus";
+import { statuses } from "../../../utils/taskMeta";
 import { canConvertTaskToMilestone } from "../../../utils/taskMilestoneConversion";
 import { StatusLabel } from "../../meta/StatusLabel";
 import { ModalConvertTaskMilestone } from "../../modals/ModalConvertTaskMilestone";
 import { PreviewTaskIdChip } from "../../PreviewTaskIdChip";
+import { QuickStatusButtons } from "../../statuses/QuickStatusButtons";
 
 type TaskTitleBlockProps = {
     myself: UserProps;
@@ -336,22 +335,23 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
         }
     };
 
-    const handleStatusChange = (newStatus: string, color: string) => {
+    // A quick status button (MIP-2603) is the same pick as `ACTaskStatus`: the autosave sends
+    // it, so rules, history, notifications and refusals are the picker's.
+    const handleQuickStatus = (category: string, statusId?: number) => {
+        const next = statuses.find((s) => s.status === category);
+        if (!next) return;
         if (setTaskContent) {
             setTaskContent({
                 ...taskContent,
-                customStatusId: keptCustomStatusId(
-                    taskContent.status.status,
-                    newStatus,
-                    taskContent.customStatusId
-                ),
-                customStatusPick: undefined,
-                status: {
-                    code: 0,
-                    status: newStatus,
-                    color: color,
-                    textColor: "white",
-                },
+                status: next,
+                customStatusId:
+                    statusId ??
+                    keptCustomStatusId(
+                        taskContent.status.status,
+                        category,
+                        taskContent.customStatusId
+                    ),
+                customStatusPick: statusId,
             });
         }
         if (setTaskUpdated) {
@@ -411,38 +411,14 @@ export const TaskTitleBlock = (props: TaskTitleBlockProps) => {
                             rowGap: 0.75,
                         }}
                     >
-                        {/* Status Transition Buttons */}
-                        {isPreviewMode &&
-                            (taskContent.status.status === "Open" ||
-                                taskContent.status.status === "Pending") && (
-                                <Button
-                                    color="warning"
-                                    size="sm"
-                                    startDecorator={<PlayArrowRoundedIcon sx={{ fontSize: 16 }} />}
-                                    sx={touchTargetSx("&")}
-                                    variant="soft"
-                                    onClick={() =>
-                                        handleStatusChange("WIP", statusSolid("WIP").color)
-                                    }
-                                >
-                                    {t.tasks.preview.startTask}
-                                </Button>
-                            )}
-
-                        {isPreviewMode && taskContent.status.status === "WIP" && (
-                            <Button
-                                color="success"
-                                size="sm"
-                                startDecorator={<TaskAltRoundedIcon sx={{ fontSize: 16 }} />}
-                                sx={touchTargetSx("&")}
-                                variant="soft"
-                                onClick={() =>
-                                    handleStatusChange("Closed", statusSolid("Closed").color)
-                                }
-                            >
-                                {t.tasks.preview.completeTask}
-                            </Button>
-                        )}
+                        <QuickStatusButtons
+                            customStatusId={taskContent.customStatusId}
+                            hostZIndex={hostZIndex}
+                            kind={isMilestone ? "milestone" : "task"}
+                            projectId={taskContent.project?.projectId}
+                            status={taskContent.status.status}
+                            onPick={handleQuickStatus}
+                        />
                         <PreviewTaskIdChip
                             key={`task-title-block-${taskContent.id}`}
                             task={taskContent}
