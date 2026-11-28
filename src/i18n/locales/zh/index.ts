@@ -5994,6 +5994,7 @@ export const zh: DeepPartial<Messages> = {
             noAnswer: "（无回答）",
             cancelledBeforeAnswer: "此提问在回答前已取消。",
             notDecided: "此提问未被批准，也未被拒绝。",
+            approvalExpired: "此提问在批准或拒绝之前已过期。",
         },
         dropped: {
             message: "Genos 无法使用你指定的消息，因此未参考该消息作答。",

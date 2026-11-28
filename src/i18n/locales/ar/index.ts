@@ -6077,6 +6077,7 @@ export const ar: DeepPartial<Messages> = {
             noAnswer: "(لا توجد إجابة)",
             cancelledBeforeAnswer: "أُلغي هذا السؤال قبل ظهور الإجابة.",
             notDecided: "لم تتم الموافقة على هذا السؤال ولا رفضه.",
+            approvalExpired: "انتهت صلاحية هذا السؤال قبل الموافقة عليه أو رفضه.",
         },
         dropped: {
             message: "لم يتمكن Genos من استخدام الرسالة التي حددتها، فأجاب من دونها.",

@@ -140,7 +140,7 @@ export interface CompletedTurn {
     unanswered?: UnansweredReason;
 }
 
-export type UnansweredReason = "cancelled" | "notDecided";
+export type UnansweredReason = "cancelled" | "notDecided" | "expired";
 
 // A restored ask that still waits for the person's decision (MIP-2604): it goes back into the
 // live slot, with the card, instead of into `turns`.
