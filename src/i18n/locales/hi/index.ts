@@ -2884,7 +2884,7 @@ export const hi: DeepPartial<Messages> = {
             previewTable: "मेज़",
             unreadCount: "{count, plural, one {# अनरीड मेसेज} other {# अनरीड मेसेज}}",
             allCaughtUp: "सब कुछ पूरा",
-            unreadFilter: "अपठित ग",
+            unreadFilter: "अपठित",
             externalBadge: "बाहरी",
             externalBadgeHint: "इस चैट में दूसरी टीम के लोग हैं",
             sharedByTeamHint: "{team} ने इस चैट को आपकी टीम के साथ साझा किया",
