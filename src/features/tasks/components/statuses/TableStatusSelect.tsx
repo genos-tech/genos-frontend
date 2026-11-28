@@ -8,11 +8,10 @@ import { STATUS_DELETED, STATUS_NAMES } from "../../meta/taskStatuses";
 import { pickableStatuses, resolveStatusRow, statusRowName } from "../../utils/projectStatus";
 import { StatusLabel } from "../meta/StatusLabel";
 import { ChipSelect, ChipSelectOption, statusSelectNode } from "../table/cellEditors";
-import { CategoryHeading } from "./statusChoices";
 
 /**
  * The table's in-cell status editor. A project that never set up statuses gets the six
- * system values, as before; one that did gets its own, grouped by category (MIP-2493).
+ * system values, as before; one that did gets its own in one flat list (MIP-2493, MIP-2590).
  */
 export const TableStatusSelect = ({
     projectId,
@@ -34,13 +33,9 @@ export const TableStatusSelect = ({
 
     const options: ChipSelectOption[] = statuses.length
         ? [
-              ...pickableStatuses(statuses, current?.statusId).map((row, i, all) => ({
+              ...pickableStatuses(statuses, current?.statusId).map((row) => ({
                   value: `st:${row.statusId}`,
                   label: statusRowName(row, t.tasks),
-                  header:
-                      all[i - 1]?.category !== row.category ? (
-                          <CategoryHeading category={row.category} />
-                      ) : undefined,
                   node: (
                       <Box sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
                           <StatusLabel row={row} status={row.category} />
