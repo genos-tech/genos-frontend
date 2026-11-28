@@ -68,7 +68,7 @@ function viaAppField(m: Pick<Message, "metadata">): { viaApp?: ViaApp } {
  */
 function ruleMoveField(m: Pick<Message, "metadata" | "sender">): { ruleMove?: RuleMoveNotice } {
     const meta = (m.metadata ?? {}) as Record<string, unknown>;
-    const { destinationProjectId, movedTaskId, ruleName, systemNotice } = meta;
+    const { destinationProjectId, movedMilestone, movedTaskId, ruleName, systemNotice } = meta;
     if (
         m.sender ||
         systemNotice !== "task_moved_by_rule" ||
@@ -78,7 +78,14 @@ function ruleMoveField(m: Pick<Message, "metadata" | "sender">): { ruleMove?: Ru
     ) {
         return {};
     }
-    return { ruleMove: { projectId: destinationProjectId, ruleName, taskId: movedTaskId } };
+    return {
+        ruleMove: {
+            projectId: destinationProjectId,
+            ruleName,
+            taskId: movedTaskId,
+            ...(movedMilestone === true ? { milestone: true } : {}),
+        },
+    };
 }
 
 /**

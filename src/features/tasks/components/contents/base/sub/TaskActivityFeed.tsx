@@ -474,9 +474,12 @@ const automationSentence = (
     const metadata = activity.metadata ?? {};
     const rule = typeof metadata.ruleName === "string" ? metadata.ruleName : "";
     const code = typeof metadata.reason === "string" ? metadata.reason : "";
-    const reason = Object.prototype.hasOwnProperty.call(messages.automation.reasons, code)
-        ? messages.automation.reasons[code as keyof ActivityMessages["automation"]["reasons"]]
-        : "";
+    // A milestone's row carries its id: "this task" would be wrong there (MIP-2540).
+    const reasons: Record<string, string> = {
+        ...messages.automation.reasons,
+        ...(metadata.milestoneId != null ? messages.automation.milestoneReasons : {}),
+    };
+    const reason = Object.prototype.hasOwnProperty.call(reasons, code) ? reasons[code] : "";
     let template: string;
     if (activity.actionType === "automation_applied") {
         template =

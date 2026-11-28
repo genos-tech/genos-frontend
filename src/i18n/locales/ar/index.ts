@@ -2637,6 +2637,8 @@ export const ar: DeepPartial<Messages> = {
             line: "نقلت القاعدة «{rule}» {task} إلى {project}.",
             aTask: "مهمة",
             anotherProject: "مشروع آخر",
+            milestoneLine: "نقلت القاعدة «{rule}» المعلم {task} إلى {project}.",
+            aMilestone: "معلمًا",
         },
         retentionBanner:
             "الرسائل الأقدم من {days} يومًا مخفية في خطتك. قم بالترقية لعرض السجل الكامل.",
@@ -4778,6 +4780,13 @@ export const ar: DeepPartial<Messages> = {
                     error: "حدث خطأ ما",
                     bad_status: "الحالة التي تضبطها القاعدة لم تعد متاحة",
                     assignee_not_allowed: "لا يمكن إسناد المهمة هناك إلى الشخص الذي تحدده القاعدة",
+                    too_many_tasks:
+                        "يضم المعلم أكثر من 200 مهمة، وهو عدد أكبر مما يمكن للقاعدة نقله",
+                },
+                // The two reasons that name what the row is about, for a milestone's history.
+                milestoneReasons: {
+                    destination: "لا يمكن نقل المعلم إلى مشروع الوجهة المحدد في القاعدة",
+                    rate_limited: "طُبّقت القواعد على هذا المعلم مرات كثيرة خلال وقت قصير",
                 },
             },
             via: {
