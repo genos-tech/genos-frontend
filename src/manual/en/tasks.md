@@ -17,7 +17,7 @@ A project holds tasks, milestones and sprints, and it has its own chat. Create o
 
 - **Customize Task Fields** sets which fields are required and their default values for new tasks and milestones. Only the project owner and editors can change these.
 - **Custom fields** (Tag, Text, Date or Member) apply to every task, sub-task and milestone in the project. They show in the task panel and as table columns. Owners and editors manage them.
-- **Statuses and automation** (the project's "…" menu, owner and editors) lets a project name and colour its own statuses. **Set up statuses** adds the built-ins, including **In Review**; then add, rename, recolour, order, set a default, turn off (In Review, WIP and Pending) or delete. Every status belongs to Open, WIP, Blocked, Pending or Closed, which board columns, filters and automations keep using. Automation rules are not there yet.
+- **Statuses and automation** (the project's "…" menu, owner and editors) lets a project name and colour its own statuses. **Set up statuses** adds the built-ins, including **In Review**; then add, rename, recolour, order, set a default, turn off (In Review, WIP, Pending and Rejected) or delete. Every status belongs to Open, WIP, Blocked, Pending, Closed or Rejected, which board columns, filters and automations keep using. Automation rules are not there yet.
 - **Templates:** any project member can add task and milestone templates for the project.
 - **Labels:** project labels group projects in the Tasks sidebar, and you can filter the sidebar by label.
 - **Import tasks from CSV…** brings in tasks from a CSV file. A Jira or Notion export is recognized, and a Jira JSON export also brings comments. Only the owner or an editor of the project can import.
@@ -25,7 +25,8 @@ A project holds tasks, milestones and sprints, and it has its own chat. Create o
 
 ## Tasks
 
-- A task has a status (Open, WIP, Pending, Blocked or Closed, shown under the project's own names where it set statuses up), a priority, an effort level, an assignee, optional collaborators, start and due dates, tags and a description. Collaborators must be members of the project.
+- A task has a status (Open, WIP, Pending, Blocked, Closed or Rejected, shown under the project's own names where it set statuses up), a priority, an effort level, an assignee, optional collaborators, start and due dates, tags and a description. Collaborators must be members of the project.
+- **Rejected** means a task will not be done. It is finished but not completed: it leaves the progress bar, its sub-tasks read as rejected unless they are already closed, and it no longer blocks other tasks.
 - A task has four tabs: Comments, Notes, Attachments and Activity. Activity records every change to the task, and you can restore an earlier description from it.
 - **Sub-tasks:** break work down with sub-tasks. A task's page shows the sub-tasks under it.
 - **Dependencies:** under Dependencies, mark which tasks a task is **Blocked by** and which it is **Blocking**. Tasks in other projects of the same team can be linked too. While a task has an open blocker, Genos sets it to Blocked. When the last blocker closes, it returns to Open. This only happens if its status is still Blocked; if you set another status yourself, Genos leaves it alone.

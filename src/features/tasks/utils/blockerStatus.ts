@@ -3,7 +3,7 @@ import { TaskDependencyRef } from "../../../types/tasks";
 /**
  * Does a blocker still hold its task back? (MIP-1549)
  *
- * A blocker is resolved when it reads Closed or Deleted. "Reads" means the status the server's
+ * A blocker is resolved when it reads Closed, Rejected or Deleted. "Reads" means the status the server's
  * closed-ancestor rule gives it: a blocker under a Closed or Deleted parent, grandparent or
  * milestone reads as Closed or Deleted whatever its own row says (MIP-1413). The server's
  * auto-Blocked flip uses the same rule (api MIP-1544), so the badge, the diagram's blocker count
@@ -14,7 +14,7 @@ import { TaskDependencyRef } from "../../../types/tasks";
  * in a project this client has not loaded. A payload without the field (an older server) falls
  * back to the blocker's own status, as before.
  */
-const RESOLVED = new Set(["closed", "deleted"]);
+const RESOLVED = new Set(["closed", "rejected", "deleted"]);
 
 /** True when `status` (a blocker's effective or own status) leaves the task blocked. */
 export const isOpenBlockerStatus = (status: string | null | undefined): boolean =>

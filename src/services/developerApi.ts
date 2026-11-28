@@ -78,6 +78,7 @@ export const WEBHOOK_EVENTS = [
     "task.created",
     "task.updated",
     "task.completed",
+    "task.rejected",
     "task.comment_created",
     "message.created",
 ] as const;

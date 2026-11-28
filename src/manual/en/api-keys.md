@@ -55,7 +55,7 @@ Send the header `Authorization: ApiKey <your key>`. The scheme is the word ApiKe
 A webhook is Genos telling your server when something happens, instead of your script checking on a timer. In Settings → Developer → Webhooks, a team owner or editor adds one:
 
 1. Type an https address. It must be a public address.
-2. Tick the events it should receive: task.created, task.updated, task.completed, task.comment_created, message.created.
+2. Tick the events it should receive: task.created, task.updated, task.completed, task.rejected, task.comment_created, message.created.
 3. Optional: choose projects. If you choose none, every project counts.
 4. For message.created, you must choose the channels to watch, because message text is sent to your address. If you choose none, no chat events are sent. Direct messages can never be sent to a webhook.
 5. Press "Add webhook". Genos asks for your password again, as for a key, and emails you that a webhook was added.

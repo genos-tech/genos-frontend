@@ -45,6 +45,7 @@ const TONE_TO_BLOCKNOTE: Record<Tone, BlockNoteTextColor> = {
     info: "blue",
     muted: "gray",
     neutral: "gray",
+    rejected: "brown",
     success: "green",
     warning: "orange",
 };

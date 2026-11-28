@@ -1,4 +1,5 @@
 import type { Messages } from "../../../../i18n/types";
+import { isFinishedStatus } from "../../meta/taskStatuses";
 import { STATUS_TONE, toneSolid } from "../../meta/taskTone";
 import { Milestone } from "../../sprint-milestone/types";
 import { EffectiveTask } from "../../utils/effectiveTasks";
@@ -51,7 +52,7 @@ export const buildCapacityMap = (
 export const statusColor = (status: keyof typeof STATUS_TONE): string =>
     toneSolid(STATUS_TONE[status]).bg;
 
-export const isOngoingMilestone = (m: Milestone): boolean => m.status !== "Closed";
+export const isOngoingMilestone = (m: Milestone): boolean => !isFinishedStatus(m.status);
 
 // Maps a backend status enum to the i18n key whose value renders in
 // the dashboard. Resolve through `t.tasks.dashboard.statusLabels[key]`

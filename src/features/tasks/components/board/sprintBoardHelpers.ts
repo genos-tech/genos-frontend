@@ -52,11 +52,25 @@ export const COLUMNS: ColumnConfig[] = [
         color: statusSolid("Pending").color,
         bgColor: toneSoftBg(STATUS_TONE.Pending, 0.1),
     },
+    {
+        id: "rejected",
+        title: "Rejected",
+        titleKey: "columnRejected",
+        status: "Rejected",
+        color: statusSolid("Rejected").color,
+        bgColor: toneSoftBg(STATUS_TONE.Rejected, 0.1),
+        onlyWithCards: true,
+    },
 ];
+
+/** The columns a board draws: Rejected only once the board holds a rejected card. */
+export const visibleColumns = (boardTasks: Record<string, readonly unknown[]>): ColumnConfig[] =>
+    COLUMNS.filter((column) => !column.onlyWithCards || (boardTasks[column.id]?.length ?? 0) > 0);
 
 // Style helpers
 export const getBoardContainerStyles = (
-    mode: "light" | "dark" | undefined
+    mode: "light" | "dark" | undefined,
+    columnCount: number
 ): React.CSSProperties => ({
     display: "grid",
     // One column per status, each at least COLUMN_MIN_WIDTH wide. The
@@ -67,7 +81,7 @@ export const getBoardContainerStyles = (
     // that point the board scrolls horizontally instead (`overflowX`
     // below). `1fr` alone resolves its implicit `auto` minimum against
     // the content and would keep shrinking.
-    gridTemplateColumns: `repeat(${COLUMNS.length}, minmax(${COLUMN_MIN_WIDTH}px, 1fr))`,
+    gridTemplateColumns: `repeat(${columnCount}, minmax(${COLUMN_MIN_WIDTH}px, 1fr))`,
     // One row exactly as tall as the board, so every column fills it and
     // scrolls its own cards (SprintBoardColumn). `minmax(0, …)` rather than
     // plain `1fr`: a tall column must not stretch the row past the board.
