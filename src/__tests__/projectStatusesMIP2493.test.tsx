@@ -101,6 +101,7 @@ describe("which status a task reads as", () => {
             "Blocked",
             "Pending",
             "Closed",
+            "Rejected",
         ]);
     });
 });
