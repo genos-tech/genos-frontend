@@ -204,10 +204,13 @@ export const SkillsPage = ({ teamId, host, initialTab }: Props) => {
 
     // Install from Team skills (MIP-2589): only an installed skill can be picked or run.
     const install = async (skill: SkillRow) => {
+        // The Install button goes away with the click: a keyboard user's focus moves to the row.
+        // A mouse or touch click leaves no ring behind.
+        const byKeyboard = document.activeElement?.matches(":focus-visible") === true;
         const res = await installSkill(accessToken, skill.id);
         if (res.ok) {
             toast.success(m.hub.installedToast);
-            focusAfterUpdate.current = skill.id;
+            if (byKeyboard) focusAfterUpdate.current = skill.id;
             void load(listTab, true);
         } else {
             toast.error(res.message || m.hub.installFailed);
