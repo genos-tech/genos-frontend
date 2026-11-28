@@ -56,7 +56,9 @@ export const GMAvatar = (props: GMAvatarProps) => {
     const avatarSrc = buildVersionedAvatarSrc(liveChat.profileImagePath, imageVersion);
 
     return (
-        <div>
+        // A press stays here: the avatar (and what it opens) does not also open the row it
+        // sits in, as with the multi-person DM's chip (`MDMAvatarButton`).
+        <div onClick={(event) => event.stopPropagation()}>
             <Clickable
                 height={_avatarSize}
                 position="relative"

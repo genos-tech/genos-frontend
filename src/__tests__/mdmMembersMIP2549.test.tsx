@@ -171,4 +171,22 @@ describe("the members modal", () => {
         });
         expect(store.removeMember).toHaveBeenCalledWith(CHAT, 4, "me");
     });
+
+    it("puts focus on the main content after leaving (MIP-2565)", async () => {
+        const main = document.createElement("div");
+        main.id = "app-main";
+        main.tabIndex = -1;
+        document.body.appendChild(main);
+        draw(setUp(3));
+        const dialog = await open();
+        fireEvent.click(within(dialog).getByRole("button", { name: "Leave conversation" }));
+        await act(async () => {
+            fireEvent.click(screen.getByRole("button", { name: "Leave" }));
+        });
+        await act(async () => {
+            await new Promise((resolve) => setTimeout(resolve, 20));
+        });
+        expect(document.activeElement).toBe(main);
+        main.remove();
+    });
 });

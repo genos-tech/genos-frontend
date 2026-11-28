@@ -105,6 +105,8 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         <>
             <NavItem
                 as="div"
+                // The avatar opens a profile or the members: not a button inside the row's.
+                interactiveContent
                 // Two lines (title + latest message): the documented multiple of
                 // a density row. It still grows for a custom status or GM tags.
                 lines={2}

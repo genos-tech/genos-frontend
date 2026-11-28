@@ -8,6 +8,7 @@ import PersonAddAltRoundedIcon from "@mui/icons-material/PersonAddAltRounded";
 import { Box, Button, Chip, Stack, Typography } from "@mui/joy";
 import { Socket } from "socket.io-client";
 
+import { APP_MAIN_ID } from "../../../../components/layout/SkipToContent";
 import { useNoteModalHostZIndex } from "../../../../components/modals/noteModalHostZIndex";
 import { UserAvatar } from "../../../../components/ui/avatars/UserAvatar";
 import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
@@ -89,6 +90,13 @@ const useMdmRoster = (chatId: string): Roster => {
         return channelService.subscribe(apply);
     }, [chatId]);
     return roster;
+};
+
+// The row (or header) whose chip opened this goes with the chat, and focus would drop to the
+// page body. After the dialogs have handed focus back, put it at the start of the main content
+// (the skip link's target).
+const focusMainAfterLeave = () => {
+    window.setTimeout(() => document.getElementById(APP_MAIN_ID)?.focus(), 0);
 };
 
 export const ModalMDMMembers = ({
@@ -190,6 +198,7 @@ export const ModalMDMMembers = ({
             return false;
         }
         onClose();
+        focusMainAfterLeave();
         return true;
     };
 
