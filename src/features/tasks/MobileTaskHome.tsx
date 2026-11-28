@@ -201,10 +201,7 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
     const isProjectOwner = isOwnerOfProject(useTM.taskFieldRules, openProjectId, myself.userId);
     const [archiveBusy, setArchiveBusy] = useState(false);
     const [openStatuses, setOpenStatuses] = useState(false);
-    const canManageStatuses =
-        hasProject &&
-        !archived &&
-        canCustomizeTaskFields(useTM.taskFieldRules, openProjectId, myself.userId);
+    const canManageStatuses = canCustomizeFields && !archived;
 
     // Archive the open project, or put an archived one back. The list moves at once; a refusal
     // says so in one line, and the project stays as it was.
