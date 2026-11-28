@@ -35,7 +35,7 @@ import { useNotificationsContext } from "../../services/notifications/notificati
 import {
     deletionCoversSession,
     mentionKey,
-    sessionTurnToCompleted,
+    restoreSessionTurns,
     useAgentQA,
     useAgentSessionsDeleted,
     type AgentMentionRef,
@@ -219,17 +219,17 @@ export const useTaskAsk = ({ accessToken, teamId }: UseTaskAskArgs): UseTaskAskR
                 // Restore only what the server has, and only into an empty window: an empty answer
                 // (never asked here, or the flag is off) keeps what the person has locally, and a
                 // retry that lands after they asked anyway must not abort their answer.
-                const restored = result.turns.map(sessionTurnToCompleted);
+                const restored = restoreSessionTurns(result.turns);
                 const live = liveRef.current;
                 if (
-                    (restored.length > 0 || result.agentSessionId) &&
+                    (result.turns.length > 0 || result.agentSessionId) &&
                     live.turns === 0 &&
                     !live.busy &&
                     !startedFreshRef.current
                 ) {
                     agentQARef.current.reset({
                         sessionId: result.agentSessionId,
-                        turns: restored,
+                        ...restored,
                     });
                 }
                 setStatus("ready");

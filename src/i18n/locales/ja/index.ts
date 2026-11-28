@@ -6237,6 +6237,8 @@ export const ja: DeepPartial<Messages> = {
             archived: "アーカイブ済み",
             untitled: "（無題）",
             noAnswer: "（回答なし）",
+            cancelledBeforeAnswer: "この質問は回答の前にキャンセルされました。",
+            notDecided: "この質問は承認も却下もされていません。",
         },
         dropped: {
             message:
@@ -7028,7 +7030,7 @@ export const ja: DeepPartial<Messages> = {
             menuItem: "ステータスと自動化",
             title: "ステータス",
             description: "このプロジェクトのステータスです。変更はすぐに保存されます。",
-            inReview: "In Review",
+            ready: "着手可",
             introTitle: "独自のステータスを使う",
             introBody:
                 "ステータスの名前や色を変えたり、追加したりできます。設定するまで何も変わりません。",
@@ -7068,7 +7070,7 @@ export const ja: DeepPartial<Messages> = {
             deleteAndMove: "移動して削除",
             boardColumnsTitle: "ステータスごとに列を表示",
             boardColumnsHint:
-                "In ReviewやQAのような工程を進めるチーム向けです。オフのときはカテゴリ（Open、WIPなど）ごとに1列です。プロジェクトの全員に適用されます。",
+                "着手可やQAのような工程を進めるチーム向けです。オフのときはカテゴリ（Open、WIPなど）ごとに1列です。プロジェクトの全員に適用されます。",
             boardColumnsOn: "ボードはステータスごとの列で表示されます。",
             boardColumnsOff: "ボードはカテゴリーごとの列で表示されます。",
             countsAs: "扱い: {category}",

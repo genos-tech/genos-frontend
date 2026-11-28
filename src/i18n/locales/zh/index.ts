@@ -5997,6 +5997,8 @@ export const zh: DeepPartial<Messages> = {
             archived: "已归档",
             untitled: "（未命名）",
             noAnswer: "（无回答）",
+            cancelledBeforeAnswer: "此提问在回答前已取消。",
+            notDecided: "此提问未被批准，也未被拒绝。",
         },
         dropped: {
             message: "Genos 无法使用你指定的消息，因此未参考该消息作答。",
@@ -6760,7 +6762,7 @@ export const zh: DeepPartial<Messages> = {
             menuItem: "状态与自动化",
             title: "状态",
             description: "此项目的状态。更改会即时保存。",
-            inReview: "审核中",
+            ready: "就绪",
             introTitle: "使用自定义状态",
             introBody: "可以重命名、改色或添加状态。设置之前不会有任何变化。",
             setUp: "设置状态",
@@ -6799,7 +6801,7 @@ export const zh: DeepPartial<Messages> = {
             deleteAndMove: "移动并删除",
             boardColumnsTitle: "每个状态显示一列",
             boardColumnsHint:
-                "当团队按“审核中”或 QA 等步骤推进工作时使用。关闭时每个类别（待处理、进行中…）一列。对项目中的所有人生效。",
+                "当团队按“就绪”或 QA 等步骤推进工作时使用。关闭时每个类别（待处理、进行中…）一列。对项目中的所有人生效。",
             boardColumnsOn: "看板现在按状态分列显示。",
             boardColumnsOff: "看板现在按类别分列显示。",
             countsAs: "视为：{category}",

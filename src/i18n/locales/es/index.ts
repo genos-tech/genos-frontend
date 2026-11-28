@@ -4744,7 +4744,7 @@ export const es: DeepPartial<Messages> = {
             menuItem: "Estados y automatización",
             title: "Estados",
             description: "Estados de este proyecto. Los cambios se guardan al momento.",
-            inReview: "En revisión",
+            ready: "Preparada",
             introTitle: "Usa tus propios estados",
             introBody:
                 "Cambia el nombre o el color de los estados, o añade otros. Nada cambia hasta que los configures.",
@@ -4785,7 +4785,7 @@ export const es: DeepPartial<Messages> = {
             deleteAndMove: "Mover y eliminar",
             boardColumnsTitle: "Mostrar una columna por cada estado",
             boardColumnsHint:
-                "Úsalo si tu equipo pasa el trabajo por pasos como En revisión o QA. Desactivado: una columna por categoría (Abiertas, En curso…). Se aplica a todo el proyecto.",
+                "Úsalo si tu equipo pasa el trabajo por pasos como Preparada o QA. Desactivado: una columna por categoría (Abiertas, En curso…). Se aplica a todo el proyecto.",
             boardColumnsOn: "El tablero muestra una columna por estado.",
             boardColumnsOff: "El tablero muestra una columna por categoría.",
             countsAs: "Cuenta como: {category}",
@@ -6187,6 +6187,8 @@ export const es: DeepPartial<Messages> = {
             archived: "Archivado",
             untitled: "(sin título)",
             noAnswer: "(sin respuesta)",
+            cancelledBeforeAnswer: "Esta pregunta se canceló antes de recibir respuesta.",
+            notDecided: "Esta pregunta no se aprobó ni se rechazó.",
         },
         dropped: {
             message: "Genos no pudo usar el mensaje que indicaste, así que respondió sin él.",

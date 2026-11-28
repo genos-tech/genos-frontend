@@ -113,7 +113,7 @@ import { SelectedTextQuote } from "./SelectedTextQuote";
 import { formatDurationMs } from "./toolProgressHelpers";
 import { ToolProgressList } from "./ToolProgressList";
 import { turnFrameSx, turnLabelSx } from "./turnFrame";
-import type { ToolEvent } from "./types";
+import type { CompletedTurn, ToolEvent } from "./types";
 import { UndoSlot } from "./UndoControls";
 import { mergeUndoSteps, type UndoRequest, type UndoStepRef } from "./undoSteps";
 
@@ -198,6 +198,8 @@ export interface AgentTurnProps {
     // A click on a citation link or a source chip. What it does (preview,
     // navigate) is the host's call.
     onPreview: (source: SpotlightResult) => void;
+    // A restored turn with no answer for a known reason (MIP-2604).
+    unanswered?: CompletedTurn["unanswered"];
     // Handed to the ApprovalCard untouched; see the header.
     onApprove?: React.ComponentProps<typeof ApprovalCard>["onApprove"];
     onReject?: React.ComponentProps<typeof ApprovalCard>["onReject"];
@@ -264,6 +266,7 @@ const AgentTurnInner = ({
     approvalFieldErrors,
     approvalEdits,
     undoSteps,
+    unanswered,
     layout = "compact",
     labels,
     elapsedMs,
@@ -376,7 +379,8 @@ const AgentTurnInner = ({
     const showRetry = Boolean(askedQuery) && Boolean(onRetry) && (!isCurrent || Boolean(askError));
     // Thumbs need a run id to key the POST, and only make sense on a
     // finished, non-error answer.
-    const showFeedback = Boolean(runId) && Boolean(onFeedback) && !askError && !isStreaming;
+    const showFeedback =
+        Boolean(runId) && Boolean(onFeedback) && !askError && !isStreaming && !unanswered;
 
     const actionContext = (): AgentTurnActionContext => ({
         askedQuery,
@@ -624,7 +628,13 @@ const AgentTurnInner = ({
 
                         {(showThinking || showNoAnswer) && (
                             <Typography level="body-md" sx={{ color: g.text.secondary }}>
-                                {showThinking ? labels.states.thinking : labels.states.noAnswer}
+                                {showThinking
+                                    ? labels.states.thinking
+                                    : unanswered === "cancelled"
+                                      ? labels.states.cancelledBeforeAnswer
+                                      : unanswered === "notDecided"
+                                        ? labels.states.notDecided
+                                        : labels.states.noAnswer}
                             </Typography>
                         )}
 
