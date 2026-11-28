@@ -80,15 +80,17 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
         const partnerUserId = chat?.dmPartnerUser?.userId || activity.dmPartnerUserId;
         if (partnerUserId !== "") {
             return (
-                <AvatarWithStatus
-                    avatarUser={useTEM.teamMemberProfiles[partnerUserId]}
-                    isYou={isYou}
-                    myself={myself}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useCM={useCM}
-                    useUISM={useUISM}
-                />
+                <div onClick={(event) => event.stopPropagation()}>
+                    <AvatarWithStatus
+                        avatarUser={useTEM.teamMemberProfiles[partnerUserId]}
+                        isYou={isYou}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useUISM={useUISM}
+                    />
+                </div>
             );
         } else {
             return <BaseAvatar name={chat?.chatName || activity.chatName} />;
@@ -247,15 +249,17 @@ export const ActivityAvatar: React.FC<ActivityAvatarProps> = ({
                 const partnerUserId = parentChat?.dmPartnerUser?.userId ?? "";
                 if (partnerUserId) {
                     return (
-                        <AvatarWithStatus
-                            avatarUser={useTEM.teamMemberProfiles[partnerUserId]}
-                            isYou={isYou}
-                            myself={myself}
-                            setMyself={setMyself}
-                            socket={socket}
-                            useCM={useCM}
-                            useUISM={useUISM}
-                        />
+                        <div onClick={(event) => event.stopPropagation()}>
+                            <AvatarWithStatus
+                                avatarUser={useTEM.teamMemberProfiles[partnerUserId]}
+                                isYou={isYou}
+                                myself={myself}
+                                setMyself={setMyself}
+                                socket={socket}
+                                useCM={useCM}
+                                useUISM={useUISM}
+                            />
+                        </div>
                     );
                 }
             } else {

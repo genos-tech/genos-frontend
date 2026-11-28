@@ -94,8 +94,11 @@ const Page = () => {
             (e) => {
                 const el = e.target as HTMLElement;
                 const btn = el.closest("button, [role='button']") as HTMLElement | null;
+                // The row's content lies above its button: a tap on it is a tap on the row.
                 const kind = !btn
-                    ? "none"
+                    ? el.closest(".NavItem-body")
+                        ? "row"
+                        : "none"
                     : btn.closest(".NavItem-actions")
                       ? `action:${btn.getAttribute("aria-label") ?? "pin"}`
                       : btn.parentElement?.parentElement?.getAttribute("data-testid") ===

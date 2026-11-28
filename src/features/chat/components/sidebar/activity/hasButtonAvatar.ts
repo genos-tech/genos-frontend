@@ -1,9 +1,6 @@
 import { ActivityMessageProps } from "../../../../../types/chat";
 
-// The rows whose avatar `ActivityAvatar` draws as a button of its own: a group's, and a
-// multi-person DM's (chat type 4 without a task; with one it is a task comment), including a
-// chat note's mention, which borrows its chat's avatar.
+// The rows whose avatar `ActivityAvatar` may draw as a button of its own: every chat's, and a
+// task's or task note's (the project's). A shared personal note's mention (6) has an icon.
 export const hasButtonAvatar = (activity: ActivityMessageProps): boolean =>
-    activity.chatType === 2 ||
-    (activity.chatType === 4 && !activity.taskId) ||
-    (activity.chatType === 8 && (activity.noteChatType === 2 || activity.noteChatType === 4));
+    activity.chatType !== 6;
