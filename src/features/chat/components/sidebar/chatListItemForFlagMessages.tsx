@@ -763,7 +763,11 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                 shared NavItem; the card content below is the feed's own. */}
             <NavItem
                 as="div"
-                interactiveContent
+                interactiveContent={
+                    !chatRemoved &&
+                    (flaggedMessage.chatType === CHAT_TYPES.GM ||
+                        flaggedMessage.chatType === CHAT_TYPES.MDM)
+                }
                 data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
                 lines={2}
                 selected={isSelected}

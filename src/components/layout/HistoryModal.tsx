@@ -392,6 +392,7 @@ const HistoryRow = ({
                 sx={{ position: "absolute", inset: 0 }}
                 onActivate={onClick}
             />
+            {/* Presses pass through to the button below, except on the avatar's own. */}
             <Box
                 id={contentId}
                 sx={{
@@ -401,8 +402,9 @@ const HistoryRow = ({
                     gap: 1.25,
                     flex: 1,
                     minWidth: 0,
+                    pointerEvents: "none",
+                    '& [role="button"]': { pointerEvents: "auto" },
                 }}
-                onClick={onClick}
             >
                 {content}
             </Box>
