@@ -10,6 +10,7 @@ import { ProjectStatusDef } from "../../../../types/tasks";
 import { STATUS_DELETED } from "../../meta/taskStatuses";
 import { pickableStatuses, resolveStatusRow, statusRowName } from "../../utils/projectStatus";
 import { taskMetaLabel } from "../../utils/taskMeta";
+import { PickerField, pickerInputProps } from "../autocompletes/pickerField";
 import { StatusLabel } from "../meta/StatusLabel";
 
 /** One of the project's statuses, or a bare system value (Deleted, or a category whose
@@ -34,6 +35,7 @@ export const ProjectStatusPicker = ({
     customStatusId,
     offerDelete,
     onPick,
+    field,
 }: {
     rows: ProjectStatusDef[];
     status: string;
@@ -41,6 +43,7 @@ export const ProjectStatusPicker = ({
     offerDelete: boolean;
     /** `statusId` is undefined for a bare system value. */
     onPick: (category: string, statusId?: number) => void;
+    field?: PickerField;
 }) => {
     const { t } = useTranslation();
     const current = resolveStatusRow(rows, status, customStatusId);
@@ -56,11 +59,14 @@ export const ProjectStatusPicker = ({
 
     return (
         <Autocomplete
+            error={field?.invalid}
+            noOptionsText={field?.noOptions}
             getOptionLabel={name}
             isOptionEqualToValue={(option, selected) => option.key === selected.key}
             options={options}
             placeholder={t.tasks.autocomplete.statusPlaceholder}
             size="sm"
+            slotProps={{ input: pickerInputProps(field) }}
             sx={{ width: "100%" }}
             value={value ? [value] : []}
             renderOption={(props, option) => (

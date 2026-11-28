@@ -36,6 +36,14 @@ import type { AutomationRule, RuleList as RuleListData } from "./types";
 import { useLater } from "./useLater";
 import { reasonText, sentenceCase, useAutomationWords, wordsFor } from "./words";
 
+const NO_DATA: AutomationContextData = {
+    projects: [],
+    members: [],
+    myself: { userId: "" } as AutomationContextData["myself"],
+    profiles: {},
+    chats: [],
+};
+
 /** Where the preview was asked for. A switch turns the saved rule on; the others save. */
 type PreviewFrom = "editor" | "menu" | "switch";
 
@@ -93,12 +101,7 @@ export const useAutomationPane = ({
     const later = useLater();
     const { accessToken } = useAuth();
     const enabled = active && data != null;
-    const lookups = useRuleLookups(
-        projectId,
-        data ?? { projects: [], members: [], myUserId: "" },
-        popupZ,
-        enabled
-    );
+    const lookups = useRuleLookups(projectId, data ?? NO_DATA, popupZ, enabled);
 
     const [list, setList] = useState<RuleListData | "failed" | null>(null);
     const [view, setView] = useState<View>({ kind: "list" });
