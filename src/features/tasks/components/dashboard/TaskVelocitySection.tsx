@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { keyframes } from "@emotion/react";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import { Box, Card, Chip, Option, Select, Stack, Typography } from "@mui/joy";
 
@@ -7,6 +8,7 @@ import { DataState } from "../../../../components/ui/feedback/DataState";
 import { Spinner } from "../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../context/authState";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g as tokens } from "../../../../theme/tokens";
 import {
     loadTaskVelocity,
     VelocityGranularity,
@@ -65,6 +67,14 @@ const defaultWindow = (granularity: VelocityGranularity): { start: string; end: 
     return { start: toIso(start), end: toIso(end) };
 };
 
+// A switch answered at once must not flash: the dim and the spinner wait this long.
+const BUSY_DELAY_MS = 150;
+
+const appear = keyframes`
+    from { opacity: 0; }
+    to { opacity: 1; }
+`;
+
 /**
  * Dashboard "Pace" card — how many tasks were created / started /
  * closed / updated per day or week across `taskIds`. Owns the Day/Week
@@ -89,7 +99,13 @@ export const TaskVelocitySection = ({
     const [granularity, setGranularity] = useState<VelocityGranularity>("day");
     // "" = all members. Only used when `members` is provided.
     const [selectedMemberId, setSelectedMemberId] = useState<string>("");
-    const [data, setData] = useState<VelocityPoint[] | null>(null);
+    // The series is kept WITH the granularity it was asked in: while the next one loads, the old
+    // bars stay on screen and must keep their own labels (a day is not "W of").
+    const [series, setSeries] = useState<{
+        points: VelocityPoint[];
+        granularity: VelocityGranularity;
+    } | null>(null);
+    const data = series?.points ?? null;
     const [loading, setLoading] = useState(false);
     // The last request failed (`loadTaskVelocity` resolves `null`). It is NOT a
     // quiet week: an empty series would draw as "nothing happened".
@@ -136,8 +152,10 @@ export const TaskVelocitySection = ({
 
     useEffect(() => {
         if (loadIds.length === 0) {
-            setData([]);
+            setSeries({ points: [], granularity });
             setFailed(false);
+            // A request still in flight was just cancelled: nothing else will clear this.
+            setLoading(false);
             return;
         }
         let cancelled = false;
@@ -149,10 +167,10 @@ export const TaskVelocitySection = ({
                 if (res === null) {
                     // Drop the old series too: it is for other inputs (another
                     // member, window or granularity) and would be a wrong chart.
-                    setData(null);
+                    setSeries(null);
                     setFailed(true);
                 } else {
-                    setData(res);
+                    setSeries({ points: res, granularity });
                 }
                 setLoading(false);
             }
@@ -180,6 +198,7 @@ export const TaskVelocitySection = ({
         <Chip
             color={granularity === g ? "primary" : "neutral"}
             size="sm"
+            slotProps={{ action: { "aria-pressed": granularity === g } }}
             sx={{ cursor: "pointer", fontWeight: 600 }}
             variant={granularity === g ? "solid" : "soft"}
             onClick={() => setGranularity(g)}
@@ -187,6 +206,10 @@ export const TaskVelocitySection = ({
             {g === "day" ? v.day : v.week}
         </Chip>
     );
+
+    // A new series is being asked for while the last one is still on screen. It can take
+    // seconds (Week is a long window), so it must be seen to be working (MIP-2442).
+    const refreshing = loading && series !== null;
 
     // Avatar + name, shared by the dropdown options AND the closed
     // Select's selected-value display (via `renderValue`).
@@ -289,25 +312,62 @@ export const TaskVelocitySection = ({
                         </Stack>
                     }
                 >
-                    <TaskVelocityChart
-                        data={data ?? []}
-                        granularity={granularity}
-                        isDark={isDark}
-                        textMuted={textMuted}
-                        textSecondary={textSecondary}
-                    />
-                    {(data ?? []).some(
-                        (d) => d.created + d.started + d.closed + d.updated > 0
-                    ) && (
-                        <Typography level="body-xs" sx={{ color: textSecondary }}>
-                            {fmt(v.totals, {
-                                created: totals.created,
-                                started: totals.started,
-                                closed: totals.closed,
-                                updated: totals.updated,
-                            })}
-                        </Typography>
-                    )}
+                    <Box
+                        sx={{
+                            position: "relative",
+                            // Room for the loading sign when the old series was only a line of text.
+                            minHeight: refreshing ? 96 : undefined,
+                        }}
+                    >
+                        {/* The old bars stay, dimmed, with their own labels. */}
+                        <Stack
+                            aria-busy={refreshing}
+                            data-testid="pace-series"
+                            spacing={1.5}
+                            sx={{
+                                opacity: refreshing ? 0.35 : 1,
+                                pointerEvents: refreshing ? "none" : undefined,
+                                transition: refreshing
+                                    ? `opacity ${tokens.motion.fast} ${BUSY_DELAY_MS}ms`
+                                    : undefined,
+                                "@media (prefers-reduced-motion: reduce)": { transition: "none" },
+                            }}
+                        >
+                            <TaskVelocityChart
+                                data={data ?? []}
+                                granularity={series?.granularity ?? granularity}
+                                isDark={isDark}
+                                textMuted={textMuted}
+                                textSecondary={textSecondary}
+                            />
+                            {(data ?? []).some(
+                                (d) => d.created + d.started + d.closed + d.updated > 0
+                            ) && (
+                                <Typography level="body-xs" sx={{ color: textSecondary }}>
+                                    {fmt(v.totals, {
+                                        created: totals.created,
+                                        started: totals.started,
+                                        closed: totals.closed,
+                                        updated: totals.updated,
+                                    })}
+                                </Typography>
+                            )}
+                        </Stack>
+                        {refreshing && (
+                            <Stack
+                                alignItems="center"
+                                data-testid="pace-loading"
+                                justifyContent="center"
+                                sx={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    animation: `${appear} 0.2s ease-out ${BUSY_DELAY_MS}ms both`,
+                                }}
+                            >
+                                <Spinner caption={t.common.feedback.loading} size="md" stacked />
+                            </Stack>
+                        )}
+                    </Box>
                 </DataState>
             </Stack>
         </Card>

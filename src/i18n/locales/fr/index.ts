@@ -1751,6 +1751,34 @@ export const fr: DeepPartial<Messages> = {
                 externalChatExplainer:
                     "Choisissez les équipes connectées à inviter. Chaque équipe approuve une fois, puis son propriétaire ou éditeur choisit lequel de ses membres se joint. Les discussions externes sont toujours privées.",
             },
+            mdmMembers: {
+                title: "Membres",
+                chipLabel: "Membres de cette conversation ({count})",
+                countOfMax: "{count} sur {max} personnes",
+                creator: "Créateur",
+                you: "vous",
+                addButton: "Ajouter des personnes",
+                atLimit: "Cette conversation a atteint le maximum de {max} personnes.",
+                atLimitCreator:
+                    "Cette conversation a atteint le maximum de {max} personnes. Retirez quelqu’un pour en ajouter un autre.",
+                historyNote: "Les personnes ajoutées peuvent voir les messages précédents.",
+                remaining:
+                    "Vous pouvez encore ajouter {count} {count, plural, one {personne} other {personnes}}.",
+                limitReached: "La limite est de {max} personnes.",
+                createMaxHint: "{max} personnes au maximum, vous compris.",
+                addHeading: "Ajouter des personnes à cette conversation",
+                addFailedFull:
+                    "Ajout impossible : la conversation est complète ({max} personnes).",
+                leaveButton: "Quitter la conversation",
+                leaveTitle: "Quitter cette conversation ?",
+                leaveDescription:
+                    "Vous ne verrez et ne recevrez plus ses messages. Un membre restant peut vous ajouter à nouveau.",
+                leaveDescriptionCreator:
+                    "Vous ne verrez et ne recevrez plus ses messages. La personne présente depuis le plus longtemps pourra retirer des membres.",
+                loadError: "Impossible de charger les membres.",
+                scopeName: "cette conversation",
+                searchPlaceholder: "Rechercher des membres...",
+            },
             createMDM: {
                 title: "Nouveau DM multi-utilisateurs",
                 description:

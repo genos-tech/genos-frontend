@@ -19,6 +19,8 @@ type Props = {
      *  cross-team disconnect reuses it — but a button reading "Leave"
      *  when the act is "Disconnect" names the wrong thing. */
     confirmLabel?: string;
+    /** The layer of the modal that opened this one, when it is not the page. */
+    hostZIndex?: number;
 };
 
 export const ModalLeaveConfirm = ({
@@ -29,6 +31,7 @@ export const ModalLeaveConfirm = ({
     onConfirm,
     onCancel,
     confirmLabel,
+    hostZIndex,
 }: Props) => {
     const { t } = useTranslation();
 
@@ -39,6 +42,7 @@ export const ModalLeaveConfirm = ({
             confirmLabel={confirmLabel ?? t.common.leaveConfirm.leave}
             description={description}
             entityName={entityName}
+            hostZIndex={hostZIndex}
             icon={<LogoutRoundedIcon sx={{ color: g.danger.text }} />}
             open={open}
             role="dialog"

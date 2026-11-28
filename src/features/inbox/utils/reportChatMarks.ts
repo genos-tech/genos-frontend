@@ -13,6 +13,7 @@
 import { MDM_MAX_VISIBLE } from "../../../components/ui/avatars/mdmStack";
 import type { MDMMemberProps } from "../../../types/chat";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
+import { withoutDeletedUsers } from "../../../utils/teamRoster";
 import { CHAT_TYPE_REVERSE_MAP } from "../../chat/utils/chatPaths";
 import type { GenosReportV2 } from "./genosReportV2";
 
@@ -56,8 +57,9 @@ export type ReportChatMark =
     | { kind: "gm"; src: string | undefined; chatType: number; chatId: string }
     | { kind: "pm"; src: string | undefined }
     /** A multi-person DM: the members the chat list's stack draws (its first few, in the list's
-     *  order), so the report shows the same faces. None known yet draws the people glyph. */
-    | { kind: "mdm"; members: ReportMdmMember[] };
+     *  order) and the member total behind its "+N", so the report shows the same stack. None
+     *  known yet draws the people glyph. */
+    | { kind: "mdm"; members: ReportMdmMember[]; total: number };
 
 export type ReportMdmMember = Pick<MDMMemberProps, "userId" | "userName" | "avatarImgPath">;
 
@@ -87,7 +89,7 @@ export const sameChatMark = (a: ReportChatMark, b: ReportChatMark): boolean => {
         case "pm":
             return b.kind === "pm" && a.src === b.src;
         default:
-            return b.kind === "mdm" && sameMdmMembers(a.members, b.members);
+            return b.kind === "mdm" && a.total === b.total && sameMdmMembers(a.members, b.members);
     }
 };
 
@@ -133,16 +135,19 @@ const markOf = (kind: ReportChatKind, chat: ChatLike, chatType: number): ReportC
             };
         case "pm":
             return { kind: "pm", src: buildAvatarSrc(chat.profileImagePath) };
-        default:
+        default: {
+            const people = withoutDeletedUsers([...(chat.mdmMembers ?? [])]);
             return {
                 kind: "mdm",
                 // Only what the stack draws, copied to primitives so a mark compares by value.
-                members: (chat.mdmMembers ?? []).slice(0, MDM_MAX_VISIBLE).map((m) => ({
+                members: people.slice(0, MDM_MAX_VISIBLE).map((m) => ({
                     userId: m.userId,
                     userName: m.userName,
                     avatarImgPath: m.avatarImgPath,
                 })),
+                total: people.length,
             };
+        }
     }
 };
 

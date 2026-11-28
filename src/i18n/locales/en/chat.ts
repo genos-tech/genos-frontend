@@ -540,6 +540,32 @@ export const chat = {
             externalChatExplainer:
                 "Pick connected teams to invite. Each team approves once, then their owner or editor chooses which of their members join. External chats are always private.",
         },
+        mdmMembers: {
+            title: "Members",
+            chipLabel: "Members of this conversation ({count})",
+            countOfMax: "{count} of {max} people",
+            creator: "Creator",
+            you: "you",
+            addButton: "Add people",
+            atLimit: "This conversation has the maximum of {max} people.",
+            atLimitCreator:
+                "This conversation has the maximum of {max} people. Remove someone to add another.",
+            historyNote: "People you add can see earlier messages.",
+            remaining: "You can add {count} more {count, plural, one {person} other {people}}.",
+            limitReached: "That's the limit of {max} people.",
+            createMaxHint: "Up to {max} people, including you.",
+            addHeading: "Add people to this conversation",
+            addFailedFull: "Couldn't add them: this conversation is full ({max} people).",
+            leaveButton: "Leave conversation",
+            leaveTitle: "Leave this conversation?",
+            leaveDescription:
+                "You'll no longer see or get its messages. Someone still in it can add you back.",
+            leaveDescriptionCreator:
+                "You'll no longer see or get its messages. The person who has been here longest takes over removing members.",
+            loadError: "Couldn't load the members.",
+            scopeName: "this conversation",
+            searchPlaceholder: "Search members...",
+        },
         createMDM: {
             title: "New Multi-user DM",
             description: "Start a conversation with multiple people without creating a group.",

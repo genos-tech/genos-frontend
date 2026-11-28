@@ -15,9 +15,10 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
-import { ownTeamOnly } from "../../../../utils/teamRoster";
+import { ownTeamOnly, withoutDeletedUsers } from "../../../../utils/teamRoster";
 import { popTeamMembers } from "../../../admin/services/popTeamMembers";
 import { addMembersToChat } from "../../services/addMembersToChat";
+import { MDM_MAX_MEMBERS } from "../../utils/mdmLimit";
 
 type Props = {
     socket: Socket | null;
@@ -26,7 +27,7 @@ type Props = {
     open: boolean;
     setOpen: (value: boolean) => void;
     useCM: ChatManagementState;
-    useTEM: TeamManagementState;
+    useTEM: Pick<TeamManagementState, "teamMembers" | "teamMemberProfiles">;
     useUISM: UIStateManagementState;
     setMyself: (value: UserProps) => void;
     /** Extra user ids to hide from the picker, on top of the ones this
@@ -38,8 +39,9 @@ type Props = {
     /** Overrides the default `addMembersToChat` dispatch. Return true on
      *  success (the modal closes). Lets the profile modals own their own
      *  add+notify while reusing this picker — `addMembersToChat` speaks
-     *  DM→MDM conversion and MDM adds, which is not what they need. */
-    onAdd?: (memberIds: string[]) => Promise<boolean>;
+     *  DM→MDM conversion and MDM adds, which is not what they need. A string is a failure
+     *  with its own words, shown instead of the generic line. */
+    onAdd?: (memberIds: string[]) => Promise<boolean | string>;
     /** Title override — "Add members to <this project>" reads better than
      *  the DM-flavoured default when hosted in a profile modal. */
     heading?: string;
@@ -117,6 +119,19 @@ export const ModalAddMembers: React.FC<Props> = ({
         }
     }, [open]);
 
+    // A multi-person DM holds ten people (MIP-2549): how many more this picker may take.
+    // `null` is no limit (a group, a project). A DM becomes an MDM of the two plus the picks.
+    const room =
+        chat.chatType === 4
+            ? Math.max(
+                  MDM_MAX_MEMBERS - withoutDeletedUsers([...(chat.mdmMembers ?? [])]).length,
+                  0
+              )
+            : chat.chatType === 1
+              ? MDM_MAX_MEMBERS - 2
+              : null;
+    const atCap = room !== null && selectedMembers.length >= room;
+
     // Filter out existing members from the list
     const filteredMembers = teamMembers.filter((member) => {
         // Exclude existing members
@@ -136,6 +151,8 @@ export const ModalAddMembers: React.FC<Props> = ({
             const isSelected = prev.some((m) => m.userId === member.userId);
             if (isSelected) {
                 return prev.filter((m) => m.userId !== member.userId);
+            } else if (room !== null && prev.length >= room) {
+                return prev;
             } else {
                 return [...prev, member];
             }
@@ -159,10 +176,10 @@ export const ModalAddMembers: React.FC<Props> = ({
             const memberIds = selectedMembers.map((m) => m.userId);
             if (onAdd) {
                 const ok = await onAdd(memberIds);
-                if (ok) {
+                if (ok === true) {
                     setOpen(false);
                 } else {
-                    setErrorMessage(t.chat.modals.addMembers.errorAdd);
+                    setErrorMessage(ok || t.chat.modals.addMembers.errorAdd);
                 }
                 return;
             }
@@ -258,6 +275,23 @@ export const ModalAddMembers: React.FC<Props> = ({
                 </Box>
             )}
 
+            {/* The limit, and what a new member sees (MIP-2549). A DM becomes a NEW, empty
+                multi-person DM, so only an existing one has earlier messages to show. */}
+            {room !== null && (
+                <Typography
+                    level="body-xs"
+                    role="status"
+                    sx={{ mb: 2, color: atCap ? g.warning.text : g.text.secondary }}
+                >
+                    {chat.chatType === 4 && `${t.chat.modals.mdmMembers.historyNote} `}
+                    {atCap
+                        ? fmt(t.chat.modals.mdmMembers.limitReached, { max: MDM_MAX_MEMBERS })
+                        : fmt(t.chat.modals.mdmMembers.remaining, {
+                              count: room - selectedMembers.length,
+                          })}
+                </Typography>
+            )}
+
             {/* Selected Members Chips */}
             {selectedMembers.length > 0 && (
                 <Box
@@ -323,17 +357,20 @@ export const ModalAddMembers: React.FC<Props> = ({
                 ) : (
                     filteredMembers.map((member) => {
                         const isSelected = selectedMembers.some((m) => m.userId === member.userId);
+                        const blocked = atCap && !isSelected;
                         return (
                             <Clickable
                                 key={member.userId}
                                 aria-checked={isSelected}
+                                aria-disabled={blocked || undefined}
                                 role="checkbox"
                                 sx={{
                                     display: "flex",
                                     alignItems: "center",
                                     gap: 1.5,
                                     p: 1.5,
-                                    cursor: "pointer",
+                                    cursor: blocked ? "not-allowed" : "pointer",
+                                    opacity: blocked ? 0.5 : 1,
                                     borderBottom: `1px solid ${g.border.subtle}`,
                                     backgroundColor: isSelected ? g.accent.subtle : "transparent",
                                     "&:hover": {

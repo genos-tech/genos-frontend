@@ -15,6 +15,7 @@
 
 import { Box, Sheet } from "@mui/joy";
 
+import { useCoveredOverlay } from "../../components/ui/modal/overlayStack";
 import { g } from "../../theme/tokens";
 import { SpotlightContent, type SpotlightContentProps } from "./SpotlightContent";
 
@@ -23,16 +24,22 @@ interface Props extends SpotlightContentProps {
     onClose: () => void;
 }
 
+// Above ServiceSwitcherOverlay (13000).
+const SPOTLIGHT_Z_INDEX = 13100;
+
 export const SpotlightOverlay = ({ isOpen, onClose, ...contentProps }: Props) => {
+    // A preview opened from a result sits on top of this overlay: its blur is enough (MIP-2556).
+    const covered = useCoveredOverlay(isOpen, SPOTLIGHT_Z_INDEX);
     if (!isOpen) return null;
 
     return (
         <Box
             // Backdrop. Captures clicks outside the sheet to close.
+            data-covered={covered || undefined}
             sx={{
                 position: "fixed",
                 inset: 0,
-                zIndex: 13100, // above ServiceSwitcherOverlay (13000)
+                zIndex: SPOTLIGHT_Z_INDEX,
                 display: "flex",
                 alignItems: "flex-start",
                 justifyContent: "center",
@@ -42,8 +49,8 @@ export const SpotlightOverlay = ({ isOpen, onClose, ...contentProps }: Props) =>
                 pt: { xs: "calc(env(safe-area-inset-top, 0px) + 12px)", sm: "12vh" },
                 px: { xs: 1, sm: 0 },
                 background: g.scrim,
-                backdropFilter: "blur(2px)",
-                WebkitBackdropFilter: "blur(2px)",
+                backdropFilter: covered ? "none" : "blur(2px)",
+                WebkitBackdropFilter: covered ? "none" : "blur(2px)",
             }}
             onMouseDown={(e) => {
                 if (e.target === e.currentTarget) onClose();
