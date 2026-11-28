@@ -182,6 +182,9 @@ export const ModalMilestoneView = (props: ModalMilestoneViewProps) => {
                 height: "100%",
                 overflow: "auto",
                 width: "100%",
+                // An opaque scroller lets Chrome scroll it on the compositor on a 1x screen too;
+                // without it every scroll frame repainted the dialog (MIP-2556).
+                backgroundColor: "inherit",
             }}
         >
             <TaskPreview
