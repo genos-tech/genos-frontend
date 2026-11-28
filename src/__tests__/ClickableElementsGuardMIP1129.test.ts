@@ -74,8 +74,8 @@ const ALLOWED: Record<string, { count: number; reason: string }> = {
         reason: "event boundaries (`onClick={stop}`) that keep a click inside the bubble's own menus from opening the message",
     },
     "components/ui/nav/NavItem.tsx": {
-        count: 1,
-        reason: "aria-hidden chevron, a mouse shortcut: the row's own keydown handler expands with ArrowRight / ArrowLeft",
+        count: 2,
+        reason: "mouse shortcuts: the aria-hidden chevron (the row's own keydown handler expands with ArrowRight / ArrowLeft), and the content box of an `interactiveContent` row, whose keyboard and screen-reader path is the row button lying under it (MIP-2565)",
     },
     "components/ui/settings/SettingRow.tsx": {
         count: 1,

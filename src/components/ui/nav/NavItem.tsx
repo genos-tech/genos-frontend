@@ -1,4 +1,4 @@
-import { KeyboardEvent, MouseEvent, ReactNode, Ref, SyntheticEvent } from "react";
+import { KeyboardEvent, MouseEvent, ReactNode, Ref, SyntheticEvent, useId } from "react";
 import ChevronRightRounded from "@mui/icons-material/ChevronRightRounded";
 import { Box, ListItem, ListItemButton } from "@mui/joy";
 import type { ListItemButtonProps } from "@mui/joy/ListItemButton";
@@ -86,6 +86,11 @@ export type NavItemProps = {
     lines?: 1 | 2;
     /** `dashed` is a "new ..." affordance, an outline instead of a fill. */
     variant?: "default" | "dashed";
+    /** The row's content holds its own controls (an avatar that opens a profile): the row
+     *  button then lies UNDER the content instead of around it, so those are not buttons
+     *  inside a button. A click anywhere else on the content still runs `onClick`; a
+     *  control stops its own click. Not for rows with `onToggleExpanded`. */
+    interactiveContent?: boolean;
     /** `li` inside a List; `div` where the row sits in a wrapper `li`. */
     as?: "li" | "div";
     /** What `aria-current` says when selected: a page, or just the item. */
@@ -146,8 +151,10 @@ export const NavItem = ({
     rootProps,
     ref,
     onKeyDown,
+    interactiveContent = false,
     ...buttonProps
 }: NavItemProps) => {
+    const contentId = useId();
     const expandable = expanded !== undefined;
     const showChevronColumn = expandable || reserveChevron;
     const hasActions = actions !== undefined && actions !== null && actions !== false;
@@ -169,6 +176,167 @@ export const NavItem = ({
             onToggleExpanded(event);
         }
     };
+
+    // The row's inner layout: on the row button, or on the content box above it.
+    const contentLayoutSx = {
+        paddingBlock: 0,
+        paddingInlineStart: `calc(${NAV_PAD_X}px + ${navIndentLength(indent)})`,
+        // `--nav-pad-end` lets a crowded list (the milestone tree below 200px)
+        // take a smaller end padding for all of its rows at once.
+        paddingInlineEnd: overlay
+            ? `calc(var(--nav-pad-end, ${NAV_PAD_X}px) + var(--nav-actions-reserve, 0px))`
+            : hasActions && !actionsInPlace
+              ? 0
+              : `var(--nav-pad-end, ${NAV_PAD_X}px)`,
+        // `--nav-gap`: a crowded list (the milestone tree below 200px) narrows it for all rows.
+        gap: `var(--nav-gap, 8px)`,
+        textAlign: "start",
+        alignItems: "center",
+    } as const;
+
+    const content = (
+        <>
+            {showChevronColumn && (
+                <Box
+                    className="NavItem-chevron"
+                    sx={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: NAV_ICON_SIZE,
+                        height: NAV_ICON_SIZE,
+                        flexShrink: 0,
+                        borderRadius: g.radius.xs,
+                        visibility: expandable ? "visible" : "hidden",
+                        color: g.text.tertiary,
+                        ...(onToggleExpanded && {
+                            cursor: "pointer",
+                            [NAV_HOVER_MEDIA]: { "&:hover": { background: g.active } },
+                        }),
+                        "& svg": {
+                            fontSize: NAV_ICON_SIZE,
+                            color: "inherit",
+                            transition: `transform ${g.motion.base} ${g.ease}`,
+                            transform: expanded ? "rotate(90deg)" : "none",
+                        },
+                        "[dir='rtl'] & svg": {
+                            transform: expanded ? "rotate(90deg)" : "scaleX(-1)",
+                        },
+                    }}
+                    aria-hidden
+                    onClick={
+                        onToggleExpanded
+                            ? (event: MouseEvent) => {
+                                  stop(event);
+                                  onToggleExpanded(event);
+                              }
+                            : undefined
+                    }
+                >
+                    <ChevronRightRounded />
+                </Box>
+            )}
+
+            {children !== undefined ? (
+                <Box
+                    className="NavItem-content"
+                    sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}
+                >
+                    {children}
+                </Box>
+            ) : (
+                <>
+                    {icon !== undefined && icon !== null && (
+                        <Box
+                            className="NavItem-icon"
+                            sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                flexShrink: 0,
+                                "& > svg": { fontSize: NAV_ICON_SIZE },
+                            }}
+                        >
+                            {icon}
+                        </Box>
+                    )}
+
+                    <Box
+                        className="NavItem-content"
+                        sx={{
+                            flex: 1,
+                            minWidth: 0,
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <Box
+                            className="NavItem-label"
+                            sx={[
+                                {
+                                    minWidth: 0,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    fontWeight: unread ? 600 : "inherit",
+                                    color: unread && !selected ? g.text.primary : "inherit",
+                                },
+                                ...(Array.isArray(labelSx) ? labelSx : labelSx ? [labelSx] : []),
+                            ]}
+                        >
+                            {label}
+                        </Box>
+                        {secondary !== undefined && secondary !== null && (
+                            <Box
+                                className="NavItem-secondary"
+                                sx={{
+                                    ...type("body-xs"),
+                                    minWidth: 0,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    fontWeight: 400,
+                                    color: g.text.tertiary,
+                                }}
+                            >
+                                {secondary}
+                            </Box>
+                        )}
+                    </Box>
+
+                    {count !== undefined && count !== null && (
+                        <Box
+                            className="NavItem-count"
+                            component="span"
+                            sx={{
+                                ...type("caption"),
+                                flexShrink: 0,
+                                color: "inherit",
+                                opacity: 0.8,
+                                fontVariantNumeric: "tabular-nums",
+                            }}
+                        >
+                            {count}
+                        </Box>
+                    )}
+
+                    {trailing !== undefined && trailing !== null && (
+                        <Box
+                            className="NavItem-trailing"
+                            sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                flexShrink: 0,
+                            }}
+                        >
+                            {trailing}
+                        </Box>
+                    )}
+                </>
+            )}
+        </>
+    );
 
     return (
         <ListItem
@@ -275,6 +443,7 @@ export const NavItem = ({
                 // a few selectors outside the row key on it. Its plate is off (below).
                 aria-current={selected ? current : undefined}
                 aria-expanded={expandable ? expanded : undefined}
+                aria-labelledby={interactiveContent ? contentId : undefined}
                 color="neutral"
                 selected={selected}
                 variant="plain"
@@ -286,178 +455,50 @@ export const NavItem = ({
                     alignSelf: "stretch",
                     minHeight: 0,
                     m: 0,
-                    paddingBlock: 0,
-                    paddingInlineStart: `calc(${NAV_PAD_X}px + ${navIndentLength(indent)})`,
-                    // `--nav-pad-end` lets a crowded list (the milestone tree below 200px)
-                    // take a smaller end padding for all of its rows at once.
-                    paddingInlineEnd: overlay
-                        ? `calc(var(--nav-pad-end, ${NAV_PAD_X}px) + var(--nav-actions-reserve, 0px))`
-                        : hasActions && !actionsInPlace
-                          ? 0
-                          : `var(--nav-pad-end, ${NAV_PAD_X}px)`,
-                    // `--nav-gap`: a crowded list (the milestone tree below 200px) narrows it for all rows.
-                    gap: `var(--nav-gap, 8px)`,
+                    ...contentLayoutSx,
                     borderRadius: "inherit",
                     // Joy paints its own hover/active plate on the button; the row
                     // box (which carries the look) is the only plate.
                     ...navButtonPlateOffSx,
                     font: "inherit",
                     letterSpacing: "inherit",
-                    textAlign: "start",
-                    alignItems: "center",
                     ...navFocusSx,
+                    // Under the content: it covers the row (focus ring included) and holds
+                    // nothing, so it has no layout of its own.
+                    ...(interactiveContent && { position: "absolute", inset: 0, p: 0 }),
                 }}
                 onKeyDown={handleKeyDown}
             >
-                {showChevronColumn && (
-                    <Box
-                        className="NavItem-chevron"
-                        sx={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: NAV_ICON_SIZE,
-                            height: NAV_ICON_SIZE,
-                            flexShrink: 0,
-                            borderRadius: g.radius.xs,
-                            visibility: expandable ? "visible" : "hidden",
-                            color: g.text.tertiary,
-                            ...(onToggleExpanded && {
-                                cursor: "pointer",
-                                [NAV_HOVER_MEDIA]: { "&:hover": { background: g.active } },
-                            }),
-                            "& svg": {
-                                fontSize: NAV_ICON_SIZE,
-                                color: "inherit",
-                                transition: `transform ${g.motion.base} ${g.ease}`,
-                                transform: expanded ? "rotate(90deg)" : "none",
-                            },
-                            "[dir='rtl'] & svg": {
-                                transform: expanded ? "rotate(90deg)" : "scaleX(-1)",
-                            },
-                        }}
-                        aria-hidden
-                        onClick={
-                            onToggleExpanded
-                                ? (event: MouseEvent) => {
-                                      stop(event);
-                                      onToggleExpanded(event);
-                                  }
-                                : undefined
-                        }
-                    >
-                        <ChevronRightRounded />
-                    </Box>
-                )}
-
-                {children !== undefined ? (
-                    <Box
-                        className="NavItem-content"
-                        sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}
-                    >
-                        {children}
-                    </Box>
-                ) : (
-                    <>
-                        {icon !== undefined && icon !== null && (
-                            <Box
-                                className="NavItem-icon"
-                                sx={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    flexShrink: 0,
-                                    "& > svg": { fontSize: NAV_ICON_SIZE },
-                                }}
-                            >
-                                {icon}
-                            </Box>
-                        )}
-
-                        <Box
-                            className="NavItem-content"
-                            sx={{
-                                flex: 1,
-                                minWidth: 0,
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <Box
-                                className="NavItem-label"
-                                sx={[
-                                    {
-                                        minWidth: 0,
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap",
-                                        fontWeight: unread ? 600 : "inherit",
-                                        color: unread && !selected ? g.text.primary : "inherit",
-                                    },
-                                    ...(Array.isArray(labelSx)
-                                        ? labelSx
-                                        : labelSx
-                                          ? [labelSx]
-                                          : []),
-                                ]}
-                            >
-                                {label}
-                            </Box>
-                            {secondary !== undefined && secondary !== null && (
-                                <Box
-                                    className="NavItem-secondary"
-                                    sx={{
-                                        ...type("body-xs"),
-                                        minWidth: 0,
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                        whiteSpace: "nowrap",
-                                        fontWeight: 400,
-                                        color: g.text.tertiary,
-                                    }}
-                                >
-                                    {secondary}
-                                </Box>
-                            )}
-                        </Box>
-
-                        {count !== undefined && count !== null && (
-                            <Box
-                                className="NavItem-count"
-                                component="span"
-                                sx={{
-                                    ...type("caption"),
-                                    flexShrink: 0,
-                                    color: "inherit",
-                                    opacity: 0.8,
-                                    fontVariantNumeric: "tabular-nums",
-                                }}
-                            >
-                                {count}
-                            </Box>
-                        )}
-
-                        {trailing !== undefined && trailing !== null && (
-                            <Box
-                                className="NavItem-trailing"
-                                sx={{
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    flexShrink: 0,
-                                }}
-                            >
-                                {trailing}
-                            </Box>
-                        )}
-                    </>
-                )}
+                {interactiveContent ? null : content}
             </ListItemButton>
+
+            {interactiveContent && (
+                <Box
+                    className="NavItem-body"
+                    id={contentId}
+                    sx={{
+                        ...contentLayoutSx,
+                        // The row button's own border: without it the content sits 1px
+                        // further out and the card is 2px shorter than its neighbours.
+                        border: "1px solid transparent",
+                        position: "relative",
+                        zIndex: 1,
+                        display: "flex",
+                        flex: 1,
+                        minWidth: 0,
+                        alignSelf: "stretch",
+                        cursor: "pointer",
+                    }}
+                    onClick={buttonProps.onClick as ((event: MouseEvent) => void) | undefined}
+                >
+                    {content}
+                </Box>
+            )}
 
             {hasActions && (
                 <Box
                     className="NavItem-actions"
-                    sx={
+                    sx={[
                         overlay
                             ? {
                                   position: "absolute",
@@ -524,8 +565,11 @@ export const NavItem = ({
                                           ...(actionsInPlace && ACTION_IN_FLOW),
                                       },
                                   },
-                              }
-                    }
+                              },
+                        // Above the row button that covers the row.
+                        interactiveContent && !overlay && { position: "relative", zIndex: 1 },
+                        interactiveContent && !!overlay && { zIndex: 1 },
+                    ]}
                 >
                     {actions}
                 </Box>

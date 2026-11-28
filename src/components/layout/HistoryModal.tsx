@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import AccountTreeRoundedIcon from "@mui/icons-material/AccountTreeRounded";
 import AssignmentRoundedIcon from "@mui/icons-material/AssignmentRounded";
 import ChatBubbleOutlineRoundedIcon from "@mui/icons-material/ChatBubbleOutlineRounded";
@@ -279,6 +279,9 @@ type RowProps = {
     onClick: () => void;
     isDark: boolean;
     relativeMessages: Messages["history"]["relative"];
+    // The avatar is a button of its own (a multi-person DM's members): the row's button then
+    // lies under the row instead of around it.
+    avatarIsButton?: boolean;
 };
 
 const HistoryRow = ({
@@ -291,89 +294,124 @@ const HistoryRow = ({
     onClick,
     isDark,
     relativeMessages,
-}: RowProps) => (
-    <Clickable
-        sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1.25,
-            px: 1.25,
-            py: 1,
-            borderRadius: "8px",
-            cursor: "pointer",
-            transition: "background-color 0.12s ease",
-            "&:hover": {
-                backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
-            },
-        }}
-        onActivate={onClick}
-    >
-        {/* `minWidth` rather than a fixed `width`: the MDM avatar is a
-            stack of up to three overlapping circles and is ~60px wide, so
-            a hard 32px box would clip it. Single-avatar rows still occupy
-            exactly AVATAR_SIZE, keeping the labels aligned. */}
-        <Box
-            sx={{
-                minWidth: AVATAR_SIZE,
-                height: AVATAR_SIZE,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-            }}
-        >
-            {avatar}
+    avatarIsButton = false,
+}: RowProps) => {
+    const contentId = useId();
+    const rowSx = {
+        display: "flex",
+        alignItems: "center",
+        gap: 1.25,
+        px: 1.25,
+        py: 1,
+        borderRadius: "8px",
+        cursor: "pointer",
+        transition: "background-color 0.12s ease",
+        "&:hover": {
+            backgroundColor: isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.04)",
+        },
+    };
+    const content = (
+        <>
+            {/* `minWidth` rather than a fixed `width`: the MDM avatar is a
+                stack of up to three overlapping circles and is ~60px wide, so
+                a hard 32px box would clip it. Single-avatar rows still occupy
+                exactly AVATAR_SIZE, keeping the labels aligned. */}
+            <Box
+                sx={{
+                    minWidth: AVATAR_SIZE,
+                    height: AVATAR_SIZE,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                }}
+            >
+                {avatar}
+            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Stack alignItems="center" direction="row" spacing={0.75}>
+                    {chipsBeforeLabel ? chips : null}
+                    <Typography
+                        level="body-sm"
+                        sx={{
+                            minWidth: 0,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            fontWeight: 500,
+                        }}
+                    >
+                        {label}
+                    </Typography>
+                    {chipsBeforeLabel ? null : chips}
+                </Stack>
+                {subtitle ? (
+                    <Typography
+                        level="body-xs"
+                        sx={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
+                        }}
+                    >
+                        {/* Message-preview subtitles carry custom emoji as
+                            their `:name:` shortcode (see `EmojiText`). Every
+                            row kind funnels through here, so resolving at
+                            this one site covers chat / thread rows without
+                            touching the string-typed prop; subtitles that
+                            are plain labels (project name, chat name) have
+                            no shortcodes and take the component's fast
+                            path. */}
+                        <EmojiText text={subtitle} />
+                    </Typography>
+                ) : null}
+            </Box>
+            <Typography
+                level="body-xs"
+                sx={{
+                    flexShrink: 0,
+                    color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
+                }}
+            >
+                {formatRelative(timestamp, relativeMessages)}
+            </Typography>
+        </>
+    );
+    if (!avatarIsButton) {
+        return (
+            <Clickable sx={rowSx} onActivate={onClick}>
+                {content}
+            </Clickable>
+        );
+    }
+    return (
+        <Box sx={{ ...rowSx, position: "relative" }}>
+            {/* Named by what the row shows; it covers the row, focus ring included. */}
+            <Clickable
+                aria-labelledby={contentId}
+                sx={{ position: "absolute", inset: 0 }}
+                onActivate={onClick}
+            />
+            {/* Presses pass through to the button below, except on the avatar's own. */}
+            <Box
+                id={contentId}
+                sx={{
+                    position: "relative",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1.25,
+                    flex: 1,
+                    minWidth: 0,
+                    pointerEvents: "none",
+                    '& [role="button"]': { pointerEvents: "auto" },
+                }}
+            >
+                {content}
+            </Box>
         </Box>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Stack alignItems="center" direction="row" spacing={0.75}>
-                {chipsBeforeLabel ? chips : null}
-                <Typography
-                    level="body-sm"
-                    sx={{
-                        minWidth: 0,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        fontWeight: 500,
-                    }}
-                >
-                    {label}
-                </Typography>
-                {chipsBeforeLabel ? null : chips}
-            </Stack>
-            {subtitle ? (
-                <Typography
-                    level="body-xs"
-                    sx={{
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        color: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.45)",
-                    }}
-                >
-                    {/* Message-preview subtitles carry custom emoji as
-                        their `:name:` shortcode (see `EmojiText`). Every
-                        row kind funnels through here, so resolving at
-                        this one site covers chat / thread rows without
-                        touching the string-typed prop; subtitles that
-                        are plain labels (project name, chat name) have
-                        no shortcodes and take the component's fast
-                        path. */}
-                    <EmojiText text={subtitle} />
-                </Typography>
-            ) : null}
-        </Box>
-        <Typography
-            level="body-xs"
-            sx={{
-                flexShrink: 0,
-                color: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
-            }}
-        >
-            {formatRelative(timestamp, relativeMessages)}
-        </Typography>
-    </Clickable>
-);
+    );
+};
 
 // Small colored chip used by Thread / Milestone / Note-type indicators.
 const SmallChip = ({
@@ -484,6 +522,7 @@ export const HistoryModal = ({
                     <HistoryRow
                         key={`chat-${entry.chatType}-${entry.chatId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark)}
+                        avatarIsButton={entry.chatType === 4 && !!chat}
                         isDark={isDark}
                         label={mdmName(chat) || entry.label}
                         relativeMessages={t.history.relative}
@@ -508,6 +547,7 @@ export const HistoryModal = ({
                     <HistoryRow
                         key={`thread-${entry.chatType}-${entry.chatId}-${entry.threadId}-${entry.messageId ?? 0}-${entry.openedAt}`}
                         avatar={renderChatAvatar(entry.chatType, chat, isDark)}
+                        avatarIsButton={entry.chatType === 4 && !!chat}
                         isDark={isDark}
                         label={mdmName(chat) || entry.label}
                         relativeMessages={t.history.relative}
@@ -632,6 +672,12 @@ export const HistoryModal = ({
                         relativeMessages={t.history.relative}
                         subtitle={subtitle || undefined}
                         timestamp={entry.openedAt}
+                        avatarIsButton={
+                            entry.noteType === 3 &&
+                            entry.chatType === 4 &&
+                            entry.chatId != null &&
+                            !!findChat(4, entry.chatId)
+                        }
                         chips={
                             visual || isHtmlNote(entry) ? (
                                 <>
