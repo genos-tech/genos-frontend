@@ -105,9 +105,10 @@ export const ChatListItem = memo((props: ChatListItemProps) => {
         <>
             <NavItem
                 as="div"
-                // A group's avatar opens its profile, a multi-person DM's its members: neither
-                // is a button inside the row's button.
-                interactiveContent={chat.chatType === 2 || chat.chatType === 4}
+                // Every chat's avatar opens something (a profile, a multi-person DM's members),
+                // so none is a button inside the row's button. A DM with no partner loaded has
+                // only a picture there, which is fine either way.
+                interactiveContent
                 // Two lines (title + latest message): the documented multiple of
                 // a density row. It still grows for a custom status or GM tags.
                 lines={2}

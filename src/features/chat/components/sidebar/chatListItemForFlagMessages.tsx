@@ -490,15 +490,18 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     const renderDMAvatar = () => {
         if (flaggedMessage.dmPartnerUser.userId !== "") {
             return (
-                <AvatarWithStatus
-                    avatarUser={useTEM.teamMemberProfiles[flaggedMessage.dmPartnerUser.userId]}
-                    isYou={isYou}
-                    myself={myself}
-                    setMyself={setMyself}
-                    socket={socket}
-                    useCM={useCM}
-                    useUISM={useUISM}
-                />
+                // A press stays on the avatar: the row it sits in does not open too.
+                <div onClick={(event) => event.stopPropagation()}>
+                    <AvatarWithStatus
+                        avatarUser={useTEM.teamMemberProfiles[flaggedMessage.dmPartnerUser.userId]}
+                        isYou={isYou}
+                        myself={myself}
+                        setMyself={setMyself}
+                        socket={socket}
+                        useCM={useCM}
+                        useUISM={useUISM}
+                    />
+                </div>
             );
         }
         return <BaseAvatar name={resolvedChatName || ""} size="md" />;
@@ -756,10 +759,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const isSelected = selectedFlaggedMessageId === flaggedMessage.flaggedMessageId;
-    // A group's or multi-person DM's avatar is a button of its own.
-    const buttonAvatar =
-        !chatRemoved &&
-        (flaggedMessage.chatType === CHAT_TYPES.GM || flaggedMessage.chatType === CHAT_TYPES.MDM);
 
     return (
         <React.Fragment>
@@ -768,7 +767,8 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             <NavItem
                 as="div"
                 data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
-                interactiveContent={buttonAvatar}
+                // Every avatar here is a button of its own, but a removed chat's picture.
+                interactiveContent={!chatRemoved}
                 lines={2}
                 selected={isSelected}
                 // Active-flag indicator bar: not shown in the past view (those

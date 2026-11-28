@@ -18,6 +18,7 @@ export const PROBE = `(() => {
   const id = (el) => !el ? 'null'
     : el.closest('.NavItem-actions') ? 'action:' + (el.closest('button')?.getAttribute('aria-label') ?? 'pin')
     : el.closest('[role="button"]') ? (el.closest('[role="button"]').parentElement.parentElement === list ? 'row' : 'avatar')
+    : el.closest('.NavItem-body') ? 'row'
     : 'other:' + el.tagName;
   const box = (r) => ({ x: +r.left.toFixed(1), y: +r.top.toFixed(1), w: +r.width.toFixed(1), h: +r.height.toFixed(1) });
   const owns = (el, hit) => !!hit && (hit === el || el.contains(hit));
@@ -62,9 +63,9 @@ export const PROBE = `(() => {
       const btns = [...actions.querySelectorAll(':scope > button')];
       const more = btns[btns.length - 1];
       const pin = btns[btns.length - 2];
-      const avatar = rowBtn.querySelector('[role="button"]');
+      const avatar = li.querySelector('.NavItem-body [role="button"]');
       const rr = li.getBoundingClientRect();
-      const mid = rowBtn.querySelector('.NavItem-label, [class*="label"]') ?? rowBtn;
+      const mid = li.querySelector('.NavItem-label, [class*="label"]') ?? rowBtn;
       const mr = mid.getBoundingClientRect();
       const rowCentre = document.elementFromPoint(mr.left + Math.min(mr.width / 2, 60), rr.top + rr.height / 2);
       const counts = {};
