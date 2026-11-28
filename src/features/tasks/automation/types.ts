@@ -18,6 +18,9 @@ export type ConditionField =
     | "custom_field"
     | "custom_status";
 
+/** What a rule acts on. A milestone rule moves the milestone with its whole sub-tree. */
+export type RuleTarget = "task" | "milestone";
+
 export type ConditionOp = "is" | "is_not" | "is_set" | "is_not_set";
 
 export type RuleCondition = {
@@ -38,8 +41,8 @@ export type AutomationRule = {
     triggerValue: TriggerValue;
     conditions: RuleCondition[];
     movesTask: boolean;
-    /** What the rule acts on (genos-api MIP-2521). This builder writes task rules only. */
-    appliesTo?: "task" | "milestone";
+    /** genos-api MIP-2521. */
+    appliesTo?: RuleTarget;
     /** Not named (`visible: false`) when the reader is not on the destination, or when it was
      *  deleted (`gone`, genos-api MIP-2544). */
     destination: {
@@ -58,6 +61,7 @@ export type AutomationRule = {
 /** The body of a create, an edit or a dry run of a rule not saved yet. */
 export type RuleDefinition = {
     name: string;
+    applies_to: RuleTarget;
     trigger_type: TriggerType;
     trigger_value: TriggerValue;
     conditions: RuleCondition[];
@@ -71,6 +75,8 @@ export type RuleDefinition = {
 export type RuleList = { rules: AutomationRule[]; planAllows: boolean };
 
 export type DryRunItem = {
+    /** A milestone rule's row; `taskId` is then the milestone's own task. */
+    milestoneId?: number;
     taskId: number;
     displayId: string;
     title: string;

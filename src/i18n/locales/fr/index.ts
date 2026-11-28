@@ -7203,16 +7203,14 @@ export const fr: DeepPartial<Messages> = {
             limitHint: "{max} règles sur {max}. Supprimez-en une pour en ajouter une autre.",
             emptyTitle: "Aucune règle pour l’instant",
             emptyBody:
-                "Les règles déplacent ou mettent à jour des tâches quand quelque chose se produit. Par exemple : quand une tâche portant l’étiquette « design » passe à WIP, déplacez-la vers un autre projet en Open.",
+                "Les règles déplacent ou mettent à jour des tâches ou des jalons quand quelque chose se produit. Par exemple : quand une tâche portant l’étiquette « design » passe à WIP, déplacez-la vers un autre projet en Open.",
             loadFailed: "Impossible de charger les règles",
             loading: "Chargement des règles",
             planTitle: "Règles d’automatisation",
             planBody:
-                "Les règles déplacent et mettent à jour les tâches pour vous quand quelque chose se produit.",
+                "Les règles déplacent et mettent à jour les tâches et les jalons pour vous quand quelque chose se produit.",
             planKept: "Vos règles sont conservées. Vous pouvez les désactiver ou les supprimer.",
             planSwitchHint: "Activer des règles nécessite Core ou plus.",
-            milestoneRule:
-                "Agit sur les jalons. Elle ne peut pas être modifiée ici ; vous pouvez la désactiver ou la supprimer.",
             hiddenHint:
                 "Vous n’êtes pas dans le projet de destination de cette règle, vous ne pouvez donc pas la modifier. Vous pouvez la désactiver ou la supprimer.",
             turnedOff: "Désactivée : {reason}",
@@ -7339,6 +7337,47 @@ export const fr: DeepPartial<Messages> = {
             stApplied: "Effectuée",
             stRefused: "Refusée",
             stSkipped: "Ignorée",
+            targetLabel: "S’applique à",
+            targetTasks: "Tâches",
+            targetMilestones: "Jalons",
+            milestoneAssignNotice:
+                "« Attribuer à » remplace tous les responsables du jalon par cette seule personne.",
+            milestoneConditionRemoved:
+                "Condition de jalon retirée : elle ne vaut que pour les règles de tâches.",
+            forMilestone: {
+                trStatus: "le statut d’un jalon devient {status}",
+                trCreated: "un jalon est créé",
+                trTag: "l’étiquette {tag} est ajoutée à un jalon",
+                trAssigneeAny: "les responsables d’un jalon changent",
+                trAssigneeTo: "un jalon est attribué à {person}",
+                aMove: "le déplacer avec ses tâches vers {project}",
+                aAssign: "faire de {person} son seul responsable",
+                everyTask: "Tous les jalons",
+                optAssignee: "Les responsables changent",
+                optCreated: "Un jalon est créé",
+                privateOnly:
+                    "Ce projet est privé : ses jalons ne peuvent aller que vers des projets privés.",
+                moveNotice:
+                    "Le jalon est déplacé avec toutes ses tâches. Elles reçoivent un nouvel identifiant dans {project} ; l’ancien les ouvre toujours. Les étiquettes y sont associées par nom, le sprint et le dossier sont retirés. Un jalon de plus de 200 tâches n’est pas déplacé.",
+                matched:
+                    "{matched, plural, one {# jalon correspond actuellement} other {# jalons correspondent actuellement}}",
+                noneTitle: "Aucun jalon ne correspond actuellement",
+                checking: "Vérification des jalons",
+                scanCap: "Seuls les 2 000 jalons mis à jour le plus récemment ont été vérifiés.",
+                previewFailed: "Impossible de vérifier les jalons",
+                hiddenTask: "Un jalon que vous ne pouvez pas ouvrir",
+                deleteBody: "Les jalons et tâches qu’elle a déjà modifiés restent tels quels.",
+                reason: {
+                    move_not_allowed: "ce jalon ne peut pas aller dans ce projet.",
+                    assignee_not_on_destination:
+                        "une personne chargée du jalon ou d’une de ses tâches n’est ni dans le projet de destination ni dans son équipe.",
+                    too_many_tasks:
+                        "il compte plus de 200 tâches, trop pour qu’une règle le déplace. Déplacez-le à la main.",
+                    rate_limited:
+                        "en pause : des règles ont modifié ce jalon deux fois dans la dernière heure.",
+                    error: "un problème est survenu pour ce jalon.",
+                },
+            },
             reason: {
                 destination_not_found:
                     "le projet de destination n’existe plus, ou vous n’en êtes pas membre.",
