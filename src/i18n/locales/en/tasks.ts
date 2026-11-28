@@ -669,6 +669,8 @@ export const tasks = {
         quickAddHiddenByFilters: "Created {id}, but your current filters hide it.",
         quickAddOpen: "Open",
         quickAddDismiss: "Dismiss",
+        statusColumnLabel: "{name} · {category} · {count, plural, one {# task} other {# tasks}}",
+        statusOffTooltip: "Turned off. Move these tasks to another status.",
     },
 
     // Sub-tasks block.
@@ -751,6 +753,11 @@ export const tasks = {
             "{count, plural, one {# task uses this status. Move it to:} other {# tasks use this status. Move them to:}}",
         replacementLabel: "Move to",
         deleteAndMove: "Delete and move",
+        boardColumnsTitle: "One board column per status",
+        boardColumnsHint:
+            "A column for each status instead of each category, for everyone in the project.",
+        boardColumnsOn: "The board shows one column per status.",
+        boardColumnsOff: "The board shows one column per category.",
     },
     // The rule builder in the same dialog (MIP-2499).
     automation: {
@@ -983,6 +990,7 @@ export const tasks = {
             "Filtering by a specific milestone opens it automatically so you can see its tasks. Other filters leave rows collapsed.",
     },
     filters: {
+        statusInCategory: "{name} in {category}",
         all: "All",
         open: "Open",
         wip: "WIP",

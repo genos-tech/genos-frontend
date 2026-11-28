@@ -1,5 +1,6 @@
 import { SavedFilterPayload } from "../services/projectSavedFilters";
 import { FilterProps } from "../types/TaskTableTypes";
+import { restoreStatusSelection, splitStatusSelection } from "./statusFilter";
 import { rehydrateFilters, rehydrateKeys } from "./taskFilterStorage";
 
 /**
@@ -66,7 +67,8 @@ export const buildSavedFilterPayload = (input: {
     sprintKeys: (string | number)[];
     memberKeys: string[];
 }): SavedFilterPayload => ({
-    ...(input.hideStatusFilter ? {} : { status: labelsOf(input.status) }),
+    // `statusIds` (the project's own statuses, MIP-2495) only when some are picked.
+    ...(input.hideStatusFilter ? {} : splitStatusSelection(input.status)),
     tags: labelsOf(input.tags),
     priorities: labelsOf(input.priorities),
     effortLevels: labelsOf(input.effortLevels),
@@ -112,8 +114,9 @@ export const resolveSavedFilter = (
 ): SavedFilterSelection => ({
     status: opts.hideStatusFilter
         ? [opts.predefinedStatusFilters[0]]
-        : rehydrateFilters(
+        : restoreStatusSelection(
               payload.status,
+              payload.statusIds,
               opts.predefinedStatusFilters,
               opts.defaultStatusFilters
           ),
@@ -190,6 +193,7 @@ export const savedFilterMatchesSelection = (
     });
     return (
         sameDimension(asApplied.status, current.status) &&
+        sameDimension(asApplied.statusIds, current.statusIds) &&
         sameDimension(asApplied.tags, current.tags) &&
         sameDimension(asApplied.priorities, current.priorities) &&
         sameDimension(asApplied.effortLevels, current.effortLevels) &&

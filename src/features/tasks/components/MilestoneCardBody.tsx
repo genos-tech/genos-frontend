@@ -48,6 +48,9 @@ type Props = {
     // milestone's status chip there; the sprint board puts the "Open task
     // graph" button there, because its column already says the status.
     topRight?: ReactNode;
+    // The project's own status, under the title, where the surface does not already say
+    // it (the board's category columns, MIP-2495).
+    statusMark?: ReactNode;
 };
 
 // The inside of a milestone card — the single layout behind both the
@@ -55,7 +58,7 @@ type Props = {
 // card (MIP-1048). The OUTER shell is not here on purpose: the dashboard card
 // is a plain button, the board card is a @hello-pangea/dnd <Draggable> with
 // its own selected / dragging chrome, and each keeps its own click behaviour.
-export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) => {
+export const MilestoneCardBody = ({ milestone, sprintName, topRight, statusMark }: Props) => {
     const { t, locale } = useTranslation();
 
     const tags = asTags(milestone.tags);
@@ -104,6 +107,8 @@ export const MilestoneCardBody = ({ milestone, sprintName, topRight }: Props) =>
             </Box>
 
             <TaskTitle lines={2}>{milestone.title}</TaskTitle>
+
+            {statusMark}
 
             {/* Progress: closed / total sub-tasks */}
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>

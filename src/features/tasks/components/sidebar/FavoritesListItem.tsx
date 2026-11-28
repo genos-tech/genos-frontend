@@ -83,6 +83,7 @@ export const FavoritesListItem = memo(function FavoritesListItem({
                     projectId: f.projectId,
                     title: live?.title ?? f.title,
                     status: live?.status ?? f.status,
+                    customStatusId: live ? live.customStatusId : f.customStatusId,
                     projectName: names.get(f.projectId) ?? f.projectName,
                     avatarSrc: avatarByProject.get(f.projectId),
                 };
@@ -170,7 +171,12 @@ export const FavoritesListItem = memo(function FavoritesListItem({
                                         component="span"
                                         sx={{ display: "flex", alignItems: "center", gap: 0.75 }}
                                     >
-                                        <StatusLabel status={row.status} iconOnly />
+                                        <StatusLabel
+                                            customStatusId={row.customStatusId}
+                                            projectId={row.projectId}
+                                            status={row.status}
+                                            iconOnly
+                                        />
                                         <Box
                                             component="span"
                                             data-testid={`favorite-project-icon-${row.milestoneId}`}

@@ -6680,6 +6680,8 @@ export const zh: DeepPartial<Messages> = {
             quickAddHiddenByFilters: "已创建 {id}，但当前筛选条件将其隐藏。",
             quickAddOpen: "打开",
             quickAddDismiss: "关闭",
+            statusColumnLabel: "{name} · {category} · {count} 个任务",
+            statusOffTooltip: "已停用。请将这些任务移到其他状态。",
         },
         subTasks: {
             loadFailed: "无法加载子任务",
@@ -6756,6 +6758,10 @@ export const zh: DeepPartial<Messages> = {
             deleteInUse: "{count} 个任务正在使用此状态。移动到：",
             replacementLabel: "移动到",
             deleteAndMove: "移动并删除",
+            boardColumnsTitle: "看板每个状态单独一列",
+            boardColumnsHint: "每个状态一列（而不是每个类别一列），对项目中的所有人生效。",
+            boardColumnsOn: "看板现在按状态分列显示。",
+            boardColumnsOff: "看板现在按类别分列显示。",
         },
         automation: {
             tabsLabel: "项目设置分区",
@@ -6968,6 +6974,7 @@ export const zh: DeepPartial<Messages> = {
                 "按特定里程碑进行过滤会自动打开它，以便你可以查看其任务。其他过滤器使行折叠。",
         },
         filters: {
+            statusInCategory: "{category}中的{name}",
             all: "全部",
             open: "待处理",
             wip: "进行中",
