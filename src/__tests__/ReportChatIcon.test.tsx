@@ -201,13 +201,13 @@ describe("a chat line's icon", () => {
         expect(slot.querySelector('svg[data-testid="AssignmentIcon"]')).not.toBeNull();
     });
 
-    it("multi-person DM: the chat list's stack of member faces (MDMAvatar), three at most", () => {
+    it("multi-person DM: the chat list's stack of member faces (MDMAvatar), two faces and the rest", () => {
         const { container } = renderBody([line("mdm", MDM, "Ada, Bob, Cy: 2 messages")]);
         const slot = slotOf(rowOf(container, "Ada, Bob"))!;
-        // Ada has a picture; Bob and Cy show their initial; the fourth member is not drawn.
+        // Ada has a picture, Bob his initial; the other two of the four are the "+2".
         expect(slot.querySelectorAll("img").length).toBe(1);
         expect(slot.querySelector("img")?.getAttribute("src")).toContain("ada.png");
-        expect(slot.textContent).toBe("BC");
+        expect(slot.textContent).toBe("B+2");
         expect(slot.querySelector('svg[data-testid="PeopleRoundedIcon"]')).toBeNull();
     });
 

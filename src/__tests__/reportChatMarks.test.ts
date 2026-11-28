@@ -169,7 +169,11 @@ describe("reportChatMarkMap: one mark per chat type", () => {
 
     it("MDM: the members the chat list's stack draws (none known: an empty stack)", () => {
         const marks = reportChatMarkMap(keysFor(["mdm", UUID]), [chat({ chatType: 4 })]);
-        expect(marks.get(chatMarkKey("mdm", UUID))).toEqual({ kind: "mdm", members: [] });
+        expect(marks.get(chatMarkKey("mdm", UUID))).toEqual({
+            kind: "mdm",
+            members: [],
+            total: 0,
+        });
     });
 
     it("MDM: the first three members, as primitives (the rest are never drawn)", () => {
@@ -190,6 +194,8 @@ describe("reportChatMarkMap: one mark per chat type", () => {
                 { userId: "u2", userName: "P2", avatarImgPath: undefined },
                 { userId: "u3", userName: "P3", avatarImgPath: undefined },
             ],
+            // The stack's "+N" counts everyone, not only the members carried.
+            total: 5,
         });
     });
 });
@@ -301,6 +307,7 @@ describe("sameChatMarks", () => {
         expect(sameChatMarks(ini, m([["k", { kind: "initial", name: "O" }]]))).toBe(false);
         const stack = (...names: string[]): ReportChatMark => ({
             kind: "mdm",
+            total: names.length,
             members: names.map((n) => ({
                 userId: `id-${n}`,
                 userName: n,
@@ -321,6 +328,7 @@ describe("sameChatMarks", () => {
                         "k",
                         {
                             kind: "mdm",
+                            total: 1,
                             members: [{ userId: "u", userName: "A", avatarImgPath: "x" }],
                         },
                     ],
@@ -330,11 +338,16 @@ describe("sameChatMarks", () => {
                         "k",
                         {
                             kind: "mdm",
+                            total: 1,
                             members: [{ userId: "u", userName: "A", avatarImgPath: "y" }],
                         },
                     ],
                 ])
             )
+        ).toBe(false);
+        // The same faces with another total draw another "+N".
+        expect(
+            sameChatMarks(m([["k", stack("A")]]), m([["k", { ...stack("A"), total: 7 } as never]]))
         ).toBe(false);
         expect(sameChatMarks(m([["k", stack()]]), m([["k", { kind: "pm", src: "x" }]]))).toBe(
             false

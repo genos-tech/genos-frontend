@@ -29,7 +29,7 @@ import { FAB_CLEARANCE_VAR } from "../../../../components/layout/spotlightFabPos
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
-import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
+import { MDMAvatarButton } from "../../../../components/ui/avatars/MDMAvatarButton";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { EmptyState } from "../../../../components/ui/feedback/EmptyState";
 import { toast } from "../../../../components/ui/feedback/toastStore";
@@ -1417,7 +1417,7 @@ const NoteSidebarBody = memo(function NoteSidebarBody(props: NoteSidebarBodyProp
                 </WithSidebarManagers>
             );
         } else if (chatGroup.chatType === 4) {
-            avatar = <MDMAvatar avatarSize={18} members={chat.mdmMembers} />;
+            avatar = <MDMAvatarButton avatarSize={18} chat={chat} />;
         } else {
             return undefined;
         }

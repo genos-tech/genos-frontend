@@ -7,7 +7,7 @@ import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { resolveDisplayName } from "../../../../components/ui/avatars/avatarContextHelpers";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
-import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
+import { MDMAvatarButton } from "../../../../components/ui/avatars/MDMAvatarButton";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { PulseDot } from "../../../../components/ui/misc/PulseDot";
 import { HeaderUserNameStyles } from "../../../../components/ui/styles/commonStyle";
@@ -148,14 +148,12 @@ export const HeaderUserName = (props: HeaderUserNameProps) => {
                         useUISM={useUISM}
                     />
                 ) : chat && chat.chatType === 4 ? (
-                    <MDMAvatar
+                    <MDMAvatarButton
                         size="md"
-                        teamMemberProfiles={useTEM.teamMemberProfiles}
-                        members={
-                            useCM.allChats.find(
-                                (c) => c.chatId === chat.chatId && c.chatType === 4
-                            )?.mdmMembers
-                        }
+                        chat={useCM.allChats.find(
+                            (c) => c.chatId === chat.chatId && c.chatType === 4
+                        )}
+                        showPresence
                     />
                 ) : null}
             </Box>

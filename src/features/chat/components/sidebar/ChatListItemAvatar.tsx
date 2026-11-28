@@ -4,7 +4,7 @@ import { Socket } from "socket.io-client";
 import { AvatarWithStatus } from "../../../../components/ui/avatars/avatarWithStatus";
 import { BaseAvatar } from "../../../../components/ui/avatars/BaseAvatar";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
-import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
+import { MDMAvatarButton } from "../../../../components/ui/avatars/MDMAvatarButton";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -103,9 +103,7 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
 
     // MDM (Multi-user DM) Chat - show overlapping member avatars
     if (chatType === 4) {
-        return (
-            <MDMAvatar members={chat.mdmMembers} teamMemberProfiles={useTEM.teamMemberProfiles} />
-        );
+        return <MDMAvatarButton chat={chat} showPresence />;
     }
 
     return null;

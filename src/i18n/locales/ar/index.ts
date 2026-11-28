@@ -3117,6 +3117,33 @@ export const ar: DeepPartial<Messages> = {
                 externalChatExplainer:
                     "اختر فرقًا متصلة لدعوتها. يوافق كل فريق مرة واحدة، ثم يختار مالكه أو محرره أيًا من أعضائه ينضم. الدردشات الخارجية تكون دائمًا خاصة.",
             },
+            mdmMembers: {
+                title: "الأعضاء",
+                chipLabel: "أعضاء هذه المحادثة ({count})",
+                countOfMax: "{count} من {max} أشخاص",
+                creator: "المنشئ",
+                you: "أنت",
+                addButton: "إضافة أشخاص",
+                atLimit: "بلغت هذه المحادثة الحد الأقصى وهو {max} أشخاص.",
+                atLimitCreator:
+                    "بلغت هذه المحادثة الحد الأقصى وهو {max} أشخاص. أزل شخصًا لإضافة آخر.",
+                historyNote: "يمكن لمن تضيفهم رؤية الرسائل السابقة.",
+                remaining:
+                    "يمكنك إضافة {count, plural, one {شخص واحد} two {شخصين} few {# أشخاص} many {# شخصًا} other {# شخص}} إضافيًا.",
+                limitReached: "الحد الأقصى هو {max} أشخاص.",
+                createMaxHint: "حتى {max} أشخاص، بمن فيهم أنت.",
+                addHeading: "إضافة أشخاص إلى هذه المحادثة",
+                addFailedFull: "تعذّرت الإضافة: المحادثة ممتلئة ({max} أشخاص).",
+                leaveButton: "مغادرة المحادثة",
+                leaveTitle: "مغادرة هذه المحادثة؟",
+                leaveDescription:
+                    "لن ترى رسائلها ولن تصلك بعد الآن. يمكن لأحد الباقين فيها إضافتك مجددًا.",
+                leaveDescriptionCreator:
+                    "لن ترى رسائلها ولن تصلك بعد الآن. تنتقل إزالة الأعضاء إلى أقدم عضو فيها.",
+                loadError: "تعذّر تحميل الأعضاء.",
+                scopeName: "هذه المحادثة",
+                searchPlaceholder: "البحث عن أعضاء...",
+            },
             createMDM: {
                 title: "رسالة مباشرة متعددة المستخدمين",
                 description: "ابدأ محادثة مع عدة أشخاص دون إنشاء مجموعة.",

@@ -3178,6 +3178,34 @@ export const es: DeepPartial<Messages> = {
                 externalChatExplainer:
                     "Elige equipos conectados para invitar. Cada equipo aprueba una vez, luego su propietario o editor elige cuáles de sus miembros se unen. Los chats externos son siempre privados.",
             },
+            mdmMembers: {
+                title: "Miembros",
+                chipLabel: "Miembros de esta conversación ({count})",
+                countOfMax: "{count} de {max} personas",
+                creator: "Creador",
+                you: "tú",
+                addButton: "Añadir personas",
+                atLimit: "Esta conversación tiene el máximo de {max} personas.",
+                atLimitCreator:
+                    "Esta conversación tiene el máximo de {max} personas. Quita a alguien para añadir a otra persona.",
+                historyNote: "Las personas que añadas podrán ver los mensajes anteriores.",
+                remaining:
+                    "Puedes añadir {count} {count, plural, one {persona} other {personas}} más.",
+                limitReached: "Ese es el límite de {max} personas.",
+                createMaxHint: "Hasta {max} personas, contándote a ti.",
+                addHeading: "Añadir personas a esta conversación",
+                addFailedFull:
+                    "No se pudieron añadir: la conversación está completa ({max} personas).",
+                leaveButton: "Salir de la conversación",
+                leaveTitle: "¿Salir de esta conversación?",
+                leaveDescription:
+                    "Dejarás de ver y recibir sus mensajes. Alguien que siga dentro puede volver a añadirte.",
+                leaveDescriptionCreator:
+                    "Dejarás de ver y recibir sus mensajes. La persona que lleve más tiempo podrá quitar miembros.",
+                loadError: "No se pudieron cargar los miembros.",
+                scopeName: "esta conversación",
+                searchPlaceholder: "Buscar miembros...",
+            },
             createMDM: {
                 title: "Nuevo DM multiusuario",
                 description: "Inicia una conversación con varias personas sin crear un grupo.",

@@ -8,7 +8,8 @@ settings: [chat, chat.messageLayout, chat.quickReactions, chat.doubleClickTodo, 
 
 The chat list has these sections: Direct Messages, Group Messages, Project Updates, Flagged Messages and Recent Activities.
 
-- **Direct messages (DM)**: one-to-one. For a quick talk with several people, start a multi-user DM (at least 3 people) without creating a group.
+- **Direct messages (DM)**: one-to-one. For a quick talk with several people, start a multi-user DM (3 to 10 people) without creating a group.
+- **Members of a multi-user DM:** click its stack of faces (in the chat list, the chat header, Recent Activities and elsewhere) to see who is in it, add people or leave. It shows two faces and "+N" when there are more than three. A multi-user DM holds at most 10 people; use a group message for more. Anyone in it can add people, and the people added can see earlier messages. Only the person who created it can remove someone else. If the creator leaves, the member who has been in it longest takes that over.
 - **Group messages**: named group chats. When you create one, you choose whether it is public or private. A private group can also be hidden, so only its members can see that it exists. **Browse group chats** lists the public groups you can join. To join a private group, you send a request, and the group's members get it in their Inbox.
 - **Project chats** (under Project Updates): every project has one. Task updates appear there as cards that show the task or milestone as it is now: status, assignee, due date and, for a milestone, its progress. Click a card to open it.
 

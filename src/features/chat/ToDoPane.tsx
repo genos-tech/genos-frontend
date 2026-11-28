@@ -218,9 +218,18 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         setTagFilter(next);
     };
 
+    // A tomorrow list with nothing in it reads as no tomorrow list (MIP-2221). The server
+    // keeps a day once it exists, so deleting its only to-do (or moving it back) left an empty
+    // "Tomorrow" card that nobody had asked for, with no way to remove it.
+    const tomorrow = getLocalTomorrowDate();
+    const listedGroups = useMemo(
+        () => groups.filter((g) => g.localDate !== tomorrow || g.items.length > 0),
+        [groups, tomorrow]
+    );
+
     const tagFilteredGroups = useMemo(
-        () => filterGroupsByTags(groups, tagFilter),
-        [groups, tagFilter]
+        () => filterGroupsByTags(listedGroups, tagFilter),
+        [listedGroups, tagFilter]
     );
 
     const displayGroups = useMemo(() => {
@@ -273,7 +282,7 @@ export const ToDoPane = (props: ToDoPaneProps) => {
     };
 
     const todayExists = groups.some((g) => g.localDate === getLocalCurrentDate());
-    const tomorrowExists = groups.some((g) => g.localDate === getLocalTomorrowDate());
+    const tomorrowExists = listedGroups.some((g) => g.localDate === tomorrow);
     // On a phone the header has one start icon, not a labelled "Start today" button (MIP-1219):
     // it starts today while today has no list, and tomorrow once today has one. Desktop keeps
     // its labelled "Start today" and the "Start tomorrow" icon, each on its own gate.

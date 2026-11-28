@@ -30,11 +30,10 @@ import { ProjectManagementState } from "../../hooks/common/useProjectManagement"
 import { SprintMilestoneManagementState } from "../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation, type Messages } from "../../i18n";
-import { UserProps } from "../../types/admin";
 import { AllChatProps } from "../../types/chat";
 import { useAvatarContext } from "../ui/avatars/AvatarContext";
 import { BaseAvatar } from "../ui/avatars/BaseAvatar";
-import { MDMAvatar } from "../ui/avatars/MDMAvatar";
+import { MDMAvatarButton } from "../ui/avatars/MDMAvatarButton";
 import { UserAvatar } from "../ui/avatars/UserAvatar";
 import { Clickable } from "../ui/Clickable";
 import { EmojiText } from "../ui/emoji/EmojiText";
@@ -154,8 +153,7 @@ const GroupOrProjectAvatar = ({
 const renderChatAvatar = (
     chatType: number,
     chat: AllChatProps | undefined,
-    isDark: boolean,
-    teamMemberProfiles: Record<string, UserProps>
+    isDark: boolean
 ): React.ReactNode => {
     // DM
     if (chatType === 1) {
@@ -178,7 +176,8 @@ const renderChatAvatar = (
     // layout here rather than a generic group glyph. `HistoryRow` widens
     // its avatar slot for this case (the stack is wider than one avatar).
     if (chatType === 4) {
-        return <MDMAvatar members={chat?.mdmMembers} teamMemberProfiles={teamMemberProfiles} />;
+        // The stack is a button of its own (MIP-2549): it opens the members, not the chat.
+        return <MDMAvatarButton chat={chat} showPresence />;
     }
     // PM
     if (chatType === 3) {
@@ -428,7 +427,7 @@ export const HistoryModal = ({
     const theme = useTheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
-    const { myself, teamMemberProfiles } = useAvatarContext();
+    const { myself } = useAvatarContext();
     const { chatsEntries, tasksEntries, notesEntries, clear } = useHistory();
     const [tab, setTab] = useState<HistoryTabKey>("chats");
 
@@ -478,7 +477,7 @@ export const HistoryModal = ({
                 return (
                     <HistoryRow
                         key={`chat-${entry.chatType}-${entry.chatId}-${entry.messageId ?? 0}-${entry.openedAt}`}
-                        avatar={renderChatAvatar(entry.chatType, chat, isDark, teamMemberProfiles)}
+                        avatar={renderChatAvatar(entry.chatType, chat, isDark)}
                         isDark={isDark}
                         label={entry.label}
                         relativeMessages={t.history.relative}
@@ -502,7 +501,7 @@ export const HistoryModal = ({
                 return (
                     <HistoryRow
                         key={`thread-${entry.chatType}-${entry.chatId}-${entry.threadId}-${entry.messageId ?? 0}-${entry.openedAt}`}
-                        avatar={renderChatAvatar(entry.chatType, chat, isDark, teamMemberProfiles)}
+                        avatar={renderChatAvatar(entry.chatType, chat, isDark)}
                         isDark={isDark}
                         label={entry.label}
                         relativeMessages={t.history.relative}
@@ -603,12 +602,7 @@ export const HistoryModal = ({
                     entry.chatId != null
                 ) {
                     const chat = findChat(entry.chatType, entry.chatId);
-                    noteAvatar = renderChatAvatar(
-                        entry.chatType,
-                        chat,
-                        isDark,
-                        teamMemberProfiles
-                    );
+                    noteAvatar = renderChatAvatar(entry.chatType, chat, isDark);
                 } else {
                     noteAvatar = (
                         <GroupOrProjectAvatar
