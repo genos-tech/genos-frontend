@@ -113,9 +113,15 @@ function resolveChatName(a: V3ActivityWire): string {
  * `app`, a number or an object is `undefined` and the card shows what it always did. The
  * viewer is never treated as the owner, so no name can be read from here.
  */
-function viaAppOf(meta: Record<string, unknown> | null | undefined): { viaApp?: ViaApp } {
+function viaAppOf(meta: Record<string, unknown> | null | undefined): {
+    viaApp?: ViaApp;
+    viaAi?: boolean;
+} {
     const source = viaSourceFromVia(meta?.via, false);
-    return source?.kind === "mcp" && source.app ? { viaApp: source.app } : {};
+    if (!source) return {};
+    return source.kind === "mcp" && source.app
+        ? { viaAi: true, viaApp: source.app }
+        : { viaAi: true };
 }
 
 function aiAppActivity(

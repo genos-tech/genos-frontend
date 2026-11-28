@@ -4,6 +4,7 @@ import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { TaskPreview } from "../../../features/tasks/components/contents/TaskPreview";
+import { ModalCommentFocusContext } from "../../../features/tasks/context/modalCommentFocus";
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
@@ -52,6 +53,9 @@ const CenteredMessage = ({ children }: { children: React.ReactNode }) => (
         </Typography>
     </Box>
 );
+
+// A milestone link names no comment; the context still says the preview is in a modal (MIP-1755).
+const NO_LINKED_COMMENT = { commentId: undefined, taskId: -1 };
 
 // Renders TaskPreview in its milestone mode against modal-local preview
 // state so the host page's `useTM.currentPreviewKind` / preview ids stay
@@ -187,19 +191,21 @@ export const ModalMilestoneView = (props: ModalMilestoneViewProps) => {
                 backgroundColor: "inherit",
             }}
         >
-            <TaskPreview
-                hostZIndex={hostZIndex}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                useCM={useCM}
-                useNM={useNM}
-                usePM={usePMOverride}
-                useSM={useSM}
-                useTEM={useTEM}
-                useTM={useTMOverride}
-                useUISM={useUISM}
-            />
+            <ModalCommentFocusContext.Provider value={NO_LINKED_COMMENT}>
+                <TaskPreview
+                    hostZIndex={hostZIndex}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useNM={useNM}
+                    usePM={usePMOverride}
+                    useSM={useSM}
+                    useTEM={useTEM}
+                    useTM={useTMOverride}
+                    useUISM={useUISM}
+                />
+            </ModalCommentFocusContext.Provider>
         </Box>
     );
 };

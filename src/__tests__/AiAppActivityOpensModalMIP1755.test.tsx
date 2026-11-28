@@ -21,6 +21,7 @@ const navigateMock = vi.fn();
 const openModalByHrefMock = vi.fn<(href: string, opts?: unknown) => "opened" | "navigated">(
     () => "opened"
 );
+const openTodoListMock = vi.fn();
 vi.mock("react-router-dom", async (importOriginal) => ({
     ...(await importOriginal<typeof import("react-router-dom")>()),
     useNavigate: () => navigateMock,
@@ -34,6 +35,7 @@ afterEach(cleanup);
 beforeEach(() => {
     navigateMock.mockClear();
     openModalByHrefMock.mockClear();
+    openTodoListMock.mockClear();
 });
 
 const myself = { userId: "me", userName: "Me", userEmail: "me@test", teamId: "t1" } as never;
@@ -51,7 +53,12 @@ const renderRow = (activity: ActivityMessageProps) => {
     render(
         <CssVarsProvider>
             <MemoryRouter>
-                <UrlLinkModalProvider value={{ openModalByHref: openModalByHrefMock }}>
+                <UrlLinkModalProvider
+                    value={{
+                        openModalByHref: openModalByHrefMock,
+                        openTodoList: openTodoListMock,
+                    }}
+                >
                     <AiAppActivityRow
                         activity={activity}
                         activityMessages={[activity]}
@@ -260,5 +267,120 @@ describe("AI-app activity row opens the item in the chat modal (MIP-1755)", () =
 
         expect(openModalByHrefMock).not.toHaveBeenCalled();
         expect(navigateMock).not.toHaveBeenCalled();
+    });
+
+    it("a task comment opens its task modal at that comment, by Enter too", () => {
+        // What `mcp_notice._comment` files: a task item of kind "comment", id = the comment.
+        const href = "/workspace/tasks/project/3/task/7/comment/41";
+        const meta = {
+            verb: "commented",
+            kind: "comment",
+            count: 1,
+            url: href,
+            items: [{ kind: "comment", id: 41, commentId: 41, taskId: 7, projectId: 3 }],
+        };
+        renderRow(row(meta));
+
+        fireEvent.click(rowButton());
+        rowButton().focus();
+        fireEvent.keyDown(rowButton(), { key: "Enter" });
+
+        expect(navigateMock).not.toHaveBeenCalled();
+        expect(openModalByHrefMock.mock.calls).toEqual([
+            [href, { fullPageHref: href }],
+            [href, { fullPageHref: href }],
+        ]);
+    });
+
+    it("a deleted comment opens the task it was on", () => {
+        const href = "/workspace/tasks/project/3/task/7";
+        renderRow(
+            row({
+                verb: "deleted",
+                kind: "comment",
+                count: 1,
+                url: href,
+                items: [{ kind: "comment", id: 41, taskId: 7, projectId: 3, url: href }],
+            })
+        );
+
+        fireEvent.click(rowButton());
+
+        expect(navigateMock).not.toHaveBeenCalled();
+        expect(openModalByHrefMock).toHaveBeenCalledWith(href, { fullPageHref: href });
+    });
+
+    it("a comment on a note opens the note modal on its thread", () => {
+        const url = "/workspace/notes/my/5?comment=th-1";
+        renderRow(
+            row({
+                verb: "commented",
+                kind: "note",
+                count: 1,
+                url,
+                items: [{ kind: "note", id: 5, title: "Plan", url }],
+            })
+        );
+
+        fireEvent.click(rowButton());
+
+        expect(openModalByHrefMock).toHaveBeenCalledWith(url, { fullPageHref: url });
+    });
+
+    it("a new to-do opens the to-do modal on its day and item, with no page button", () => {
+        const url = "/workspace/todo/2026-11-30/item/12";
+        renderRow(
+            row({
+                verb: "created",
+                kind: "todo",
+                count: 1,
+                url,
+                items: [{ kind: "todo", id: 12, title: "Call", localDate: "2026-11-30", url }],
+            })
+        );
+
+        fireEvent.click(rowButton());
+
+        expect(navigateMock).not.toHaveBeenCalled();
+        expect(openModalByHrefMock).toHaveBeenCalledWith(url, undefined);
+    });
+
+    it.each(["created", "deleted"])(
+        "a %s to-do with no day opens the whole to-do list",
+        (verb) => {
+            renderRow(
+                row({
+                    verb,
+                    kind: "todo",
+                    count: 1,
+                    url: "/workspace/todo",
+                    items: [{ kind: "todo", id: 12, title: "Call", url: "/workspace/todo" }],
+                })
+            );
+
+            fireEvent.click(rowButton());
+
+            expect(openTodoListMock).toHaveBeenCalledTimes(1);
+            expect(navigateMock).not.toHaveBeenCalled();
+        }
+    );
+
+    it("a project member change keeps its page: the modal has no project view", () => {
+        const url = "/workspace/tasks/project/3";
+        renderRow(
+            row({
+                verb: "members",
+                kind: "project",
+                count: 1,
+                action: "add",
+                url,
+                items: [{ kind: "project", id: 3, projectId: 3, title: "QR", url }],
+            })
+        );
+
+        fireEvent.click(rowButton());
+
+        expect(openModalByHrefMock).not.toHaveBeenCalled();
+        expect(navigateMock).toHaveBeenCalledWith(url);
     });
 });
