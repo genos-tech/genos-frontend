@@ -1,4 +1,5 @@
 import type React from "react";
+import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
 import { Box } from "@mui/joy";
 
 import { PlainButton } from "../../../../components/ui/PlainButton";
@@ -17,6 +18,7 @@ const PREVIEW_SLOT = "\u0000";
 /**
  * The line above a main-chat message that is really a thread reply also sent to the chat
  * (MIP-2486): "Replied to a thread: <first line of the thread>", a button that opens it.
+ * It reads as a link at rest (thread icon and link colour): a phone has no hover.
  * Clicks stop here, so they do not also select the message or add it to the to-do list.
  */
 export const RepliedToThreadLine = ({ preview, onOpen }: RepliedToThreadLineProps) => {
@@ -32,18 +34,18 @@ export const RepliedToThreadLine = ({ preview, onOpen }: RepliedToThreadLineProp
             title={preview ?? undefined}
             sx={{
                 ...type("caption"),
-                display: "block",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
                 // Adds nothing to a balloon's width: the message decides it, and a long
                 // preview is cut inside it.
                 contain: "inline-size",
                 width: "100%",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
                 textAlign: "start",
                 marginBottom: "2px",
-                color: g.text.tertiary,
-                "&:hover": { textDecoration: "underline", color: g.accent.text },
+                // The link roles hold AA on every bubble fill, the sent tint included.
+                color: g.link.default,
+                "&:hover": { color: g.link.hover, textDecoration: "underline" },
                 // WCAG's smallest finger target, on a touch screen only.
                 "@media (pointer: coarse)": { minHeight: 28 },
             }}
@@ -53,13 +55,25 @@ export const RepliedToThreadLine = ({ preview, onOpen }: RepliedToThreadLineProp
                 onOpen(e);
             }}
         >
-            {before}
-            {preview && (
-                <Box component="bdi" sx={{ font: "inherit" }}>
-                    {preview}
-                </Box>
-            )}
-            {after}
+            {/* The icon of the thread pane's "Thread" chip. */}
+            <ReplyRoundedIcon aria-hidden sx={{ fontSize: "1.2em", flexShrink: 0 }} />
+            <Box
+                component="span"
+                sx={{
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                }}
+            >
+                {before}
+                {preview && (
+                    <Box component="bdi" sx={{ font: "inherit" }}>
+                        {preview}
+                    </Box>
+                )}
+                {after}
+            </Box>
         </PlainButton>
     );
 };

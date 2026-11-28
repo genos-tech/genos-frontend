@@ -165,9 +165,12 @@ describe("main chat rows", () => {
                 <RepliedToThreadLine preview="Where do we ship?" onOpen={open} />
             </div>
         );
-        fireEvent.click(
-            screen.getByRole("button", { name: "Replied to a thread: Where do we ship?" })
-        );
+        const line = screen.getByRole("button", {
+            name: "Replied to a thread: Where do we ship?",
+        });
+        // The thread icon is there at rest, and stays out of the button's name.
+        expect(line.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+        fireEvent.click(line);
         expect(open).toHaveBeenCalledTimes(1);
         expect(select).not.toHaveBeenCalled();
     });
