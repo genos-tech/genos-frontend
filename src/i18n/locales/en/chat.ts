@@ -643,6 +643,11 @@ export const chat = {
             joinRequestSuffix: ".",
         },
     },
+    // The accessible names of the avatars that open a profile (MIP-2587).
+    avatarButtons: {
+        groupProfile: "Group profile: {name}",
+        projectProfile: "Project profile: {name}",
+    },
     // The thread chip under a message: task comments in a project chat, replies elsewhere.
     underBar: {
         comments: "{count, plural, one {# comment} other {# comments}}",
