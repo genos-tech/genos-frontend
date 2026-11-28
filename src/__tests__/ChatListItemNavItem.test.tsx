@@ -98,7 +98,8 @@ const mount = (over: Partial<ChatListItemProps> = {}, c: AllChatProps = chat()) 
     );
 
 const row = () => button().parentElement as HTMLElement;
-const button = () => screen.getByText("Ada").closest('[role="button"]') as HTMLElement;
+// The row button lies under the content, which names it (`NavItem interactiveContent`).
+const button = () => screen.getByRole("button", { name: /^Ada/ });
 
 beforeEach(() => {
     onClickHandler.mockClear();
@@ -144,7 +145,8 @@ describe("ChatListItem on NavItem", () => {
 
     it("the time and unread dot live in the always-visible trailing slot", () => {
         mount();
-        expect(button().contains(screen.getByTestId("meta"))).toBe(true);
+        expect(row().contains(screen.getByTestId("meta"))).toBe(true);
+        expect(screen.getByTestId("meta").closest(".NavItem-actions")).toBeNull();
     });
 
     describe("hover prefetch (chat-switch perf work)", () => {

@@ -42,7 +42,8 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
         );
     }
     return (
-        <div>
+        // A press stays here, as with `GMAvatar`: the row the avatar sits in does not open too.
+        <div onClick={(event) => event.stopPropagation()}>
             <Clickable
                 height={_avatarSize}
                 position="relative"
