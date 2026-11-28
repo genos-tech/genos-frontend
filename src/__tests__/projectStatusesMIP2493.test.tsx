@@ -1,6 +1,6 @@
 /**
  * Per-project statuses (MIP-2493): a project that set none up draws as before; one that did
- * names and groups them, and a status pick is sent exactly once.
+ * names them in one flat list (MIP-2590), and a status pick is sent exactly once.
  */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
@@ -8,8 +8,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { StatusLabel } from "../features/tasks/components/meta/StatusLabel";
 import { CardStatusMark } from "../features/tasks/components/statuses/CardStatusMark";
-import { GroupedStatusPicker } from "../features/tasks/components/statuses/GroupedStatusPicker";
 import { ModalProjectStatuses } from "../features/tasks/components/statuses/ModalProjectStatuses";
+import { ProjectStatusPicker } from "../features/tasks/components/statuses/ProjectStatusPicker";
 import {
     BUILTIN_STATUSES,
     keptCustomStatusId,
@@ -27,11 +27,12 @@ vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }
 const reorder = vi.fn();
 const remove = vi.fn();
 const update = vi.fn();
+const create = vi.fn();
 vi.mock("../features/tasks/services/projectStatuses", () => ({
     loadProjectStatuses: vi.fn().mockResolvedValue(null),
     reorderProjectStatuses: (...args: unknown[]) => reorder(...args),
     deleteProjectStatus: (...args: unknown[]) => remove(...args),
-    createProjectStatus: vi.fn(),
+    createProjectStatus: (...args: unknown[]) => create(...args),
     updateProjectStatus: (...args: unknown[]) => update(...args),
 }));
 
@@ -70,6 +71,7 @@ beforeEach(() => {
     reorder.mockReset();
     remove.mockReset();
     update.mockReset();
+    create.mockReset();
 });
 afterEach(cleanup);
 
@@ -135,11 +137,11 @@ describe("a chip", () => {
     });
 });
 
-describe("the grouped picker", () => {
-    it("lists the statuses under their categories and reports the one picked", () => {
+describe("the status picker", () => {
+    it("lists each status once, without category headings, and reports the one picked", () => {
         const onPick = vi.fn();
         wrap(
-            <GroupedStatusPicker
+            <ProjectStatusPicker
                 customStatusId={null}
                 rows={ROWS}
                 status="WIP"
@@ -150,6 +152,20 @@ describe("the grouped picker", () => {
         fireEvent.keyDown(screen.getByRole("combobox"), { key: "ArrowDown" });
         const list = screen.getByRole("listbox");
         expect(within(list).queryByText("Old step")).toBeNull();
+        expect(within(list).queryByRole("group")).toBeNull();
+        expect(within(list).queryByRole("presentation")).toBeNull();
+        expect(
+            within(list)
+                .getAllByRole("option")
+                .map((o) => o.textContent)
+        ).toEqual([
+            en.tasks.filters.open,
+            en.tasks.projectStatuses.inReview,
+            en.tasks.filters.wip,
+            "Code review",
+            "Done",
+            en.tasks.filters.deleted,
+        ]);
         fireEvent.click(within(list).getByText("Code review"));
         expect(onPick).toHaveBeenCalledWith("WIP", 4);
     });
@@ -195,5 +211,90 @@ describe("the editor", () => {
         // Leaving the refused name does not send it again.
         fireEvent.blur(field);
         expect(update).toHaveBeenCalledTimes(1);
+    });
+
+    it("is one list that says what each status counts as, once each", () => {
+        setProjectStatuses(7, { statuses: ROWS, canManage: true });
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
+        const list = screen.getByRole("list", { name: en.tasks.projectStatuses.title });
+        expect(within(list).getAllByRole("listitem")).toHaveLength(ROWS.length);
+        expect(screen.queryByRole("group")).toBeNull();
+        // Built-ins say it; one the team added can change it.
+        expect(within(list).getAllByText("Counts as: Open")).toHaveLength(2);
+        expect(
+            screen.getByRole("combobox", { name: "What Code review counts as" }).textContent
+        ).toBe("Counts as: WIP");
+        expect(screen.queryByRole("combobox", { name: "What WIP counts as" })).toBeNull();
+    });
+
+    it("moves a status only among the ones that count as the same", async () => {
+        setProjectStatuses(7, { statuses: ROWS, canManage: true });
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
+        fireEvent.click(screen.getByRole("button", { name: "More actions for Code review" }));
+        expect(await screen.findByRole("menuitem", { name: "Move up" })).toBeTruthy();
+        // "Old step" counts as WIP too; Done, after it, does not.
+        expect(screen.getByRole("menuitem", { name: "Move down" })).toBeTruthy();
+        fireEvent.keyDown(screen.getByRole("menu"), { key: "Escape" });
+        fireEvent.click(screen.getByRole("button", { name: "More actions for Done" }));
+        await screen.findByRole("menuitem", { name: "Rename" });
+        expect(screen.queryByRole("menuitem", { name: "Move up" })).toBeNull();
+    });
+
+    it("adds a status with what it counts as", async () => {
+        setProjectStatuses(7, { statuses: ROWS, canManage: true });
+        create.mockResolvedValue({ ok: true, data: { statuses: ROWS, canManage: true } });
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
+        fireEvent.click(screen.getByRole("button", { name: en.tasks.projectStatuses.addStatus }));
+        const field = screen.getByRole("textbox", { name: en.tasks.projectStatuses.nameLabel });
+        fireEvent.change(field, { target: { value: "QA" } });
+        fireEvent.click(
+            screen.getByRole("combobox", { name: en.tasks.projectStatuses.countsAsNew })
+        );
+        fireEvent.click(screen.getByRole("option", { name: "WIP" }));
+        fireEvent.submit(field.closest("form")!);
+        await vi.waitFor(() =>
+            expect(create).toHaveBeenCalledWith(7, { name: "QA", category: "WIP" }, "t")
+        );
+    });
+
+    it("says why what a status counts as cannot change", async () => {
+        setProjectStatuses(7, { statuses: ROWS, canManage: true });
+        update.mockResolvedValue({ ok: false, code: "status_in_use", inUse: 2 });
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
+        fireEvent.click(screen.getByRole("combobox", { name: "What Code review counts as" }));
+        fireEvent.click(screen.getByRole("option", { name: "Closed" }));
+        await vi.waitFor(() =>
+            expect(update).toHaveBeenCalledWith(7, 4, { category: "Closed" }, "t")
+        );
+        expect(await screen.findByText(/2 tasks or milestones use this status/)).toBeTruthy();
+    });
+
+    it("leaves Alt+arrows on the select to the select, and says what changed", async () => {
+        setProjectStatuses(7, { statuses: ROWS, canManage: true });
+        update.mockResolvedValue({ ok: true, data: { statuses: ROWS, canManage: true } });
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
+        const select = screen.getByRole("combobox", { name: "What Code review counts as" });
+        reorder.mockResolvedValue({ ok: true, data: { statuses: ROWS, canManage: true } });
+        fireEvent.keyDown(select, { key: "ArrowDown", altKey: true });
+        expect(reorder).not.toHaveBeenCalled();
+        if (select.getAttribute("aria-expanded") !== "true") fireEvent.click(select);
+        fireEvent.click(screen.getByRole("option", { name: "Closed" }));
+        expect(await screen.findByText("Code review now counts as Closed.")).toBeTruthy();
+    });
+
+    it("cannot cancel an add that is being saved", async () => {
+        setProjectStatuses(7, { statuses: ROWS, canManage: true });
+        create.mockReturnValue(new Promise(() => undefined));
+        wrap(<ModalProjectStatuses projectId={7} open onClose={vi.fn()} />);
+        fireEvent.click(screen.getByRole("button", { name: en.tasks.projectStatuses.addStatus }));
+        const field = screen.getByRole("textbox", { name: en.tasks.projectStatuses.nameLabel });
+        fireEvent.change(field, { target: { value: "QA" } });
+        fireEvent.submit(field.closest("form")!);
+        const cancel = screen.getByRole("button", { name: en.common.actions.cancel });
+        await vi.waitFor(() => expect((cancel as HTMLButtonElement).disabled).toBe(true));
+        fireEvent.keyDown(field, { key: "Escape" });
+        expect(screen.getByRole("textbox", { name: en.tasks.projectStatuses.nameLabel })).toBe(
+            field
+        );
     });
 });

@@ -43,6 +43,7 @@ import { ChatListItemLive } from "../../hooks/useChatListItem";
 import { useChatRouting } from "../../hooks/useChatRouting";
 import { useShowReorderedChat } from "../../hooks/useShowReorderedChat";
 import { ChipId, selectVisibleActivityMessages } from "../../utils/activityChipFilters";
+import { isViaAiCard } from "../../utils/viaActivityModalHref";
 import { AiAppActivityRow } from "./activity/AiAppActivityRow";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
 import { ChatListItem } from "./chatListItem";
@@ -517,7 +518,13 @@ const ActivityListRenderer = ({
                             />
                         ) : (
                             <ChatListItemForActivity
-                                key={`${activityMessage.activityId}-${activityMessage.isRead}`}
+                                // A card that opens a modal keeps its row when marked read, so
+                                // closing the modal can give it the focus back (MIP-1755).
+                                key={
+                                    isViaAiCard(activityMessage)
+                                        ? activityMessage.activityId
+                                        : `${activityMessage.activityId}-${activityMessage.isRead}`
+                                }
                                 activity={activityMessage}
                                 activityMessages={activityMessages}
                                 myself={data.myself}

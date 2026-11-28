@@ -11,7 +11,7 @@ import { isDeletingStatus } from "../../utils/deletedStatus";
 import { keptCustomStatusId } from "../../utils/projectStatus";
 import { statuses, taskMetaLabel } from "../../utils/taskMeta";
 import { StatusLabel } from "../meta/StatusLabel";
-import { GroupedStatusPicker } from "../statuses/GroupedStatusPicker";
+import { ProjectStatusPicker } from "../statuses/ProjectStatusPicker";
 import { PickerField, pickerInputProps } from "./pickerField";
 
 type ACTaskStatusProps = {
@@ -41,7 +41,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
         [onDeleteTask]
     );
 
-    // A project that set up statuses offers its own, grouped (MIP-2493).
+    // A project that set up statuses offers its own (MIP-2493).
     const { statuses: projectStatuses } = useProjectStatuses(
         taskContent?.project?.projectId,
         taskContent?.customStatusId
@@ -78,7 +78,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
 
     if (projectStatuses.length > 0) {
         return (
-            <GroupedStatusPicker
+            <ProjectStatusPicker
                 key={taskContent.id}
                 customStatusId={taskContent.customStatusId}
                 field={field}

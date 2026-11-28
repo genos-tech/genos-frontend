@@ -16,7 +16,10 @@ import { UserProps } from "../../../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../../../types/chat";
 import { TaskCommentProps } from "../../../../../../types/tasks";
 import { useFollowOwnOutput } from "../../../../../chat/hooks/useFollowOwnOutput";
-import { useScrollToTaskCommentByCommentId } from "../../../../hooks/taskCommentHooks";
+import {
+    useRevealFocusedComment,
+    useScrollToTaskCommentByCommentId,
+} from "../../../../hooks/taskCommentHooks";
 import { taskCommentKey } from "../../../../services/deleteTaskComment";
 import { viaSourceOfComment } from "../../../../utils/viaSource";
 import { TaskCommentBubble } from "./TaskCommentBubble";
@@ -79,6 +82,10 @@ type TaskCommentListProps = {
      * this id renders in the focused palette, and Virtuoso scrolls it
      * into view. */
     focusedCommentId?: number;
+    /** The list sits in a preview modal over another page (MIP-1755): the focused comment is also
+     *  brought into view of the modal, which scrolls as one, and a click on a comment does not
+     *  move the page behind to it. */
+    inModal?: boolean;
     setTodoFromMessageBubble?: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
@@ -116,6 +123,7 @@ export const TaskCommentList = ({
     fillContainer = false,
     commentLinkBuilder,
     focusedCommentId,
+    inModal = false,
     setTodoFromMessageBubble,
     hostZIndex,
 }: TaskCommentListProps) => {
@@ -174,6 +182,7 @@ export const TaskCommentList = ({
         taskComments,
         focusedCommentId
     );
+    useRevealFocusedComment(scrollerElRef, taskComments, inModal ? focusedCommentId : undefined);
 
     // ...with one exception to "only when already at the bottom": a
     // comment *I* just posted always pulls the list down, even if I had
@@ -206,7 +215,7 @@ export const TaskCommentList = ({
         },
         [commentLinkBuilder, navigate]
     );
-    const onCommentClick = commentLinkBuilder ? handleCommentClick : undefined;
+    const onCommentClick = commentLinkBuilder && !inModal ? handleCommentClick : undefined;
 
     // Hoisted out of the Virtuoso element into a stable `useCallback`
     // shared by both layout branches — Virtuoso re-renders every visible
@@ -225,7 +234,10 @@ export const TaskCommentList = ({
                 //    scroller while scrolling) it gets `pointer-events: none`,
                 //    so bubbles sliding under a stationary cursor can't fire
                 //    hover handlers. Wheel/touch still reach the scroller.
-                <div className="comment-row">
+                <div
+                    className="comment-row"
+                    data-comment-focused={comment.commentId === focusedCommentId || undefined}
+                >
                     <TaskCommentBubble
                         key={`task-comment-${comment.commentId}-${comment.tsUpdated}`}
                         comment={comment}

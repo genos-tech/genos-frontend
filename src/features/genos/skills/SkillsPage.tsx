@@ -3,6 +3,7 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ArticleOutlinedIcon from "@mui/icons-material/ArticleOutlined";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import FlagOutlinedIcon from "@mui/icons-material/FlagOutlined";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
@@ -47,6 +48,8 @@ import {
     createSkill,
     deleteSkill,
     fetchSkills,
+    installSkill,
+    isInstallableTeamSkill,
     isModerated,
     setSkillHidden,
     uninstallSkill,
@@ -61,6 +64,8 @@ import { SkillUpdateDiffDialog } from "./SkillUpdateDiffDialog";
 type Props = {
     teamId: string;
     host: SkillsHost;
+    /** The list to open on (MIP-2589: "Find more skills" opens the Hub). */
+    initialTab?: "hub" | "team";
 };
 
 type View = { kind: "list" } | { kind: "edit"; id: string };
@@ -80,12 +85,12 @@ type ListState =
  * with a way back. A new skill is created at once with a title ("New skill") and the editor
  * opens on it, so the editor is the form and there is no half-made skill in a dialog.
  */
-export const SkillsPage = ({ teamId, host }: Props) => {
+export const SkillsPage = ({ teamId, host, initialTab }: Props) => {
     const { t, locale } = useTranslation();
     const m = t.settings.genosSkills;
     const { accessToken } = useAuth();
     const [view, setView] = useState<View>({ kind: "list" });
-    const [tab, setTab] = useState<PageTab>("mine");
+    const [tab, setTab] = useState<PageTab>(initialTab ?? "mine");
     // The server's `GENOS_SKILLS_PUBLIC` switch, as the list last said it: the Hub tab exists only
     // while it is on. It is kept apart from the list because the Hub tab shows no list of ours.
     const [publicEnabled, setPublicEnabled] = useState(false);
@@ -197,7 +202,23 @@ export const SkillsPage = ({ teamId, host }: Props) => {
         void load(listTab);
     };
 
+    // Install from Team skills (MIP-2589): only an installed skill can be picked or run.
+    const install = async (skill: SkillRow) => {
+        // The Install button goes away with the click: a keyboard user's focus moves to the row.
+        // A mouse or touch click leaves no ring behind.
+        const byKeyboard = document.activeElement?.matches(":focus-visible") === true;
+        const res = await installSkill(accessToken, skill.id);
+        if (res.ok) {
+            toast.success(m.hub.installedToast);
+            if (byKeyboard) focusAfterUpdate.current = skill.id;
+            void load(listTab, true);
+        } else {
+            toast.error(res.message || m.hub.installFailed);
+        }
+    };
+
     // From the Installed tab (MIP-2293): the row leaves the list once the server has removed it.
+    // On Team skills the row stays and offers Install again.
     const uninstall = async (skill: SkillRow) => {
         const res = await uninstallSkill(accessToken, skill.id);
         if (res.ok) {
@@ -398,12 +419,14 @@ export const SkillsPage = ({ teamId, host }: Props) => {
                             key={skill.id}
                             installedTab={tab === "installed"}
                             skill={skill}
+                            teamTab={tab === "team"}
                             when={
                                 skill.updatedAt
                                     ? relativeTimeLabel(skill.updatedAt, t.spotlight, locale)
                                     : ""
                             }
                             onCopy={() => void copy(skill)}
+                            onInstall={() => void install(skill)}
                             onOpen={() => setView({ kind: "edit", id: skill.id })}
                             onReport={() => setReporting(skill)}
                             onToggleHidden={() => void toggleHidden(skill)}
@@ -456,6 +479,8 @@ type ItemProps = {
     skill: SkillRow;
     /** The Installed tab: the row names the author and gets the version line (MIP-2226). */
     installedTab: boolean;
+    /** The Team skills tab: the row can be installed from here (MIP-2589). */
+    teamTab: boolean;
     when: string;
     onOpen: () => void;
     onCopy: () => void;
@@ -464,6 +489,7 @@ type ItemProps = {
     onDelete: () => void;
     onUpdate: () => void;
     onUninstall: () => void;
+    onInstall: () => void;
 };
 
 /** The one-line footer of an installed row. Both states are `FOOTER_HEIGHT` tall, so a row with
@@ -473,6 +499,7 @@ const FOOTER_HEIGHT = 36;
 const SkillListItem = ({
     skill,
     installedTab,
+    teamTab,
     when,
     onOpen,
     onCopy,
@@ -481,6 +508,7 @@ const SkillListItem = ({
     onDelete,
     onUpdate,
     onUninstall,
+    onInstall,
 }: ItemProps) => {
     const { t } = useTranslation();
     const l = t.settings.genosSkills.list;
@@ -493,7 +521,11 @@ const SkillListItem = ({
         : skill.author
           ? fmt(h.byHandle, { handle: skill.author.handle })
           : "";
-    const installed = installedTab ? (skill.installedVersionNo ?? null) : null;
+    // The version this member installed, on the two tabs that act on installs.
+    const installed = installedTab || teamTab ? (skill.installedVersionNo ?? null) : null;
+    const canInstall = teamTab && installed === null && isInstallableTeamSkill(skill);
+    // Team rows that are installed or can be keep one footer height, so installing moves nothing.
+    const hasFooter = installed !== null || canInstall;
     const items = [
         {
             id: "open",
@@ -571,7 +603,7 @@ const SkillListItem = ({
                         p: 1.5,
                         borderRadius: "lg",
                         // A row with a footer under it keeps its text clear of the footer.
-                        ...(installed !== null && { pb: 0.5 }),
+                        ...(hasFooter && { pb: 0.5 }),
                     }}
                     onClick={onOpen}
                 >
@@ -670,6 +702,33 @@ const SkillListItem = ({
                             .join(" · ")}
                     </Typography>
                 </PlainButton>
+                {canInstall && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            height: FOOTER_HEIGHT,
+                            px: 1.5,
+                        }}
+                    >
+                        <Button
+                            size="sm"
+                            startDecorator={<DownloadRoundedIcon />}
+                            variant="outlined"
+                            sx={{
+                                minHeight: 0,
+                                height: FOOTER_HEIGHT - 8,
+                                "@media (pointer: coarse)": { height: FOOTER_HEIGHT },
+                            }}
+                            onClick={onInstall}
+                        >
+                            {h.install}
+                            <Box component="span" sx={visuallyHidden}>
+                                {` · ${name}`}
+                            </Box>
+                        </Button>
+                    </Box>
+                )}
                 {installed !== null && (
                     <Box
                         sx={{
@@ -701,6 +760,11 @@ const SkillListItem = ({
                                     {` · ${name}`}
                                 </Box>
                             </Button>
+                        )}
+                        {teamTab && (
+                            <Chip color="success" size="sm" sx={{ flexShrink: 0 }} variant="soft">
+                                {h.installed}
+                            </Chip>
                         )}
                         <Typography
                             level="body-xs"

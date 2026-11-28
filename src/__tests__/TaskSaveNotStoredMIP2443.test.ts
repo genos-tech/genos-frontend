@@ -64,7 +64,7 @@ describe("a task save that stored nothing", () => {
         ["a refusal", 403, false],
     ])("reports %s", async (_name, status, retry) => {
         put.mockRejectedValue(httpError(status));
-        expect(await save()).toHaveBeenCalledWith(retry);
+        expect(await save()).toHaveBeenCalledWith(retry, expect.anything());
     });
 
     it("says nothing when the PUT stored the task", async () => {

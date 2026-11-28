@@ -15,6 +15,8 @@ type UrlLinkModalContextValue = {
         href: string,
         opts?: { zIndex?: number; fullPageHref?: string }
     ) => "opened" | "navigated" | "external";
+    /** The whole to-do list in the modal: it has no link (MIP-1044). */
+    openTodoList?: () => void;
 };
 
 const UrlLinkModalContext = createContext<UrlLinkModalContextValue | null>(null);

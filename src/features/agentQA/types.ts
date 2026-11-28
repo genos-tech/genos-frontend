@@ -58,6 +58,8 @@ export interface AskState {
     answerSources: SpotlightResult[];
     // Set when the stream emits an error event (or transport fails).
     askError: string | null;
+    // The ask named a skill that is not installed (MIP-2589): the list to install it from.
+    askErrorSkillList?: "hub" | "team";
     // Per-step tool-call activity log. Ordered by step.
     toolEvents: ToolEvent[];
     // When the agent calls a write tool, the loop pauses here. The UI
@@ -113,6 +115,7 @@ export interface CompletedTurn {
     answerSources: SpotlightResult[];
     toolEvents: ToolEvent[];
     askError: string | null;
+    askErrorSkillList?: "hub" | "team";
     // AgentRun id for this turn (F1 feedback target). Absent for turns
     // restored from older snapshots / cancelled before `done`.
     runId?: string | null;

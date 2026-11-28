@@ -1079,6 +1079,7 @@ export const ja: DeepPartial<Messages> = {
             actionFailed: "操作を完了できませんでした。もう一度お試しください。",
             messageSendFailed: "メッセージを送信できませんでした。もう一度お試しください。",
             noteNotSaved: "このノートの最新の変更を保存できませんでした。",
+            changeNotSaved: "変更は保存されませんでした。もう一度お試しください。",
             idleReload: "一定時間操作がなかったため、ページを更新しています…",
         },
         serviceSwitch: {
@@ -3888,6 +3889,10 @@ export const ja: DeepPartial<Messages> = {
             unknownError: "不明なエラー",
             networkError: "ネットワークエラー：{message}",
             serverReturned: "サーバーが {status} を返しました",
+            skillInstallFromHub:
+                "/{name} はインストールされていません。先に Genos Hub からインストールしてから、もう一度質問してください。",
+            skillInstallFromTeam:
+                "/{name} はインストールされていません。先にチームスキルからインストールしてから、もう一度質問してください。",
             streamInterrupted: "ストリームが中断されました：{message}",
             malformedNdjsonLine: "不正な NDJSON 行：{line}",
             taskNotFound:
@@ -5204,7 +5209,8 @@ export const ja: DeepPartial<Messages> = {
             paramSkillInputHint: "任意。スキル名の後に入力する言葉です（プロジェクトや週など）。",
             skillPlaceholder: "スキルを選択",
             skillLoading: "スキルを読み込み中…",
-            skillNone: "実行できるスキルがまだありません。先にスキルを作成してください。",
+            skillNone:
+                "実行できるスキルがまだありません。スキルを作成するか、インストールしてください。",
             skillTagFilter: "タグでスキルを絞り込む",
             skillNoMatch: "これらのタグをすべて持つスキルはありません。",
             skillDashboardNone: "dashboard タグの付いたスキルはまだありません。",
@@ -5259,7 +5265,7 @@ export const ja: DeepPartial<Messages> = {
             tabs: {
                 label: "スキル",
                 mine: "自分のスキル",
-                team: "チーム",
+                team: "チームスキル",
                 installed: "インストール済み",
                 hub: "Genos Hub",
             },
@@ -5274,10 +5280,10 @@ export const ja: DeepPartial<Messages> = {
                 emptyMineBody: "テンプレートから始めるか、白紙から自分で書いてください。",
                 emptyTeamTitle: "チームのスキルはまだありません",
                 emptyTeamBody:
-                    "チームメンバーが共有したスキルがここに表示されます。自分のスキルは詳細から共有できます。",
+                    "チームメンバーが共有したスキルがここに表示されます。使うにはインストールしてください。自分のスキルは詳細から共有できます。",
                 emptyInstalledTitle: "インストール済みのスキルはまだありません",
                 emptyInstalledBody:
-                    "インストールした公開スキルがここに表示され、作者が更新を公開するとお知らせします。",
+                    "チームスキルや Genos Hub からインストールしたスキルがここに表示され、作者が更新を公開するとお知らせします。",
                 installedUpToDate: "バージョン {n} · 最新です",
                 installedBehind: "バージョン {from} · 最新 {to}",
                 limitReached:
@@ -5360,7 +5366,7 @@ export const ja: DeepPartial<Messages> = {
                 visibilityPrivate: "自分のみ",
                 visibilityTeam: "自分のチーム",
                 visibilityTeamHelp:
-                    "チームメンバーは最後に公開したバージョンを読み、実行できます。「自分のチーム」を選ぶと現在のテキストが公開され、その後は「変更を公開」を押すまで、保存した編集は自分だけに表示されます。",
+                    "チームメンバーは公開したバージョンを読んでインストールでき、インストールすると実行できます。「自分のチーム」を選ぶと現在のテキストが公開され、その後は「変更を公開」を押すまで、保存した編集は自分だけに表示されます。",
                 visibilitySpecific: "特定の人",
                 visibilitySpecificHelp: "共有先を変更できるのはオーナーだけです。",
                 owner: "オーナー",
@@ -6283,6 +6289,9 @@ export const ja: DeepPartial<Messages> = {
             fromTeammate: "{name} さんのチームスキル",
             installed: "インストール済み",
             official: "Genos",
+            findMore: "Genos Hubでほかのスキルを探す",
+            openHub: "Genos Hubを開く",
+            openTeam: "チームスキルを開く",
         },
         errors: {
             noTeam: "チームが選択されていません。",
@@ -7012,16 +7021,14 @@ export const ja: DeepPartial<Messages> = {
             inReview: "In Review",
             introTitle: "独自のステータスを使う",
             introBody:
-                "各カテゴリのステータスは、名前や色の変更、追加ができます。設定するまで何も変わりません。",
+                "ステータスの名前や色を変えたり、追加したりできます。設定するまで何も変わりません。",
             setUp: "ステータスを設定",
             setUpFailed: "ステータスを設定できませんでした。もう一度お試しください。",
             add: "追加",
-            addTo: "{category}にステータスを追加",
             nameLabel: "ステータス名",
             default: "デフォルト",
             off: "オフ",
             count: "{max}件中{n}件",
-            groupLabel: "{category}のステータス",
             rename: "名前を変更",
             moveUp: "上へ移動",
             moveDown: "下へ移動",
@@ -7041,19 +7048,30 @@ export const ja: DeepPartial<Messages> = {
             nameEmpty: "名前を入力してください。",
             saveFailed: "保存できませんでした。もう一度お試しください。",
             saving: "保存中",
-            moved: "{name}を{category}の{total}件中{position}番目に移動しました。",
+            moved: "「{name}」を{total}件中{position}番目に移動しました。",
             loadFailed: "ステータスを読み込めませんでした",
             deleteTitle: "「{name}」を削除しますか？",
             deleteBody: "使用中のタスクは、選んだステータスに移動します。",
-            noReplacement: "先にこのカテゴリの別のステータスをオンにしてください。",
+            noReplacement: "先に、扱いが{category}の別のステータスをオンにしてください。",
             deleteInUse: "{count}件のタスクがこのステータスを使っています。移動先：",
             replacementLabel: "移動先",
             deleteAndMove: "移動して削除",
-            boardColumnsTitle: "ステータスごとにボードの列を分ける",
+            boardColumnsTitle: "ステータスごとに列を表示",
             boardColumnsHint:
-                "列を分類ごとではなくステータスごとにします。プロジェクトの全員に適用されます。",
+                "In ReviewやQAのような工程を進めるチーム向けです。オフのときはカテゴリ（Open、WIPなど）ごとに1列です。プロジェクトの全員に適用されます。",
             boardColumnsOn: "ボードはステータスごとの列で表示されます。",
             boardColumnsOff: "ボードはカテゴリーごとの列で表示されます。",
+            countsAs: "扱い: {category}",
+            countsAsLabel: "「{name}」の扱い",
+            countsAsNew: "扱い",
+            countsAsHint:
+                "「扱い」は、フィルタ・期限超過・進捗・自動化がステータスをどう扱うかを決めます。",
+            countsAsInUse:
+                "{count, plural, other {#件のタスクまたはマイルストーンがこのステータスを使っています。扱いを変えるには、先に別のステータスへ移してください。}}",
+            countsAsChanged: "「{name}」の扱いを{category}に変更しました。",
+            countsAsInRules:
+                "このステータスは自動化ルールで使われています。先にルールを変更してください。",
+            addStatus: "ステータスを追加",
         },
         automation: {
             tabsLabel: "プロジェクト設定のセクション",
@@ -7320,7 +7338,6 @@ export const ja: DeepPartial<Messages> = {
                 "特定のマイルストーンでフィルターすると、マイルストーンが自動的に開き、そのタスクを確認できます。他のフィルターでは、行は折りたたまれたままになります。",
         },
         filters: {
-            statusInCategory: "{category}の{name}",
             all: "All",
             open: "Open",
             wip: "WIP",

@@ -5,6 +5,11 @@ import { Box, Button, Sheet, Stack, Typography } from "@mui/joy";
 
 import { Spinner } from "../../../components/ui/feedback/Skeleton";
 import { useTranslation } from "../../../i18n";
+import {
+    OPEN_SKILLS_EVENT,
+    takePendingSkillsList,
+    type SkillsList,
+} from "../skills/openSkillsList";
 import { SkillsEntryCard } from "../skills/SkillsEntryCard";
 import type { SkillsHost } from "../skills/skillsHost";
 
@@ -58,6 +63,9 @@ export const GenosSettingsPanel = ({
     const { t } = useTranslation();
     const m = t.settings.genosMemory;
     const [view, setView] = useState<View>("settings");
+    // The list of the Skills page asked for from elsewhere ("Find more skills in the Genos Hub",
+    // MIP-2589). `n` remounts the page when it is already open on another list.
+    const [wanted, setWanted] = useState<{ list: SkillsList; n: number } | null>(null);
     const rootRef = useRef<HTMLDivElement | null>(null);
     // Set by the two buttons that switch views, so the scroll below happens
     // for a switch and never for the first mount (which would yank the
@@ -77,6 +85,21 @@ export const GenosSettingsPanel = ({
         rootRef.current?.scrollIntoView?.({ block: "start" });
     }, [view]);
 
+    // Only the dialog that has the Skills page answers (not the Spotlight gear dialog).
+    const hasSkillsPage = Boolean(skillsHost);
+    useEffect(() => {
+        if (!hasSkillsPage) return;
+        const show = () => {
+            const list = takePendingSkillsList();
+            if (!list) return;
+            setWanted((prev) => ({ list, n: (prev?.n ?? 0) + 1 }));
+            switchTo("skills");
+        };
+        show(); // asked for before this panel mounted (the dialog opened because of it)
+        window.addEventListener(OPEN_SKILLS_EVENT, show);
+        return () => window.removeEventListener(OPEN_SKILLS_EVENT, show);
+    }, [hasSkillsPage]);
+
     if (view === "skills" && skillsHost) {
         return (
             <Stack ref={rootRef} spacing={1.5} sx={{ minWidth: 0 }}>
@@ -85,7 +108,10 @@ export const GenosSettingsPanel = ({
                     startDecorator={<ArrowBackRoundedIcon />}
                     sx={{ alignSelf: "flex-start" }}
                     variant="plain"
-                    onClick={() => switchTo("settings")}
+                    onClick={() => {
+                        setWanted(null);
+                        switchTo("settings");
+                    }}
                 >
                     {t.settings.genosSkills.backToSettings}
                 </Button>
@@ -96,7 +122,12 @@ export const GenosSettingsPanel = ({
                         </Box>
                     }
                 >
-                    <SkillsPage host={skillsHost} teamId={teamId} />
+                    <SkillsPage
+                        key={wanted?.n ?? 0}
+                        host={skillsHost}
+                        initialTab={wanted?.list}
+                        teamId={teamId}
+                    />
                 </Suspense>
             </Stack>
         );

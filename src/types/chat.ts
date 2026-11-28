@@ -210,6 +210,9 @@ export type ActivityMessageProps = {
     // person's own change, any other app, and every row stored before the
     // API sent it; the card then shows nothing extra. Never a name.
     viaApp?: ViaApp;
+    // The change was made through an AI app at all (`meta.via`, any app): the card opens what it
+    // names in the chat's preview modal (MIP-1755).
+    viaAi?: boolean;
 };
 
 export type AiAppNoticeItem = {
@@ -220,6 +223,10 @@ export type AiAppNoticeItem = {
     url?: string | null;
     projectId?: number | null;
     taskId?: number | null;
+    // A task comment's id, so the notice opens its task at that comment (MIP-1755).
+    commentId?: number | null;
+    // The day a to-do sits under (YYYY-MM-DD): part of its link (MIP-1755).
+    localDate?: string | null;
 };
 
 export type AiAppNotice = {

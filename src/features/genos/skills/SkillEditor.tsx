@@ -36,6 +36,7 @@ import {
     fetchSkill,
     fetchSkillVersions,
     installSkill,
+    isInstallableTeamSkill,
     isModerated,
     publishSkill,
     setSkillHidden,
@@ -488,27 +489,30 @@ export const SkillEditor = ({ skillId, teamId, host, publicEnabled = false, onBa
                         >
                             {m.report.action}
                         </Button>
-                        {skill.visibility === "public" &&
+                        {((skill.visibility === "public" &&
                             skill.status === "active" &&
-                            !skill.mine && (
-                                <Button
-                                    loading={installing}
-                                    size="sm"
-                                    variant="outlined"
-                                    startDecorator={
-                                        skill.installedVersionNo != null ? (
-                                            <RemoveCircleOutlineRoundedIcon />
-                                        ) : (
-                                            <DownloadRoundedIcon />
-                                        )
-                                    }
-                                    onClick={() => void toggleInstall()}
-                                >
-                                    {skill.installedVersionNo != null
-                                        ? m.hub.uninstall
-                                        : m.hub.install}
-                                </Button>
-                            )}
+                            !skill.mine) ||
+                            isInstallableTeamSkill(skill) ||
+                            // An install of a team skill can always be taken away.
+                            (!skill.mine && skill.installedVersionNo != null)) && (
+                            <Button
+                                loading={installing}
+                                size="sm"
+                                variant="outlined"
+                                startDecorator={
+                                    skill.installedVersionNo != null ? (
+                                        <RemoveCircleOutlineRoundedIcon />
+                                    ) : (
+                                        <DownloadRoundedIcon />
+                                    )
+                                }
+                                onClick={() => void toggleInstall()}
+                            >
+                                {skill.installedVersionNo != null
+                                    ? m.hub.uninstall
+                                    : m.hub.install}
+                            </Button>
+                        )}
                         {!skill.hiddenByTeam &&
                             skill.visibility !== "private" &&
                             (skill.mine || skill.visibility !== "specific") && (
