@@ -52,7 +52,7 @@ export const RulePreview = ({
     onRetry: () => void;
     onAnnounce: (text: string) => void;
 }) => {
-    const words = useAutomationWords();
+    const words = useAutomationWords(draft.appliesTo);
     const lookups = useLookups();
     const heading = useRef<HTMLHeadingElement>(null);
     const matched = state.status === "ok" ? state.result.matched : null;

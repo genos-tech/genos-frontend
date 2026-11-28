@@ -39,6 +39,7 @@ import {
     RuleDraft,
     StatusPick,
     withDestination,
+    withTarget,
 } from "./draft";
 import { coarsePointer, fieldName, projectName } from "./helpers";
 import {
@@ -50,7 +51,7 @@ import {
     useLookups,
 } from "./lookups";
 import { SlotAutocomplete, SlotOption, SlotSelect } from "./slots";
-import type { ConditionField, ConditionOp, TriggerType } from "./types";
+import type { ConditionField, ConditionOp, RuleTarget, TriggerType } from "./types";
 import { useLater } from "./useLater";
 import { useAutomationWords } from "./words";
 
@@ -251,7 +252,8 @@ export const RuleEditor = ({
     formError: string | null;
     onAnnounce: (text: string) => void;
 }) => {
-    const words = useAutomationWords();
+    const words = useAutomationWords(draft.appliesTo);
+    const milestone = draft.appliesTo === "milestone";
     const { t } = useTranslation();
     const lookups = useLookups();
     const { accessToken } = useAuth();
@@ -353,6 +355,7 @@ export const RuleEditor = ({
     const fieldOptions: SlotOption[] = [
         ...(["tag", "assignee", "reporter", "priority", "milestone", "custom_status"] as const)
             .filter((field) => field !== "custom_status" || lookups.statuses.length > 0)
+            .filter((field) => field !== "milestone" || !milestone)
             .map((field) => ({ value: field as string, label: fieldName(words, field) })),
         ...lookups.fields.map((f) => ({ value: `f:${f.fieldId}`, label: f.fieldName })),
     ];
@@ -481,6 +484,14 @@ export const RuleEditor = ({
                 {needsValue(c.op) && conditionValue(c)}
             </Line>
         );
+    };
+
+    const changeTarget = (target: RuleTarget) => {
+        const next = withTarget(draft, target);
+        onChange(next);
+        if (next.conditions.length < draft.conditions.length) {
+            onAnnounce(words.milestoneConditionRemoved);
+        }
     };
 
     const addCondition = () => {
@@ -663,6 +674,16 @@ export const RuleEditor = ({
                 >
                     <Line error={errors.trigger} errorId={errorId("trigger")}>
                         <SlotSelect
+                            label={words.targetLabel}
+                            slotId="applies-to"
+                            value={draft.appliesTo}
+                            options={[
+                                { value: "task", label: words.targetTasks },
+                                { value: "milestone", label: words.targetMilestones },
+                            ]}
+                            onChange={(value) => changeTarget(value as RuleTarget)}
+                        />
+                        <SlotSelect
                             label={words.triggerLabel}
                             slotId="trigger-type"
                             value={draft.triggerType}
@@ -765,6 +786,11 @@ export const RuleEditor = ({
                                 ))}
                             </MenuSurface>
                         </Dropdown>
+                    )}
+                    {milestone && draft.actions.includes("assignee") && (
+                        <Box sx={{ ...type("body-xs"), color: g.text.tertiary }}>
+                            {words.milestoneAssignNotice}
+                        </Box>
                     )}
                     {moving && draft.destinationId != null && (
                         <Box sx={{ ...type("body-xs"), color: g.text.tertiary }}>

@@ -7060,15 +7060,13 @@ export const ja: DeepPartial<Messages> = {
             limitHint: "{max} / {max} 件です。追加するには1件削除してください。",
             emptyTitle: "ルールはまだありません",
             emptyBody:
-                "何かが起きたときに、タスクを移動したり更新したりできます。例: 「design」タグのタスクが WIP になったら、別のプロジェクトに Open で移動する。",
+                "何かが起きたときに、タスクやマイルストーンを移動したり更新したりできます。例: 「design」タグのタスクが WIP になったら、別のプロジェクトに Open で移動する。",
             loadFailed: "ルールを読み込めませんでした",
             loading: "ルールを読み込み中",
             planTitle: "自動化ルール",
-            planBody: "何かが起きたときに、ルールがタスクを移動・更新します。",
+            planBody: "何かが起きたときに、ルールがタスクやマイルストーンを移動・更新します。",
             planKept: "ルールは保存されています。オフにするか削除できます。",
             planSwitchHint: "ルールをオンにするには Core 以上が必要です。",
-            milestoneRule:
-                "マイルストーンが対象のルールです。ここでは編集できません。オフにするか削除できます。",
             hiddenHint:
                 "このルールの移動先プロジェクトに参加していないため変更できません。オフにするか削除できます。",
             turnedOff: "オフになりました: {reason}",
@@ -7193,6 +7191,45 @@ export const ja: DeepPartial<Messages> = {
             stApplied: "完了",
             stRefused: "拒否",
             stSkipped: "スキップ",
+            targetLabel: "対象",
+            targetTasks: "タスク",
+            targetMilestones: "マイルストーン",
+            milestoneAssignNotice:
+                "担当者の設定は、マイルストーンの担当者全員をこの1人に置き換えます。",
+            milestoneConditionRemoved:
+                "マイルストーンの条件を削除しました。タスクのルールでのみ使えます。",
+            forMilestone: {
+                trStatus: "マイルストーンのステータスが {status} になった",
+                trCreated: "マイルストーンが作成された",
+                trTag: "マイルストーンにタグ {tag} が追加された",
+                trAssigneeAny: "マイルストーンの担当者が変わった",
+                trAssigneeTo: "{person} がマイルストーンの担当になった",
+                aMove: "配下のタスクごと {project} に移動する",
+                aAssign: "担当者を {person} だけにする",
+                everyTask: "すべてのマイルストーン",
+                optCreated: "マイルストーンが作成される",
+                privateOnly:
+                    "このプロジェクトは非公開のため、マイルストーンは非公開プロジェクトにのみ移動できます。",
+                moveNotice:
+                    "マイルストーンは配下のすべてのタスクと一緒に移動します。{project} で新しい ID になり、古い ID でも開けます。タグは移動先の同じ名前のものが付き、スプリントとフォルダは外れます。タスクが200件を超えるマイルストーンは移動しません。",
+                matched: "{matched, plural, other {現在 # 件のマイルストーンが一致します}}",
+                noneTitle: "現在一致するマイルストーンはありません",
+                checking: "マイルストーンを確認中",
+                scanCap: "最近更新された 2,000 件のマイルストーンのみを確認しました。",
+                previewFailed: "マイルストーンを確認できませんでした",
+                hiddenTask: "開けないマイルストーン",
+                deleteBody: "すでに変更されたマイルストーンとタスクはそのままです。",
+                reason: {
+                    move_not_allowed: "このマイルストーンはそのプロジェクトに移動できません。",
+                    assignee_not_on_destination:
+                        "マイルストーンかそのタスクの担当者が、移動先のプロジェクトにもチームにもいません。",
+                    too_many_tasks:
+                        "タスクが200件を超えるため、ルールでは移動しません。手動で移動してください。",
+                    rate_limited:
+                        "直近1時間にルールがこのマイルストーンを2回変更したため一時停止しています。",
+                    error: "このマイルストーンで問題が発生しました。",
+                },
+            },
             reason: {
                 destination_not_found: "移動先プロジェクトがないか、参加していません。",
                 destination_archived: "移動先プロジェクトはアーカイブされています。",

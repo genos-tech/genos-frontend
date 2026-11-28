@@ -14,14 +14,17 @@ import {
     emptyDraft,
     missingParts,
     withDestination,
+    withTarget,
 } from "../features/tasks/automation/draft";
 import { statusOptions } from "../features/tasks/automation/lookups";
 import type { AutomationRule } from "../features/tasks/automation/types";
+import { wordsFor } from "../features/tasks/automation/words";
 import { ModalProjectStatuses } from "../features/tasks/components/statuses/ModalProjectStatuses";
 import { __resetProjectStatusesStore } from "../hooks/tasks/useProjectStatuses";
 import { en } from "../i18n/locales/en";
 import { ProjectProps, ProjectStatusDef } from "../types/tasks";
 
+vi.mock("../components/ui/avatars/UserAvatar", () => ({ UserAvatar: () => null }));
 vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
 vi.mock("../features/tasks/services/projectStatuses", () => ({
     loadProjectStatuses: vi.fn().mockResolvedValue({ statuses: [], canManage: true }),
@@ -139,6 +142,7 @@ describe("what a draft sends", () => {
         const sent = definitionOf(draftOf(rule()), "Hand over");
         expect(sent).toEqual({
             name: "Hand over",
+            applies_to: "task",
             trigger_type: "status_changed",
             trigger_value: { status: "WIP" },
             conditions: [{ field: "tag", op: "is", value: "tag-a" }],
@@ -365,18 +369,6 @@ describe("the Automation tab", () => {
         );
     });
 
-    it("does not read a milestone rule as a task rule, and only lets it go off", async () => {
-        api.updateRule.mockResolvedValue({ ok: true, data: rule() });
-        const pane = await openRules([rule({ appliesTo: "milestone" })]);
-        expect(pane.textContent).toContain(words.milestoneRule);
-        expect(within(pane).queryByTestId("rule-sentence")).toBeNull();
-        expect(rowButton()).toBeNull();
-        fireEvent.click(screen.getByRole("switch"));
-        await waitFor(() =>
-            expect(api.updateRule).toHaveBeenCalledWith(7, 1, { enabled: false }, "t")
-        );
-    });
-
     it("on Free shows the plan note, keeps off working and offers no editing", async () => {
         api.updateRule.mockResolvedValue({ ok: true, data: rule() });
         const pane = await openRules([rule(), rule({ ruleId: 2, enabled: false })], false);
@@ -391,5 +383,88 @@ describe("the Automation tab", () => {
         await waitFor(() =>
             expect(api.updateRule).toHaveBeenCalledWith(7, 1, { enabled: false }, "t")
         );
+    });
+});
+
+describe("milestone rules (MIP-2547)", () => {
+    const milestoneRule = (extra: Partial<AutomationRule> = {}) =>
+        rule({ appliesTo: "milestone", conditions: [], ...extra });
+    const msWords = wordsFor(words, "milestone");
+
+    it("keeps what the rule acts on, and drops the milestone condition for milestones", () => {
+        expect(definitionOf(draftOf(milestoneRule()), "x").applies_to).toBe("milestone");
+        expect(emptyDraft().appliesTo).toBe("task");
+        const draft = draftOf(
+            rule({
+                conditions: [
+                    { field: "milestone", op: "is", value: 3 },
+                    { field: "tag", op: "is", value: "tag-a" },
+                ],
+            })
+        );
+        expect(withTarget(draft, "milestone").conditions.map((c) => c.field)).toEqual(["tag"]);
+        expect(withTarget(draft, "task").conditions).toHaveLength(2);
+    });
+
+    it("reads as a milestone sentence and opens in the editor", async () => {
+        const pane = await openRules([milestoneRule({ setAssigneeId: "me" })]);
+        const sentence = within(pane).getByTestId("rule-sentence").textContent;
+        expect(sentence).toContain("a milestone's status becomes");
+        expect(sentence).toContain("move it and its tasks to Delivery");
+        expect(sentence).toContain("its only assignee");
+        fireEvent.click(rowButton()!);
+        const editor = await screen.findByTestId("rule-clauses");
+        expect(editor.textContent).toContain(words.milestoneAssignNotice);
+        expect(editor.textContent).toContain("Every milestone");
+        expect(editor.textContent).toContain("more than 200 tasks");
+    });
+
+    it("switches a task rule to milestones and previews them with plain reasons", async () => {
+        api.dryRunRule.mockResolvedValue({
+            ok: true,
+            data: {
+                matched: 1,
+                truncated: false,
+                items: [
+                    {
+                        milestoneId: 3,
+                        taskId: 30,
+                        displayId: "IN-30",
+                        title: "Launch",
+                        status: "WIP",
+                        outcome: "refused",
+                        reason: "too_many_tasks",
+                    },
+                ],
+            },
+        });
+        await openRules([rule({ conditions: [{ field: "milestone", op: "is", value: 3 }] })]);
+        fireEvent.click(rowButton()!);
+        fireEvent.click(await screen.findByRole("combobox", { name: /^Applies to/ }));
+        fireEvent.click(await screen.findByRole("option", { name: words.targetMilestones }));
+        await waitFor(() =>
+            expect(screen.getByTestId("rule-clauses").textContent).toContain("Every milestone")
+        );
+        expect(await screen.findByText(words.milestoneConditionRemoved)).toBeTruthy();
+        fireEvent.click(screen.getByRole("button", { name: words.preview }));
+        expect(await screen.findByText("1 milestone matches right now")).toBeTruthy();
+        expect(screen.getByTestId("preview-rows").textContent).toContain(
+            "more than 200 tasks, too many for a rule to move"
+        );
+        expect(api.dryRunRule).toHaveBeenCalledWith(
+            7,
+            expect.objectContaining({ applies_to: "milestone", conditions: [] }),
+            "t"
+        );
+    });
+
+    it("says milestone in a turned-off reason and in the delete question", async () => {
+        const pane = await openRules([milestoneRule({ enabled: false, disabledReason: "error" })]);
+        expect(within(pane).getByTestId("rule-turned-off").textContent).toContain(
+            msWords.reason.error
+        );
+        fireEvent.click(screen.getByRole("button", { name: "More actions for Hand over" }));
+        fireEvent.click(await screen.findByRole("menuitem", { name: words.delete }));
+        expect(await screen.findByText(msWords.deleteBody)).toBeTruthy();
     });
 });

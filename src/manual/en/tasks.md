@@ -46,10 +46,10 @@ A project holds tasks, milestones and sprints, and it has its own chat. Create o
 
 ## Automation rules and guards
 
-A project can have **automation rules**: when something happens to one of its tasks, Genos can move the task to another project, set its status, assign it or add a tag. Rules need the Core plan or higher. The project's owner and editors write them: open the project's "…" menu → **Statuses and automation** → **Automation** → **New rule**.
+A project can have **automation rules**: when something happens to one of its tasks or milestones, Genos can move it to another project, set its status, assign it or add a tag. Rules need the Core plan or higher. The project's owner and editors write them: open the project's "…" menu → **Statuses and automation** → **Automation** → **New rule**.
 
-- **Writing a rule:** name it, then fill the sentence. **When** (the status becomes, a task is created, a tag is added, the assignee changes), **If** (conditions that must all hold; with none, every task) and **Then** (move to another project, set a status, assign someone, add a tag).
-- **Preview before it is on:** **Preview matches** lists the tasks that match right now and what the rule would do to each, with the reason where it would not. Nothing changes until the next change that fits. Then **Save and turn on** or **Save, keep off**.
+- **Writing a rule:** name it, then fill the sentence. **When** (**Tasks** or **Milestones**, then: the status becomes, one is created, a tag is added, the assignee changes), **If** (conditions that must all hold; with none, every task or milestone) and **Then** (move to another project, set a status, assign someone, add a tag).
+- **Preview before it is on:** **Preview matches** lists the tasks or milestones that match right now and what the rule would do to each, with the reason where it would not. Nothing changes until the next change that fits. Then **Save and turn on** or **Save, keep off**.
 - **Order and on/off:** rules are listed in the order they are tried. Move one from its "…" menu or with Alt+↑ / Alt+↓. The switch turns a rule off at once; turning it on shows the preview first. **Recent runs** says what a rule did lately.
 
 - **What sets a rule off:** a task is created, its status or assignee changes, or a tag is added. A rule can also ask for conditions, such as a tag, the assignee, the priority or the milestone.
@@ -57,7 +57,7 @@ A project can have **automation rules**: when something happens to one of its ta
 - **Who it acts as:** a rule runs as the person who last saved it, who must be the project's owner or an editor and a member of the destination project.
 - **What moves:** the task takes its sub-tasks, comments, notes and chat card with it. It gets a new ID, and the old ID still works. Tags carry over when the destination has a tag of the same name.
 - **What you see:** the task's Activity tab says it was moved by the rule, or why the rule was not applied. The old project's chat gets one line saying a rule moved a task; it names the task and the new project only to people who can open them. The assignee is told.
-- **Milestones:** a rule can also be set to act on milestones. It reads the milestone's own status, tags and assignees, and cannot use a “milestone” condition. Moving a milestone moves every task under it and clears the sprint and folder. A rule that assigns someone makes that person the milestone's only assignee.
+- **Milestones:** a rule set to **Milestones** reads the milestone's own status, tags and assignees, and cannot use a “milestone” condition (switching a rule to milestones removes it). Moving a milestone moves every task under it and clears the sprint and folder. A rule that assigns someone makes that person the milestone's only assignee.
 
 **Guards.** A rule never moves a task to another team, or to a project that somebody could read who cannot read this one, so a private project's tasks never move to a public one. A sub-task does not move without its parent. A task that rules have acted on several times within an hour is left alone for a while. A rule whose owner can no longer run it is turned off. A milestone with more than 200 tasks under it is not moved by a rule, and its Activity says so. Rules apply to one milestone at most twice within an hour.
 

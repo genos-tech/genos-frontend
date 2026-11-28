@@ -19,12 +19,12 @@ import { fmt, useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
 import { rowSx } from "../components/statuses/listStyles";
 import { MAX_RULES } from "./draft";
-import { forMilestones, isHidden, unnamedDestination } from "./helpers";
+import { isHidden, unnamedDestination } from "./helpers";
 import { useLookups } from "./lookups";
 import { RuleSummary } from "./RuleSentence";
 import type { AutomationRule } from "./types";
 import { useLater } from "./useLater";
-import { reasonText, useAutomationWords } from "./words";
+import { reasonText, useAutomationWords, wordsFor } from "./words";
 
 const PlanNote = ({ kept, onLeave }: { kept: boolean; onLeave: () => void }) => {
     const words = useAutomationWords();
@@ -116,13 +116,12 @@ export const RuleList = (props: Props) => {
     const menuFor = (rule: AutomationRule, index: number): MoreMenuItem[] => {
         const hidden = isHidden(rule);
         const unnamed = unnamedDestination(rule);
-        const milestone = forMilestones(rule);
         return [
             {
                 id: "edit",
                 label: words.edit,
                 icon: <EditOutlinedIcon />,
-                visible: !milestone && planAllows,
+                visible: planAllows,
                 disabled: hidden,
                 hint: hidden ? words.hiddenHint : undefined,
                 // After the menu has handed focus back to its trigger.
@@ -133,7 +132,7 @@ export const RuleList = (props: Props) => {
                 label: words.preview,
                 icon: <VisibilityOutlinedIcon />,
                 // Without a destination there is nothing true to preview: it is edited first.
-                visible: !milestone && planAllows && !(unnamed && !hidden),
+                visible: planAllows && !(unnamed && !hidden),
                 disabled: hidden,
                 hint: hidden ? words.hiddenHint : undefined,
                 onClick: () => later(() => props.onPreview(rule), 0),
@@ -171,15 +170,10 @@ export const RuleList = (props: Props) => {
     const row = (rule: AutomationRule, index: number) => {
         const nameId = `${ids}-${rule.ruleId}`;
         const hidden = isHidden(rule);
-        const milestone = forMilestones(rule);
-        const editable = planAllows && !hidden && !milestone;
+        const editable = planAllows && !hidden;
         // Turning on needs the plan and a rule the reader may save; turning off never does.
-        const locked = !rule.enabled && (!planAllows || hidden || milestone);
-        const lockedWhy = !planAllows
-            ? words.planSwitchHint
-            : milestone
-              ? words.milestoneRule
-              : words.hiddenHint;
+        const locked = !rule.enabled && (!planAllows || hidden);
+        const lockedWhy = !planAllows ? words.planSwitchHint : words.hiddenHint;
         return (
             <Box
                 key={rule.ruleId}
@@ -292,7 +286,10 @@ export const RuleList = (props: Props) => {
                         >
                             <WarningAmberRoundedIcon sx={{ fontSize: 14, color: "inherit" }} />
                             {fmt(words.turnedOff, {
-                                reason: reasonText(words, rule.disabledReason),
+                                reason: reasonText(
+                                    wordsFor(words, rule.appliesTo),
+                                    rule.disabledReason
+                                ),
                             })}
                         </Box>
                     )}

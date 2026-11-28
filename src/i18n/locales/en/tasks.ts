@@ -772,15 +772,13 @@ export const tasks = {
         limitHint: "{max} of {max} rules. Delete one to add another.",
         emptyTitle: "No rules yet",
         emptyBody:
-            "Rules move or update tasks when something happens. For example: when a task tagged “design” becomes WIP, move it to another project as Open.",
+            "Rules move or update tasks or milestones when something happens. For example: when a task tagged “design” becomes WIP, move it to another project as Open.",
         loadFailed: "Couldn't load rules",
         loading: "Loading rules",
         planTitle: "Automation rules",
-        planBody: "Rules move and update tasks for you when something happens.",
+        planBody: "Rules move and update tasks and milestones for you when something happens.",
         planKept: "Your rules are kept. You can turn them off or delete them.",
         planSwitchHint: "Turning rules on needs Core or above.",
-        milestoneRule:
-            "Acts on milestones. It can't be edited here; you can turn it off or delete it.",
         hiddenHint:
             "You're not in this rule's destination project, so you can't change it. You can turn it off or delete it.",
         turnedOff: "Turned off: {reason}",
@@ -905,6 +903,45 @@ export const tasks = {
         stApplied: "Done",
         stRefused: "Refused",
         stSkipped: "Skipped",
+        targetLabel: "Applies to",
+        targetTasks: "Tasks",
+        targetMilestones: "Milestones",
+        milestoneAssignNotice:
+            "“Assign to” replaces all of the milestone's assignees with this one person.",
+        milestoneConditionRemoved: "Milestone condition removed: it only fits task rules.",
+        // What a milestone rule says instead of the words above (`wordsFor`).
+        forMilestone: {
+            trStatus: "a milestone's status becomes {status}",
+            trCreated: "a milestone is created",
+            trTag: "tag {tag} is added to a milestone",
+            trAssigneeAny: "a milestone's assignees change",
+            trAssigneeTo: "{person} is assigned to a milestone",
+            aMove: "move it and its tasks to {project}",
+            aAssign: "make {person} its only assignee",
+            everyTask: "Every milestone",
+            optCreated: "A milestone is created",
+            privateOnly:
+                "This project is private, so its milestones can only move to private projects.",
+            moveNotice:
+                "The milestone moves with every task under it. They get new IDs in {project}; the old IDs still open them. Tags are matched by name there, and sprint and folder are cleared. A milestone with more than 200 tasks isn't moved.",
+            matched:
+                "{matched, plural, one {# milestone matches right now} other {# milestones match right now}}",
+            noneTitle: "No milestones match right now",
+            checking: "Checking milestones",
+            scanCap: "Only the 2,000 most recently updated milestones were checked.",
+            previewFailed: "Couldn't check milestones",
+            hiddenTask: "A milestone you can't open",
+            deleteBody: "Milestones and tasks it already changed stay as they are.",
+            reason: {
+                move_not_allowed: "this milestone can't move to that project.",
+                assignee_not_on_destination:
+                    "someone assigned to it or to one of its tasks isn't in the destination project or its team.",
+                too_many_tasks:
+                    "it has more than 200 tasks, too many for a rule to move. Move it by hand.",
+                rate_limited: "paused: rules changed this milestone twice in the last hour.",
+                error: "something went wrong for this milestone.",
+            },
+        },
         // Why a rule or a task is refused. Each finishes "Turned off: …".
         reason: {
             destination_not_found:

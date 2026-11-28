@@ -34,7 +34,7 @@ import {
 } from "./service";
 import type { AutomationRule, RuleList as RuleListData } from "./types";
 import { useLater } from "./useLater";
-import { reasonText, sentenceCase, useAutomationWords } from "./words";
+import { reasonText, sentenceCase, useAutomationWords, wordsFor } from "./words";
 
 /** Where the preview was asked for. A switch turns the saved rule on; the others save. */
 type PreviewFrom = "editor" | "menu" | "switch";
@@ -48,6 +48,7 @@ type View =
 /** The server's `field` → the part of the editor its message belongs to. */
 const PARTS: Record<string, string> = {
     name: "name",
+    applies_to: "trigger",
     trigger_type: "trigger",
     trigger_value: "trigger",
     conditions: "conditions",
@@ -508,7 +509,7 @@ export const useAutomationPane = ({
             <ConfirmDialog
                 cancelLabel={t.common.actions.cancel}
                 confirmLabel={words.delete}
-                description={words.deleteBody}
+                description={wordsFor(words, deleting?.appliesTo).deleteBody}
                 hostZIndex={popupZ - 10}
                 open={deleting != null}
                 title={deleting ? fmt(words.deleteTitle, { name: deleting.name }) : ""}

@@ -8,10 +8,6 @@ import type { AutomationWords } from "./words";
 export const coarsePointer = (): boolean =>
     window.matchMedia?.("(pointer: coarse)").matches === true;
 
-/** Written through the API: the builder has no words or pickers for it, so it only says so
- *  and lets it be turned off or deleted. */
-export const forMilestones = (rule: AutomationRule): boolean => rule.appliesTo === "milestone";
-
 /** The server does not name where this rule moves tasks to: the reader is not on it, or it
  *  is gone. */
 export const unnamedDestination = (rule: AutomationRule): boolean =>
