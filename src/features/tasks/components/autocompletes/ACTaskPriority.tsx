@@ -23,9 +23,9 @@ export const ACTaskPriority = (props: ACTaskPriorityProps) => {
         <Autocomplete
             key={taskContent.id}
             error={field?.invalid}
-            noOptionsText={field?.noOptions}
             getOptionLabel={(option) => taskMetaLabel(option.priority, t.tasks.filters)}
             isOptionEqualToValue={(option, value) => option.priority === value.priority}
+            noOptionsText={field?.noOptions}
             openOnFocus={true}
             options={priorities}
             placeholder={t.tasks.autocomplete.priorityPlaceholder}

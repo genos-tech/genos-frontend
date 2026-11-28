@@ -222,9 +222,9 @@ export const SprintMilestonePicker = ({
                     disableClearable={!milestonePlaceholder}
                     disabled={disabled}
                     error={field?.invalid}
-                    noOptionsText={field?.noOptions}
                     getOptionLabel={(o) => o.label}
                     isOptionEqualToValue={(a, b) => a.id === b.id}
+                    noOptionsText={field?.noOptions}
                     options={milestoneOptions}
                     placeholder={milestonePlaceholder}
                     size={size}

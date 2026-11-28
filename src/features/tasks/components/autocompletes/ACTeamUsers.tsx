@@ -92,10 +92,10 @@ export const ACTeamUsers = (props: ACTeamUsersProps) => {
         <Autocomplete
             key={taskContent.id}
             error={field?.invalid}
-            noOptionsText={field?.noOptions}
             filterOptions={personFilterOptions}
             getOptionLabel={(option) => personLabel(option, myself.userId, youSuffix)}
             isOptionEqualToValue={(option, value) => option.userId === value.userId}
+            noOptionsText={field?.noOptions}
             options={sortedMembers}
             // Pass `null` through so an unassigned task renders an empty
             // picker (built-in placeholder), not a silent fallback to

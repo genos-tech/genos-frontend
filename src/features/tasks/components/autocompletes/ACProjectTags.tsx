@@ -35,10 +35,10 @@ export const ACProjectTags = (props: ACProjectTagsProps) => {
         <Autocomplete
             key={`ac-project-tags-${taskContent.id}`}
             error={field?.invalid}
-            noOptionsText={field?.noOptions}
             getOptionLabel={(option) => option.tagName}
             isOptionEqualToValue={(option, value) => option.tagName === value.tagName}
             limitTags={3}
+            noOptionsText={field?.noOptions}
             options={projectTags}
             placeholder={t.tasks.autocomplete.tagsPlaceholder}
             size="sm"
