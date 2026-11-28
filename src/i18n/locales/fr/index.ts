@@ -6354,6 +6354,7 @@ export const fr: DeepPartial<Messages> = {
             noAnswer: "(aucune réponse)",
             cancelledBeforeAnswer: "Cette question a été annulée avant toute réponse.",
             notDecided: "Cette question n’a été ni approuvée ni refusée.",
+            approvalExpired: "Cette question a expiré avant d’être approuvée ou refusée.",
         },
         dropped: {
             message:

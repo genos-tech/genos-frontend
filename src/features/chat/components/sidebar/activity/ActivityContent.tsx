@@ -14,12 +14,15 @@ interface ActivityContentProps {
     activity: ActivityMessageProps;
     myself: UserProps;
     groupedReactions: GroupedReactionProps[];
+    /** On the root: the text names the row button (MIP-2605). */
+    id?: string;
 }
 
 export const ActivityContent: React.FC<ActivityContentProps> = ({
     activity,
     myself,
     groupedReactions,
+    id,
 }) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -38,7 +41,7 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
     // For non-reaction activities, show the first line content
     if (activity.activityType !== 2) {
         return (
-            <Stack alignItems="flex-start" direction="row" justifyContent="space-between">
+            <Stack alignItems="flex-start" direction="row" id={id} justifyContent="space-between">
                 <Box
                     sx={{
                         ml: "44px",
@@ -83,7 +86,7 @@ export const ActivityContent: React.FC<ActivityContentProps> = ({
 
     // For reaction activities, show the reaction display
     return (
-        <Box sx={{ mt: 0.25 }}>
+        <Box id={id} sx={{ mt: 0.25 }}>
             <ActivityReactions
                 activity={activity}
                 groupedReactions={groupedReactions}

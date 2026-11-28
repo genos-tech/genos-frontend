@@ -502,7 +502,14 @@ describe.each([
                 // as before; what matters is the hook asked for the clear first)
                 await flush();
                 expect(uploadInline).toHaveBeenCalledTimes(1);
+                // The upload settles after the unmount. BlockNote's view unsubscribed with it, so
+                // no draft save may be scheduled: it would outlive this test and write the
+                // storage in the middle of a later one (MIP-2629).
+                vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
                 await act(async () => first.resolve("u"));
+                await flush();
+                act(() => vi.advanceTimersByTime(800));
+                expect(readStoredDraft(key)).toBeNull();
             });
 
             it("skips a file that fails and keeps going", async () => {

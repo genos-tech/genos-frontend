@@ -8,13 +8,14 @@
  * counter, the size guard, the draft storage, the send flow) is the real code, so the same tests
  * run unchanged against the code before and after the shared hook was extracted.
  *
- * The fake mirrors two BlockNote facts the composers depend on:
+ * The fake mirrors three BlockNote facts the composers depend on:
+ *   - the view unsubscribes when it unmounts, so a later editor change reaches nobody;
  *   - `replaceBlocks` fires the view's `onChange` synchronously (tiptap `update`);
  *   - `useCreateBlockNote` freezes its options at the first render (`editor.options`).
  *
  * Each test file wires it with `vi.mock(path, async () => (await import("./helpers_composerHarness")).<factory>())`.
  */
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { act } from "@testing-library/react";
 import { vi } from "vitest";
 
@@ -107,7 +108,18 @@ export const blockNoteMantineMock = () => ({
         onKeyDown,
         onBlur,
     }: ViewProps & { children?: ReactNode }) => {
-        harness.view = { onChange, onKeyDown, onBlur };
+        const view = { onChange, onKeyDown, onBlur };
+        harness.view = view;
+        const latest = useRef(view);
+        latest.current = view;
+        useEffect(
+            () => () => {
+                // Left in place, an upload settling after the unmount would reach the dead
+                // composer and schedule a real draft save that fires in a later test (MIP-2629).
+                if (harness.view === latest.current) harness.view = null;
+            },
+            []
+        );
         return <div data-testid="bn-view">{children}</div>;
     },
 });

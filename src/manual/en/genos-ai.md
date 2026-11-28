@@ -31,7 +31,7 @@ What Genos can do depends on your plan:
 
 ## Nothing changes without your approval
 
-- Before every change, Genos shows a card titled "Approval required" with exactly what it will create or change. Click Approve or Reject.
+- Before every change, Genos shows a card titled "Approval required" with exactly what it will create or change. Click Approve or Reject. You have 7 days to answer. After that the card is gone, nothing is changed, and the conversation says the ask expired.
 - For many changes you can click Edit and fix a title, a date or a sentence before you approve.
 - A card marked "Can't be undone" tells you before you approve that this change cannot be reversed.
 - After you approve, many changes show an Undo button. Undo puts back what that one change did. It works for up to 7 days, as long as nothing has changed the item since then. Undo cannot take back notifications, messages or emails that were already sent.

@@ -2170,11 +2170,13 @@ const HistoryArchiveTurn = ({
                             <Typography level="body-md" sx={{ color: g.danger.text }}>
                                 {turn.error}
                             </Typography>
-                        ) : unanswered ? (
+                        ) : unanswered && !turn.answer ? (
                             <Typography level="body-md" sx={{ color: g.text.secondary }}>
                                 {unanswered === "cancelled"
                                     ? ts.states.cancelledBeforeAnswer
-                                    : ts.states.notDecided}
+                                    : unanswered === "expired"
+                                      ? ts.states.approvalExpired
+                                      : ts.states.notDecided}
                             </Typography>
                         ) : (
                             <Box sx={markdownAnswerSx()}>
@@ -2197,6 +2199,12 @@ const HistoryArchiveTurn = ({
                                     {answerForRender}
                                 </ReactMarkdown>
                             </Box>
+                        )}
+                        {/* Under what the ask wrote before it paused (MIP-2613). */}
+                        {unanswered === "expired" && turn.answer && (
+                            <Typography level="body-md" sx={{ color: g.text.secondary, mt: 0.5 }}>
+                                {ts.states.approvalExpired}
+                            </Typography>
                         )}
                     </Box>
                 </Box>

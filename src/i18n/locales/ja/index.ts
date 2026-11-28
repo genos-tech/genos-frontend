@@ -6234,6 +6234,7 @@ export const ja: DeepPartial<Messages> = {
             noAnswer: "（回答なし）",
             cancelledBeforeAnswer: "この質問は回答の前にキャンセルされました。",
             notDecided: "この質問は承認も却下もされていません。",
+            approvalExpired: "この質問は承認も却下もされないまま期限が切れました。",
         },
         dropped: {
             message:
