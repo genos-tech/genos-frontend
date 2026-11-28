@@ -106,6 +106,8 @@ export function parseAiAppNotice(meta: Record<string, unknown>): AiAppNotice {
                   url: str(i.url) ?? null,
                   projectId: typeof i.projectId === "number" ? i.projectId : null,
                   taskId: typeof i.taskId === "number" ? i.taskId : null,
+                  commentId: typeof i.commentId === "number" ? i.commentId : null,
+                  localDate: str(i.localDate) ?? null,
               }))
         : [];
     const count = typeof meta.count === "number" && meta.count > 0 ? meta.count : 1;
@@ -123,6 +125,56 @@ export function parseAiAppNotice(meta: Record<string, unknown>): AiAppNotice {
         url: str(meta.url) ?? "",
         items,
     };
+}
+
+/** What a notice opens in the app's preview modal (MIP-1755): a link the modal understands, or
+ *  the whole to-do list, which has no link. */
+export type AiAppModalTarget = { href: string } | { todoList: true };
+
+/**
+ * Where a click on a notice opens it in place. Null when the modal has nothing to show: a deleted
+ * note or milestone, a project, a connected app, or a notice without the ids to build a link. The
+ * row then keeps the path it always had.
+ */
+export function aiAppModalTarget(notice: AiAppNotice): AiAppModalTarget | null {
+    const item = notice.items[0];
+    if (!item) return null;
+    const { projectId, taskId } = item;
+    const taskHref =
+        projectId != null && taskId != null
+            ? `/workspace/tasks/project/${projectId}/task/${taskId}`
+            : null;
+    // A deleted item has nothing left to open: the modal would say "unavailable" (MIP-1923). A
+    // deleted comment still has its task, and a deleted to-do its list.
+    if (notice.verb === "deleted") {
+        if (notice.kind === "comment") return taskHref ? { href: taskHref } : null;
+        return notice.kind === "todo" ? { todoList: true } : null;
+    }
+    switch (notice.kind) {
+        case "task":
+            return taskHref ? { href: taskHref } : null;
+        case "comment": {
+            // `id` carries the comment's id too, on notices filed before `commentId` was read.
+            const commentId = item.commentId ?? (typeof item.id === "number" ? item.id : null);
+            if (!taskHref) return null;
+            return { href: commentId != null ? `${taskHref}/comment/${commentId}` : taskHref };
+        }
+        case "milestone":
+            return projectId != null && item.id != null
+                ? { href: `/workspace/tasks/project/${projectId}/milestone/${item.id}` }
+                : null;
+        case "note": {
+            const url = inAppPath(notice.url);
+            return url ? { href: url } : null;
+        }
+        case "todo": {
+            // A notice filed before the day was part of the link opens the whole list.
+            const url = inAppPath(item.url);
+            return url?.startsWith("/workspace/todo/") ? { href: url } : { todoList: true };
+        }
+        default:
+            return null;
+    }
 }
 
 /** "QR-12 Fix login" — the id when there is one, then the title. */
