@@ -664,6 +664,7 @@ export const SkillParamSelect = ({
                     data-testid="skill-find-more"
                     level="body-xs"
                     startDecorator={<AddCircleOutlineRoundedIcon sx={{ fontSize: 16 }} />}
+                    type="button"
                     sx={{
                         alignSelf: "flex-start",
                         textAlign: "start",
@@ -671,7 +672,6 @@ export const SkillParamSelect = ({
                         // A finger gets a full target.
                         "@media (pointer: coarse)": { minHeight: 44 },
                     }}
-                    type="button"
                     onClick={() => openSkillsList("hub")}
                 >
                     {t.spotlight.skills.findMore}

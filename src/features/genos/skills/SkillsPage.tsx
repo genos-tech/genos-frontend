@@ -415,17 +415,17 @@ export const SkillsPage = ({ teamId, host, initialTab }: Props) => {
                         <SkillListItem
                             key={skill.id}
                             installedTab={tab === "installed"}
-                            teamTab={tab === "team"}
                             skill={skill}
+                            teamTab={tab === "team"}
                             when={
                                 skill.updatedAt
                                     ? relativeTimeLabel(skill.updatedAt, t.spotlight, locale)
                                     : ""
                             }
                             onCopy={() => void copy(skill)}
+                            onInstall={() => void install(skill)}
                             onOpen={() => setView({ kind: "edit", id: skill.id })}
                             onReport={() => setReporting(skill)}
-                            onInstall={() => void install(skill)}
                             onToggleHidden={() => void toggleHidden(skill)}
                             onUninstall={() => void uninstall(skill)}
                             onUpdate={() => setUpdating(skill)}
