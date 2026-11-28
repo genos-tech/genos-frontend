@@ -70,6 +70,13 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
+/* Not for a labelled Joy checkbox: it draws its own box, and its invisible input
+   spans the whole row, label included. Scaled, that input reached 20% past each
+   end of the row and made the Settings panels scroll sideways (MIP-2599). */
+.MuiCheckbox-root:has(.MuiCheckbox-label) input.MuiCheckbox-input {
+    transform: none;
+}
+
 /* ==========================================================================
    Names in RTL
    ========================================================================== */
