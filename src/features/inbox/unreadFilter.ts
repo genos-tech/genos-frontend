@@ -38,7 +38,8 @@ export const useUnreadOnly = () => {
  * (`isRead === false`, so a waiting request counts), PLUS every item that was unread at any
  * point since this list was opened. A card read under the reader's eyes therefore stays where it
  * is, and goes only when the list is opened again (leaving, switching tab, the filter off and on,
- * a reload). The card the route points at shows too, or a link to a read card would open nothing.
+ * a reload). The card the route points at is shown and held too: a link to a read card must open
+ * something, and opening another card afterwards must not take it away.
  */
 export const useUnreadItems = (
     items: InboxItemProps[],
@@ -47,17 +48,14 @@ export const useUnreadItems = (
 ): InboxItemProps[] => {
     const [kept, setKept] = useState<ReadonlySet<number>>(new Set());
     // Adjusted during render, so a card is held from the first frame that shows it.
-    const arrived = unreadOnly ? items.filter((i) => !i.isRead && !kept.has(i.itemId)) : [];
+    const arrived = unreadOnly
+        ? items.filter((i) => (!i.isRead || i.itemId === selectedItemId) && !kept.has(i.itemId))
+        : [];
     if (arrived.length > 0) setKept(new Set([...kept, ...arrived.map((i) => i.itemId)]));
 
     // Memoised: the list's scroll position is worked out from a change of this array.
     return useMemo(
-        () =>
-            unreadOnly
-                ? items.filter(
-                      (i) => !i.isRead || kept.has(i.itemId) || i.itemId === selectedItemId
-                  )
-                : items,
-        [items, unreadOnly, kept, selectedItemId]
+        () => (unreadOnly ? items.filter((i) => !i.isRead || kept.has(i.itemId)) : items),
+        [items, unreadOnly, kept]
     );
 };

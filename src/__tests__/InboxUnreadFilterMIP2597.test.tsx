@@ -49,10 +49,9 @@ describe("useUnreadOnly", () => {
 
 describe("useUnreadItems", () => {
     const start = [row(3, 0, false), row(2, 1, false), row(1, 0, true)];
-    const mount = (selected?: number) =>
+    const mount = () =>
         renderHook(
-            ({ items, on }: { items: InboxItemProps[]; on: boolean }) =>
-                useUnreadItems(items, on, selected),
+            ({ items, on }: { items: InboxItemProps[]; on: boolean }) => useUnreadItems(items, on),
             { initialProps: { items: start, on: true } }
         );
 
@@ -78,8 +77,14 @@ describe("useUnreadItems", () => {
         expect(ids(result.current)).toEqual([2]);
     });
 
-    it("shows the read card the route points at", () => {
-        expect(ids(mount(1).result.current)).toEqual([3, 2, 1]);
+    it("shows the read card the route points at, and keeps it when another is opened", () => {
+        const { result, rerender } = renderHook(
+            ({ selected }: { selected?: number }) => useUnreadItems(start, true, selected),
+            { initialProps: { selected: 1 as number | undefined } }
+        );
+        expect(ids(result.current)).toEqual([3, 2, 1]);
+        rerender({ selected: 3 });
+        expect(ids(result.current)).toEqual([3, 2, 1]);
     });
 
     it("hands back the same array while nothing changed (the list's scroll relies on it)", () => {
