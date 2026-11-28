@@ -1232,6 +1232,8 @@ export const ja: DeepPartial<Messages> = {
             listLabel: "メッセージ",
             threadListLabel: "スレッドの返信",
         },
+        // The line a closed task leaves in the thread it was made from (MIP-2553).
+        taskClosedNotice: "タスク {task} は「{status}」になりました。",
         ruleMoveNotice: {
             line: "ルール「{rule}」が{task}を{project}に移動しました。",
             aTask: "タスク",

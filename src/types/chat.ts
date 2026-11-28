@@ -330,6 +330,8 @@ export type ThreadMessageProps = {
     // a person's own message, an API key, any other app and any value this build
     // does not know. Never a name: the server sends kind + family only.
     viaApp?: ViaApp;
+    /** Set on the authorless "task is now Closed" line (MIP-2553): the task's display id. */
+    closedTaskId?: string;
 };
 
 export type NewMessageProps = {

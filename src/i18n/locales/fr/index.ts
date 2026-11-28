@@ -1246,6 +1246,8 @@ export const fr: DeepPartial<Messages> = {
             listLabel: "Messages",
             threadListLabel: "Réponses du fil",
         },
+        // The line a closed task leaves in the thread it was made from (MIP-2553).
+        taskClosedNotice: "La tâche {task} est maintenant « {status} ».",
         ruleMoveNotice: {
             line: "La règle « {rule} » a déplacé {task} vers {project}.",
             aTask: "une tâche",

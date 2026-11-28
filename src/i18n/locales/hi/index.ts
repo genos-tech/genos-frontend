@@ -2665,6 +2665,8 @@ export const hi: DeepPartial<Messages> = {
             listLabel: "संदेश",
             threadListLabel: "थ्रेड के जवाब",
         },
+        // The line a closed task leaves in the thread it was made from (MIP-2553).
+        taskClosedNotice: "टास्क {task} अब {status} है।",
         ruleMoveNotice: {
             line: "नियम “{rule}” ने {task} को {project} में ले जाया।",
             aTask: "एक टास्क",
