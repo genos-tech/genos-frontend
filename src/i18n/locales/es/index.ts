@@ -6122,6 +6122,11 @@ export const es: DeepPartial<Messages> = {
             defaultEmptyTitle: "¡Todo al día!",
             defaultEmptySubtitle: "Elige una tarea para trabajar o descansa un poco.",
         },
+        // The "Unread" filter's empty state (MIP-2597); its chip is `chat.sidebar.unreadFilter`.
+        unreadFilter: {
+            emptyTitle: "No hay elementos sin leer",
+            showAll: "Mostrar todo",
+        },
         emptyStates: {
             activitiesTitle: "Aún no hay actividad",
             activitiesSubtitle:

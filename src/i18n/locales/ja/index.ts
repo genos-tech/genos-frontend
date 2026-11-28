@@ -3005,6 +3005,11 @@ export const ja: DeepPartial<Messages> = {
             defaultEmptyTitle: "すべて確認済みです！",
             defaultEmptySubtitle: "取り組むタスクを選ぶか、少し休みましょう。",
         },
+        // The "Unread" filter's empty state (MIP-2597); its chip is `chat.sidebar.unreadFilter`.
+        unreadFilter: {
+            emptyTitle: "未読の項目はありません",
+            showAll: "すべて表示",
+        },
         emptyStates: {
             activitiesTitle: "アクティビティはまだありません",
             activitiesSubtitle:

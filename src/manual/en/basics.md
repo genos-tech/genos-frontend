@@ -34,6 +34,8 @@ The Inbox has two tabs:
 
 Use **Mark all as read** on Activities, and **Sync inbox** to fetch items that arrived while the page was open.
 
+Turn on **Unread** in the Inbox header to see only what you haven't read, on either tab. It is off until you turn it on. A request counts as unread while it waits for your answer. An item you read while the filter is on stays in the list until you switch to the other tab, leave the Inbox or reload the page.
+
 ## Works everywhere
 
 - Press Cmd+K on a Mac (Ctrl+K on Windows and Linux) anywhere to open Spotlight. Spotlight is the quick-ask box: type to search your chats, tasks and notes, or press Enter to ask Genos.

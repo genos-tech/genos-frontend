@@ -11,9 +11,16 @@ import { InboxHomeProps } from "./types/inboxTypes";
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { useTranslation } from "../../i18n";
 import { InboxItemProps } from "../../types/common";
+import { useUnreadOnly } from "./unreadFilter";
+
+type SectionProps = InboxHomeProps & {
+    items: InboxItemProps[];
+    unreadOnly: boolean;
+    onShowAll: () => void;
+};
 
 // Wrapper component for Activities section with item routing
-const ActivitiesSection = (props: InboxHomeProps & { items: InboxItemProps[] }) => {
+const ActivitiesSection = (props: SectionProps) => {
     const { itemId } = useParams<{ itemId?: string }>();
     const { items, useCM, myself, setMyself, socket, useTEM, useUISM } = props;
     const { t } = useTranslation();
@@ -22,6 +29,8 @@ const ActivitiesSection = (props: InboxHomeProps & { items: InboxItemProps[] }) 
     // For now, we just render the section normally
     return (
         <InboxSection
+            // A new list when the filter changes: it holds its own read cards and scroll place.
+            key={String(props.unreadOnly)}
             emptySubtitle={t.inbox.emptyStates.activitiesSubtitle}
             emptyTitle={t.inbox.emptyStates.activitiesTitle}
             isRequest={false}
@@ -30,6 +39,7 @@ const ActivitiesSection = (props: InboxHomeProps & { items: InboxItemProps[] }) 
             myself={myself}
             setMyself={setMyself}
             socket={socket}
+            unreadOnly={props.unreadOnly}
             useCM={useCM}
             useTEM={useTEM}
             useUISM={useUISM}
@@ -37,18 +47,21 @@ const ActivitiesSection = (props: InboxHomeProps & { items: InboxItemProps[] }) 
                 itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined
             }
             onItemChanged={props.useIM.funcSetInboxItems}
+            onShowAll={props.onShowAll}
         />
     );
 };
 
 // Wrapper component for Requests section with item routing
-const RequestsSection = (props: InboxHomeProps & { items: InboxItemProps[] }) => {
+const RequestsSection = (props: SectionProps) => {
     const { itemId } = useParams<{ itemId?: string }>();
     const { items, useCM, myself, setMyself, socket, useTEM, useUISM } = props;
     const { t } = useTranslation();
 
     return (
         <InboxSection
+            // A new list when the filter changes: it holds its own read cards and scroll place.
+            key={String(props.unreadOnly)}
             emptySubtitle={t.inbox.emptyStates.requestsSubtitle}
             emptyTitle={t.inbox.emptyStates.requestsTitle}
             isRequest={true}
@@ -57,6 +70,7 @@ const RequestsSection = (props: InboxHomeProps & { items: InboxItemProps[] }) =>
             myself={myself}
             setMyself={setMyself}
             socket={socket}
+            unreadOnly={props.unreadOnly}
             useCM={useCM}
             useTEM={useTEM}
             useUISM={useUISM}
@@ -64,6 +78,7 @@ const RequestsSection = (props: InboxHomeProps & { items: InboxItemProps[] }) =>
                 itemId && !Number.isNaN(parseInt(itemId, 10)) ? parseInt(itemId, 10) : undefined
             }
             onItemChanged={props.useIM.funcSetInboxItems}
+            onShowAll={props.onShowAll}
         />
     );
 };
@@ -74,6 +89,13 @@ export const InboxHome = (props: InboxHomeProps) => {
     const isDark = mode === "dark";
 
     const { activityInboxItems, requestInboxItems } = useInboxItems(useIM.inboxItems);
+    const [unreadOnly, toggleUnreadOnly] = useUnreadOnly();
+    // The empty state's button goes away with the filter, so focus goes to the chip.
+    const showAll = () => {
+        toggleUnreadOnly();
+        document.querySelector<HTMLElement>('[data-testid="inbox-unread-filter"] button')?.focus();
+    };
+    const filterProps = { unreadOnly, onShowAll: showAll };
 
     const ls = isDark ? LayoutStyles.dark : LayoutStyles.light;
 
@@ -86,7 +108,9 @@ export const InboxHome = (props: InboxHomeProps) => {
                 <InboxHeader
                     activityItems={activityInboxItems}
                     myself={props.myself}
+                    unreadOnly={unreadOnly}
                     onItemsChanged={useIM.funcSetInboxItems}
+                    onToggleUnreadOnly={toggleUnreadOnly}
                 />
 
                 {/* Tab Navigation */}
@@ -126,7 +150,11 @@ export const InboxHome = (props: InboxHomeProps) => {
                                         },
                                     }}
                                 >
-                                    <RequestsSection {...props} items={requestInboxItems} />
+                                    <RequestsSection
+                                        {...props}
+                                        {...filterProps}
+                                        items={requestInboxItems}
+                                    />
                                 </Box>
                             }
                         />
@@ -145,7 +173,11 @@ export const InboxHome = (props: InboxHomeProps) => {
                                         },
                                     }}
                                 >
-                                    <RequestsSection {...props} items={requestInboxItems} />
+                                    <RequestsSection
+                                        {...props}
+                                        {...filterProps}
+                                        items={requestInboxItems}
+                                    />
                                 </Box>
                             }
                         />
@@ -166,7 +198,11 @@ export const InboxHome = (props: InboxHomeProps) => {
                                         },
                                     }}
                                 >
-                                    <ActivitiesSection {...props} items={activityInboxItems} />
+                                    <ActivitiesSection
+                                        {...props}
+                                        {...filterProps}
+                                        items={activityInboxItems}
+                                    />
                                 </Box>
                             }
                         />
@@ -185,7 +221,11 @@ export const InboxHome = (props: InboxHomeProps) => {
                                         },
                                     }}
                                 >
-                                    <ActivitiesSection {...props} items={activityInboxItems} />
+                                    <ActivitiesSection
+                                        {...props}
+                                        {...filterProps}
+                                        items={activityInboxItems}
+                                    />
                                 </Box>
                             }
                         />

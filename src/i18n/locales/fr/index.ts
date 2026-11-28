@@ -3039,6 +3039,11 @@ export const fr: DeepPartial<Messages> = {
             defaultEmptySubtitle:
                 "Choisissez une tâche sur laquelle travailler, ou faites une pause.",
         },
+        // The "Unread" filter's empty state (MIP-2597); its chip is `chat.sidebar.unreadFilter`.
+        unreadFilter: {
+            emptyTitle: "Aucun élément non lu",
+            showAll: "Tout afficher",
+        },
         emptyStates: {
             activitiesTitle: "Aucune activité pour le moment",
             activitiesSubtitle:

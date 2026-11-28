@@ -6,18 +6,14 @@ import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 import PeopleRoundedIcon from "@mui/icons-material/PeopleRounded";
 import RestoreFromTrashRoundedIcon from "@mui/icons-material/RestoreFromTrashRounded";
 import TravelExploreRoundedIcon from "@mui/icons-material/TravelExploreRounded";
-import { Badge, Box, Chip, Divider, IconButton, Sheet, Stack, Typography } from "@mui/joy";
+import { Badge, Box, Divider, IconButton, Sheet, Stack, Typography } from "@mui/joy";
 import { useColorScheme } from "@mui/joy/styles";
 import { Socket } from "socket.io-client";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { Clickable } from "../../../../components/ui/Clickable";
 import { MoreMenu } from "../../../../components/ui/MoreMenu";
-import {
-    chipHitAreaSx,
-    headerTouchTargetsSx,
-    touchTargetSx,
-} from "../../../../components/ui/touchTargets";
+import { headerTouchTargetsSx, touchTargetSx } from "../../../../components/ui/touchTargets";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { usePersonalGMTags } from "../../../../hooks/common/personalGMTagsState";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -47,6 +43,7 @@ import { ModalCreateMDM } from "../modals/ModalCreateMDM";
 import { ModalGroupDirectory } from "../modals/ModalGroupDirectory";
 import { ModalJoinGM } from "../modals/ModalJoinGM";
 import { ModalRecentlyDeletedChats } from "../modals/ModalRecentlyDeletedChats";
+import { UnreadFilterChip } from "../UnreadFilterChip";
 import { ChatList } from "./ChatList";
 import { ChatSearch } from "./ChatSearch";
 import { ActivityDivider } from "./ChatSidebarDividers";
@@ -467,47 +464,10 @@ export const ChatSidebar = (props: ChatSidebarProps) => {
                             sx={headerTouchTargetsSx}
                         >
                             {/* Unread Filter Toggle */}
-                            <Chip
-                                color={showOnlyUnreadItems ? "primary" : "neutral"}
-                                size="sm"
-                                variant={showOnlyUnreadItems ? "solid" : "soft"}
-                                sx={{
-                                    cursor: "pointer",
-                                    fontWeight: 600,
-                                    fontSize: "0.7rem",
-                                    px: 1,
-                                    height: 26,
-                                    // A 44px tap band around the 26px chip (MIP-1319).
-                                    ...chipHitAreaSx(26),
-                                    borderRadius: "8px",
-                                    transition: "all 0.2s ease",
-                                    background: showOnlyUnreadItems
-                                        ? isDark
-                                            ? "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)"
-                                            : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)"
-                                        : isDark
-                                          ? "rgba(255,255,255,0.06)"
-                                          : "rgba(0,0,0,0.04)",
-                                    border: "1px solid",
-                                    borderColor: showOnlyUnreadItems
-                                        ? "transparent"
-                                        : isDark
-                                          ? "rgba(255,255,255,0.08)"
-                                          : "rgba(0,0,0,0.06)",
-                                    "&:hover": {
-                                        background: showOnlyUnreadItems
-                                            ? isDark
-                                                ? "linear-gradient(135deg, var(--gp-brandalt-400) 0%, var(--gp-brand-400) 100%)"
-                                                : "linear-gradient(135deg, var(--gp-brand-700) 0%, var(--gp-brand-800) 100%)"
-                                            : isDark
-                                              ? "rgba(255,255,255,0.1)"
-                                              : "rgba(0,0,0,0.06)",
-                                    },
-                                }}
-                                onClick={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
-                            >
-                                {t.chat.sidebar.unreadFilter}
-                            </Chip>
+                            <UnreadFilterChip
+                                active={showOnlyUnreadItems}
+                                onToggle={() => setShowOnlyUnreadItems(!showOnlyUnreadItems)}
+                            />
 
                             {/* Menu. The two view actions below the creates show only on
                                 their own pane. */}

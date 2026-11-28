@@ -15,6 +15,7 @@ import { focusRing, g } from "../../../theme/tokens";
 import { smoothScrollBehavior } from "../../../utils/motion";
 import { useInboxListPosition } from "../hooks/useInboxListPosition";
 import { InboxSectionProps } from "../types/inboxTypes";
+import { useUnreadItems } from "../unreadFilter";
 import { InboxBubble } from "./InboxBubble";
 
 type InboxSectionExtendedProps = InboxSectionProps & {
@@ -22,10 +23,14 @@ type InboxSectionExtendedProps = InboxSectionProps & {
     emptySubtitle?: string;
     isRequest?: boolean;
     selectedItemId?: number;
+    /** Show only unread items (and those read since the list was opened). */
+    unreadOnly?: boolean;
+    /** Turn the filter off, from its empty state. */
+    onShowAll?: () => void;
 };
 
 export const InboxSection = ({
-    items,
+    items: allItems,
     myself,
     setMyself,
     useCM,
@@ -38,7 +43,10 @@ export const InboxSection = ({
     isRequest = false,
     selectedItemId,
     onItemChanged,
+    unreadOnly = false,
+    onShowAll,
 }: InboxSectionExtendedProps) => {
+    const items = useUnreadItems(allItems, unreadOnly, selectedItemId);
     const { mode } = useColorScheme();
     const { t } = useTranslation();
     const isDark = mode === "dark";
@@ -48,6 +56,8 @@ export const InboxSection = ({
     const basePath = isRequest ? "/workspace/inbox/requests" : "/workspace/inbox/activities";
     const resolvedEmptyTitle = emptyTitle ?? t.inbox.section.defaultEmptyTitle;
     const resolvedEmptySubtitle = emptySubtitle ?? t.inbox.section.defaultEmptySubtitle;
+    // The filter hid everything there is: say so, and not that the inbox failed to load.
+    const filteredOut = unreadOnly && allItems.length > 0;
 
     const { virtuosoRef, atTopStateChange, firstItemIndex } = useInboxListPosition(items);
 
@@ -159,15 +169,22 @@ export const InboxSection = ({
                 />
             ) : (
                 <DataState
-                    error={sync.failed}
+                    error={sync.failed && !filteredOut}
                     hasData={false}
-                    loading={sync.retrying}
+                    loading={sync.retrying && !filteredOut}
                     skeleton={<SkeletonRows count={5} twoLines />}
                     empty={{
-                        body: resolvedEmptySubtitle,
+                        ...(unreadOnly
+                            ? {
+                                  action: onShowAll && {
+                                      label: t.inbox.unreadFilter.showAll,
+                                      onClick: onShowAll,
+                                  },
+                                  title: t.inbox.unreadFilter.emptyTitle,
+                              }
+                            : { body: resolvedEmptySubtitle, title: resolvedEmptyTitle }),
                         "data-empty": "inbox",
                         icon: isRequest ? <CheckCircleOutlineRoundedIcon /> : <InboxRoundedIcon />,
-                        title: resolvedEmptyTitle,
                     }}
                     errorState={{
                         "data-error": "inbox",

@@ -7,6 +7,7 @@ import { useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
 import type { UserProps } from "../../../types/admin";
 import type { InboxItemProps } from "../../../types/common";
+import { UnreadFilterChip } from "../../chat/components/UnreadFilterChip";
 import { InboxMarkAllReadButton } from "./InboxMarkAllReadButton";
 import { InboxSyncButton } from "./InboxSyncButton";
 
@@ -15,10 +16,19 @@ type InboxHeaderProps = {
     myself: UserProps;
     /** Re-read the list after a bulk change. */
     onItemsChanged: () => void;
+    /** The "Unread" filter, for whichever tab is open. */
+    unreadOnly: boolean;
+    onToggleUnreadOnly: () => void;
 };
 
 /** The Inbox's page header: the shared bar, with its icon and one line of context. */
-export const InboxHeader = ({ activityItems, myself, onItemsChanged }: InboxHeaderProps) => {
+export const InboxHeader = ({
+    activityItems,
+    myself,
+    onItemsChanged,
+    unreadOnly,
+    onToggleUnreadOnly,
+}: InboxHeaderProps) => {
     const { t } = useTranslation();
     const location = useLocation();
     // "Mark all as read" only ever touches the Activities half, so it is offered there and
@@ -33,6 +43,11 @@ export const InboxHeader = ({ activityItems, myself, onItemsChanged }: InboxHead
             title={t.inbox.header.title}
             actions={
                 <Stack alignItems="center" direction="row" spacing={0.5}>
+                    <UnreadFilterChip
+                        active={unreadOnly}
+                        data-testid="inbox-unread-filter"
+                        onToggle={onToggleUnreadOnly}
+                    />
                     {onActivities && (
                         <InboxMarkAllReadButton
                             items={activityItems}
