@@ -2,7 +2,7 @@
 // restores a persisted agent session into a live conversation
 // (threadAsk / noteAsk bootstrap, Spotlight/Genos history resume).
 
-import type { AgentSessionTurn } from "../../services/agentApi";
+import { asDroppedReferences, type AgentSessionTurn } from "../../services/agentApi";
 import type { CompletedTurn, RestoredPendingAsk, UnansweredReason } from "./types";
 import { undoStepsFromSession } from "./undoSteps";
 
@@ -27,6 +27,10 @@ export const sessionTurnToCompleted = (turn: AgentSessionTurn, index: number): C
     // The only record of this turn's approved writes: it has no tool events.
     const undo = undoStepsFromSession(turn);
     const unanswered = unansweredReason(turn);
+    // Only a turn with a card carries them (MIP-2627).
+    const dropped = turn.dropped_references
+        ? asDroppedReferences(turn.dropped_references)
+        : undefined;
     return {
         id: index + 1,
         askedQuery: turn.query,
@@ -43,6 +47,7 @@ export const sessionTurnToCompleted = (turn: AgentSessionTurn, index: number): C
         // Absent (not `[]`) when the turn has no writes to undo.
         ...(undo.length > 0 ? { undo } : {}),
         ...(unanswered ? { unanswered } : {}),
+        ...(dropped ? { droppedReferences: dropped } : {}),
         // The skill the turn ran (MIP-2189): kept as the same ref a live ask holds, so Retry sends `skill`
         // (and the version that ran) again instead of asking the words as a plain question.
         ...(turn.skill?.id

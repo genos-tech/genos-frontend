@@ -310,3 +310,59 @@ describe("an ask refused before it began (MIP-2609)", () => {
         expect(screen.getByText("This ask couldn't be answered.")).toBeTruthy();
     });
 });
+
+describe("what a restored card carries into its decision (MIP-2627)", () => {
+    // The run had already approved one write before it paused on the next one.
+    const earlier = {
+        step_id: 11,
+        step: 0,
+        tool_name: "create_task",
+        available_until: "2099-01-01T00:00:00Z",
+        undone_at: null,
+    };
+    const half = { ...waiting, undo: [earlier], dropped_references: ["message", "brand_new"] };
+    const undoRef = { stepId: 11, toolName: "create_task", runId: "run-p" };
+
+    it("keeps the earlier write's Undo and the notice while the card waits", async () => {
+        const { result } = await resume([half]);
+        expect(result.current.ask.carriedUndo).toMatchObject([undoRef]);
+        // Only kinds this client has a sentence for.
+        expect(result.current.ask.droppedReferences).toEqual(["message"]);
+    });
+
+    it("keeps them on the turn after the next decision", async () => {
+        vi.mocked(decideAgent).mockImplementation(async (args) => {
+            args.onDelta("Done.");
+            args.onDone("sess-1", "run-p", 10, ["message"]);
+        });
+        const { result } = await resume([half]);
+        act(() => result.current.onApprove());
+        await waitFor(() => expect(result.current.turns).toHaveLength(1));
+        expect(result.current.turns[0].undo).toMatchObject([undoRef]);
+        expect(result.current.turns[0].droppedReferences).toEqual(["message"]);
+    });
+
+    it("keeps the Undo when the resumed answer is cancelled before anything arrives", async () => {
+        const { result } = await resume([{ ...waiting, undo: [earlier] }]);
+        act(() => result.current.onApprove());
+        act(() => result.current.onCancel());
+        expect(result.current.turns).toHaveLength(1);
+        expect(result.current.turns[0].undo).toMatchObject([undoRef]);
+    });
+
+    it("does not carry them into the next ask", async () => {
+        vi.mocked(decideAgent).mockImplementation(async (args) => {
+            args.onDelta("Done.");
+            args.onDone("sess-1", "run-p");
+        });
+        const { result } = await resume([half]);
+        act(() => result.current.onApprove());
+        await waitFor(() => expect(result.current.turns).toHaveLength(1));
+        act(() => {
+            result.current.onAsk("something else");
+        });
+        expect(result.current.ask.askedQuery).toBe("something else");
+        expect(result.current.ask.carriedUndo).toBeUndefined();
+        expect(result.current.ask.droppedReferences).toBeUndefined();
+    });
+});

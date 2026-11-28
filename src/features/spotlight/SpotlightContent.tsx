@@ -1855,6 +1855,7 @@ const ConversationPanel = memo(
                                 runId={ask.runId}
                                 selection={ask.askedSelection}
                                 toolEvents={ask.toolEvents}
+                                undoSteps={ask.carriedUndo}
                                 isCurrent
                                 onApprove={onApprove}
                                 onFeedback={onFeedback}

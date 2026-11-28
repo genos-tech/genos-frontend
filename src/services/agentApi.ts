@@ -796,6 +796,10 @@ export interface AgentSessionTurn {
     pending_approval?: PendingApprovalPayload | null;
     /** The paused write is older than the server lets anyone decide (7 days, MIP-2613). */
     approval_expired?: boolean;
+    // Only on a turn with a card (MIP-2627): the kinds the card event's `dropped_references`
+    // carried. Raw: read it with `asDroppedReferences`. Absent when nothing was dropped and
+    // against older backends.
+    dropped_references?: unknown;
 }
 
 export interface AgentSessionUndo {
