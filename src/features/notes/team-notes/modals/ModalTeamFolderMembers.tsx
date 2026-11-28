@@ -25,6 +25,7 @@ import { PersonPicker } from "../../../../components/ui/PersonPicker";
 import { useAuth } from "../../../../context/authState";
 import { useMentionGroupsContext } from "../../../../context/MentionGroupsContext";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
+import { useLatestRef } from "../../../../hooks/common/useLatestRef";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { fmt, useTranslation } from "../../../../i18n";
 import { UserProps } from "../../../../types/admin";
@@ -128,13 +129,17 @@ export const ModalTeamFolderMembers = (props: Props) => {
         setLoading(false);
     };
 
+    // Reset and load once per opened folder: a refreshed folder list hands over a new `folder`
+    // object (and every render a new `reload`), which must not drop the pending selection.
+    const reloadRef = useLatestRef(reload);
+
     useEffect(() => {
-        if (!open || !folder) return;
+        if (!open || folder?.folderId === undefined) return;
         setPendingUserIds([]);
         setPendingGroups([]);
         setInviteRole(ROLE_EDITOR);
-        void reload();
-    }, [open, folder?.folderId]);
+        void reloadRef.current();
+    }, [open, folder?.folderId, reloadRef]);
 
     const existingIds = useMemo(() => new Set(members.map((m) => m.userId)), [members]);
 

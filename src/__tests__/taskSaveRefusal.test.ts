@@ -311,3 +311,30 @@ describe("updateTaskFromTable on a refused save", () => {
         expect(result).toBe(edited);
     });
 });
+
+// MIP-2493: a project status is sent only when the person picked it. Re-sending the stored id
+// could write back a label the server has since cleared.
+describe("a project status in the task save", () => {
+    const sentBody = () => JSON.parse(adapter.mock.calls[0][0].data as string);
+
+    it("is left out when nothing was picked, even though the task has one", async () => {
+        respondWith(200, { task: {} });
+        await sendUpdatedSpecificTask(null, myself, makeTask({ customStatusId: 4 }), false, "tok");
+        expect(sentBody()).not.toHaveProperty("custom_status");
+    });
+
+    it("is sent when picked, and the pick never reaches the caches", async () => {
+        respondWith(200, { task: {} });
+        await sendUpdatedSpecificTask(
+            null,
+            myself,
+            makeTask({ customStatusId: 4, customStatusPick: 4 }),
+            false,
+            "tok"
+        );
+        expect(sentBody().custom_status).toBe(4);
+        expect(cacheFullTask.mock.calls[0][0]).toMatchObject({ customStatusId: 4 });
+        expect(cacheFullTask.mock.calls[0][0].customStatusPick).toBeUndefined();
+        expect(addTask.mock.calls[0][0]).toMatchObject({ customStatusId: 4 });
+    });
+});

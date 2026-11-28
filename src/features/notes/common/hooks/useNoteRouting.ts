@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
+import { useLatestRef } from "../../../../hooks/common/useLatestRef";
 import { NoteManagementState } from "../../../../hooks/notes/useNoteManagement";
 import { isPersonalNoteBucket } from "../utils/noteTypeAlias";
 
@@ -240,6 +241,10 @@ export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) =>
         [navigate]
     );
 
+    // What the two sync effects below read without being re-run by it: `useNM` is a new object
+    // on most renders, and `navigate` changes when this Home is hidden or shown.
+    const latestRef = useLatestRef({ useNM, navigate, pathname: location.pathname });
+
     // Sync URL with note state on initial load or URL change.
     // After the first run we let `tabsApi.rehydrate()` (which restores
     // the previously-open tabs from localStorage) be the source of
@@ -247,6 +252,7 @@ export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) =>
     // doesn't already match. This avoids the double-open race where
     // both `rehydrate()` and this effect fire on first mount.
     useEffect(() => {
+        const { useNM } = latestRef.current;
         const routeInfo = parseCurrentRoute();
 
         // Keep the state→URL effect's dedup ref aligned with the real URL
@@ -310,7 +316,7 @@ export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) =>
         } else {
             hasHandledInitialUrl.current = true;
         }
-    }, [location.pathname]);
+    }, [location.pathname, parseCurrentRoute, latestRef]);
 
     // `/workspace/notes/folder/:id` (a Spotlight folder result, or a link
     // to one): open that folder's space, unfold its ancestors and flash it.
@@ -351,9 +357,10 @@ export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) =>
             return;
         }
 
+        const { useNM, navigate, pathname } = latestRef.current;
         const newPath = notePathForOpenNote(useNM);
 
-        if (newPath && newPath !== location.pathname && newPath !== lastNavigatedPath.current) {
+        if (newPath && newPath !== pathname && newPath !== lastNavigatedPath.current) {
             lastNavigatedPath.current = newPath;
             // Push (not replace) so each opened note is its own history
             // entry — browser Back/Forward steps between notes.
@@ -364,6 +371,7 @@ export const useNoteRouting = ({ useNM, isActiveRoute }: UseNoteRoutingProps) =>
         useNM.currentMyNote?.noteId,
         useNM.currentTaskNote?.noteId,
         useNM.currentChatNote?.noteId,
+        latestRef,
     ]);
 
     return {

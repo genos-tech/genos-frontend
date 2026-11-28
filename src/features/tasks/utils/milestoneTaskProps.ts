@@ -48,6 +48,7 @@ export const milestoneToTaskProps = (
         threadId: (m.threadId ?? null) as unknown as number | null,
         startDate: m.startDate ?? null,
         dueDate: m.dueDate ?? "",
+        customStatusId: m.customStatusId ?? null,
         status: {
             code: 0,
             status: m.status as string,

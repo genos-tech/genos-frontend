@@ -187,6 +187,23 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
                 );
             };
 
+            // A status pick is sent once (MIP-2493): once stored, take it off the working
+            // copies so a later save cannot put an old label back.
+            const sentPick = baseTaskContent.customStatusPick;
+            const dropSentPick = () => {
+                if (sentPick == null) return;
+                setTmpCurrentTaskContent((prev) =>
+                    prev.customStatusPick === sentPick && prev.id === baseTaskContent.id
+                        ? { ...prev, customStatusPick: undefined }
+                        : prev
+                );
+                setCurrentPreviewTask((prev) =>
+                    prev && prev.customStatusPick === sentPick && prev.id === baseTaskContent.id
+                        ? { ...prev, customStatusPick: undefined }
+                        : prev
+                );
+            };
+
             let uploadAttachments: Awaited<ReturnType<typeof sendUpdatedSpecificTask>>;
             // Set when the PUT stored nothing: whether it is worth sending again.
             let notSaved: { retry: boolean } | null = null;
@@ -399,7 +416,10 @@ export const useSendUpdatedTask = (params: UseSendUpdatedTaskParams) => {
             // by task id, so a save fired while switching away doesn't
             // refetch anything for the newly-opened task.
             const failed = notSaved as { retry: boolean } | null;
-            if (!failed) emitTaskTouched(Number(baseTaskContent.id), "update");
+            if (!failed) {
+                emitTaskTouched(Number(baseTaskContent.id), "update");
+                dropSentPick();
+            }
 
             const persistedAttachments: AttachmentFileProps[] =
                 uploadAttachments && uploadAttachments.length > 0

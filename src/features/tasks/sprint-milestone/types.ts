@@ -78,6 +78,7 @@ export type Milestone = {
     description: unknown | null;
     status: MilestoneStatus | string;
     statusCode: number | null;
+    customStatusId?: number | null;
     priority: string | null;
     priorityCode: number | null;
     effortLevel?: string | null;

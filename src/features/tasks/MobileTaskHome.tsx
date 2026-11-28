@@ -18,6 +18,7 @@ import { TaskSearchBar } from "./components/header/TaskSearchBar";
 import { ModalCustomizeTaskFields } from "./components/modals/ModalCustomizeTaskFields";
 import { ModalImportTasksCsv } from "./components/modals/ModalImportTasksCsv";
 import { TaskSidebar } from "./components/sidebar/TaskSidebarMain";
+import { ModalProjectStatuses } from "./components/statuses/ModalProjectStatuses";
 
 import { MobileOverlay } from "../../components/layout/MobileOverlay";
 import { MenuRow, MenuSurface } from "../../components/ui/MoreMenu";
@@ -199,6 +200,8 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
     );
     const isProjectOwner = isOwnerOfProject(useTM.taskFieldRules, openProjectId, myself.userId);
     const [archiveBusy, setArchiveBusy] = useState(false);
+    const [openStatuses, setOpenStatuses] = useState(false);
+    const canManageStatuses = canCustomizeFields && !archived;
 
     // Archive the open project, or put an archived one back. The list moves at once; a refusal
     // says so in one line, and the project stays as it was.
@@ -237,6 +240,14 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                 flexDirection: "column",
             }}
         >
+            {openStatuses && openProjectId != null && (
+                <ModalProjectStatuses
+                    projectId={openProjectId}
+                    open
+                    onClose={() => setOpenStatuses(false)}
+                />
+            )}
+
             {/* Compact mobile header — renders for the dashboard view
                 AND for the project task list. The bare sidebar (no
                 project, no dashboard) has its own search/header inside
@@ -364,6 +375,12 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                             {canCustomizeFields && (
                                 <MenuRow onClick={() => setOpenCustomizeFields(true)}>
                                     {t.tasks.header.customizeFieldsMenuItem}
+                                </MenuRow>
+                            )}
+                            {/* MIP-2493: owners and editors, as in the desktop header. */}
+                            {canManageStatuses && (
+                                <MenuRow onClick={() => setOpenStatuses(true)}>
+                                    {t.tasks.projectStatuses.menuItem}
                                 </MenuRow>
                             )}
                             {importProjectId != null && !importArchived && (
