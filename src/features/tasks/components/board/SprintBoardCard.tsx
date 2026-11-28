@@ -43,6 +43,8 @@ type SprintBoardCardProps = {
     // The card sits in the Closed column: its own status may still say Open when a
     // Closed ancestor put it there (MIP-1389), and a closed card has no due badge.
     inClosedColumn?: boolean;
+    // The column already names the card's status ("one column per status", MIP-2495).
+    hideStatusMark?: boolean;
 };
 
 const SprintBoardCardImpl = ({
@@ -55,6 +57,7 @@ const SprintBoardCardImpl = ({
     milestone,
     sprintName = null,
     inClosedColumn = false,
+    hideStatusMark = false,
 }: SprintBoardCardProps) => {
     const { t } = useTranslation();
 
@@ -131,6 +134,7 @@ const SprintBoardCardImpl = ({
                         <TaskCard
                             dragging={snapshot.isDragging}
                             headerEnd={diagramButton}
+                            hideStatusMark={hideStatusMark}
                             selected={isSelected}
                             showDue={!isFinishedStatus(task.status) && !inClosedColumn}
                             task={task}

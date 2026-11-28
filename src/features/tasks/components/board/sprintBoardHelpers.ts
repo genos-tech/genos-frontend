@@ -1,6 +1,9 @@
 import React from "react";
 
+import type { ProjectStatusDef, TaskTableProps } from "../../../../types/tasks";
 import { STATUS_TONE, statusSolid, toneSoftBg } from "../../meta/taskTone";
+import { bucketByStatus, statusColumnSpecs } from "../../utils/boardStatusColumns";
+import { rowColorCss } from "../../utils/projectStatus";
 import { COLUMN_MIN_WIDTH, ColumnConfig } from "./SprintBoardColumn";
 
 // Sort tiers (priority/due-date/etc. ranking, comparator builder) now
@@ -66,6 +69,38 @@ export const COLUMNS: ColumnConfig[] = [
 /** The columns a board draws: Rejected only once the board holds a rejected card. */
 export const visibleColumns = (boardTasks: Record<string, readonly unknown[]>): ColumnConfig[] =>
     COLUMNS.filter((column) => !column.onlyWithCards || (boardTasks[column.id]?.length ?? 0) > 0);
+
+const categoryColumns = COLUMNS.map((c) => ({
+    id: c.id,
+    category: c.status,
+    onlyWithCards: c.onlyWithCards,
+}));
+
+/** The cards by column id. With `statusRows` (the "one column per status" option, MIP-2495)
+ *  the category buckets are spread over the project's statuses. */
+export const boardBuckets = (
+    statusRows: readonly ProjectStatusDef[] | null,
+    byCategory: Record<string, TaskTableProps[]>
+): Record<string, TaskTableProps[]> =>
+    statusRows ? bucketByStatus(statusRows, categoryColumns, byCategory) : byCategory;
+
+/** The columns the board draws. */
+export const boardColumns = (
+    statusRows: readonly ProjectStatusDef[] | null,
+    boardTasks: Record<string, readonly unknown[]>
+): ColumnConfig[] => {
+    if (!statusRows) return visibleColumns(boardTasks);
+    return statusColumnSpecs(statusRows, categoryColumns, boardTasks).map((spec) => {
+        const base = COLUMNS.find((c) => c.status === spec.category)!;
+        return {
+            ...base,
+            id: spec.id,
+            color: spec.row ? rowColorCss(spec.row) : base.color,
+            row: spec.row ?? undefined,
+            categoryStart: spec.categoryStart,
+        };
+    });
+};
 
 // Style helpers
 export const getBoardContainerStyles = (

@@ -11,10 +11,14 @@ import { flushSync } from "react-dom";
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { ROVING_ITEM_ATTR } from "../../../../hooks/common/roving";
 import { fmt, useTranslation } from "../../../../i18n";
+import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
-import { TaskTableProps } from "../../../../types/tasks";
+import { ProjectStatusDef, TaskTableProps } from "../../../../types/tasks";
 import { Milestone } from "../../sprint-milestone/types";
+import { statusRowName } from "../../utils/projectStatus";
 import { useRenderOnScroll } from "../../utils/renderOnScroll";
+import { getStatusIcon } from "../meta/statusIcons";
+import { useCategoryName } from "../statuses/useCategoryName";
 import { SprintBoardCard } from "./SprintBoardCard";
 import { BOARD_DRAGGING_ATTR } from "./useBoardDragScrollLock";
 
@@ -31,6 +35,10 @@ export type ColumnConfig = {
     icon?: React.ReactNode;
     /** Drawn only while it has cards (Rejected, MIP-2494), so a board without any is unchanged. */
     onlyWithCards?: boolean;
+    /** One of the project's statuses: the "one column per status" option (MIP-2495). */
+    row?: ProjectStatusDef;
+    /** The first column of a category, in that option: drawn a little apart. */
+    categoryStart?: boolean;
 };
 
 // Narrowest a column may get before the BOARD scrolls horizontally
@@ -90,6 +98,111 @@ const getColumnHeaderStyles = (
     borderTopRightRadius: 10,
 });
 
+/**
+ * The header of one status's column (MIP-2495), by the status chip's rule: the color is in the
+ * accent line and the icon, whose shape says the category; the words stay neutral.
+ */
+const StatusColumnHeader = ({
+    column,
+    row,
+    title,
+    count,
+    quickAdd,
+}: {
+    column: ColumnConfig;
+    row: ProjectStatusDef;
+    title: string;
+    count: number;
+    quickAdd: React.ReactNode;
+}) => {
+    const { t } = useTranslation();
+    const categoryName = useCategoryName();
+    const label = fmt(t.tasks.board.statusColumnLabel, {
+        name: title,
+        category: categoryName(row.category),
+        count,
+    });
+    return (
+        <Box
+            data-testid="status-column-header"
+            sx={{
+                display: "flex",
+                alignItems: "center",
+                gap: 0.75,
+                px: 1.5,
+                py: 1,
+                flexShrink: 0,
+                background: g.surface.default,
+                borderBottom: `1px solid ${g.border.subtle}`,
+                borderTop: `3px solid ${column.color}`,
+            }}
+        >
+            <AppTooltip title={row.isArchived ? t.tasks.board.statusOffTooltip : label}>
+                <Box
+                    aria-label={label}
+                    aria-level={3}
+                    role="heading"
+                    sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}
+                >
+                    <span
+                        aria-hidden="true"
+                        style={
+                            {
+                                display: "inline-flex",
+                                flexShrink: 0,
+                                color: column.color,
+                                "--Icon-color": column.color,
+                            } as React.CSSProperties
+                        }
+                    >
+                        {getStatusIcon(row.category, 14)}
+                    </span>
+                    <Box
+                        component="span"
+                        sx={{
+                            ...type("title-sm"),
+                            fontWeight: 600,
+                            color: row.isArchived ? g.text.tertiary : g.text.primary,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                        }}
+                    >
+                        {title}
+                    </Box>
+                    {row.isArchived && (
+                        <Box component="span" sx={{ ...type("caption"), color: g.text.tertiary }}>
+                            {t.tasks.projectStatuses.off}
+                        </Box>
+                    )}
+                </Box>
+            </AppTooltip>
+            <Box sx={{ flex: 1 }} />
+            {quickAdd}
+            <Box
+                component="span"
+                sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    minWidth: 22,
+                    height: 20,
+                    px: 0.75,
+                    borderRadius: "10px",
+                    background: g.hover,
+                    color: g.text.secondary,
+                    ...type("caption"),
+                    fontWeight: 500,
+                    fontVariantNumeric: "tabular-nums",
+                }}
+            >
+                {count}
+            </Box>
+        </Box>
+    );
+};
+
 type SprintBoardColumnProps = {
     column: ColumnConfig;
     tasks: TaskTableProps[];
@@ -140,7 +253,11 @@ const SprintBoardColumnImpl = ({
         colorMode === "light" || colorMode === "dark" ? colorMode : undefined;
     const isDark = mode === "dark";
     const { t } = useTranslation();
-    const columnTitle = t.tasks.board[column.titleKey];
+    const columnTitle = column.row
+        ? statusRowName(column.row, t.tasks)
+        : t.tasks.board[column.titleKey];
+    // A turned-off status takes no new cards, as the pickers do not offer it.
+    const isOff = column.row?.isArchived === true;
     // A very long column (the Closed one) draws its cards as far down as it has been scrolled.
     const { limit, grow, onScroll, scroller } = useRenderOnScroll(tasks.length);
     const shownTasks = limit < tasks.length ? tasks.slice(0, limit) : tasks;
@@ -157,63 +274,81 @@ const SprintBoardColumnImpl = ({
         }
     };
 
+    const quickAdd = onQuickAddClick && (
+        <AppTooltip title={t.tasks.board.quickAddTooltip}>
+            <IconButton
+                aria-label={t.tasks.board.quickAddTooltip}
+                size="sm"
+                variant="plain"
+                // 20px, the count badge's height, so the Open
+                // column's header isn't taller than the rest.
+                sx={{
+                    "--IconButton-size": "20px",
+                    minHeight: 20,
+                    color: column.row ? g.text.secondary : column.color,
+                }}
+                onClick={onQuickAddClick}
+            >
+                <AddRoundedIcon sx={{ fontSize: 16 }} />
+            </IconButton>
+        </AppTooltip>
+    );
+
     return (
-        <div style={getColumnStyles(mode)}>
+        <div
+            style={
+                column.categoryStart
+                    ? { ...getColumnStyles(mode), marginInlineStart: 8 }
+                    : getColumnStyles(mode)
+            }
+        >
             {/* Column Header — outside the scrolling card list, so it stays put. */}
-            <div style={getColumnHeaderStyles(column.color, mode)}>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                    <Typography
-                        level="title-sm"
-                        sx={{
-                            fontWeight: 700,
-                            textTransform: "uppercase",
-                            letterSpacing: "0.8px",
-                            fontSize: "0.7rem",
-                            color: column.color,
-                        }}
-                    >
-                        {columnTitle}
-                    </Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-                    {onQuickAddClick && (
-                        <AppTooltip title={t.tasks.board.quickAddTooltip}>
-                            <IconButton
-                                aria-label={t.tasks.board.quickAddTooltip}
-                                size="sm"
-                                variant="plain"
-                                // 20px, the count badge's height, so the Open
-                                // column's header isn't taller than the rest.
-                                sx={{
-                                    "--IconButton-size": "20px",
-                                    minHeight: 20,
-                                    color: column.color,
-                                }}
-                                onClick={onQuickAddClick}
-                            >
-                                <AddRoundedIcon sx={{ fontSize: 16 }} />
-                            </IconButton>
-                        </AppTooltip>
-                    )}
-                    <span
-                        style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            minWidth: 22,
-                            height: 20,
-                            padding: "0 6px",
-                            borderRadius: 10,
-                            fontWeight: 700,
-                            fontSize: "0.65rem",
-                            backgroundColor: column.color,
-                            color: "#fff",
-                        }}
-                    >
-                        {tasks.length}
-                    </span>
-                </Box>
-            </div>
+            {column.row ? (
+                <StatusColumnHeader
+                    column={column}
+                    count={tasks.length}
+                    quickAdd={quickAdd}
+                    row={column.row}
+                    title={columnTitle}
+                />
+            ) : (
+                <div style={getColumnHeaderStyles(column.color, mode)}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                        <Typography
+                            level="title-sm"
+                            sx={{
+                                fontWeight: 700,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.8px",
+                                fontSize: "0.7rem",
+                                color: column.color,
+                            }}
+                        >
+                            {columnTitle}
+                        </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+                        {quickAdd}
+                        <span
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                minWidth: 22,
+                                height: 20,
+                                padding: "0 6px",
+                                borderRadius: 10,
+                                fontWeight: 700,
+                                fontSize: "0.65rem",
+                                backgroundColor: column.color,
+                                color: "#fff",
+                            }}
+                        >
+                            {tasks.length}
+                        </span>
+                    </Box>
+                </div>
+            )}
 
             {quickAddSlot}
 
@@ -223,7 +358,7 @@ const SprintBoardColumnImpl = ({
                 droppableId={column.id}
                 ignoreContainerClipping={false}
                 isCombineEnabled={false}
-                isDropDisabled={false}
+                isDropDisabled={isOff}
             >
                 {(provided, snapshot) => {
                     const isOver = snapshot.isDraggingOver;
@@ -233,20 +368,17 @@ const SprintBoardColumnImpl = ({
                     // `alpha()` is the same helper used by the task
                     // row pulse for consistency.
                     const accent = column.color;
-                    const pulseBgLow = alpha(accent, isDark ? 0.08 : 0.05);
-                    const pulseBgHigh = alpha(accent, isDark ? 0.22 : 0.16);
-                    const pulseShadowLow = `inset 0 0 0 2px ${alpha(
-                        accent,
-                        0.55
-                    )}, 0 0 8px ${alpha(accent, 0.2)}`;
-                    const pulseShadowHigh = `inset 0 0 0 2px ${accent}, 0 0 26px ${alpha(
-                        accent,
-                        0.55
-                    )}, 0 0 12px ${alpha(accent, 0.4)}`;
-                    const shimmerGradient = `linear-gradient(90deg, transparent 0%, transparent 35%, ${alpha(
-                        accent,
-                        isDark ? 0.4 : 0.32
-                    )} 50%, transparent 65%, transparent 100%)`;
+                    // A status's color can be a token reference or a color name, which
+                    // `alpha` cannot read; the category columns keep `alpha`.
+                    const tint = (amount: number) =>
+                        column.row
+                            ? `color-mix(in srgb, ${accent} ${Math.round(amount * 100)}%, transparent)`
+                            : alpha(accent, amount);
+                    const pulseBgLow = tint(isDark ? 0.08 : 0.05);
+                    const pulseBgHigh = tint(isDark ? 0.22 : 0.16);
+                    const pulseShadowLow = `inset 0 0 0 2px ${tint(0.55)}, 0 0 8px ${tint(0.2)}`;
+                    const pulseShadowHigh = `inset 0 0 0 2px ${accent}, 0 0 26px ${tint(0.55)}, 0 0 12px ${tint(0.4)}`;
+                    const shimmerGradient = `linear-gradient(90deg, transparent 0%, transparent 35%, ${tint(isDark ? 0.4 : 0.32)} 50%, transparent 65%, transparent 100%)`;
                     return (
                         <Box
                             ref={(el: HTMLElement | null) => {
@@ -326,7 +458,7 @@ const SprintBoardColumnImpl = ({
                                         borderRadius: 6,
                                         color: isOver ? accent : mode === "dark" ? "#555" : "#aaa",
                                         backgroundColor: isOver
-                                            ? alpha(accent, 0.08)
+                                            ? tint(0.08)
                                             : mode === "dark"
                                               ? "rgba(255, 255, 255, 0.01)"
                                               : "rgba(0, 0, 0, 0.01)",
@@ -378,6 +510,7 @@ const SprintBoardColumnImpl = ({
                                         <SprintBoardCard
                                             key={task.id}
                                             columnId={column.id}
+                                            hideStatusMark={column.row != null}
                                             inClosedColumn={column.status === "Closed"}
                                             index={index}
                                             isSelected={isSelected}

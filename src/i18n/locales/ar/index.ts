@@ -3858,6 +3858,8 @@ export const ar: DeepPartial<Messages> = {
             quickAddHiddenByFilters: "تم إنشاء {id}، لكن عوامل التصفية الحالية تخفيه.",
             quickAddOpen: "فتح",
             quickAddDismiss: "إغلاق",
+            statusColumnLabel: "{name} · {category} · المهام: {count}",
+            statusOffTooltip: "معطّلة. انقل هذه المهام إلى حالة أخرى.",
         },
         subTasks: {
             loadFailed: "تعذّر تحميل المهام الفرعية",
@@ -3891,6 +3893,7 @@ export const ar: DeepPartial<Messages> = {
             folder: "المجلد",
         },
         filters: {
+            statusInCategory: "{name} ضمن {category}",
             all: "الكل",
             open: "مفتوحة",
             wip: "قيد التنفيذ",
@@ -4645,6 +4648,10 @@ export const ar: DeepPartial<Messages> = {
             deleteInUse: "عدد المهام التي تستخدم هذه الحالة: {count}. انقلها إلى:",
             replacementLabel: "نقل إلى",
             deleteAndMove: "نقل وحذف",
+            boardColumnsTitle: "عمود في اللوحة لكل حالة",
+            boardColumnsHint: "يسري على جميع أعضاء المشروع.",
+            boardColumnsOn: "تعرض اللوحة عمودًا لكل حالة.",
+            boardColumnsOff: "تعرض اللوحة عمودًا لكل فئة.",
         },
         automation: {
             tabsLabel: "أقسام إعدادات المشروع",

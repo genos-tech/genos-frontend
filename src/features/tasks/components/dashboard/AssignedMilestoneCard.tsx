@@ -33,7 +33,13 @@ export const AssignedMilestoneCard = ({ milestone, sprintName, onOpen }: Props) 
                 <MilestoneCardBody
                     milestone={milestone}
                     sprintName={sprintName}
-                    topRight={<StatusLabel status={milestone.status} />}
+                    topRight={
+                        <StatusLabel
+                            customStatusId={milestone.customStatusId}
+                            projectId={milestone.projectId}
+                            status={milestone.status}
+                        />
+                    }
                 />
             </TaskCardFrame>
         </AppTooltip>
