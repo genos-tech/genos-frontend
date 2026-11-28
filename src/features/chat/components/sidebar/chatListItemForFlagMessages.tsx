@@ -756,6 +756,10 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const isSelected = selectedFlaggedMessageId === flaggedMessage.flaggedMessageId;
+    // A group's or multi-person DM's avatar is a button of its own.
+    const buttonAvatar =
+        !chatRemoved &&
+        (flaggedMessage.chatType === CHAT_TYPES.GM || flaggedMessage.chatType === CHAT_TYPES.MDM);
 
     return (
         <React.Fragment>
@@ -764,7 +768,15 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             <NavItem
                 as="div"
                 data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
+                interactiveContent={buttonAvatar}
                 lines={2}
+                selected={isSelected}
+                // Active-flag indicator bar: not shown in the past view (those
+                // flags are completed, not outstanding).
+                unread={Boolean(tmpIsFlagged) && viewMode === "active"}
+                // Complete / Reopen / Unflag live in the row's actions slot, beside the card and
+                // not inside the row's own button. They are always shown (the keep class): a flag's
+                // actions are its main controls, not a hover extra.
                 actions={
                     <>
                         {viewMode === "active" ? (
@@ -836,18 +848,6 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                             </IconButton>
                         </AppTooltip>
                     </>
-                }
-                selected={isSelected}
-                // Active-flag indicator bar: not shown in the past view (those
-                // flags are completed, not outstanding).
-                unread={Boolean(tmpIsFlagged) && viewMode === "active"}
-                // Complete / Reopen / Unflag live in the row's actions slot, beside the card and
-                // not inside the row's own button. They are always shown (the keep class): a flag's
-                // actions are its main controls, not a hover extra.
-                interactiveContent={
-                    !chatRemoved &&
-                    (flaggedMessage.chatType === CHAT_TYPES.GM ||
-                        flaggedMessage.chatType === CHAT_TYPES.MDM)
                 }
                 sx={{
                     mx: 1,
