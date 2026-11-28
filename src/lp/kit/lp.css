@@ -1935,31 +1935,6 @@ a.lp-row:hover .lp-row__arrow {
     font-size: 0.9375rem;
 }
 
-.lp-featured {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0 48px;
-}
-
-.lp-featured .lp-post {
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
-    gap: 10px;
-    padding-block: 24px 28px;
-    border-top: 1px solid var(--lp-border);
-    border-bottom: 0;
-}
-
-.lp-featured .lp-post__title {
-    font-size: 1.375rem;
-    line-height: 1.3;
-}
-
-@media (max-width: 800px) {
-    .lp-featured {
-        grid-template-columns: minmax(0, 1fr);
-    }
-}
-
 /* API reference (/developers). */
 .lp-prose--doc {
     font-size: 1rem;
@@ -3059,13 +3034,43 @@ a.lp-row:hover .lp-row__arrow {
     border-radius: 8px;
     margin-bottom: 6px;
 }
+.lp-postgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+    gap: 8px 32px;
+}
+.lp-postgrid .lp-post {
+    align-content: start;
+    min-width: 0;
+}
 .lp-post__cover {
     width: 100%;
+    height: auto;
     aspect-ratio: 16 / 9;
     object-fit: cover;
     object-position: top left;
     border: 1px solid var(--lp-border-subtle);
     border-radius: 8px;
+}
+.lp-post__cover--flow {
+    display: grid;
+    align-content: center;
+    padding: 12px;
+}
+/* In a card the boxes stack: the card is too narrow for a row. */
+.lp-root .lp-post__cover--flow .lp-flow {
+    flex-direction: column;
+    gap: 14px;
+}
+.lp-post__cover--flow .lp-flow li {
+    padding-block: 4px;
+}
+.lp-post__cover--flow .lp-flow li + li::before {
+    content: "↓";
+    content: "↓" / "";
+    left: 50%;
+    top: -9px;
+    transform: translate(-50%, -50%);
 }
 .lp-prose .lp-blog-figure {
     display: block;

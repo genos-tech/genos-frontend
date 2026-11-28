@@ -118,7 +118,7 @@ export const DEVELOPERS_META: Meta = {
 /** English-only index. */
 export const BLOG_META: Meta = {
     title: "Blog | Genos",
-    description: "Product thinking and engineering write-ups from the Genos team.",
+    description: "Short, mostly visual posts about what you can do with Genos.",
 };
 
 /** One URL carries both languages; Japanese is the operative text. */
