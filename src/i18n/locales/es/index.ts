@@ -2672,6 +2672,11 @@ export const es: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# comentario} other {# comentarios}}",
+            replies: "{count, plural, one {# respuesta} other {# respuestas}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -4180,19 +4185,19 @@ export const es: DeepPartial<Messages> = {
                 loadFailed: "No se pudo cargar el gráfico de ritmo",
                 title: "Ritmo",
                 subtitle:
-                    "Tareas creadas, iniciadas, cerradas y actualizadas a lo largo del tiempo.",
+                    "Tareas creadas, iniciadas, cerradas y actualizadas a lo largo del tiempo",
                 day: "Día",
                 week: "Semana",
-                created: "Creado",
-                started: "Comenzó",
-                closed: "Cerrado",
-                updated: "Actualizado",
-                weekPrefix: "W de",
+                created: "Creadas",
+                started: "Iniciadas",
+                closed: "Cerradas",
+                updated: "Actualizadas",
+                weekPrefix: "Sem.",
                 memberLabel: "Miembro",
                 allMembers: "Todos los miembros",
-                empty: "Aún no hay actividad de tarea en esta ventana.",
+                empty: "Aún no hay actividad de tareas en este periodo.",
                 barTooltip: "{count} {series} · {date}",
-                totals: "En vista: {created} creado, {started} iniciado, {closed} cerrado, {updated} actualizado.",
+                totals: "En este periodo — Creadas: {created} · Iniciadas: {started} · Cerradas: {closed} · Actualizadas: {updated}",
             },
             moreCount: "+{count} más",
             noOverdueTasks: "Sin tareas atrasadas",

@@ -2652,6 +2652,11 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# टिप्पणी} other {# टिप्पणियाँ}}",
+            replies: "{count, plural, one {# जवाब} other {# जवाब}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -4380,19 +4385,19 @@ export const hi: DeepPartial<Messages> = {
             velocity: {
                 loadFailed: "रफ़्तार का चार्ट लोड नहीं हो सका",
                 title: "रफ़्तार",
-                subtitle: "समय के साथ कार्य बनाए गए, प्रारंभ किए गए, बंद किए गए और अद्यतन किए गए",
+                subtitle: "समय के साथ बने, शुरू हुए, बंद हुए और अपडेट हुए टास्क",
                 day: "दिन",
                 week: "सप्ताह",
-                created: "बनाया था",
-                started: "शुरू कर दिया",
-                closed: "बंद किया हुआ",
-                updated: "अद्यतन",
-                weekPrefix: "डब्ल्यू का",
+                created: "नए",
+                started: "शुरू",
+                closed: "बंद",
+                updated: "अपडेट",
+                weekPrefix: "सप्ताह",
                 memberLabel: "सदस्य",
                 allMembers: "सभी सदस्य",
-                empty: "इस विंडो में अभी तक कोई कार्य गतिविधि नहीं है.",
+                empty: "इस अवधि में अभी कोई टास्क गतिविधि नहीं है।",
                 barTooltip: "{count} {series} · {date}",
-                totals: "दृश्य में - {created} बनाया गया, {started} प्रारंभ हुआ, {closed} बंद हुआ, {updated} अद्यतन किया गया",
+                totals: "इस अवधि में — नए: {created} · शुरू: {started} · बंद: {closed} · अपडेट: {updated}",
             },
             member: "मेंबर",
             open: "ओपन",
@@ -6224,7 +6229,7 @@ export const hi: DeepPartial<Messages> = {
             placeholder: "इस धागे के बारे में कुछ भी पूछें...",
             send: "भेजना",
             cancel: "रद्द करना",
-            clear: "स्पष्ट बातचीत",
+            clear: "बातचीत साफ़ करें",
         },
         mentions: {
             ariaLabel: "सुझावों का उल्लेख करें",
@@ -6318,7 +6323,7 @@ export const hi: DeepPartial<Messages> = {
             placeholder: "इस नोट के बारे में कुछ भी पूछें...",
             send: "भेजना",
             cancel: "रद्द करना",
-            clear: "स्पष्ट बातचीत",
+            clear: "बातचीत साफ़ करें",
         },
         mentions: {
             ariaLabel: "सुझावों का उल्लेख करें",
