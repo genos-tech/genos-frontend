@@ -35,18 +35,25 @@ export const useScrollToBottomOnNewTaskComment = (
  * sibling hook above and gives Virtuoso time to mount its rows after
  * the comment list reloads. No-ops when the id is missing or not in
  * the current `taskComments` slice (deep link aimed at a comment we
- * haven't loaded yet).
+ * haven't loaded yet). Scrolls once per id: a new comment, a reaction or
+ * an edit must not pull a reader back to the linked one (MIP-2543).
  */
 export const useScrollToTaskCommentByCommentId = (
     virtuosoRef: React.RefObject<VirtuosoHandle>,
     taskComments: TaskCommentProps[],
     focusedCommentId: number | undefined
 ) => {
+    const scrolledToRef = useRef<number | undefined>(undefined);
     useEffect(() => {
-        if (focusedCommentId === undefined) return;
+        if (focusedCommentId === undefined) {
+            scrolledToRef.current = undefined;
+            return;
+        }
+        if (scrolledToRef.current === focusedCommentId) return;
         const index = taskComments.findIndex((c) => c.commentId === focusedCommentId);
         if (index === -1) return;
         const timer = setTimeout(() => {
+            scrolledToRef.current = focusedCommentId;
             virtuosoRef.current?.scrollToIndex({
                 index,
                 align: "center",

@@ -41,6 +41,7 @@ import {
 import { useScrollToBottomOnNewActivity } from "../../hooks/messageBubbleHooks";
 import { ChatListItemLive } from "../../hooks/useChatListItem";
 import { useChatRouting } from "../../hooks/useChatRouting";
+import { useShowReorderedChat } from "../../hooks/useShowReorderedChat";
 import { ChipId, selectVisibleActivityMessages } from "../../utils/activityChipFilters";
 import { AiAppActivityRow } from "./activity/AiAppActivityRow";
 import { ChatListItemForActivity } from "./activity/chatListItemForActivity";
@@ -355,6 +356,7 @@ export const SyncAwareEmpty = ({
 const ChatListRenderer = ({
     targetChats,
     virtuosoRef,
+    atTopStateChange,
     state,
     actions,
     data,
@@ -367,6 +369,7 @@ const ChatListRenderer = ({
 }: {
     targetChats: AllChatProps[];
     virtuosoRef: React.RefObject<VirtuosoHandle | null>;
+    atTopStateChange: (atTop: boolean) => void;
     state: ChatListState;
     actions: ChatListActions;
     data: ChatListData;
@@ -396,6 +399,7 @@ const ChatListRenderer = ({
         <Virtuoso
             ref={virtuosoRef}
             atBottomThreshold={128}
+            atTopStateChange={atTopStateChange}
             atTopThreshold={64}
             className={`custom-scrollbar-${isDark ? "dark" : "light"}`}
             components={FAB_CLEARANCE_COMPONENTS}
@@ -700,25 +704,7 @@ export const ChatList = (props: ChatListProps) => {
     const [selectedActivityId, setSelectedActivityId] = useState<string>("");
     const [selectedFlaggedMessageId, setSelectedFlaggedMessageId] = useState<string>("");
 
-    // Scroll to top when a non-pinned chat reorders to the top (e.g., new message sent/received)
-    const prevFirstNonPinnedKeyRef = useRef<string>("");
-    useEffect(() => {
-        if (targetChats.length === 0) return;
-        const firstNonPinned = targetChats.find((c) => !c.isPinned);
-        if (!firstNonPinned) return;
-        const key = `${firstNonPinned.chatId}-${firstNonPinned.chatType}`;
-        if (prevFirstNonPinnedKeyRef.current && prevFirstNonPinnedKeyRef.current !== key) {
-            const ref = chatTypeLookup[targetChatType];
-            requestAnimationFrame(() => {
-                ref?.current?.scrollTo({ top: 0, behavior: smoothScrollBehavior() });
-            });
-        }
-        prevFirstNonPinnedKeyRef.current = key;
-        // Effect is keyed to `targetChats` reordering. `chatTypeLookup` /
-        // `targetChatType` are stable for a given tab; including them
-        // would cause unrelated re-scrolls on tab switches.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [targetChats]);
+    const atTopStateChange = useShowReorderedChat(chatTypeLookup[targetChatType], targetChats);
 
     // Scroll hooks
     useScrollToBottomOnNewActivity(
@@ -919,6 +905,7 @@ export const ChatList = (props: ChatListProps) => {
             return (
                 <ChatListRenderer
                     actions={actions}
+                    atTopStateChange={atTopStateChange}
                     data={data}
                     isDark={isDark}
                     socket={socket}
