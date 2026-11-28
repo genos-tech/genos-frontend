@@ -192,6 +192,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
     };
 
     const activityColor = getActivityColor();
+    const rowId = React.useId();
 
     // For task-comment activities (chat_type=4 + taskId truthy), the actual
     // chat is the underlying PM (chat_type=3) — clicking the activity opens
@@ -790,11 +791,21 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
         8: t.chat.activity.chipChatNote,
     };
 
+    // The row button is named by the card's text, never by its avatar button (MIP-2605).
+    const nameIds = {
+        title: `${rowId}-title`,
+        chips: `${rowId}-chips`,
+        time: `${rowId}-time`,
+        body: `${rowId}-body`,
+        more: `${rowId}-more`,
+    };
+
     return (
         <React.Fragment>
             {/* The row shell (selection, unread bar, focus, hover) is the shared
                 NavItem; the card content below is the feed's own. */}
             <NavItem
+                aria-labelledby={Object.values(nameIds).join(" ")}
                 as="div"
                 // The avatars are buttons of their own (`ActivityAvatar`).
                 interactiveContent={hasButtonAvatar(activity)}
@@ -820,9 +831,11 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                         socket={socket}
                         useTEM={useTEM}
                         useUISM={useUISM}
+                        ids={nameIds}
                     />
 
                     <ActivityContent
+                        id={nameIds.body}
                         activity={activity}
                         groupedReactions={groupedReactions}
                         myself={myself}
@@ -830,6 +843,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
 
                     {aggregatedCount > 1 && (
                         <Typography
+                            id={nameIds.more}
                             level="body-xs"
                             sx={{
                                 ml: "44px",
