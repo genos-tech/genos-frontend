@@ -24,7 +24,7 @@ import {
     ProjectChatAvatar,
 } from "../../../../components/ui/avatars/ChatKindAvatar";
 import { GMAvatar } from "../../../../components/ui/avatars/GMAvatar";
-import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
+import { MDMAvatarButton } from "../../../../components/ui/avatars/MDMAvatarButton";
 import { ProjectAvatar } from "../../../../components/ui/avatars/ProjectAvatar";
 import { EmojiText } from "../../../../components/ui/emoji/EmojiText";
 import { NavItem } from "../../../../components/ui/nav/NavItem";
@@ -545,12 +545,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
         return <ProjectChatAvatar size="md" />;
     };
 
-    const renderMDMAvatar = () => (
-        <MDMAvatar
-            members={chatRecord?.mdmMembers}
-            teamMemberProfiles={useTEM.teamMemberProfiles}
-        />
-    );
+    const renderMDMAvatar = () => <MDMAvatarButton chat={chatRecord} showPresence />;
 
     // Fallback for any chat that has been removed entirely — we still need
     // *something* in the avatar slot so the row layout stays consistent.

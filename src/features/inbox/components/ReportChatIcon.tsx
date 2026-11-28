@@ -110,7 +110,13 @@ export const ReportChatIcon = memo(
                 // The chat list's own stack of member faces (`MDMAvatar`, one logic for both),
                 // at the `xs` step. No `teamMemberProfiles`: no presence dot or paused-moon on a
                 // mark, as for a DM above. A chat whose members are not known draws its people glyph.
-                avatar = <MDMAvatar avatarSize={CHAT_ICON_SLOT} members={mark.members} />;
+                avatar = (
+                    <MDMAvatar
+                        avatarSize={CHAT_ICON_SLOT}
+                        memberCount={mark.total}
+                        members={mark.members}
+                    />
+                );
         }
         return <ChatIconSlot width={slotWidth}>{avatar}</ChatIconSlot>;
     }

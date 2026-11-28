@@ -7,10 +7,11 @@ import { g } from "../../../theme/tokens";
 import { UserProps } from "../../../types/admin";
 import { MDMMemberProps } from "../../../types/chat";
 import { initialOf } from "../../../utils/initials";
+import { withoutDeletedUsers } from "../../../utils/teamRoster";
 import { PRESENCE_COLOR } from "../misc/presenceColor";
 import { PulseDot } from "../misc/PulseDot";
 import { BaseAvatar } from "./BaseAvatar";
-import { MDM_MAX_VISIBLE, MDM_STEP, mdmInitialOffset, mdmStackWidth } from "./mdmStack";
+import { MDM_MAX_VISIBLE, MDM_STEP, mdmFaces, mdmInitialOffset, mdmStackWidth } from "./mdmStack";
 
 const media_url = import.meta.env.VITE_MEDIA_ROOT_DJANGO;
 
@@ -30,6 +31,12 @@ type MDMAvatarProps = {
      * glyph scale with it so the stack keeps its proportions.
      */
     avatarSize?: number;
+    /**
+     * The member total, for a caller that passes only the members it draws (an inbox report
+     * mark). Without it the total is the members given, deleted accounts left out: they take
+     * no seat (MIP-2549).
+     */
+    memberCount?: number;
 };
 
 export const MDMAvatar: React.FC<MDMAvatarProps> = ({
@@ -37,13 +44,15 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
     size = "sm",
     teamMemberProfiles,
     avatarSize,
+    memberCount,
 }) => {
     const { t } = useTranslation();
 
     const miniSize = avatarSize ?? (size === "sm" ? 28 : 32);
     const maxVisible = MDM_MAX_VISIBLE;
+    const people = members ? withoutDeletedUsers(members) : [];
 
-    if (!members || members.length === 0) {
+    if (people.length === 0) {
         return (
             <BaseAvatar
                 size={avatarSize ?? (size === "sm" ? "md" : "lg")}
@@ -63,11 +72,14 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
         );
     }
 
-    const visibleMembers = members.slice(0, maxVisible);
+    const { faces, overflow } = mdmFaces(Math.max(memberCount ?? people.length, people.length));
+    const visibleMembers = people.slice(0, faces);
     const step = miniSize * MDM_STEP;
     // The presence dot and the paused moon are the chat list's: they show when it passes profiles.
     const showPresence = !!teamMemberProfiles;
-    const totalWidth = mdmStackWidth(visibleMembers.length, miniSize);
+    const drawn = visibleMembers.length + (overflow > 0 ? 1 : 0);
+    const totalWidth = mdmStackWidth(drawn, miniSize);
+    const overflowOffset = mdmInitialOffset(visibleMembers.length, miniSize, false);
 
     return (
         <Box
@@ -183,6 +195,43 @@ export const MDMAvatar: React.FC<MDMAvatarProps> = ({
                     </Box>
                 );
             })}
+            {overflow > 0 && (
+                <Box
+                    data-testid="mdm-overflow"
+                    sx={{
+                        position: "absolute",
+                        top: 0,
+                        // The stack's own `left`, so it mirrors in Arabic like the faces.
+                        left: visibleMembers.length * step,
+                        width: miniSize,
+                        height: miniSize,
+                        borderRadius: "50%",
+                        bgcolor: g.surface.default,
+                    }}
+                >
+                    <BaseAvatar
+                        size={miniSize}
+                        sx={{
+                            fontSize: Math.max(7, Math.round(miniSize * 0.36)),
+                            fontWeight: 600,
+                            border: "1.5px solid",
+                            borderColor: g.surface.default,
+                        }}
+                    >
+                        <Box
+                            component="span"
+                            sx={{
+                                position: "relative",
+                                insetInlineStart: `${overflowOffset.inline}px`,
+                            }}
+                        >
+                            {/* "+8" reads left to right in every language; the offset above
+                                follows the stack's direction, so the two are separate. */}
+                            <bdi dir="ltr">+{overflow}</bdi>
+                        </Box>
+                    </BaseAvatar>
+                </Box>
+            )}
         </Box>
     );
 };

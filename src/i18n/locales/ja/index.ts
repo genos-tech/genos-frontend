@@ -1727,6 +1727,32 @@ export const ja: DeepPartial<Messages> = {
                 externalChatExplainer:
                     "招待する接続チームを選択します。各チームは 1 回承認し、その後、チームのオーナーまたは編集者がどのメンバーが参加するかを選択します。外部チャットは常に非公開です。",
             },
+            mdmMembers: {
+                title: "メンバー",
+                chipLabel: "この会話のメンバー（{count}人）",
+                countOfMax: "{count} / {max} 人",
+                creator: "作成者",
+                you: "自分",
+                addButton: "メンバーを追加",
+                atLimit: "この会話は上限の {max} 人に達しています。",
+                atLimitCreator:
+                    "この会話は上限の {max} 人に達しています。追加するには、誰かを削除してください。",
+                historyNote: "追加した人は、過去のメッセージも見られます。",
+                remaining: "あと {count} 人追加できます。",
+                limitReached: "上限は {max} 人です。",
+                createMaxHint: "自分を含めて {max} 人までです。",
+                addHeading: "この会話にメンバーを追加",
+                addFailedFull: "追加できませんでした。この会話は満員です（{max} 人）。",
+                leaveButton: "会話から退出",
+                leaveTitle: "この会話から退出しますか？",
+                leaveDescription:
+                    "この会話のメッセージは表示されず、届かなくなります。残っているメンバーに再び追加してもらえます。",
+                leaveDescriptionCreator:
+                    "この会話のメッセージは表示されず、届かなくなります。メンバーの削除は、最も長く参加している人が引き継ぎます。",
+                loadError: "メンバーを読み込めませんでした。",
+                scopeName: "この会話",
+                searchPlaceholder: "メンバーを検索...",
+            },
             createMDM: {
                 title: "新規マルチユーザーDM",
                 description: "グループを作らずに複数のメンバーとチャットを始めます。",

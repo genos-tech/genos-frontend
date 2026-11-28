@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 
 import { AppTooltip } from "../../../../components/ui/AppTooltip";
 import { useResolvedUserName } from "../../../../components/ui/avatars/AvatarContext";
-import { MDMAvatar } from "../../../../components/ui/avatars/MDMAvatar";
+import { MDMAvatarButton } from "../../../../components/ui/avatars/MDMAvatarButton";
 import { modalChromeEndPadding } from "../../../../components/ui/modal/modalChrome";
 import { MenuRow, MenuSurface, MoreMenu } from "../../../../components/ui/MoreMenu";
 import { pageHeaderFrameSx } from "../../../../components/ui/page/pageHeaderFrame";
@@ -543,15 +543,14 @@ export const ThreadChatPaneHeader = (props: ThreadChatPaneHeaderProps) => {
                 {/* MDM Avatar */}
                 {useCM.currentThreadChat?.chatType === 4 && (
                     <Box sx={{ flexShrink: 0 }}>
-                        <MDMAvatar
-                            members={
-                                useCM.allChats.find(
-                                    (c) =>
-                                        // v3 string vs ThreadProps numeric — `String()` bridges.
-                                        c.chatId === String(useCM.currentThreadChat?.chatId) &&
-                                        c.chatType === 4
-                                )?.mdmMembers
-                            }
+                        <MDMAvatarButton
+                            chat={useCM.allChats.find(
+                                (c) =>
+                                    // v3 string vs ThreadProps numeric — `String()` bridges.
+                                    c.chatId === String(useCM.currentThreadChat?.chatId) &&
+                                    c.chatType === 4
+                            )}
+                            hostZIndex={hostZIndex}
                             size="sm"
                         />
                     </Box>
