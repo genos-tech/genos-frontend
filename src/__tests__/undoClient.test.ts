@@ -197,6 +197,7 @@ describe("a refusal", () => {
         [409, "changed_since", false],
         [410, "expired", false],
         [403, "permission_lost", false],
+        [409, "archived", false],
     ];
 
     it.each(CASES)("%i %s is typed and cannot be retried", async (status, code, retryable) => {
