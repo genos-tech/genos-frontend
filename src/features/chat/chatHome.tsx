@@ -16,7 +16,6 @@ import { SelectChatPanel } from "./components/panels/SelectChatPanel";
 import { SubChatPanel } from "./components/panels/SubChatPanel";
 import { TaskPreviewPanel } from "./components/panels/TaskPreviewPanel";
 import { ThreadPanel } from "./components/panels/ThreadPanel";
-import { ResizeHandle } from "./components/shared/ResizeHandle";
 import { ChatSidebar } from "./components/sidebar/ChatSidebar";
 import {
     setTodoFromMessageBubble,
@@ -24,6 +23,7 @@ import {
 } from "./components/todo/addToTodoStore";
 import { useChatRouting } from "./hooks/useChatRouting";
 
+import { ResizeHandle } from "../../components/ui/ResizeHandle";
 import { LayoutStyles } from "../../components/ui/styles/commonStyle";
 import { ChatManagementState } from "../../hooks/chats/useChatManagement";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
@@ -425,10 +425,7 @@ export const ChatHome = (props: ChatHomeProps) => {
                                                             todoFromMessageBubble
                                                         }
                                                     />
-                                                    <ResizeHandle
-                                                        key="sub-chat-resize-handle"
-                                                        className="chat-resize-handle-ver"
-                                                    />
+                                                    <ResizeHandle key="sub-chat-resize-handle" />
                                                 </>
                                             )}
 
@@ -610,19 +607,6 @@ export const ChatHome = (props: ChatHomeProps) => {
                     {/* Modal for managing tags (create, edit, delete) — global flag-gated */}
                     <ModalManageTagsHost myself={myself} usePM={usePM} useTM={useTM} />
                 </Sheet>
-
-                {/* Hover Animation with CSS */}
-                <style>
-                    {`
-                    .chat-resize-handle {
-                        transition: all 0.3s ease-in-out;
-                    }
-                    .chat-resize-handle:hover {
-                        background-color: grey !important;
-                        width: 8px !important;
-                    }
-                    `}
-                </style>
             </Box>
         </ChatProvider>
     );

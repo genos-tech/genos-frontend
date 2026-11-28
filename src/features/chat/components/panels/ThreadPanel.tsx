@@ -1,5 +1,4 @@
 import { Box } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "react-resizable-panels";
 import type { Socket } from "socket.io-client";
 
@@ -45,16 +44,12 @@ export const ThreadPanel = ({
     useUISM,
     setTodoFromMessageBubble,
 }: ThreadPanelProps) => {
-    const { mode } = useColorScheme();
-
     return (
         <Panel id={"5"} maxSize={70} minSize={25} order={5}>
             <Box
                 sx={{
                     height: "100%",
                     backgroundColor: "black",
-                    borderColor: mode === "dark" ? "black" : "white",
-                    borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                 }}
             >
                 {useCM.currentThreadChat && (

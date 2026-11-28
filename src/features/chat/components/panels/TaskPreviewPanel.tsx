@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { Box } from "@mui/joy";
-import { useColorScheme } from "@mui/joy/styles";
 import { Panel } from "react-resizable-panels";
 import type { Socket } from "socket.io-client";
 
@@ -61,8 +60,6 @@ export const TaskPreviewPanel = ({
     guardStaleTaskId,
     createForm,
 }: TaskPreviewPanelProps) => {
-    const { mode } = useColorScheme();
-
     return (
         <Panel id={"7"} maxSize={70} minSize={30} order={7}>
             <Box
@@ -80,9 +77,6 @@ export const TaskPreviewPanel = ({
                     minWidth: 0,
                     height: "var(--app-vh)",
                     gap: 1,
-                    boxShadow: "0 0 0 1px grey",
-                    borderColor: mode === "dark" ? "black" : "white",
-                    borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                 }}
             >
                 {createForm ?? (

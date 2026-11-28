@@ -27,6 +27,7 @@ import { requestConnectSetup } from "../../components/layout/connectAppPanelHelp
 import { SchedulesModal } from "../../components/layout/schedules/SchedulesModal";
 import { useAgentQuiet } from "../../components/layout/useAgentQuiet";
 import { AppTooltip } from "../../components/ui/AppTooltip";
+import { paneDivider } from "../../components/ui/paneDivider";
 import { useIsDemoUser } from "../../hooks/common/useIsDemoUser";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import { useTranslation } from "../../i18n";
@@ -212,8 +213,7 @@ export const GenosHome = ({
                     sx={{
                         width: SIDEBAR_WIDTH,
                         flexShrink: 0,
-                        borderRight: "1px solid",
-                        borderColor: palette.divider,
+                        borderInlineEnd: paneDivider,
                         // The app-standard panel surface (theme-reactive
                         // gradient) instead of a flat tint.
                         background: palette.surface,

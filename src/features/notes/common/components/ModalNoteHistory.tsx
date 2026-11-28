@@ -11,6 +11,7 @@ import { ErrorState } from "../../../../components/ui/feedback/ErrorState";
 import { SkeletonLines } from "../../../../components/ui/feedback/Skeleton";
 import { ViaChip } from "../../../../components/ui/misc/ViaChip";
 import { ModalFrame } from "../../../../components/ui/modal/ModalFrame";
+import { paneDivider } from "../../../../components/ui/paneDivider";
 import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
@@ -246,7 +247,7 @@ export const ModalNoteHistory = ({
                         width: { xs: "auto", sm: 320 },
                         maxHeight: { xs: "40%", sm: "none" },
                         flexShrink: 0,
-                        borderInlineEnd: { sm: `1px solid ${g.border.subtle}` },
+                        borderInlineEnd: { sm: paneDivider },
                         borderBlockEnd: { xs: `1px solid ${g.border.subtle}`, sm: "none" },
                         overflow: "auto",
                     }}

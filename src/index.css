@@ -298,3 +298,32 @@
         }
     }
 }
+
+/* The one pane divider (MIP-2606): the line the task page draws between its
+   table and preview. `components/ui/ResizeHandle` renders it; panes that cannot
+   be resized use `paneDivider` (components/ui/paneDivider.ts). */
+.gp-pane-handle {
+    flex-shrink: 0;
+    background-color: var(--g-border);
+    transition: all 0.3s ease-in-out;
+}
+
+.gp-pane-handle[data-panel-group-direction="horizontal"] {
+    width: 2px;
+    cursor: col-resize;
+}
+
+.gp-pane-handle[data-panel-group-direction="vertical"] {
+    height: 2px;
+    cursor: row-resize;
+}
+
+.gp-pane-handle[data-panel-group-direction="horizontal"]:hover {
+    width: 8px;
+    background-color: grey;
+}
+
+.gp-pane-handle[data-panel-group-direction="vertical"]:hover {
+    height: 8px;
+    background-color: grey;
+}

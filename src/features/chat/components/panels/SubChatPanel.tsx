@@ -1,4 +1,4 @@
-import { Box, useColorScheme } from "@mui/joy";
+import { Box } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
 import type { Socket } from "socket.io-client";
 
@@ -51,16 +51,12 @@ export const SubChatPanel = ({
     useUISM,
     setTodoFromMessageBubble,
 }: SubChatPanelProps) => {
-    const { mode } = useColorScheme();
-
     return (
         <Panel id={"3"} maxSize={80} minSize={30} order={3} onResize={setSubChatPanelSize}>
             <Box
                 sx={{
                     height: "100%",
                     width: "100%",
-                    borderColor: mode === "dark" ? "black" : "white",
-                    borderRight: mode === "dark" ? "1px black inset" : "1px lightgrey inset",
                 }}
             >
                 <MessagesSubPane

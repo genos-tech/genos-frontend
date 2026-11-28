@@ -30,6 +30,7 @@ import { DataState } from "../../../components/ui/feedback/DataState";
 import { EmptyState } from "../../../components/ui/feedback/EmptyState";
 import { SkeletonRows } from "../../../components/ui/feedback/Skeleton";
 import { SearchField } from "../../../components/ui/fields/SearchField";
+import { paneDivider } from "../../../components/ui/paneDivider";
 import { fmt, useTranslation } from "../../../i18n";
 import { channelService } from "../../../services/channel/channelService";
 import { useSyncFailure } from "../../../services/syncStatus";
@@ -132,7 +133,7 @@ export function ChannelListV3({ selectedChannelId, onSelect, fullWidth }: Channe
                 flexDirection: "column",
                 height: "100%",
                 width: fullWidth ? "100%" : 240,
-                borderRight: fullWidth ? "none" : "1px solid #ddd",
+                borderInlineEnd: fullWidth ? "none" : paneDivider,
                 fontFamily: "system-ui, sans-serif",
             }}
         >

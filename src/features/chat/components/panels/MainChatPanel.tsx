@@ -2,6 +2,7 @@ import { Box } from "@mui/joy";
 import { Panel } from "react-resizable-panels";
 import { Socket } from "socket.io-client";
 
+import { ResizeHandle } from "../../../../components/ui/ResizeHandle";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
@@ -11,7 +12,6 @@ import { UseTodoGroupsState } from "../../../../hooks/useTodoGroups";
 import { UserProps } from "../../../../types/admin";
 import { MessageProps, ThreadMessageProps } from "../../../../types/chat";
 import { TaskCommentProps } from "../../../../types/tasks";
-import { ResizeHandle } from "../../../notes/common/components/ResizeHandle";
 import { MessagesPane } from "../../MainChatPane";
 import { SelectChatPanel } from "./SelectChatPanel";
 

@@ -19,6 +19,7 @@ import { BaseAvatar } from "../../ui/avatars/BaseAvatar";
 import { Bubble, BubbleAuthor, BubbleMeta } from "../../ui/bubble";
 import { EmptyState } from "../../ui/feedback/EmptyState";
 import { ViaChip } from "../../ui/misc/ViaChip";
+import { paneDivider } from "../../ui/paneDivider";
 import { TOUCH_TARGET } from "../../ui/touchTargets";
 import { commentFirstLine } from "./commentMentions";
 import { useNoteLink } from "./NoteLinkContext";
@@ -518,8 +519,7 @@ export const CommentsSidebar = ({
                           minHeight: 0,
                           display: "flex",
                           flexDirection: "column",
-                          borderInlineStart: "1px solid",
-                          borderColor: "divider",
+                          borderInlineStart: paneDivider,
                           bgcolor: "background.surface",
                       }
             }

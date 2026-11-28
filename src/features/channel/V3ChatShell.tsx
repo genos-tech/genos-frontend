@@ -20,6 +20,7 @@ import type { ImportableAttachment } from "./components/MessageAttachments";
 import { MessagesPaneV3 } from "./components/MessagesPaneV3";
 import { ThreadPanelV3 } from "./components/ThreadPanelV3";
 
+import { paneDivider } from "../../components/ui/paneDivider";
 import { useIsMobile } from "../../hooks/common/useIsMobile";
 import type { NoteManagementState } from "../../hooks/notes/useNoteManagement";
 import { channelService } from "../../services/channel/channelService";
@@ -233,7 +234,7 @@ export function V3ChatShell({ myself, useNM }: V3ChatShellProps = {}) {
                             <div
                                 style={{
                                     width: 360,
-                                    borderLeft: "1px solid #ddd",
+                                    borderInlineStart: paneDivider,
                                     display: "flex",
                                     flexDirection: "column",
                                 }}
