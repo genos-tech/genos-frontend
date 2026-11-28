@@ -1,6 +1,7 @@
 /**
- * The blog is picture first and short (MIP-2416): every post opens with a screenshot or a diagram,
- * stays under 150 words, and shows no picture that is not in the repo.
+ * The blog is picture first and says why a feature matters (MIP-2416): every post opens with a
+ * screenshot or a diagram, has a flow and headed sections, runs about 300 to 600 words, and shows no
+ * picture that is not in the repo.
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -28,7 +29,11 @@ const words = (body: string) =>
 describe("visual blog", () => {
     it.each(listBlogArticles().map((a) => [a.slug, a] as const))("%s", (_slug, article) => {
         expect(article.body).toMatch(/^(!\[[^\]]+\]\(\/lp\/|```flow\n)/);
-        expect(words(article.body)).toBeLessThanOrEqual(150);
+        expect(words(article.body)).toBeGreaterThanOrEqual(300);
+        expect(words(article.body)).toBeLessThanOrEqual(600);
+        expect(article.body).toContain("```flow\n");
+        expect(article.body).toMatch(/^## Why it is hard$/m);
+        expect(article.body).toMatch(/^## How to start$/m);
         for (const src of picturesIn(article.body)) {
             expect(existsSync(publicFile(src)), src).toBe(true);
             expect(pictureSize(src).width, src).toBeGreaterThan(0);
