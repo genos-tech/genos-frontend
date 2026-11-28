@@ -221,16 +221,14 @@ export const SkillTagsField = ({
                                         </MenuRow>
                                     );
                                 })}
+                                {editable && <MenuDivider />}
                                 {editable && (
-                                    <>
-                                        <MenuDivider />
-                                        <MenuRow
-                                            icon={<SettingsRoundedIcon />}
-                                            onClick={() => setManaging(true)}
-                                        >
-                                            {f.manageTags}
-                                        </MenuRow>
-                                    </>
+                                    <MenuRow
+                                        icon={<SettingsRoundedIcon />}
+                                        onClick={() => setManaging(true)}
+                                    >
+                                        {f.manageTags}
+                                    </MenuRow>
                                 )}
                             </MenuSurface>
                         </Dropdown>

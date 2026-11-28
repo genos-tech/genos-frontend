@@ -9,6 +9,7 @@ import { fmt, useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import { UserProps } from "../../../../types/admin";
 import { AllChatProps } from "../../../../types/chat";
+import { mdmChatName } from "../../utils/mdmChatName";
 import { ChatListItemTags } from "./ChatListItemTags";
 
 interface ChatListItemTitleProps {
@@ -44,13 +45,8 @@ export const ChatListItemTitle: React.FC<ChatListItemTitleProps> = ({
           : null;
 
     // MDM (chatType 4) chats have no server-side `chatName`; their title is the
-    // comma-separated member names — the same source the chat header and the
-    // sidebar MDM avatar use. Without deriving it here the sidebar item renders
-    // a blank name for MDM chats. Each member's name is resolved live so a
-    // rename (including your own) shows here instead of the cached member name.
-    const mdmName = chat.mdmMembers
-        ?.map((m) => resolveDisplayName(m.userId, m.userName, myself, useTEM.teamMemberProfiles))
-        .join(", ");
+    // member names, the same source the chat header and History use.
+    const mdmName = mdmChatName(chat.mdmMembers, myself, useTEM.teamMemberProfiles);
     // DM (chatType 1) titles are the partner's name — resolve it live too so a
     // partner's rename shows without waiting for the chat row to re-sync.
     const displayName =

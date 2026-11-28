@@ -82,29 +82,30 @@ export const MilestoneRowMenu = ({
                         ? t.tasks.sidebar.removeFromFavorites
                         : t.tasks.sidebar.addToFavorites}
                 </MenuRow>
+                {/* One guard per row, not a Fragment: the menu clones its first and last
+                    child, and a Fragment cannot take what it adds (MIP-2569). */}
+                {canMove && <MenuDivider />}
+                {canMove && <MenuGroupLabel>{t.tasks.folders.moveToFolder}</MenuGroupLabel>}
                 {canMove && (
-                    <>
-                        <MenuDivider />
-                        <MenuGroupLabel>{t.tasks.folders.moveToFolder}</MenuGroupLabel>
-                        <MenuRow
-                            disabled={currentFolderId == null}
-                            selected={currentFolderId == null}
-                            onClick={() => onMoveToFolder(null)}
-                        >
-                            {t.tasks.folders.noFolder}
-                        </MenuRow>
-                        {folders.map((f) => (
-                            <MenuRow
-                                key={f.folderId}
-                                disabled={f.folderId === currentFolderId}
-                                selected={f.folderId === currentFolderId}
-                                onClick={() => onMoveToFolder(f.folderId)}
-                            >
-                                {f.name}
-                            </MenuRow>
-                        ))}
-                    </>
+                    <MenuRow
+                        disabled={currentFolderId == null}
+                        selected={currentFolderId == null}
+                        onClick={() => onMoveToFolder(null)}
+                    >
+                        {t.tasks.folders.noFolder}
+                    </MenuRow>
                 )}
+                {canMove &&
+                    folders.map((f) => (
+                        <MenuRow
+                            key={f.folderId}
+                            disabled={f.folderId === currentFolderId}
+                            selected={f.folderId === currentFolderId}
+                            onClick={() => onMoveToFolder(f.folderId)}
+                        >
+                            {f.name}
+                        </MenuRow>
+                    ))}
             </MenuSurface>
         </Dropdown>
     );

@@ -19,7 +19,7 @@ import { fmt, useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
 import { rowSx } from "../components/statuses/listStyles";
 import { MAX_RULES } from "./draft";
-import { isHidden, unnamedDestination } from "./helpers";
+import { isHidden, turnedOffCode, unnamedDestination } from "./helpers";
 import { useLookups } from "./lookups";
 import { RuleSummary } from "./RuleSentence";
 import type { AutomationRule } from "./types";
@@ -288,7 +288,7 @@ export const RuleList = (props: Props) => {
                             {fmt(words.turnedOff, {
                                 reason: reasonText(
                                     wordsFor(words, rule.appliesTo),
-                                    rule.disabledReason
+                                    turnedOffCode(rule)
                                 ),
                             })}
                         </Box>

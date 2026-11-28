@@ -18,7 +18,13 @@ import {
     type StatusPick,
 } from "./draft";
 import { fmtNodes } from "./fmtNodes";
-import { fieldName, memberName, projectName } from "./helpers";
+import {
+    destinationGone,
+    fieldName,
+    memberName,
+    projectName,
+    unnamedDestination,
+} from "./helpers";
 import { statusRowOf, useLookups } from "./lookups";
 import type { AutomationRule } from "./types";
 import { useAutomationWords } from "./words";
@@ -67,11 +73,14 @@ const StatusWord = ({ pick, projectId }: { pick: StatusPick; projectId: number }
 export const RuleSentence = ({
     draft,
     hiddenDestination = false,
+    goneDestination = false,
     destinationName,
 }: {
     draft: RuleDraft;
     /** The reader is not on the destination: it is not named. */
     hiddenDestination?: boolean;
+    /** The destination project was deleted. */
+    goneDestination?: boolean;
     destinationName?: string | null;
 }) => {
     const words = useAutomationWords(draft.appliesTo);
@@ -80,7 +89,7 @@ export const RuleSentence = ({
     const list = useList();
     const { locale } = useTranslation();
     const person = (id: string) => <Value>{memberName(lookups, id) ?? words.unknown}</Value>;
-    const moves = draft.actions.includes("move") || hiddenDestination;
+    const moves = draft.actions.includes("move") || hiddenDestination || goneDestination;
     const target = moves && draft.destinationId != null ? draft.destinationId : lookups.projectId;
 
     const trigger = (): ReactNode => {
@@ -159,7 +168,8 @@ export const RuleSentence = ({
     };
 
     const actions: ReactNode[] = [];
-    if (hiddenDestination) actions.push(words.aMoveHidden);
+    if (goneDestination) actions.push(words.aMoveGone);
+    else if (hiddenDestination) actions.push(words.aMoveHidden);
     else if (draft.actions.includes("move")) {
         const name =
             destinationName ??
@@ -216,6 +226,7 @@ export const RuleSummary = ({ rule }: { rule: AutomationRule }) => (
     <RuleSentence
         destinationName={rule.destination?.name}
         draft={draftOf(rule)}
-        hiddenDestination={rule.movesTask && rule.destination?.visible === false}
+        goneDestination={destinationGone(rule)}
+        hiddenDestination={unnamedDestination(rule)}
     />
 );
