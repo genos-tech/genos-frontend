@@ -23,7 +23,22 @@ vi.mock("../features/tasks/services/projectStatuses", () => ({
     loadProjectStatuses: vi.fn().mockResolvedValue({ statuses: [], canManage: true }),
 }));
 vi.mock("../features/tasks/services/projectCustomFields", () => ({
-    loadProjectCustomFields: vi.fn().mockResolvedValue({ fields: [], canManage: true }),
+    loadProjectCustomFields: vi.fn().mockResolvedValue({
+        canManage: true,
+        fields: [
+            {
+                fieldId: 5,
+                fieldName: "Area",
+                fieldType: "tag",
+                sortOrder: 0,
+                options: [
+                    { id: "web", label: "Web", color: "#0ea5e9" },
+                    { id: "ios", label: "iOS", color: "#8b5cf6" },
+                ],
+            },
+            { fieldId: 6, fieldName: "Tester", fieldType: "member", sortOrder: 1, options: [] },
+        ],
+    }),
 }));
 vi.mock("../features/tasks/sprint-milestone/services/loadProjectSprints", () => ({
     loadProjectSprints: vi.fn().mockResolvedValue({ sprints: [] }),
@@ -229,5 +244,24 @@ describe("the rule builder's pickers", { timeout: 30_000 }, () => {
         expect(slot("trigger").getAttribute("placeholder")).toBe(words.anyone);
         await pick(slot("trigger"), /Bo/);
         expect((await sent()).trigger_value).toEqual({ assignee_id: "bo" });
+    });
+
+    it("picks a custom tag field and a custom member field as the task view does", async () => {
+        await openEditor(
+            projects,
+            rule({
+                conditions: [
+                    { field: "custom_field", field_id: 5, op: "is", value: "web" },
+                    { field: "custom_field", field_id: 6, op: "is", value: "me" },
+                ],
+            })
+        );
+        await waitFor(() => expect(conditionSlot(1)?.value).toBe("Mia"));
+        await pick(conditionSlot(0), /iOS/);
+        await pick(conditionSlot(1), /Bo/);
+        expect((await sent()).conditions).toMatchObject([
+            { field_id: 5, value: "ios" },
+            { field_id: 6, value: "bo" },
+        ]);
     });
 });
