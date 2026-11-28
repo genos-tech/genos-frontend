@@ -2176,7 +2176,9 @@ const HistoryArchiveTurn = ({
                                     ? ts.states.cancelledBeforeAnswer
                                     : unanswered === "expired"
                                       ? ts.states.approvalExpired
-                                      : ts.states.notDecided}
+                                      : unanswered === "refused"
+                                        ? ts.states.notAnswered
+                                        : ts.states.notDecided}
                             </Typography>
                         ) : (
                             <Box sx={markdownAnswerSx()}>

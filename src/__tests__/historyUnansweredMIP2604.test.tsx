@@ -267,3 +267,46 @@ describe("the line a turn without an answer shows", () => {
         expect(screen.getByText(ja)).toBeTruthy();
     });
 });
+
+describe("an ask refused before it began (MIP-2609)", () => {
+    const refused = turn({
+        run_id: "run-r",
+        query: "summarise this",
+        answer: "",
+        status: "error",
+    });
+
+    it("opens with its question, marked refused", async () => {
+        const { result } = await resume([refused]);
+        expect(result.current.turns).toMatchObject([
+            { askedQuery: "summarise this", unanswered: "refused" },
+        ]);
+    });
+
+    it("keeps the server's own words when the run has an error message", async () => {
+        const { result } = await resume([{ ...refused, error: "It broke." }]);
+        expect(result.current.turns[0].askError).toBe("It broke.");
+        expect(result.current.turns[0].unanswered).toBeUndefined();
+    });
+
+    it("says it could not be answered", () => {
+        render(
+            <CssVarsProvider>
+                <AgentTurn
+                    answer=""
+                    answerSources={[]}
+                    askedQuery="summarise this"
+                    askError={null}
+                    isCurrent={false}
+                    labels={buildAgentTurnLabels(getMessages("en"), "spotlight")}
+                    runId="run-r"
+                    toolEvents={[]}
+                    unanswered="refused"
+                    onFeedback={vi.fn()}
+                    onPreview={vi.fn()}
+                />
+            </CssVarsProvider>
+        );
+        expect(screen.getByText("This ask couldn't be answered.")).toBeTruthy();
+    });
+});

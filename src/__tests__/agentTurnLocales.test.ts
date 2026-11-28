@@ -131,6 +131,7 @@ describe("where each host's labels come from", () => {
             cancelledBeforeAnswer: sp.states.cancelledBeforeAnswer,
             notDecided: sp.states.notDecided,
             approvalExpired: sp.states.approvalExpired,
+            notAnswered: sp.states.notAnswered,
         });
         expect(l.actions).toEqual({
             approve: sp.actions.approve,

@@ -638,7 +638,9 @@ const AgentTurnInner = ({
                                         ? labels.states.notDecided
                                         : unanswered === "expired"
                                           ? labels.states.approvalExpired
-                                          : labels.states.noAnswer}
+                                          : unanswered === "refused"
+                                            ? labels.states.notAnswered
+                                            : labels.states.noAnswer}
                             </Typography>
                         )}
 

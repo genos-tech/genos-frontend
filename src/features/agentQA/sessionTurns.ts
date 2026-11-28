@@ -14,6 +14,8 @@ export const unansweredReason = (turn: AgentSessionTurn): UnansweredReason | und
     if (turn.answer || turn.error) return undefined;
     if (turn.status === "cancelled") return "cancelled";
     if (turn.status === "awaiting_approval") return "notDecided";
+    // Ended as an error with no message: refused before it began (MIP-2609).
+    if (turn.status === "error") return "refused";
     return undefined;
 };
 
