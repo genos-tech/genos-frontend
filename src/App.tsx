@@ -103,6 +103,7 @@ import { webSocketSync } from "./hooks/common/useSyncManagement";
 import { TaskSortPreferencesProvider } from "./hooks/common/useTaskSortPreferences";
 import { ThemePreferenceProvider } from "./hooks/common/useThemePreference";
 import { useThreadTaskHandling } from "./hooks/common/useThreadTaskHandling";
+import { useTodoRoute } from "./hooks/common/useTodoRoute";
 import { UiSettingsProvider } from "./hooks/common/useUiSettings";
 import { useUrlLinkModalState } from "./hooks/common/useUrlLinkModalState";
 import { useWakeRefresh } from "./hooks/common/useWakeRefresh";
@@ -604,50 +605,32 @@ const AppBody = () => {
     // hooks, BrowserRouter, and every provider above.
     const urlLinkModal = useUrlLinkModalState({ navigate });
 
-    // Fresh-load todo deep link: /workspace/todo/... has no page route
-    // (the /workspace/* catch-all renders nothing), so a pasted URL
-    // would land on a blank workspace. Mirror how a pasted chat-message
-    // URL behaves — open the PAGE, not the preview modal (the modal is
-    // reserved for clicked links): route to the self-DM with the todo
-    // pane flipped visible and hand the focus target to ToDoPane via
-    // sessionStorage — ChatHome/ToDoPane aren't mounted yet on a fresh
-    // load, so a CustomEvent would be lost. One-shot; waits for the
-    // chat list so the self-DM is resolvable.
-    const todoDeepLinkHandledRef = useRef(false);
-    useEffect(() => {
-        if (todoDeepLinkHandledRef.current) return;
-        if (!accessToken || !myself.userId) return;
-        if (!window.location.pathname.startsWith("/workspace/todo/")) return;
-        const classified = parseInternalUrl(window.location.pathname);
-        if (classified.kind !== "todo") {
-            todoDeepLinkHandledRef.current = true;
-            return;
-        }
-        const selfDm = useCM.allChats.find(
-            (c) => c.chatType === 1 && c.dmPartnerUser?.userId === myself.userId
-        );
-        // Chat list not loaded yet — the allChats dep re-runs us.
-        if (!selfDm) return;
-        todoDeepLinkHandledRef.current = true;
-        localStorage.setItem("isToDoVisible", "true");
-        sessionStorage.setItem(
-            "todoDeepLinkTarget",
-            JSON.stringify({ itemId: classified.itemId, localDate: classified.localDate })
-        );
-        // PUNCH LIST (v3 chatId migration): same legacy-slot cast as the
-        // Spotlight todo branch below.
-        useCM.moveToSpecificChat(
-            1,
-            selfDm.chatId as unknown as number,
-            0,
-            false,
-            false,
-            useTM.setCurrentPreviewTaskId,
-            usePM.setCurrentProject,
-            undefined
-        );
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [accessToken, myself.userId, useCM.allChats]);
+    // /workspace/todo... has no page route: open the self-DM with the to-do pane (MIP-2593).
+    useTodoRoute({
+        pathname: location.pathname,
+        selfDmId:
+            accessToken && myself.userId
+                ? useCM.allChats.find(
+                      (c) => c.chatType === 1 && c.dmPartnerUser?.userId === myself.userId
+                  )?.chatId
+                : undefined,
+        openSelfDm: (chatId) => {
+            // PUNCH LIST (v3 chatId migration): same legacy-slot cast as the
+            // Spotlight todo branch below.
+            useCM.moveToSpecificChat(
+                1,
+                chatId as unknown as number,
+                0,
+                false,
+                false,
+                useTM.setCurrentPreviewTaskId,
+                usePM.setCurrentProject,
+                undefined,
+                false,
+                true
+            );
+        },
+    });
 
     // Handle thread task interactions
     useThreadTaskHandling({ useCM, useTM });
