@@ -63,7 +63,7 @@ import { useShortcut } from "../../shortcuts";
 import {
     deletionCoversSession,
     MAX_TURNS_IN_HISTORY,
-    sessionTurnToCompleted,
+    restoreSessionTurns,
     useAgentSessionsDeleted,
     type AgentMentionRef,
     type AgentRunResult,
@@ -73,7 +73,7 @@ import {
     type ToolEvent,
     type UndoRequest,
 } from "../agentQA";
-import { useAgentQA } from "../agentQA/useAgentQA";
+import { useAgentQA, waitingSnapshot } from "../agentQA/useAgentQA";
 import { OPEN_SKILLS_EVENT } from "../genos/skills/openSkillsList";
 import { lookupTaskByDisplayId } from "../tasks/services/lookupTaskByDisplayId";
 import { displayIdOnlyQuery } from "../tasks/utils/taskDisplayId";
@@ -566,11 +566,15 @@ export const useSpotlight = ({
     // change turns or sessionId) never trigger a write.
     // toolEvents are stripped before storing — they can contain large
     // argument blobs and are not needed for conversation resumption.
+    // An ask waiting on its card is stored too, without the card (MIP-2604): after a reload
+    // its question is still there, and opening it from History brings the card back.
+    const waitingAsk = ask.pendingApproval ? ask : null;
     useEffect(() => {
         if (!teamId) return;
         const timer = window.setTimeout(() => {
             try {
-                const toStore = turns.slice(-MAX_STORED_TURNS).map((t) => ({
+                const all = waitingAsk ? [...turns, waitingSnapshot(waitingAsk)] : turns;
+                const toStore = all.slice(-MAX_STORED_TURNS).map((t) => ({
                     ...t,
                     toolEvents: [], // strip large blobs
                     // A note about the run that just ended (MIP-1058), not part of the
@@ -591,7 +595,7 @@ export const useSpotlight = ({
             }
         }, 500);
         return () => window.clearTimeout(timer);
-    }, [turns, sessionId, teamId]);
+    }, [turns, sessionId, teamId, waitingAsk]);
 
     // ---- Search by task id (MIP-1040). ----
     // OpenSearch cannot find "MIP-890" (the id is in no chunk), so a query that is
@@ -1005,7 +1009,7 @@ export const useSpotlight = ({
                     const recent = (detail.turns || []).slice(-MAX_TURNS_IN_HISTORY);
                     resetConversation({
                         sessionId: detail.session_id,
-                        turns: recent.map(sessionTurnToCompleted),
+                        ...restoreSessionTurns(recent),
                     });
                     setHistoryMode("closed");
                     setHistoryDetail(null);

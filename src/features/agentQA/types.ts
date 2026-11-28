@@ -135,6 +135,18 @@ export interface CompletedTurn {
     // restored (a restored turn has no tool events), and kept when Spotlight
     // persists the turn (it strips the events). Absent when there are none.
     undo?: UndoStepRef[];
+    // A restored turn that has no answer for a known reason (MIP-2604): the turn says which
+    // instead of "(no answer)". Absent for every other turn.
+    unanswered?: UnansweredReason;
+}
+
+export type UnansweredReason = "cancelled" | "notDecided";
+
+// A restored ask that still waits for the person's decision (MIP-2604): it goes back into the
+// live slot, with the card, instead of into `turns`.
+export interface RestoredPendingAsk {
+    turn: CompletedTurn;
+    card: PendingApprovalPayload;
 }
 
 // Soft cap on how many completed turns we hold in client memory. The
@@ -279,7 +291,12 @@ export interface UseAgentQAReturn {
     //   - `turns: undefined` = preserve current; `[]` = clear.
     // Lets callers do partial resets without accidentally wiping the
     // other half.
-    reset: (args: { sessionId?: string | null; turns?: CompletedTurn[] }) => void;
+    //   - `pending` (only with `turns`): an ask of this session still awaiting approval.
+    reset: (args: {
+        sessionId?: string | null;
+        turns?: CompletedTurn[];
+        pending?: RestoredPendingAsk | null;
+    }) => void;
     // Show a finished answer that did not come from a stream, in place of
     // the conversation (Spotlight's collected "Previous answer" cards).
     showStaticAnswer: (answer: StaticAnswer) => void;

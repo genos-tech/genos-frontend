@@ -2619,6 +2619,11 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The accessible names of the avatars that open a profile (MIP-2587).
+        avatarButtons: {
+            groupProfile: "ملف المجموعة: {name}",
+            projectProfile: "ملف المشروع: {name}",
+        },
         // The thread chip under a message: task comments in a project chat, replies elsewhere.
         underBar: {
             comments:
@@ -4661,7 +4666,7 @@ export const ar: DeepPartial<Messages> = {
             menuItem: "الحالات والأتمتة",
             title: "الحالات",
             description: "حالات هذا المشروع. تُحفظ التغييرات فور إجرائها.",
-            inReview: "قيد المراجعة",
+            ready: "جاهزة",
             introTitle: "استخدم حالاتك الخاصة",
             introBody:
                 "أعد تسمية الحالات أو لوّنها أو أضف حالات جديدة. لا يتغير شيء حتى تقوم بإعدادها.",
@@ -4701,7 +4706,7 @@ export const ar: DeepPartial<Messages> = {
             deleteAndMove: "نقل وحذف",
             boardColumnsTitle: "عرض عمود لكل حالة",
             boardColumnsHint:
-                "استخدمه عندما يمرر فريقك العمل بخطوات مثل «قيد المراجعة» أو ضمان الجودة. عند الإيقاف: عمود لكل فئة (مفتوحة، قيد التنفيذ…). ينطبق على الجميع في المشروع.",
+                "استخدمه عندما يمرر فريقك العمل بخطوات مثل «جاهزة» أو ضمان الجودة. عند الإيقاف: عمود لكل فئة (مفتوحة، قيد التنفيذ…). ينطبق على الجميع في المشروع.",
             boardColumnsOn: "تعرض اللوحة عمودًا لكل حالة.",
             boardColumnsOff: "تعرض اللوحة عمودًا لكل فئة.",
             countsAs: "تُحتسب: {category}",
@@ -6070,6 +6075,8 @@ export const ar: DeepPartial<Messages> = {
             archived: "مؤرشف",
             untitled: "(بدون عنوان)",
             noAnswer: "(لا توجد إجابة)",
+            cancelledBeforeAnswer: "أُلغي هذا السؤال قبل ظهور الإجابة.",
+            notDecided: "لم تتم الموافقة على هذا السؤال ولا رفضه.",
         },
         dropped: {
             message: "لم يتمكن Genos من استخدام الرسالة التي حددتها، فأجاب من دونها.",

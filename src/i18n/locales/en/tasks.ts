@@ -712,7 +712,7 @@ export const tasks = {
         menuItem: "Statuses and automation",
         title: "Statuses",
         description: "Statuses for this project. Changes save as you make them.",
-        inReview: "In Review",
+        ready: "Ready",
         introTitle: "Use your own statuses",
         introBody: "Rename, recolour or add statuses. Nothing changes until you set them up.",
         setUp: "Set up statuses",
@@ -752,7 +752,7 @@ export const tasks = {
         deleteAndMove: "Delete and move",
         boardColumnsTitle: "Show a column for each status",
         boardColumnsHint:
-            "Use it when your team moves work through steps such as In Review or QA. Off: one column per category (Open, WIP, …). Applies to everyone in the project.",
+            "Use it when your team moves work through steps such as Ready or QA. Off: one column per category (Open, WIP, …). Applies to everyone in the project.",
         boardColumnsOn: "The board shows one column per status.",
         boardColumnsOff: "The board shows one column per category.",
         countsAs: "Counts as: {category}",

@@ -43,19 +43,21 @@ export const ChatListItemAvatar: React.FC<ChatListItemAvatarProps> = ({
             ? (useTEM.teamMemberProfiles[chat.dmPartnerUser.userId] ?? chat.dmPartnerUser)
             : undefined;
 
-    // DM Chat with partner
+    // DM Chat with partner. A press stays on the avatar: the row it sits in does not open too.
     if (chatType === 1 && chat.dmPartnerUser.userId !== "") {
         return (
-            <AvatarWithStatus
-                avatarUser={partnerProfile}
-                chat={chat}
-                isYou={isYou}
-                myself={myself}
-                setMyself={setMyself}
-                socket={socket}
-                useCM={useCM}
-                useUISM={useUISM}
-            />
+            <div onClick={(event) => event.stopPropagation()}>
+                <AvatarWithStatus
+                    avatarUser={partnerProfile}
+                    chat={chat}
+                    isYou={isYou}
+                    myself={myself}
+                    setMyself={setMyself}
+                    socket={socket}
+                    useCM={useCM}
+                    useUISM={useUISM}
+                />
+            </div>
         );
     }
 

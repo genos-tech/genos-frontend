@@ -44,7 +44,7 @@ export {
     useAgentSessionsDeleted,
 } from "./sessionEvents";
 export { SelectedTextQuote, type SelectedTextQuoteProps } from "./SelectedTextQuote";
-export { sessionTurnToCompleted } from "./sessionTurns";
+export { restoreSessionTurns, sessionTurnToCompleted, unansweredReason } from "./sessionTurns";
 export { type UndoRequest, type UndoStepRef } from "./undoSteps";
 export { sourceChipLabel } from "./sourceChipLabel";
 export { ToolProgressList } from "./ToolProgressList";
@@ -80,4 +80,4 @@ export {
     type UseAgentQAArgs,
     type UseAgentQAReturn,
 } from "./types";
-export { useAgentQA } from "./useAgentQA";
+export { useAgentQA, waitingSnapshot } from "./useAgentQA";

@@ -30,6 +30,8 @@ export const spotlight = {
         // word, or a run that ended on tool steps alone). The turn says so
         // rather than leaving the question hanging.
         noAnswer: "(no answer)",
+        cancelledBeforeAnswer: "This ask was cancelled before an answer.",
+        notDecided: "This ask was not approved or rejected.",
     },
     // What the server could not use of what an ask pointed at (the `dropped_references` of the
     // `done` event, and of the approval card's event on a run that pauses, MIP-1058, MIP-1585).

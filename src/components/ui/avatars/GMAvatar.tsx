@@ -6,6 +6,7 @@ import { ModalGMProfile } from "../../../features/chat/components/modals/ModalGM
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps } from "../../../types/chat";
 import { buildVersionedAvatarSrc } from "../../../utils/avatarSrc";
@@ -26,6 +27,7 @@ type GMAvatarProps = {
 };
 export const GMAvatar = (props: GMAvatarProps) => {
     const { useTEM, socket, myself, setMyself, avatarSize, isYou, gmChat, useUISM, useCM } = props;
+    const { t } = useTranslation();
     const [openModalGMProfile, setOpenModalGMProfile] = useState<boolean>(false);
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
     const [avatarUserId, setAvatarUserId] = useState<string | undefined>(undefined);
@@ -61,6 +63,7 @@ export const GMAvatar = (props: GMAvatarProps) => {
         <div onClick={(event) => event.stopPropagation()}>
             <Clickable
                 height={_avatarSize}
+                label={fmt(t.chat.avatarButtons.groupProfile, { name: liveChat.chatName ?? "" })}
                 position="relative"
                 width={_avatarSize}
                 onActivate={() => setOpenModalGMProfile(true)}

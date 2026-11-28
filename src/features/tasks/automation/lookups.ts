@@ -8,17 +8,22 @@ import { useAuth } from "../../../context/authState";
 import { useProjectCustomFields } from "../../../hooks/tasks/useProjectCustomFields";
 import { useProjectStatuses } from "../../../hooks/tasks/useProjectStatuses";
 import type { UserProps } from "../../../types/admin";
+import type { AllChatProps } from "../../../types/chat";
 import type { ProjectCustomFieldDef, ProjectProps, ProjectStatusDef } from "../../../types/tasks";
 import { loadProjectMilestones } from "../sprint-milestone/services/loadProjectMilestones";
-import type { Milestone } from "../sprint-milestone/types";
-import { sortStatuses, STATUS_CATEGORIES } from "../utils/projectStatus";
+import { loadProjectSprints } from "../sprint-milestone/services/loadProjectSprints";
+import type { Milestone, Sprint } from "../sprint-milestone/types";
 import type { StatusPick } from "./draft";
 
 export type AutomationContextData = {
     /** The team's projects as the app lists them (`usePM.teamProjects`). */
     projects: ProjectProps[];
     members: UserProps[];
-    myUserId: string;
+    myself: UserProps;
+    /** For the member picker's avatars and names, as the task view has them. */
+    profiles: Record<string, UserProps>;
+    /** The project picker's project images. */
+    chats: AllChatProps[];
 };
 
 export type Lookups = AutomationContextData & {
@@ -27,6 +32,8 @@ export type Lookups = AutomationContextData & {
     statuses: ProjectStatusDef[];
     fields: ProjectCustomFieldDef[];
     milestones: Milestone[];
+    /** The milestone picker names each milestone's sprint. */
+    sprints: Sprint[];
     /** The layer popups of this dialog open at. */
     popupZ: number;
 };
@@ -52,12 +59,19 @@ export const useRuleLookups = (
         of: projectId,
         rows: [],
     });
+    const [sprints, setSprints] = useState<{ of: number; rows: Sprint[] }>({
+        of: projectId,
+        rows: [],
+    });
 
     useEffect(() => {
         if (!enabled) return;
         let live = true;
         void loadProjectMilestones(projectId, accessToken).then((res) => {
             if (live && res) setMilestones({ of: projectId, rows: res.milestones ?? [] });
+        });
+        void loadProjectSprints(projectId, accessToken).then((res) => {
+            if (live && res) setSprints({ of: projectId, rows: res.sprints ?? [] });
         });
         return () => {
             live = false;
@@ -71,6 +85,7 @@ export const useRuleLookups = (
         statuses,
         fields,
         milestones: milestones.of === projectId ? milestones.rows : [],
+        sprints: sprints.of === projectId ? sprints.rows : [],
         popupZ,
     };
 };
@@ -90,7 +105,6 @@ export const refusedAsPublic = (lookups: Lookups, destination: ProjectProps): bo
     lookups.current?.isPrivate === true && destination.isPrivate !== true;
 
 type Row = Pick<ProjectStatusDef, "name" | "builtinKey" | "color" | "category">;
-export type StatusOption = { key: string; pick: StatusPick; row: Row };
 
 const builtinRow = (category: string): Row => ({
     name: category,
@@ -99,32 +113,20 @@ const builtinRow = (category: string): Row => ({
     category,
 });
 
+/** A category's own built-in stands for the category itself. */
 const isCategoryOwn = (row: ProjectStatusDef) => row.builtinKey === row.category;
 
-export const statusKey = (pick: StatusPick): string =>
-    pick.customStatusId != null ? `s:${pick.customStatusId}` : `c:${pick.category}`;
-
 /**
- * What a "status" slot offers. A category's own built-in stands for the category itself; every
- * other row of the project stands for that status alone.
+ * What a pick in the status picker saves: every other row of the project stands for that
+ * status alone. `statusId` is undefined in a project that set nothing up.
  */
-export const statusOptions = (rows: ProjectStatusDef[]): StatusOption[] => {
-    const live = sortStatuses(rows).filter((r) => !r.isArchived);
-    const list: { pick: StatusPick; row: Row }[] = [];
-    for (const category of STATUS_CATEGORIES) {
-        const group = live.filter((r) => r.category === category);
-        // A project that set nothing up lists the categories.
-        if (!rows.length) {
-            list.push({ pick: { category, customStatusId: null }, row: builtinRow(category) });
-        }
-        for (const row of group) {
-            list.push({
-                pick: { category, customStatusId: isCategoryOwn(row) ? null : row.statusId },
-                row,
-            });
-        }
-    }
-    return list.map((o) => ({ ...o, key: statusKey(o.pick) }));
+export const statusPickOf = (
+    category: string,
+    statusId: number | null | undefined,
+    rows: ProjectStatusDef[]
+): StatusPick => {
+    const row = rows.find((r) => r.statusId === statusId);
+    return { category, customStatusId: row && !isCategoryOwn(row) ? row.statusId : null };
 };
 
 /** The row a saved pick reads as, whether or not the slot still offers it. */

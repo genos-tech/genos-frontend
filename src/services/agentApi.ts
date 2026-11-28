@@ -791,6 +791,9 @@ export interface AgentSessionTurn {
     // ran, 0 = the owner's draft, and the slug), so "Retry" from history runs it again. Null or absent
     // for a plain ask and against older backends.
     skill?: { id: string; version_no: number; slug: string } | null;
+    // Only on a turn with `status: "awaiting_approval"` (MIP-2604): the card the stream sent when the
+    // run paused, or null when there is nothing left to decide. Absent against older backends.
+    pending_approval?: PendingApprovalPayload | null;
 }
 
 export interface AgentSessionUndo {

@@ -118,7 +118,9 @@ export interface ChatManagementState {
         // the deep-link callers (notification / search / history / citation)
         // leave it at its `false` default so they stay no-ops here. See the
         // implementation for the full rationale.
-        openChatPageTaskPreview?: boolean
+        openChatPageTaskPreview?: boolean,
+        // Replace the current history entry instead of adding one.
+        replaceUrl?: boolean
     ) => Promise<void>;
     moveToSpecificThreadChat: (
         chat: AllChatProps,
@@ -371,7 +373,10 @@ export const useChatManagement = (
         // (TaskTitleBlock) set this. Gated on `taskExist` below so a
         // task-less thread never raises it. Defaults false so every
         // existing caller keeps its prior behavior.
-        openChatPageTaskPreview: boolean = false
+        openChatPageTaskPreview: boolean = false,
+        // Replace the current history entry instead of adding one: for a URL
+        // that only forwards here (`useTodoRoute`).
+        replaceUrl: boolean = false
     ) => {
         // Get the URL path for the chat type
         const chatTypePath = CHAT_TYPE_REVERSE_MAP[chatType];
@@ -393,6 +398,13 @@ export const useChatManagement = (
             if (threadActive) path += `/thread/${threadId}`;
             if (hasMessage) path += `/message/${messageId}`;
             return path;
+        };
+
+        const startPath = window.location.pathname;
+        const goToChat = () => {
+            if (!replaceUrl) return navigate(buildPath());
+            // The messages load first. A reader who has gone elsewhere meanwhile stays there.
+            if (window.location.pathname === startPath) navigate(buildPath(), { replace: true });
         };
 
         // Switching to the chat service is implicit: every code path below
@@ -420,7 +432,7 @@ export const useChatManagement = (
         if (!targetChat) {
             console.error(`Chat not found: chatType=${chatType}, chatId=${chatId}`);
             // Still navigate to the chat page - the routing hook will handle loading
-            navigate(buildPath());
+            goToChat();
             return;
         }
 
@@ -496,15 +508,15 @@ export const useChatManagement = (
                 }
                 setIsMainChatVisible(true);
                 setIsThreadVisible(true);
-                navigate(buildPath());
+                goToChat();
             } else {
                 setIsMainChatVisible(true);
-                navigate(buildPath());
+                goToChat();
             }
         } catch (error) {
             console.error(error);
             // Still navigate on error to show the chat page
-            navigate(buildPath());
+            goToChat();
         }
     };
 

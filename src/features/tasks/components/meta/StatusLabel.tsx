@@ -4,7 +4,12 @@ import { useProjectStatuses } from "../../../../hooks/tasks/useProjectStatuses";
 import { useTranslation } from "../../../../i18n";
 import { ProjectStatusDef } from "../../../../types/tasks";
 import { statusTone, toneCss } from "../../meta/taskTone";
-import { resolveStatusRow, rowColorCss, statusRowName } from "../../utils/projectStatus";
+import {
+    builtinName,
+    resolveStatusRow,
+    rowColorCss,
+    statusRowName,
+} from "../../utils/projectStatus";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { getStatusIcon } from "./statusIcons";
 
@@ -86,7 +91,9 @@ export const StatusLabel = ({
                 <span
                     style={{ overflow: "hidden", textOverflow: "ellipsis" }}
                     // A team's name can be cut off in a narrow column.
-                    title={row && row.name !== row.builtinKey ? label : undefined}
+                    title={
+                        row && row.name !== builtinName(row.builtinKey ?? "") ? label : undefined
+                    }
                     data-status-word
                 >
                     {label}
