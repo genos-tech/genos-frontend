@@ -173,6 +173,33 @@ describe("opening a past ask from the sidebar", () => {
         ]);
     });
 
+    it("keeps the question when the restored card is cancelled", async () => {
+        const { result } = await resume([waiting]);
+        act(() => result.current.onCancel());
+        expect(result.current.turns).toMatchObject([
+            { askedQuery: "Add a comment", unanswered: "notDecided" },
+        ]);
+    });
+
+    it("keeps the waiting question across a reload, without its token", async () => {
+        const first = await resume([waiting]);
+        await waitFor(
+            () =>
+                expect(localStorage.getItem("spotlight:session:v1:team-1")).toContain(
+                    "Add a comment"
+                ),
+            { timeout: 2000 }
+        );
+        expect(localStorage.getItem("spotlight:session:v1:team-1")).not.toContain("tok-pending");
+        first.unmount();
+        const { result } = renderHook(() =>
+            useSpotlight({ accessToken: "tok", teamId: "team-1", isPageActive: true })
+        );
+        expect(result.current.turns).toMatchObject([
+            { askedQuery: "Add a comment", unanswered: "notDecided" },
+        ]);
+    });
+
     it("keeps an ordinary conversation as it was", async () => {
         const { result } = await resume([turn()]);
         expect(result.current.turns[0]).not.toHaveProperty("unanswered");

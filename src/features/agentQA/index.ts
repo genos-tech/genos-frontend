@@ -80,4 +80,4 @@ export {
     type UseAgentQAArgs,
     type UseAgentQAReturn,
 } from "./types";
-export { useAgentQA } from "./useAgentQA";
+export { useAgentQA, waitingSnapshot } from "./useAgentQA";

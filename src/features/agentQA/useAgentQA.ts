@@ -108,6 +108,12 @@ const snapshotTurn = (ask: AskState): CompletedTurn => {
     };
 };
 
+// A turn whose card was never answered: the same snapshot, and with no answer text it says so.
+export const waitingSnapshot = (ask: AskState): CompletedTurn => ({
+    ...snapshotTurn(ask),
+    ...(ask.pendingApproval && !ask.answer ? { unanswered: "notDecided" as const } : {}),
+});
+
 export const useAgentQA = ({
     accessToken,
     teamId,
@@ -852,9 +858,12 @@ export const useAgentQA = ({
                 const hasContent =
                     Boolean(prev.answer) ||
                     prev.toolEvents.length > 0 ||
-                    prev.answerSources.length > 0;
+                    prev.answerSources.length > 0 ||
+                    // A card cancelled before anything else arrived (a restored one has no
+                    // tool events, MIP-2604): the question must not vanish with it.
+                    prev.pendingApproval !== null;
                 if (hasContent) {
-                    const snapshot = snapshotTurn(prev);
+                    const snapshot = waitingSnapshot(prev);
                     setTurns((prevTurns) => appendTurn(prevTurns, snapshot));
                 }
             }
