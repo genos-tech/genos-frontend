@@ -85,6 +85,8 @@ export const setupWebSocketHandlers = (
                 // skip these, but a self-skip here avoids the extra
                 // snapshot lookups inside the adapter for a no-op call.
                 if (m.sender && m.sender.userId === myself.userId) return;
+                // A rule's "moved a task" line rings nobody (MIP-2500).
+                if (!m.sender && m.metadata?.systemNotice === "task_moved_by_rule") return;
                 if (m.isThreadReply) {
                     const payload = v3MessageToLegacyThreadPayload(m, myself);
                     const intent = buildIntentFromMessage(payload, myself, useTEM, useCM);

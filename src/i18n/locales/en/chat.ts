@@ -1,4 +1,10 @@
 export const chat = {
+    // The line a project rule leaves in the old project's chat (MIP-2500).
+    ruleMoveNotice: {
+        line: "Rule “{rule}” moved {task} to {project}.",
+        aTask: "a task",
+        anotherProject: "another project",
+    },
     // Tier retention strip (RetentionBanner) — shown when the viewer's
     // plan hides part of this channel's history.
     retentionBanner:

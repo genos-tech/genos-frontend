@@ -2660,6 +2660,11 @@ export const hi: DeepPartial<Messages> = {
             listLabel: "संदेश",
             threadListLabel: "थ्रेड के जवाब",
         },
+        ruleMoveNotice: {
+            line: "नियम “{rule}” ने {task} को {project} में ले जाया।",
+            aTask: "एक टास्क",
+            anotherProject: "दूसरा प्रोजेक्ट",
+        },
         retentionBanner:
             "आपकी योजना में {days} दिनों से पुराने संदेश छिपे हुए हैं। पूरा इतिहास देखने के लिए अपग्रेड करें।",
         composer: {
@@ -4039,6 +4044,23 @@ export const hi: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "जोड़ा",
                 milestoneAssigneeRemoved: "निकाला गया",
                 prUnlinked: "यह लिंक हटाया:",
+            },
+            automation: {
+                moved: "नियम “{rule}” ने इसे स्थानांतरित किया",
+                changed: "नियम “{rule}” ने इसे बदला",
+                notApplied: "नियम “{rule}” लागू नहीं हुआ: {reason}",
+                notAppliedPlain: "नियम “{rule}” लागू नहीं हुआ",
+                reasons: {
+                    destination: "टास्क को नियम के गंतव्य प्रोजेक्ट में नहीं ले जाया जा सकता",
+                    owner: "नियम का मालिक अब इसे नहीं चला सकता",
+                    plan: "नियम के मालिक के प्लान में ऑटोमेशन नियम शामिल नहीं हैं",
+                    nested: "सब-टास्क केवल अपने पैरेंट के साथ ही स्थानांतरित होता है",
+                    rate_limited: "थोड़े समय में नियमों ने इस टास्क पर बहुत बार कार्रवाई की",
+                    error: "कुछ गड़बड़ हो गई",
+                    bad_status: "नियम जो स्थिति सेट करता है वह अब उपलब्ध नहीं है",
+                    assignee_not_allowed:
+                        "नियम जिस व्यक्ति को असाइन करता है उसे वहाँ असाइन नहीं किया जा सकता",
+                },
             },
             via: {
                 mcp: "MCP के ज़रिए",

@@ -33,6 +33,7 @@ import type {
     FlaggedMessageProps,
     MDMMemberProps,
     MessageProps,
+    RuleMoveNotice,
     ThreadMessageProps,
 } from "../../../types/chat";
 import type { ReactionProps } from "../../../types/common";
@@ -59,6 +60,25 @@ const KIND_TO_CHAT_TYPE: Record<ChannelKind, number> = {
 function viaAppField(m: Pick<Message, "metadata">): { viaApp?: ViaApp } {
     const app = viaSourceFromVia(m.metadata?.via, false)?.app;
     return app ? { viaApp: app } : {};
+}
+
+/**
+ * The line a project rule leaves in the old chat (MIP-2500). Only a message with NO sender is
+ * one: a member's own message has one, so its `metadata` cannot draw the line.
+ */
+function ruleMoveField(m: Pick<Message, "metadata" | "sender">): { ruleMove?: RuleMoveNotice } {
+    const meta = (m.metadata ?? {}) as Record<string, unknown>;
+    const { destinationProjectId, movedTaskId, ruleName, systemNotice } = meta;
+    if (
+        m.sender ||
+        systemNotice !== "task_moved_by_rule" ||
+        typeof movedTaskId !== "number" ||
+        typeof destinationProjectId !== "number" ||
+        typeof ruleName !== "string"
+    ) {
+        return {};
+    }
+    return { ruleMove: { projectId: destinationProjectId, ruleName, taskId: movedTaskId } };
 }
 
 /**
@@ -577,6 +597,7 @@ export function v3MessageToLegacy(args: {
         isFlagged: flaggedMessageIds?.has(m.id) ?? false,
         attachment: v3AttachmentToLegacy(m.attachments),
         ...viaAppField(m),
+        ...ruleMoveField(m),
     };
 }
 
@@ -622,7 +643,7 @@ export function v3MessagesToLegacy(args: {
         // metadata.taskId`. Reusing the adapter's resolved value keeps
         // the filter and the resolver from ever diverging again.
         const adapted = v3MessageToLegacy({ message: m, channelId, chatType, flaggedMessageIds });
-        if (isPm && adapted.taskId == null) continue;
+        if (isPm && adapted.taskId == null && !adapted.ruleMove) continue;
         out.push(adapted);
     }
     out.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));
@@ -686,7 +707,7 @@ export function createCachedMessagesAdapter(): (args: {
             }
             // Same PM orphan-row filter as `v3MessagesToLegacy` — on the
             // RESOLVED taskId, see the rationale there.
-            if (isPm && adapted.taskId == null) continue;
+            if (isPm && adapted.taskId == null && !adapted.ruleMove) continue;
             out.push(adapted);
         }
         out.sort((a, b) => (a.tsSent || "").localeCompare(b.tsSent || ""));

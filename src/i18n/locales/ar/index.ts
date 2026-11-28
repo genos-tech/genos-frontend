@@ -2626,6 +2626,11 @@ export const ar: DeepPartial<Messages> = {
             listLabel: "الرسائل",
             threadListLabel: "ردود المحادثة الفرعية",
         },
+        ruleMoveNotice: {
+            line: "نقلت القاعدة «{rule}» {task} إلى {project}.",
+            aTask: "مهمة",
+            anotherProject: "مشروع آخر",
+        },
         retentionBanner:
             "الرسائل الأقدم من {days} يومًا مخفية في خطتك. قم بالترقية لعرض السجل الكامل.",
         composer: {
@@ -4686,6 +4691,22 @@ export const ar: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "وأضاف",
                 milestoneAssigneeRemoved: "تمت إزالته",
                 prUnlinked: "أزال الرابط إلى",
+            },
+            automation: {
+                moved: "نُقلت بواسطة القاعدة «{rule}»",
+                changed: "غُيّرت بواسطة القاعدة «{rule}»",
+                notApplied: "لم تُطبَّق القاعدة «{rule}»: {reason}",
+                notAppliedPlain: "لم تُطبَّق القاعدة «{rule}»",
+                reasons: {
+                    destination: "لا يمكن نقل المهمة إلى مشروع الوجهة المحدد في القاعدة",
+                    owner: "لم يعد بإمكان مالك القاعدة تشغيلها",
+                    plan: "خطة مالك القاعدة لا تتضمن قواعد الأتمتة",
+                    nested: "المهمة الفرعية لا تنتقل إلا مع مهمتها الأم",
+                    rate_limited: "طُبّقت القواعد على هذه المهمة مرات كثيرة خلال وقت قصير",
+                    error: "حدث خطأ ما",
+                    bad_status: "الحالة التي تضبطها القاعدة لم تعد متاحة",
+                    assignee_not_allowed: "لا يمكن إسناد المهمة هناك إلى الشخص الذي تحدده القاعدة",
+                },
             },
             via: {
                 mcp: "عبر MCP",

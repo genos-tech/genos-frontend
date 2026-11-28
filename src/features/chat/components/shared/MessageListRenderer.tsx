@@ -22,6 +22,7 @@ import { VisibleRange } from "../../hooks/useScrollManagement";
 import { handleAtTop } from "../../services/handleBubblePositionAction";
 import { computeMessageItemMetas } from "../../utils/messageItemMetas";
 import { MessageBubble } from "../bubbles/MessageBubble";
+import { RuleMoveNoticeRow } from "../bubbles/RuleMoveNoticeRow";
 import { ThreadMessageBubble } from "../bubbles/ThreadMessageBubble";
 import { ChatHistoryLoadFailed } from "./ChatHistoryLoadFailed";
 import { ChatLiveAnnouncer } from "./ChatLiveAnnouncer";
@@ -397,6 +398,7 @@ export const MessageListRenderer = ({
             const isYou = chat.chatType === 3 ? false : myself.userId === message.sender.userId;
             const isFocused = resolveFocusedState(message);
             const meta = itemMetas[index];
+            const ruleMove = isThread ? undefined : (message as MessageProps).ruleMove;
             const dateSeparator = meta.showDateSeparator ? (
                 <div style={{ padding: "0.5rem 0" }}>
                     <div style={{ textAlign: "center", fontWeight: 300 }}>
@@ -433,56 +435,60 @@ export const MessageListRenderer = ({
                 // `messageUniqueKey`.
                 <div ref={rowRef} className="chat-msg-row" data-msg-key={getMessageKey(message)}>
                     {dateSeparator}
-                    <Stack
-                        direction="row"
-                        spacing={isCompact ? 0 : 2}
-                        sx={{
-                            flexDirection: isCompact ? "row" : isYou ? "row-reverse" : "row",
-                            paddingTop: meta.paddingTop,
-                            paddingBottom: meta.paddingBottom,
-                            paddingX: isCompact ? 0 : 1,
-                        }}
-                    >
-                        {isThread ? (
-                            <ThreadMessageBubble
-                                currentMessageIndex={index}
-                                isFocused={isFocused}
-                                isSimpleBubble={meta.isSimpleBubble}
-                                message={message as ThreadMessageProps}
-                                myself={myself}
-                                setEditTargetMessage={setEditTargetMessage}
-                                setIsInEdit={setIsInEdit}
-                                setMyself={setMyself}
-                                setTargetMessageIndex={() => {}}
-                                setTodoFromMessageBubble={setTodoFromMessageBubble}
-                                socket={socket}
-                                thread={chat as ThreadProps}
-                                useCM={useCM}
-                                useTEM={useTEM}
-                                useUISM={useUISM}
-                                variant={isYou ? "sent" : "received"}
-                            />
-                        ) : (
-                            <MessageBubble
-                                chat={chat as ChatProps}
-                                isFocused={isFocused}
-                                isSimpleBubble={meta.isSimpleBubble}
-                                message={message as MessageProps}
-                                myself={myself}
-                                setEditTargetMessage={setEditTargetMessage}
-                                setIsInEdit={setIsInEdit}
-                                setMyself={setMyself}
-                                setTodoFromMessageBubble={setTodoFromMessageBubble}
-                                socket={socket}
-                                useCM={useCM}
-                                usePM={usePM}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                                variant={isYou ? "sent" : "received"}
-                            />
-                        )}
-                    </Stack>
+                    {ruleMove ? (
+                        <RuleMoveNoticeRow notice={ruleMove} />
+                    ) : (
+                        <Stack
+                            direction="row"
+                            spacing={isCompact ? 0 : 2}
+                            sx={{
+                                flexDirection: isCompact ? "row" : isYou ? "row-reverse" : "row",
+                                paddingTop: meta.paddingTop,
+                                paddingBottom: meta.paddingBottom,
+                                paddingX: isCompact ? 0 : 1,
+                            }}
+                        >
+                            {isThread ? (
+                                <ThreadMessageBubble
+                                    currentMessageIndex={index}
+                                    isFocused={isFocused}
+                                    isSimpleBubble={meta.isSimpleBubble}
+                                    message={message as ThreadMessageProps}
+                                    myself={myself}
+                                    setEditTargetMessage={setEditTargetMessage}
+                                    setIsInEdit={setIsInEdit}
+                                    setMyself={setMyself}
+                                    setTargetMessageIndex={() => {}}
+                                    setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                    socket={socket}
+                                    thread={chat as ThreadProps}
+                                    useCM={useCM}
+                                    useTEM={useTEM}
+                                    useUISM={useUISM}
+                                    variant={isYou ? "sent" : "received"}
+                                />
+                            ) : (
+                                <MessageBubble
+                                    chat={chat as ChatProps}
+                                    isFocused={isFocused}
+                                    isSimpleBubble={meta.isSimpleBubble}
+                                    message={message as MessageProps}
+                                    myself={myself}
+                                    setEditTargetMessage={setEditTargetMessage}
+                                    setIsInEdit={setIsInEdit}
+                                    setMyself={setMyself}
+                                    setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                    socket={socket}
+                                    useCM={useCM}
+                                    usePM={usePM}
+                                    useTEM={useTEM}
+                                    useTM={useTM}
+                                    useUISM={useUISM}
+                                    variant={isYou ? "sent" : "received"}
+                                />
+                            )}
+                        </Stack>
+                    )}
                 </div>
             );
         },

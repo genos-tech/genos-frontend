@@ -1162,6 +1162,11 @@ export const zh: DeepPartial<Messages> = {
             listLabel: "消息",
             threadListLabel: "主题回复",
         },
+        ruleMoveNotice: {
+            line: "规则“{rule}”已将{task}移至{project}。",
+            aTask: "一个任务",
+            anotherProject: "另一个项目",
+        },
         retentionBanner: "根据你的套餐，超过 {days} 天的消息已被隐藏。升级后可查看完整历史记录。",
         composer: {
             placeholder: "输入消息…",
@@ -6785,6 +6790,22 @@ export const zh: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "额外",
                 milestoneAssigneeRemoved: "已删除",
                 prUnlinked: "移除了以下链接：",
+            },
+            automation: {
+                moved: "由规则“{rule}”移动",
+                changed: "由规则“{rule}”更改",
+                notApplied: "规则“{rule}”未执行：{reason}",
+                notAppliedPlain: "规则“{rule}”未执行",
+                reasons: {
+                    destination: "任务无法移至规则指定的目标项目",
+                    owner: "规则所有者已无法运行该规则",
+                    plan: "规则所有者的套餐不包含自动化规则",
+                    nested: "子任务只能随父任务一起移动",
+                    rate_limited: "规则在短时间内对此任务操作过于频繁",
+                    error: "出现了问题",
+                    bad_status: "规则要设置的状态已不可用",
+                    assignee_not_allowed: "规则指定的负责人无法在那里被指派",
+                },
             },
             via: {
                 mcp: "通过 MCP",
