@@ -1,7 +1,8 @@
 import articlesManifest from "./articles.json";
 
 /**
- * Public LP blog — English articles synced from genos-docs/marketing.
+ * Public LP blog — English posts synced from genos-docs/marketing/blog. Picture first, short
+ * (MIP-2416; `lpBlogVisualMIP2416.test.tsx` pins it).
  *
  * To add a post:
  *   1. Write the draft in genos-docs/marketing (English).
@@ -22,7 +23,10 @@ export type BlogArticleMeta = {
     language: "en";
     category: string;
     publishedAt: string;
-    featured?: boolean;
+    /** The card's picture, a path under `public/`. A post has this or `coverFlow`. */
+    cover?: string;
+    /** The card's diagram, for a post with no screenshot. */
+    coverFlow?: string[];
 };
 
 export type BlogArticle = BlogArticleMeta & {
@@ -53,14 +57,9 @@ for (const meta of articlesManifest as BlogArticleMeta[]) {
     bySlug.set(meta.slug, { ...meta, body: stripGeneratedBanner(raw) });
 }
 
-/** Newest first. Stable for a given manifest. */
+/** Newest first; posts of one day keep the manifest's order. */
 export const listBlogArticles = (): BlogArticle[] =>
-    [...bySlug.values()].sort((a, b) => {
-        if (a.publishedAt !== b.publishedAt) {
-            return a.publishedAt < b.publishedAt ? 1 : -1;
-        }
-        return a.title.localeCompare(b.title);
-    });
+    [...bySlug.values()].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 
 export const getBlogArticle = (slug: string): BlogArticle | undefined => bySlug.get(slug);
 

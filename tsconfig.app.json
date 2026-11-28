@@ -7,7 +7,8 @@
         // builds the location picker from `Intl.supportedValuesOf("timeZone")`,
         // which is ES2022 and typed nowhere in ES2020. Adding just the Intl
         // slice keeps every other ES2022 feature out of the emitted syntax.
-        "lib": ["ES2020", "ES2022.Intl", "DOM", "DOM.Iterable"],
+        // `ES2021.Intl` types `Intl.ListFormat` (`features/schedules/scheduleRule`).
+        "lib": ["ES2020", "ES2021.Intl", "ES2022.Intl", "DOM", "DOM.Iterable"],
         "module": "ESNext",
         "skipLibCheck": true,
 

@@ -53,6 +53,10 @@ export const JA_SETTINGS_TEXT: Record<SettingGuideId, JaSettingText> = {
         name: "スケジュール: AI の Effort",
         default: "Low(スキルの実行は Medium)。AI モードのときだけ表示",
     },
+    "spotlight.scheduleMessage": {
+        name: "スケジュール、予約メッセージ: メッセージ(グループチャットかプロジェクトチャットに自分の名前で送信)",
+        default: "空欄",
+    },
     "spotlight.scheduleDeliver": {
         name: "スケジュール: レポートの送信先",
         default: "自分の受信箱",

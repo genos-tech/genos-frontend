@@ -10,6 +10,8 @@ type CardCommon = {
     title: string;
     excerpt: string;
     status: string;
+    /** The project's own status the task points at; the API does not send it yet. */
+    customStatusId?: number | null;
     priority: string | null;
     reporter: CardPerson | null;
     dueDate: string | null;

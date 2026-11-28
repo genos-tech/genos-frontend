@@ -1,11 +1,15 @@
 /** The project chat's task and milestone card (MIP-2484). */
 import { CssVarsProvider } from "@mui/joy/styles";
 import { fireEvent, render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { TaskCardEntry } from "../features/chat/taskCards/taskCardStore";
 import type { LiveMilestoneCard, LiveTaskCard } from "../features/chat/taskCards/taskCardTypes";
 import { TaskMessageCard } from "../features/chat/taskCards/TaskMessageCard";
+import {
+    __resetProjectStatusesStore,
+    setProjectStatuses,
+} from "../hooks/tasks/useProjectStatuses";
 
 const live = vi.hoisted(() => ({ entry: undefined as TaskCardEntry | undefined }));
 vi.mock("../features/chat/taskCards/useLiveTaskCard", () => ({
@@ -83,6 +87,7 @@ describe("TaskMessageCard", () => {
         onOpen.mockClear();
         outer.mockClear();
     });
+    afterEach(() => __resetProjectStatusesStore());
 
     it("shows the message's own title until the live task arrives", () => {
         show({ status: "loading" });
@@ -128,6 +133,28 @@ describe("TaskMessageCard", () => {
         const { container } = show({ status: "ready", data: { ...task, status: "Closed" } });
         expect(container.querySelector('[data-tone="overdue"]')).toBeNull();
         expect(screen.queryByText(/Blocked by/)).toBeNull();
+    });
+
+    it("names the status as the task's project does", () => {
+        const row = { color: "", builtinKey: null, isArchived: false, sortOrder: 0 };
+        setProjectStatuses(1, {
+            canManage: false,
+            statuses: [
+                { ...row, statusId: 1, category: "Blocked", name: "Stuck", isDefault: true },
+                { ...row, statusId: 2, category: "Blocked", name: "On legal", isDefault: false },
+            ],
+        });
+        const first = show({ status: "ready", data: task });
+        expect(screen.getByText("Stuck")).toBeTruthy();
+        first.unmount();
+        show({ status: "ready", data: { ...task, customStatusId: 2 } });
+        expect(screen.getByText("On legal")).toBeTruthy();
+    });
+
+    it("never calls rejected work overdue", () => {
+        const { container } = show({ status: "ready", data: { ...task, status: "Rejected" } });
+        expect(screen.getByText("Rejected")).toBeTruthy();
+        expect(container.querySelector('[data-tone="overdue"]')).toBeNull();
     });
 
     it("draws a milestone with its progress", () => {

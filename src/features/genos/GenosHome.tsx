@@ -38,6 +38,7 @@ import { hasAskContent, SpotlightContent } from "../spotlight/SpotlightContent";
 import type { SpotlightResult } from "../spotlight/types";
 import type { UseSpotlightReturn } from "../spotlight/useSpotlight";
 import { GenosSessionSidebar } from "./GenosSessionSidebar";
+import type { SkillsHost } from "./skills/skillsHost";
 import { useGenosSessions } from "./useGenosSessions";
 
 interface GenosHomeProps {
@@ -58,6 +59,8 @@ interface GenosHomeProps {
     onSelect: (r: SpotlightResult) => void;
     onPreview: (r: SpotlightResult) => void;
     onOpenSettings: () => void;
+    /** What the schedules dialog's message editor reads from the app (MIP-2482). */
+    editorHost?: SkillsHost;
 }
 
 const SIDEBAR_WIDTH = 268;
@@ -75,6 +78,7 @@ export const GenosHome = ({
     onSelect,
     onPreview,
     onOpenSettings,
+    editorHost,
 }: GenosHomeProps) => {
     const { mode } = useColorScheme();
     const { t } = useTranslation();
@@ -252,6 +256,7 @@ export const GenosHome = ({
             )}
 
             <SchedulesModal
+                editorHost={editorHost}
                 open={schedulesOpen}
                 teamId={teamId}
                 onClose={() => setSchedulesOpen(false)}

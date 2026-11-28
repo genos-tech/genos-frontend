@@ -292,6 +292,13 @@ export const MCP_TOOLS: McpTool[] = [
             "What you have not read yet, as data with counts: chats, threads, tasks and notes, by place and by reason (message, reply, mention, comment, reaction, assigned). It returns no summary; the AI writes it.",
     },
     {
+        name: "list_my_waiting_comments",
+        type: "read",
+        taskRef: true,
+        meaning:
+            "Task and milestone comments you have not answered: newer than your last reply and without your reaction, on work that is not closed and involves you. The AI reads them and says which need an answer.",
+    },
+    {
         name: "get_my_importance",
         type: "read",
         meaning:
@@ -307,7 +314,7 @@ export const MCP_TOOLS: McpTool[] = [
         name: "list_my_schedules",
         type: "read",
         meaning:
-            "Your own schedules and the jobs a schedule can run: when each runs, whether it is on, the next and last run, and why it is paused if it is. Its report arrives in your Inbox.",
+            "Your own schedules and the jobs a schedule can run: when each runs, whether it is on, the next and last run, and why it is paused if it is. Its report arrives in your Inbox, or in the chat the schedule posts to.",
     },
     {
         name: "list_my_skills",
@@ -646,7 +653,7 @@ export const MCP_TOOLS: McpTool[] = [
         name: "run_my_schedule",
         type: "write",
         meaning:
-            "Run one of your schedules once, now: the report arrives in your Inbox like a scheduled one. It does not change when the schedule runs next, and a schedule can be run at most once a minute.",
+            "Run one of your schedules once, now: the report arrives in your Inbox, or the chat the schedule posts to, like a scheduled one. It does not change when the schedule runs next, and a schedule can be run at most once a minute.",
     },
 ];
 

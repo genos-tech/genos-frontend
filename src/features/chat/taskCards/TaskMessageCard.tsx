@@ -89,7 +89,9 @@ const TaskMessageCardImpl = (props: TaskMessageCardProps) => {
         >
             <Box id={factsId} sx={{ display: "contents" }}>
                 <CardHeader
+                    customStatusId={card?.customStatusId}
                     displayId={displayId}
+                    projectId={card?.project?.projectId}
                     isMilestone={isMilestone}
                     sentAt={props.sentAt}
                     status={card?.status ?? props.seedStatus}

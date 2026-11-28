@@ -6,13 +6,12 @@ import { g, type } from "../../../theme/tokens";
 import { MilestoneFlag } from "../../tasks/components/card/parts";
 import { PriorityIcon } from "../../tasks/components/meta/PriorityIcon";
 import { Tag } from "../../tasks/components/meta/Tag";
+import { isDone } from "./barStatuses";
 import { Clip, Due, Excerpt, Person, Row } from "./cardParts";
 import { factSx, metaSx } from "./cardStyles";
 import type { LiveTaskCard } from "./taskCardTypes";
 
 const SHOWN_TAGS = 3;
-
-const isDone = (status: string) => status === "Closed" || status === "Deleted";
 
 /** The middle of a task's card: what it is, who has it, when, and where it sits. */
 export const TaskCardContent = ({ card }: { card: LiveTaskCard }) => {

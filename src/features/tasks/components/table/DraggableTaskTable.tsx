@@ -1178,6 +1178,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                 if ((prevRow?.status ?? null) !== (updatedRow.status ?? null)) {
                     patch.status = updatedRow.status || undefined;
                 }
+                if (updatedRow.customStatusPick != null) {
+                    patch.customStatusId = updatedRow.customStatusPick;
+                }
                 if ((prevRow?.priority ?? null) !== (updatedRow.priority ?? null)) {
                     patch.priority = updatedRow.priority || null;
                 }
@@ -1233,6 +1236,8 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     : null;
                 const mirrored: TaskTableProps = {
                     ...updatedRow,
+                    customStatusId: updated.customStatusId ?? null,
+                    customStatusPick: undefined,
                     title: updated.title ?? updatedRow.title,
                     status: (updated.status as string) ?? updatedRow.status,
                     priority: updated.priority ?? updatedRow.priority,
@@ -1292,6 +1297,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     status:
                         statuses.find((status) => status.status === result.status) ||
                         openPreview.status,
+                    customStatusId: result.customStatusId,
                     priority:
                         priorities.find((priority) => priority.priority === result.priority) ||
                         openPreview.priority,

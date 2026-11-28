@@ -1078,6 +1078,7 @@ export const ja: DeepPartial<Messages> = {
                 "プランの上限に達しました。詳細は 設定 → プランと使用状況 をご確認ください。",
             actionFailed: "操作を完了できませんでした。もう一度お試しください。",
             messageSendFailed: "メッセージを送信できませんでした。もう一度お試しください。",
+            noteNotSaved: "このノートの最新の変更を保存できませんでした。",
             idleReload: "一定時間操作がなかったため、ページを更新しています…",
         },
         serviceSwitch: {
@@ -1218,6 +1219,11 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# 件のコメント} other {# 件のコメント}}",
+            replies: "{count, plural, one {# 件の返信} other {# 件の返信}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -1225,6 +1231,11 @@ export const ja: DeepPartial<Messages> = {
             attachment: "添付ファイルを送信しました",
             listLabel: "メッセージ",
             threadListLabel: "スレッドの返信",
+        },
+        ruleMoveNotice: {
+            line: "ルール「{rule}」が{task}を{project}に移動しました。",
+            aTask: "タスク",
+            anotherProject: "別のプロジェクト",
         },
         retentionBanner:
             "プランの制限により、{days} 日より前のメッセージは非表示になっています。アップグレードすると全履歴を表示できます。",
@@ -2869,6 +2880,7 @@ export const ja: DeepPartial<Messages> = {
             unmeasured: "Genos がこれに AI を使用しました。使用量は計測されていません。",
             noAiUsed: "AI は使用していません",
             noAiNoCredits: "AI は使用していません: 今月の AI クレジットが残っていません",
+            noAiMonthlyLimit: "AI未使用：Genos AIが今月の利用上限に達しました",
             deductedNone: "残高からの差し引きなし",
             deducted: "残高から {credits} を差し引き",
             scheduleFallback: "このスケジュール",
@@ -3286,7 +3298,7 @@ export const ja: DeepPartial<Messages> = {
             placeholder: "このノートについて何でも聞いてください…",
             send: "送信",
             cancel: "キャンセル",
-            clear: "明確な会話",
+            clear: "会話を消去",
         },
         mentions: {
             ariaLabel: "提案についてメンションする",
@@ -3829,6 +3841,8 @@ export const ja: DeepPartial<Messages> = {
             outOfCredits: "AIクレジットを使い切ったため、現在Genosは回答できません。",
             outOfCreditsBuy: "クレジットを購入",
             outOfCreditsUpgrade: "プランをアップグレード",
+            monthlyLimit:
+                "Genos AIは今月の利用上限に達したため、いまは実行できません。来月の初めに再開します。検索やその他の機能は引き続き使えます。",
             taskSessionLoadFailed: "このタスクについての以前の会話を読み込めませんでした。",
         },
         pwaInstall: {
@@ -4852,7 +4866,7 @@ export const ja: DeepPartial<Messages> = {
         },
         schedules: {
             title: "Genos Assist スケジュール",
-            blurb: "Genos は、あなたが決めた時刻にレポートを用意します。レポートは受信箱に届きます。",
+            blurb: "Genos は、あなたが決めた時刻に実行します。レポートは受信箱かチャットに届き、あなたが書いたメッセージはチャットに送られます。",
             loading: "スケジュールを読み込み中…",
             loadFailed: "スケジュールを読み込めませんでした。",
             retry: "もう一度試す",
@@ -4868,6 +4882,11 @@ export const ja: DeepPartial<Messages> = {
             suggestEveningName: "夕方の振り返り",
             suggestEveningBlurb: "今日やったこと",
             suggestDaily: "毎日 {time}",
+            ruleDaily: "毎日 {time}",
+            ruleWeekdays: "毎週月曜〜金曜 {time}",
+            ruleWeekly: "毎週{days} {time}",
+            ruleMonthly: "毎月{day}日 {time}",
+            ruleOnce: "1回のみ: {date} {time}",
             upgradeTitle: "自動で届くレポート",
             upgradeChip: "Core 以上",
             upgradeBody:
@@ -4936,6 +4955,11 @@ export const ja: DeepPartial<Messages> = {
             job: "レポート",
             jobPlaceholder: "レポートを選択",
             jobCatalog: {
+                scheduled_message: {
+                    title: "予約メッセージ",
+                    description:
+                        "自分で書いたメッセージを、指定した時刻にあなたの名前でグループチャットまたはプロジェクトチャットに送ります。AIは使いません。",
+                },
                 ai_dashboard: {
                     title: "ダッシュボードページ",
                     description:
@@ -5067,6 +5091,18 @@ export const ja: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "レポートは AI の文章付きのメッセージとしてこのチャットに投稿されます。チャットの全員が読めますが、その費用はあなたの受信箱にだけ表示されます。通知は送りません。",
             rowDeliver: "投稿先: {name}",
+            messageLabel: "メッセージ",
+            messageHint:
+                "自分で「送信」を押したときと同じように、あなたの名前で送られます。メンションしたチャットのメンバーには通知されます。画像やファイルは追加できません。",
+            messageChatLabel: "メッセージの送信先",
+            messageChatPlaceholder: "チャットを選択",
+            errorMessage: "送るメッセージを入力してください。",
+            errorMessageFiles: "メッセージから画像とファイルを削除してください。",
+            errorMessageChat: "グループチャットかプロジェクトチャットを選択してください。",
+            rowMessage: "メッセージ: {text}",
+            rowSendTo: "送信先: {name}",
+            messageSent: "{chat}にメッセージを送信しました",
+            runRightAwayHintMessage: "「今すぐ実行」を押すとすぐに{chat}へ送信されます。",
             reportPosted: "{chat} にレポートを投稿しました",
             rowProject: "プロジェクト: {name}",
             rowMilestone: "マイルストーン: {name}",
@@ -6909,6 +6945,52 @@ export const ja: DeepPartial<Messages> = {
             dependencies: "依存関係",
             folder: "フォルダー",
         },
+        // Per-project statuses (MIP-2493).
+        projectStatuses: {
+            menuItem: "ステータスと自動化",
+            title: "ステータス",
+            description: "このプロジェクトのステータスです。変更はすぐに保存されます。",
+            inReview: "In Review",
+            introTitle: "独自のステータスを使う",
+            introBody:
+                "各カテゴリのステータスは、名前や色の変更、追加ができます。設定するまで何も変わりません。",
+            setUp: "ステータスを設定",
+            setUpFailed: "ステータスを設定できませんでした。もう一度お試しください。",
+            add: "追加",
+            addTo: "{category}にステータスを追加",
+            nameLabel: "ステータス名",
+            default: "デフォルト",
+            off: "オフ",
+            count: "{max}件中{n}件",
+            groupLabel: "{category}のステータス",
+            rename: "名前を変更",
+            moveUp: "上へ移動",
+            moveDown: "下へ移動",
+            makeDefault: "デフォルトにする",
+            turnOff: "オフにする",
+            turnOn: "オンにする",
+            delete: "削除",
+            categoryColor: "カテゴリの色",
+            colorFor: "{name}の色",
+            changeColor: "{name}の色を変更",
+            moreActions: "{name}のその他の操作",
+            builtinHint: "標準のステータスは削除できません。",
+            limitHint: "上限の{max}件に達しました。先に削除してください。",
+            nameTaken: "その名前はすでに使われています。",
+            nameReserved: "その名前は標準のステータスで使われています。",
+            nameTooLong: "{max}文字以内にしてください。",
+            nameEmpty: "名前を入力してください。",
+            saveFailed: "保存できませんでした。もう一度お試しください。",
+            saving: "保存中",
+            moved: "{name}を{category}の{total}件中{position}番目に移動しました。",
+            loadFailed: "ステータスを読み込めませんでした",
+            deleteTitle: "「{name}」を削除しますか？",
+            deleteBody: "使用中のタスクは、選んだステータスに移動します。",
+            noReplacement: "先にこのカテゴリの別のステータスをオンにしてください。",
+            deleteInUse: "{count}件のタスクがこのステータスを使っています。移動先：",
+            replacementLabel: "移動先",
+            deleteAndMove: "移動して削除",
+        },
         customFields: {
             heading: "カスタムフィールド",
             manageTooltip: "カスタムフィールドを管理する",
@@ -7080,6 +7162,22 @@ export const ja: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "追加した",
                 milestoneAssigneeRemoved: "削除されました",
                 prUnlinked: "次のリンクを削除しました:",
+            },
+            automation: {
+                moved: "ルール「{rule}」により移動されました",
+                changed: "ルール「{rule}」により変更されました",
+                notApplied: "ルール「{rule}」は適用されませんでした：{reason}",
+                notAppliedPlain: "ルール「{rule}」は適用されませんでした",
+                reasons: {
+                    destination: "ルールの移動先プロジェクトにはこのタスクを移動できません",
+                    owner: "ルールの所有者がこのルールを実行できなくなりました",
+                    plan: "ルール所有者のプランに自動化ルールが含まれていません",
+                    nested: "サブタスクは親タスクと一緒にのみ移動します",
+                    rate_limited: "短時間にルールがこのタスクを何度も操作しました",
+                    error: "問題が発生しました",
+                    bad_status: "ルールが設定するステータスは利用できなくなりました",
+                    assignee_not_allowed: "ルールが割り当てる人は移動先で担当者にできません",
+                },
             },
         },
         dynamicUrl: {
@@ -8101,7 +8199,7 @@ export const ja: DeepPartial<Messages> = {
             placeholder: "このスレッドについて何でも質問してください...",
             send: "送信",
             cancel: "キャンセル",
-            clear: "明確な会話",
+            clear: "会話を消去",
         },
         mentions: {
             ariaLabel: "提案についてメンションする",

@@ -62,6 +62,37 @@ describe("parseChatRoute - chat main", () => {
     });
 });
 
+describe("parseChatRoute - message segment (number or UUID)", () => {
+    const MESSAGE_UUID = "0f8fad5b-d9cb-469f-a165-70867728950e";
+
+    it("keeps a message UUID on a main-chat link (was NaN'd by Number())", () => {
+        expect(
+            parseChatRoute(`/workspace/chat/dm/${CHAT_UUID}/message/${MESSAGE_UUID}`)
+        ).toMatchObject({ chatId: CHAT_UUID, messageId: MESSAGE_UUID, threadId: undefined });
+    });
+
+    it("keeps a message UUID inside a thread", () => {
+        expect(
+            parseChatRoute(
+                `/workspace/chat/gm/${CHAT_UUID}/thread/${THREAD_UUID}/message/${MESSAGE_UUID}`
+            )
+        ).toMatchObject({ threadId: THREAD_UUID, messageId: MESSAGE_UUID });
+    });
+
+    it("keeps a numeric segment a number", () => {
+        expect(parseChatRoute(`/workspace/chat/pm/${CHAT_UUID}/message/42`).messageId).toBe(42);
+    });
+
+    it("drops a segment that is neither", () => {
+        expect(
+            parseChatRoute(`/workspace/chat/dm/${CHAT_UUID}/message/abc`).messageId
+        ).toBeUndefined();
+        expect(
+            parseChatRoute(`/workspace/chat/dm/${CHAT_UUID}/message`).messageId
+        ).toBeUndefined();
+    });
+});
+
 describe("parseChatRoute - thread (type-aware threadId)", () => {
     it("keeps a DM/GM/MDM thread-root UUID as a string (was NaN'd by Number())", () => {
         expect(

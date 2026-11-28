@@ -240,6 +240,16 @@ export type AiAppNotice = {
     items: AiAppNoticeItem[];
 };
 
+/**
+ * "A rule moved a task out of this project" (MIP-2500). Ids and the rule's name only: the task and
+ * the project it went to are resolved for each viewer, who may not be allowed to open either.
+ */
+export type RuleMoveNotice = {
+    ruleName: string;
+    taskId: number;
+    projectId: number;
+};
+
 export type MessageProps = {
     chatType: number;
     messageIdWithChatId?: string;
@@ -280,6 +290,8 @@ export type MessageProps = {
     // a person's own message, an API key, any other app and any value this build
     // does not know. Never a name: the server sends kind + family only.
     viaApp?: ViaApp;
+    // Set on the line a project rule leaves in the old project's chat (MIP-2500).
+    ruleMove?: RuleMoveNotice;
 };
 
 export type ThreadMessageProps = {

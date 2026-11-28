@@ -107,7 +107,7 @@ const Footer = ({
                     overflowWrap: "anywhere",
                 }}
             >
-                {costText(usage.cost, c, outOfCredits)}
+                {costText(usage.cost, c, outOfCredits, usage.source?.monthlyLimit === true)}
             </Typography>
             {/* A report has a switch for the schedule that made it. The Genos digest was
                 decommissioned (MIP-1968): its old items keep the cost line and have no switch. */}

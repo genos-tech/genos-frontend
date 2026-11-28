@@ -134,6 +134,13 @@ export const SETTINGS_MAP = {
                 default: "Low (Medium for Run a skill); shown only in AI mode",
                 serverSwitch: null,
             },
+            scheduleMessage: {
+                name: "Schedules, Scheduled message: Message (sent as you in a group or project chat)",
+                who: "ownSchedules",
+                plan: "core+",
+                default: "Empty",
+                serverSwitch: null,
+            },
             scheduleDeliver: {
                 name: "Schedules: Send the report to",
                 who: "ownSchedules",

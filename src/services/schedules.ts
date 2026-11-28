@@ -48,6 +48,8 @@ export interface EffortCost {
 }
 
 export interface ScheduleJob {
+    /** The member writes a message that is sent as them in a chat (MIP-2482). */
+    postsAsOwner?: boolean;
     job: string;
     title: string;
     description: string;
@@ -73,7 +75,8 @@ export interface ChatTarget {
     projectId: number | null;
 }
 
-export type ParamValue = string | number | boolean;
+/** `unknown[]` is a scheduled message's `body`: the BlockNote blocks of a chat message. */
+export type ParamValue = string | number | boolean | unknown[];
 
 export interface Schedule {
     id: string;
@@ -148,6 +151,8 @@ export interface ScheduleList {
     /** The chats the member can point a report at (MIP-1420). Absent on a server that predates
      *  it: the form then shows no choice and the report goes to the Inbox. */
     chatTargets: ChatTarget[];
+    /** The chats a scheduled message can be sent to (MIP-2482): public group chats too. */
+    messageChatTargets?: ChatTarget[];
 }
 
 /** What the member can set. Fields a frequency does not use are not sent. */
@@ -254,6 +259,7 @@ export const listSchedules = async (
             schedules: res.data.schedules ?? [],
             suggestions: res.data.suggestions ?? [],
             chatTargets: res.data.chatTargets ?? [],
+            messageChatTargets: res.data.messageChatTargets ?? [],
         };
     } catch {
         return null;

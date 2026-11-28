@@ -162,7 +162,7 @@ describe("report names and descriptions follow the locale", () => {
 
     it("has a name and a description in every locale for every built-in job", () => {
         const keys = Object.keys(E.jobCatalog);
-        expect(keys.length).toBe(9);
+        expect(keys.length).toBe(10);
         for (const [name, loc] of Object.entries({ ar, es, fr, hi, ja, zh })) {
             for (const k of keys) {
                 const row = whole(loc).jobCatalog[k as keyof typeof E.jobCatalog];

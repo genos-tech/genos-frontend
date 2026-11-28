@@ -39,7 +39,6 @@ export const switchTeam = ({
         tsJoined: myself.tsJoined,
         isOfflineForced: myself.isOfflineForced,
         role: myself.role,
-        baseCountry: myself.baseCountry,
         currentLocation: myself.currentLocation,
         aboutMe: myself.aboutMe,
         customStatus: myself.customStatus,

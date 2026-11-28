@@ -6,7 +6,7 @@ import { g, type } from "../../../theme/tokens";
 import { PriorityIcon } from "../../tasks/components/meta/PriorityIcon";
 import { StatusLabel } from "../../tasks/components/meta/StatusLabel";
 import { taskMetaLabel } from "../../tasks/utils/taskMeta";
-import { BAR_STATUSES } from "./barStatuses";
+import { BAR_STATUSES, isDone } from "./barStatuses";
 import { Clip, Due, Excerpt, Row } from "./cardParts";
 import { factSx, metaSx } from "./cardStyles";
 import { MilestoneStatusBar } from "./MilestoneStatusBar";
@@ -85,10 +85,7 @@ export const MilestoneCardContent = ({ card }: { card: LiveMilestoneCard }) => {
                     </Box>
                 )}
                 {card.priority && <PriorityIcon priority={card.priority} size={14} showLabel />}
-                <Due
-                    done={card.status === "Closed" || card.status === "Deleted"}
-                    dueDate={card.dueDate}
-                />
+                <Due done={isDone(card.status)} dueDate={card.dueDate} />
                 {card.sprint && (
                     <Box component="span" sx={{ ...factSx, display: "inline-flex", minWidth: 0 }}>
                         <Clip max={180}>

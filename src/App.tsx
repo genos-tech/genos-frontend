@@ -2089,6 +2089,14 @@ const AppBody = () => {
                                                                                                                                 accessToken={
                                                                                                                                     accessToken
                                                                                                                                 }
+                                                                                                                                editorHost={{
+                                                                                                                                    myself,
+                                                                                                                                    setMyself,
+                                                                                                                                    socket: socketInstance,
+                                                                                                                                    useTEM,
+                                                                                                                                    useCM,
+                                                                                                                                    useUISM,
+                                                                                                                                }}
                                                                                                                                 mentionGroups={
                                                                                                                                     useMGM.mentionGroups
                                                                                                                                 }

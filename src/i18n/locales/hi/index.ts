@@ -530,6 +530,7 @@ export const hi: DeepPartial<Messages> = {
                 "आप अपनी योजना की सीमा तक पहुँच गए हैं। विवरण के लिए सेटिंग्स → प्लान और उपयोग देखें।",
             actionFailed: "कार्य पूरा नहीं हो सका। कृपया पुनः प्रयास करें।",
             messageSendFailed: "आपका संदेश नहीं भेजा जा सका। कृपया पुनः प्रयास करें।",
+            noteNotSaved: "इस नोट में आपके नवीनतम बदलाव सहेजे नहीं जा सके।",
             idleReload: "निष्क्रियता के बाद पेज रीफ़्रेश किया जा रहा है…",
         },
         serviceSwitch: {
@@ -1409,7 +1410,7 @@ export const hi: DeepPartial<Messages> = {
         },
         schedules: {
             title: "Genos Assist शेड्यूल",
-            blurb: "Genos आपके चुने हुए समय पर आपके लिए रिपोर्ट तैयार करता है; वह आपके इनबॉक्स में पहुँचती है।",
+            blurb: "Genos इन्हें आपके चुने हुए समय पर चलाता है: रिपोर्ट आपके इनबॉक्स या किसी चैट में पहुँचती है, और आपका लिखा संदेश किसी चैट में भेजा जाता है।",
             loading: "आपके शेड्यूल लोड हो रहे हैं…",
             loadFailed: "आपके शेड्यूल लोड नहीं हो सके।",
             retry: "फिर कोशिश करें",
@@ -1425,6 +1426,11 @@ export const hi: DeepPartial<Messages> = {
             suggestEveningName: "शाम का सार",
             suggestEveningBlurb: "आज आपने क्या किया",
             suggestDaily: "हर दिन {time} बजे",
+            ruleDaily: "हर दिन {time} बजे",
+            ruleWeekdays: "सोमवार से शुक्रवार, {time} बजे",
+            ruleWeekly: "हर {days} को {time} बजे",
+            ruleMonthly: "हर महीने की {day} तारीख को {time} बजे",
+            ruleOnce: "सिर्फ़ एक बार, {date} को {time} बजे",
             upgradeTitle: "अपने आप पहुँचने वाली रिपोर्ट",
             upgradeChip: "Core और उससे ऊपर",
             upgradeBody:
@@ -1492,6 +1498,11 @@ export const hi: DeepPartial<Messages> = {
             job: "रिपोर्ट",
             jobPlaceholder: "रिपोर्ट चुनें",
             jobCatalog: {
+                scheduled_message: {
+                    title: "निर्धारित संदेश",
+                    description:
+                        "आपका लिखा संदेश, आपके चुने समय पर, आपकी ओर से किसी ग्रुप चैट या प्रोजेक्ट चैट में भेजता है। इसमें AI का उपयोग नहीं होता।",
+                },
                 ai_dashboard: {
                     title: "डैशबोर्ड पेज",
                     description:
@@ -1623,6 +1634,18 @@ export const hi: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "रिपोर्ट AI वाक्यों के साथ इस चैट में एक संदेश के रूप में पोस्ट होती है। चैट में सभी लोग इसे पढ़ सकते हैं, पर उसकी लागत सिर्फ़ आपको आपके इनबॉक्स में दिखती है। कोई सूचना नहीं भेजी जाती।",
             rowDeliver: "यहाँ पोस्ट होती है: {name}",
+            messageLabel: "संदेश",
+            messageHint:
+                "आपकी ओर से भेजा जाता है, जैसे आपने खुद भेजें दबाया हो। चैट के जिन सदस्यों का आप उल्लेख करते हैं, उन्हें सूचना मिलती है। चित्र और फ़ाइलें नहीं जोड़ी जा सकतीं।",
+            messageChatLabel: "संदेश कहाँ भेजें",
+            messageChatPlaceholder: "चैट चुनें",
+            errorMessage: "भेजने के लिए संदेश लिखें।",
+            errorMessageFiles: "संदेश से चित्र और फ़ाइलें हटाएँ।",
+            errorMessageChat: "कोई ग्रुप चैट या प्रोजेक्ट चैट चुनें।",
+            rowMessage: "संदेश: {text}",
+            rowSendTo: "भेजा जाता है: {name}",
+            messageSent: "{chat} में संदेश भेज दिया गया",
+            runRightAwayHintMessage: "अभी चलाएँ दबाते ही {chat} में भेज दिया जाएगा।",
             reportPosted: "रिपोर्ट {chat} में पोस्ट हुई",
             rowProject: "प्रोजेक्ट: {name}",
             rowMilestone: "माइलस्टोन: {name}",
@@ -2629,6 +2652,11 @@ export const hi: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# टिप्पणी} other {# टिप्पणियाँ}}",
+            replies: "{count, plural, one {# जवाब} other {# जवाब}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -2636,6 +2664,11 @@ export const hi: DeepPartial<Messages> = {
             attachment: "अटैचमेंट भेजा",
             listLabel: "संदेश",
             threadListLabel: "थ्रेड के जवाब",
+        },
+        ruleMoveNotice: {
+            line: "नियम “{rule}” ने {task} को {project} में ले जाया।",
+            aTask: "एक टास्क",
+            anotherProject: "दूसरा प्रोजेक्ट",
         },
         retentionBanner:
             "आपकी योजना में {days} दिनों से पुराने संदेश छिपे हुए हैं। पूरा इतिहास देखने के लिए अपग्रेड करें।",
@@ -3901,6 +3934,52 @@ export const hi: DeepPartial<Messages> = {
             dependencies: "निर्भरताएँ",
             folder: "फ़ोल्डर",
         },
+        // Per-project statuses (MIP-2493).
+        projectStatuses: {
+            menuItem: "स्थिति और ऑटोमेशन",
+            title: "स्थितियाँ",
+            description: "इस प्रोजेक्ट की स्थितियाँ। बदलाव तुरंत सहेजे जाते हैं।",
+            inReview: "समीक्षा में",
+            introTitle: "अपनी स्थितियाँ इस्तेमाल करें",
+            introBody:
+                "हर श्रेणी में स्थिति का नाम या रंग बदलें, या नई जोड़ें। सेट अप करने तक कुछ नहीं बदलता।",
+            setUp: "स्थितियाँ सेट अप करें",
+            setUpFailed: "स्थितियाँ सेट अप नहीं हो सकीं। फिर कोशिश करें।",
+            add: "जोड़ें",
+            addTo: "{category} में स्थिति जोड़ें",
+            nameLabel: "स्थिति का नाम",
+            default: "डिफ़ॉल्ट",
+            off: "बंद",
+            count: "{max} में से {n}",
+            groupLabel: "{category} की स्थितियाँ",
+            rename: "नाम बदलें",
+            moveUp: "ऊपर ले जाएँ",
+            moveDown: "नीचे ले जाएँ",
+            makeDefault: "डिफ़ॉल्ट बनाएँ",
+            turnOff: "बंद करें",
+            turnOn: "चालू करें",
+            delete: "हटाएँ",
+            categoryColor: "श्रेणी का रंग",
+            colorFor: "{name} का रंग",
+            changeColor: "{name} का रंग बदलें",
+            moreActions: "{name} के और विकल्प",
+            builtinHint: "बिल्ट-इन स्थिति हटाई नहीं जा सकती।",
+            limitHint: "सीमा पूरी: {max} स्थितियाँ। पहले कोई एक हटाएँ।",
+            nameTaken: "यह नाम पहले से इस्तेमाल में है।",
+            nameReserved: "यह नाम एक बिल्ट-इन स्थिति का है।",
+            nameTooLong: "अधिकतम {max} अक्षर रखें।",
+            nameEmpty: "नाम खाली नहीं हो सकता।",
+            saveFailed: "सहेजा नहीं जा सका। फिर कोशिश करें।",
+            saving: "सहेजा जा रहा है",
+            moved: "{name} को {category} में {total} में से {position} स्थान पर ले जाया गया।",
+            loadFailed: "स्थितियाँ लोड नहीं हो सकीं",
+            deleteTitle: "“{name}” हटाएँ?",
+            deleteBody: "इसे इस्तेमाल करने वाले टास्क आपकी चुनी स्थिति पर चले जाएँगे।",
+            noReplacement: "पहले इस श्रेणी की कोई दूसरी स्थिति चालू करें।",
+            deleteInUse: "{count} टास्क यह स्थिति इस्तेमाल करते हैं। इन्हें यहाँ ले जाएँ:",
+            replacementLabel: "यहाँ ले जाएँ",
+            deleteAndMove: "ले जाएँ और हटाएँ",
+        },
         customFields: {
             heading: "तटकर क्षेत्र",
             manageTooltip: "कस्टम फ़ील्ड प्रबंधित करें",
@@ -4032,6 +4111,23 @@ export const hi: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "जोड़ा",
                 milestoneAssigneeRemoved: "निकाला गया",
                 prUnlinked: "यह लिंक हटाया:",
+            },
+            automation: {
+                moved: "नियम “{rule}” ने इसे स्थानांतरित किया",
+                changed: "नियम “{rule}” ने इसे बदला",
+                notApplied: "नियम “{rule}” लागू नहीं हुआ: {reason}",
+                notAppliedPlain: "नियम “{rule}” लागू नहीं हुआ",
+                reasons: {
+                    destination: "टास्क को नियम के गंतव्य प्रोजेक्ट में नहीं ले जाया जा सकता",
+                    owner: "नियम का मालिक अब इसे नहीं चला सकता",
+                    plan: "नियम के मालिक के प्लान में ऑटोमेशन नियम शामिल नहीं हैं",
+                    nested: "सब-टास्क केवल अपने पैरेंट के साथ ही स्थानांतरित होता है",
+                    rate_limited: "थोड़े समय में नियमों ने इस टास्क पर बहुत बार कार्रवाई की",
+                    error: "कुछ गड़बड़ हो गई",
+                    bad_status: "नियम जो स्थिति सेट करता है वह अब उपलब्ध नहीं है",
+                    assignee_not_allowed:
+                        "नियम जिस व्यक्ति को असाइन करता है उसे वहाँ असाइन नहीं किया जा सकता",
+                },
             },
             via: {
                 mcp: "MCP के ज़रिए",
@@ -4373,19 +4469,19 @@ export const hi: DeepPartial<Messages> = {
             velocity: {
                 loadFailed: "रफ़्तार का चार्ट लोड नहीं हो सका",
                 title: "रफ़्तार",
-                subtitle: "समय के साथ कार्य बनाए गए, प्रारंभ किए गए, बंद किए गए और अद्यतन किए गए",
+                subtitle: "समय के साथ बने, शुरू हुए, बंद हुए और अपडेट हुए टास्क",
                 day: "दिन",
                 week: "सप्ताह",
-                created: "बनाया था",
-                started: "शुरू कर दिया",
-                closed: "बंद किया हुआ",
-                updated: "अद्यतन",
-                weekPrefix: "डब्ल्यू का",
+                created: "नए",
+                started: "शुरू",
+                closed: "बंद",
+                updated: "अपडेट",
+                weekPrefix: "सप्ताह",
                 memberLabel: "सदस्य",
                 allMembers: "सभी सदस्य",
-                empty: "इस विंडो में अभी तक कोई कार्य गतिविधि नहीं है.",
+                empty: "इस अवधि में अभी कोई टास्क गतिविधि नहीं है।",
                 barTooltip: "{count} {series} · {date}",
-                totals: "दृश्य में - {created} बनाया गया, {started} प्रारंभ हुआ, {closed} बंद हुआ, {updated} अद्यतन किया गया",
+                totals: "इस अवधि में — नए: {created} · शुरू: {started} · बंद: {closed} · अपडेट: {updated}",
             },
             member: "मेंबर",
             open: "ओपन",
@@ -5624,6 +5720,7 @@ export const hi: DeepPartial<Messages> = {
             noAiUsed: "AI का उपयोग नहीं हुआ",
             // TODO(copy): MIP-1960 draft wording for a native reader.
             noAiNoCredits: "AI का उपयोग नहीं हुआ: इस महीने आपके AI क्रेडिट बचे नहीं हैं",
+            noAiMonthlyLimit: "AI का उपयोग नहीं हुआ: Genos AI अपनी मासिक सीमा तक पहुँच गया है",
             deductedNone: "आपके बैलेंस से कुछ नहीं काटा गया",
             deducted: "आपके बैलेंस से {credits} काटे गए",
             scheduleFallback: "यह शेड्यूल",
@@ -6216,7 +6313,7 @@ export const hi: DeepPartial<Messages> = {
             placeholder: "इस धागे के बारे में कुछ भी पूछें...",
             send: "भेजना",
             cancel: "रद्द करना",
-            clear: "स्पष्ट बातचीत",
+            clear: "बातचीत साफ़ करें",
         },
         mentions: {
             ariaLabel: "सुझावों का उल्लेख करें",
@@ -6310,7 +6407,7 @@ export const hi: DeepPartial<Messages> = {
             placeholder: "इस नोट के बारे में कुछ भी पूछें...",
             send: "भेजना",
             cancel: "रद्द करना",
-            clear: "स्पष्ट बातचीत",
+            clear: "बातचीत साफ़ करें",
         },
         mentions: {
             ariaLabel: "सुझावों का उल्लेख करें",
@@ -6351,6 +6448,8 @@ export const hi: DeepPartial<Messages> = {
             outOfCredits: "आपके सभी AI क्रेडिट खत्म हो गए हैं, इसलिए Genos अभी जवाब नहीं दे सकता।",
             outOfCreditsBuy: "क्रेडिट खरीदें",
             outOfCreditsUpgrade: "प्लान अपग्रेड करें",
+            monthlyLimit:
+                "Genos AI अपनी मासिक सीमा तक पहुँच गया है, इसलिए अभी यह नहीं कर सकता। यह अगले महीने की शुरुआत में फिर चालू होगा। खोज और बाकी सब काम करता रहेगा।",
             taskSessionLoadFailed: "इस टास्क के बारे में आपकी पिछली बातचीत लोड नहीं हो सकी।",
         },
         pwaInstall: {

@@ -153,7 +153,7 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
             chatId: number,
             threadId: number,
             paneType: number,
-            messageId: number | undefined,
+            messageId: number | string | undefined,
             useTaskIdAsThreadId: boolean,
             // Set the thread synchronously instead of after the 250ms
             // settle below. Used by the optimistic cache paint, which is
@@ -202,11 +202,15 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
                 // UUIDs now (chatId + threadId are v3 UUIDs) and never
                 // matches a bare-UUID key, so a thread deep-link loaded the
                 // thread but never scrolled to / highlighted the reply.
-                // `messageId` is the still-numeric URL seq, so resolve the
-                // reply by it within the loaded thread messages.
+                // The URL `messageId` is either the numeric seq or the reply's
+                // UUID, so match whichever arrived within the loaded thread.
                 const target =
                     messageId !== undefined
-                        ? threadMessages.find((m) => Number(m.messageId) === messageId)
+                        ? threadMessages.find((m) =>
+                              typeof messageId === "string"
+                                  ? m.messageIdWithChatIdAndThreadId === messageId
+                                  : Number(m.messageId) === messageId
+                          )
                         : undefined;
                 const newMoveIndex = (target ?? threadMessages[0])?.messageIdWithChatIdAndThreadId;
                 useCM.setCurrentThreadChat({ ...newThread, moveToSpecificIndex: newMoveIndex });
@@ -575,22 +579,10 @@ export const useChatRouting = ({ useCM, useTM, myself, isActiveRoute }: UseChatR
         // exactly the path this effect would have produced.
         const threadId = threadUrlToken(currentThreadChat);
 
-        // Preserve the deep-link target already in the URL. `commentId`
-        // wins over `messageId` because the user explicitly navigated
-        // to a task comment (PM "Comments" tab), and we don't want a
-        // stale `moveToSpecificIndex` (the thread bubble's focus state)
-        // to overwrite the active comment focus.
-        const { commentId } = parsedRoute;
-        let { messageId } = parsedRoute;
-        if (commentId === undefined && !messageId && currentThreadChat.moveToSpecificIndex) {
-            const parts = currentThreadChat.moveToSpecificIndex.split("-");
-            if (parts.length >= 3) {
-                const parsedMsgId = Number(parts[parts.length - 1]);
-                if (!isNaN(parsedMsgId) && parsedMsgId > 0) {
-                    messageId = parsedMsgId;
-                }
-            }
-        }
+        // Preserve the deep-link target already in the URL, and add none: the pane's
+        // `moveToSpecificIndex` is a message UUID, and reading digits out of it put a
+        // `/message/<number>` that named no message in the address (MIP-2520).
+        const { commentId, messageId } = parsedRoute;
 
         const newPath = buildChatPath(
             typePath,

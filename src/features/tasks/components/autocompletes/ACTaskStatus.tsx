@@ -4,11 +4,14 @@ import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
 import { Socket } from "socket.io-client";
 
+import { useProjectStatuses } from "../../../../hooks/tasks/useProjectStatuses";
 import { useTranslation } from "../../../../i18n";
 import { TaskProps, TaskStatusProps } from "../../../../types/tasks";
 import { isDeletingStatus } from "../../utils/deletedStatus";
+import { keptCustomStatusId } from "../../utils/projectStatus";
 import { statuses, taskMetaLabel } from "../../utils/taskMeta";
 import { StatusLabel } from "../meta/StatusLabel";
+import { GroupedStatusPicker } from "../statuses/GroupedStatusPicker";
 
 type ACTaskStatusProps = {
     socket: Socket | null;
@@ -35,8 +38,25 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
         [onDeleteTask]
     );
 
-    const applyStatus = (status: TaskStatusProps) => {
-        setTaskContent({ ...taskContent, status });
+    // A project that set up statuses offers its own, grouped (MIP-2493).
+    const { statuses: projectStatuses } = useProjectStatuses(
+        taskContent?.project?.projectId,
+        taskContent?.customStatusId
+    );
+
+    const applyStatus = (status: TaskStatusProps, statusId?: number) => {
+        setTaskContent({
+            ...taskContent,
+            status,
+            customStatusId:
+                statusId ??
+                keptCustomStatusId(
+                    taskContent.status?.status,
+                    status.status,
+                    taskContent.customStatusId
+                ),
+            customStatusPick: statusId,
+        });
         if (setTaskStatusUpdated) {
             setTaskStatusUpdated(true);
         }
@@ -44,6 +64,30 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
             setTaskUpdated(true);
         }
     };
+
+    const pickStatus = (next: TaskStatusProps, statusId?: number) => {
+        if (isDeletingStatus(next.status, taskContent.status?.status)) {
+            onDeleteTask?.();
+            return;
+        }
+        applyStatus(next, statusId);
+    };
+
+    if (projectStatuses.length > 0) {
+        return (
+            <GroupedStatusPicker
+                key={taskContent.id}
+                customStatusId={taskContent.customStatusId}
+                offerDelete={!!onDeleteTask}
+                rows={projectStatuses}
+                status={taskContent.status?.status ?? ""}
+                onPick={(category, statusId) => {
+                    const meta = statuses.find((s) => s.status === category);
+                    if (meta) pickStatus(meta, statusId);
+                }}
+            />
+        );
+    }
 
     return (
         <Fragment>
@@ -72,12 +116,7 @@ export const ACTaskStatus = (props: ACTaskStatusProps) => {
                 multiple
                 onChange={(event, value) => {
                     if (value !== null && value.length > 0) {
-                        const next = value.slice(-1)[0];
-                        if (isDeletingStatus(next.status, taskContent.status?.status)) {
-                            onDeleteTask?.();
-                            return;
-                        }
-                        applyStatus(next);
+                        pickStatus(value.slice(-1)[0]);
                     }
                 }}
             />

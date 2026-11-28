@@ -5,6 +5,7 @@ import Box from "@mui/joy/Box";
 
 import { Spinner } from "../../../../../components/ui/feedback/Skeleton";
 import { useAuth } from "../../../../../context/authState";
+import { useLatestRef } from "../../../../../hooks/common/useLatestRef";
 import { NoteManagementState } from "../../../../../hooks/notes/useNoteManagement";
 import { useTranslation } from "../../../../../i18n";
 import { UserProps } from "../../../../../types/admin";
@@ -39,6 +40,9 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
         });
     };
 
+    // One load per time the box starts loading; who asks and for which note are read then.
+    const latestRef = useLatestRef({ myself, accessToken, noteId: useNM.currentChatNote?.noteId });
+
     useEffect(() => {
         let active = true;
 
@@ -47,9 +51,10 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
         }
 
         (async () => {
+            const { myself, accessToken, noteId } = latestRef.current;
             const loadedUsers: ChatNoteProps[] = await loadChatSubNotes(
                 myself,
-                useNM.currentChatNote?.noteId as number,
+                noteId as number,
                 accessToken
             );
 
@@ -61,7 +66,7 @@ export const ACChatChildNotes = (props: ACChatChildNotesProps) => {
         return () => {
             active = false;
         };
-    }, [loading]);
+    }, [loading, latestRef]);
 
     useEffect(() => {
         if (!open) {

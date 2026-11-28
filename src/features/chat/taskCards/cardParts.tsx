@@ -50,12 +50,17 @@ export const Clip = ({ children, max }: { children: ReactNode; max?: number }) =
 export const CardHeader = ({
     displayId,
     status,
+    projectId,
+    customStatusId,
     isMilestone,
     sentAt,
     viaApp,
 }: {
     displayId: string;
     status: string | null | undefined;
+    /** Of the live task: its project's names for statuses (MIP-2493). */
+    projectId?: number | null;
+    customStatusId?: number | null;
     isMilestone: boolean;
     sentAt: string;
     viaApp?: ViaApp;
@@ -77,7 +82,13 @@ export const CardHeader = ({
                     </Box>
                 )}
             </Box>
-            {status && <StatusLabel status={status} />}
+            {status && (
+                <StatusLabel
+                    customStatusId={customStatusId}
+                    projectId={projectId}
+                    status={status}
+                />
+            )}
             <Box sx={{ marginInlineStart: "auto", display: "inline-flex", gap: 0.75 }}>
                 <Box component="span" sx={metaSx}>
                     {sentAt}

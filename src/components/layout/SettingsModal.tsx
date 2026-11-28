@@ -1941,6 +1941,11 @@ export const SettingsModal = ({
         window.addEventListener(OPEN_PLAN_EVENT, toPlan);
         return () => window.removeEventListener(OPEN_PLAN_EVENT, toPlan);
     }, [open]);
+    // What the editors inside Settings (Skills, a scheduled message) read from the app.
+    const editorHost =
+        myself && setMyself && useCM && useUISM && useTEM
+            ? { myself, setMyself, socket: socket ?? null, useTEM, useCM, useUISM }
+            : undefined;
     // The team the Genos tab works in (its memory page and its schedules).
     const genosTeamId =
         useTEM?.currentTeamId || myself?.teamId || localStorage.getItem("teamId") || "";
@@ -2053,19 +2058,8 @@ export const SettingsModal = ({
                             jump to General because this dialog owns the
                             tab state. */}
                         <GenosSettingsPanel
+                            skillsHost={editorHost}
                             teamId={genosTeamId}
-                            skillsHost={
-                                myself && setMyself && useCM && useUISM && useTEM
-                                    ? {
-                                          myself,
-                                          setMyself,
-                                          socket: socket ?? null,
-                                          useTEM,
-                                          useCM,
-                                          useUISM,
-                                      }
-                                    : undefined
-                            }
                             onOpenLanguageSettings={() => setTab("general")}
                         >
                             <LlmModelSection />
@@ -2078,7 +2072,11 @@ export const SettingsModal = ({
                                 sx={{ p: 2, borderRadius: "lg", minWidth: 0 }}
                                 variant="outlined"
                             >
-                                <SchedulesSection teamId={genosTeamId} onNavigateAway={onClose} />
+                                <SchedulesSection
+                                    editorHost={editorHost}
+                                    teamId={genosTeamId}
+                                    onNavigateAway={onClose}
+                                />
                             </Sheet>
                         </GenosSettingsPanel>
                     </TabPanel>

@@ -1091,6 +1091,7 @@ export const fr: DeepPartial<Messages> = {
                 "Vous avez atteint une limite de votre forfait. Voir Paramètres → Forfait et utilisation.",
             actionFailed: "Impossible d'effectuer cette action. Veuillez réessayer.",
             messageSendFailed: "Impossible d'envoyer votre message. Veuillez réessayer.",
+            noteNotSaved: "Impossible d'enregistrer vos dernières modifications de cette note.",
             idleReload: "Actualisation après une période d'inactivité…",
         },
         serviceSwitch: {
@@ -1232,6 +1233,11 @@ export const fr: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The thread chip under a message: task comments in a project chat, replies elsewhere.
+        underBar: {
+            comments: "{count, plural, one {# commentaire} other {# commentaires}}",
+            replies: "{count, plural, one {# réponse} other {# réponses}}",
+        },
         // TODO(copy): MIP-1956 — draft wording for a native reader.
         liveRegion: {
             newMessage: "{name}: {preview}",
@@ -1239,6 +1245,11 @@ export const fr: DeepPartial<Messages> = {
             attachment: "a envoyé une pièce jointe",
             listLabel: "Messages",
             threadListLabel: "Réponses du fil",
+        },
+        ruleMoveNotice: {
+            line: "La règle « {rule} » a déplacé {task} vers {project}.",
+            aTask: "une tâche",
+            anotherProject: "un autre projet",
         },
         retentionBanner:
             "Les messages de plus de {days} jours sont masqués avec votre forfait. Passez à un forfait supérieur pour voir tout l'historique.",
@@ -2899,6 +2910,7 @@ export const fr: DeepPartial<Messages> = {
             noAiUsed: "Aucune IA utilisée",
             // TODO(copy): MIP-1960 draft wording for a native reader.
             noAiNoCredits: "Aucune IA utilisée : il ne vous reste plus de crédits d'IA ce mois-ci",
+            noAiMonthlyLimit: "Aucune IA utilisée : Genos AI a atteint sa limite mensuelle",
             deductedNone: "Rien n'a été déduit de votre solde",
             deducted: "{credits} déduits de votre solde",
             scheduleFallback: "Cette planification",
@@ -3326,7 +3338,7 @@ export const fr: DeepPartial<Messages> = {
             placeholder: "Demandez n'importe quoi à propos de cette note…",
             send: "Envoyer",
             cancel: "Annuler",
-            clear: "Conversation claire",
+            clear: "Effacer la conversation",
         },
         mentions: {
             ariaLabel: "Mentionner les suggestions",
@@ -3887,6 +3899,8 @@ export const fr: DeepPartial<Messages> = {
                 "Vous avez utilisé tous vos crédits d'IA : Genos ne peut pas répondre pour le moment.",
             outOfCreditsBuy: "Acheter des crédits",
             outOfCreditsUpgrade: "Changer de formule",
+            monthlyLimit:
+                "Genos AI a atteint sa limite mensuelle et ne peut donc pas le faire pour le moment. Elle revient au début du mois prochain. La recherche et tout le reste continuent de fonctionner.",
             taskSessionLoadFailed:
                 "Impossible de charger votre conversation précédente à propos de cette tâche.",
         },
@@ -4937,7 +4951,7 @@ export const fr: DeepPartial<Messages> = {
         },
         schedules: {
             title: "Planifications Genos Assist",
-            blurb: "Genos vous prépare un rapport aux heures que vous choisissez ; il arrive dans votre boîte de réception.",
+            blurb: "Genos les exécute aux heures que vous choisissez : un rapport arrive dans votre boîte de réception ou dans une discussion, et votre message est envoyé dans une discussion.",
             loading: "Chargement de vos planifications…",
             loadFailed: "Impossible de charger vos planifications.",
             retry: "Réessayer",
@@ -4953,6 +4967,11 @@ export const fr: DeepPartial<Messages> = {
             suggestEveningName: "Bilan du soir",
             suggestEveningBlurb: "Ce que vous avez fait aujourd'hui",
             suggestDaily: "Tous les jours à {time}",
+            ruleDaily: "Tous les jours à {time}",
+            ruleWeekdays: "Du lundi au vendredi à {time}",
+            ruleWeekly: "Chaque {days} à {time}",
+            ruleMonthly: "Chaque mois, le jour {day}, à {time}",
+            ruleOnce: "Une seule fois, le {date} à {time}",
             upgradeTitle: "Des rapports qui arrivent tout seuls",
             upgradeChip: "Core et supérieur",
             upgradeBody:
@@ -5023,6 +5042,11 @@ export const fr: DeepPartial<Messages> = {
             job: "Rapport",
             jobPlaceholder: "Choisir un rapport",
             jobCatalog: {
+                scheduled_message: {
+                    title: "Message programmé",
+                    description:
+                        "Envoie un message que vous rédigez dans une discussion de groupe ou de projet, en votre nom, à l'heure choisie. Aucune IA n'est utilisée.",
+                },
                 ai_dashboard: {
                     title: "Page de tableau de bord",
                     description:
@@ -5154,6 +5178,19 @@ export const fr: DeepPartial<Messages> = {
             deliverChatHintAiShared:
                 "Le rapport est publié dans ce chat sous forme de message, avec ses phrases d'IA. Tout le monde dans le chat peut le lire, mais son coût n'est montré qu'à vous, dans votre boîte de réception. Aucune notification n'est envoyée.",
             rowDeliver: "Publié dans : {name}",
+            messageLabel: "Message",
+            messageHint:
+                "Envoyé en votre nom, comme si vous appuyiez sur Envoyer. Les membres de la discussion que vous mentionnez sont avertis. Impossible d'ajouter des images ou des fichiers.",
+            messageChatLabel: "Envoyer le message à",
+            messageChatPlaceholder: "Choisir une discussion",
+            errorMessage: "Rédigez le message à envoyer.",
+            errorMessageFiles: "Retirez les images et les fichiers du message.",
+            errorMessageChat: "Choisissez une discussion de groupe ou de projet.",
+            rowMessage: "Message : {text}",
+            rowSendTo: "Envoyé à : {name}",
+            messageSent: "Message envoyé à {chat}",
+            runRightAwayHintMessage:
+                "Envoyé à {chat} dès que vous appuyez sur Exécuter maintenant.",
             reportPosted: "Rapport publié dans {chat}",
             rowProject: "Projet : {name}",
             rowMilestone: "Jalon : {name}",
@@ -7032,6 +7069,53 @@ export const fr: DeepPartial<Messages> = {
             dependencies: "Dépendances",
             folder: "Dossier",
         },
+        // Per-project statuses (MIP-2493).
+        projectStatuses: {
+            menuItem: "Statuts et automatisation",
+            title: "Statuts",
+            description: "Les statuts de ce projet. Les changements sont enregistrés aussitôt.",
+            inReview: "En revue",
+            introTitle: "Utilisez vos propres statuts",
+            introBody:
+                "Renommez, recolorez ou ajoutez des statuts dans chaque catégorie. Rien ne change tant qu'ils ne sont pas configurés.",
+            setUp: "Configurer les statuts",
+            setUpFailed: "Impossible de configurer les statuts. Réessayez.",
+            add: "Ajouter",
+            addTo: "Ajouter un statut à {category}",
+            nameLabel: "Nom du statut",
+            default: "Par défaut",
+            off: "Désactivé",
+            count: "{n} sur {max}",
+            groupLabel: "Statuts {category}",
+            rename: "Renommer",
+            moveUp: "Monter",
+            moveDown: "Descendre",
+            makeDefault: "Définir par défaut",
+            turnOff: "Désactiver",
+            turnOn: "Activer",
+            delete: "Supprimer",
+            categoryColor: "Couleur de la catégorie",
+            colorFor: "Couleur de {name}",
+            changeColor: "Changer la couleur de {name}",
+            moreActions: "Autres actions pour {name}",
+            builtinHint: "Les statuts intégrés ne peuvent pas être supprimés.",
+            limitHint: "Limite atteinte : {max} statuts. Supprimez-en un d'abord.",
+            nameTaken: "Ce nom est déjà utilisé.",
+            nameReserved: "Ce nom appartient à un statut intégré.",
+            nameTooLong: "{max} caractères au maximum.",
+            nameEmpty: "Le nom ne peut pas être vide.",
+            saveFailed: "Échec de l'enregistrement. Réessayez.",
+            saving: "Enregistrement",
+            moved: "{name} est passé en position {position} sur {total} dans {category}.",
+            loadFailed: "Impossible de charger les statuts",
+            deleteTitle: "Supprimer « {name} » ?",
+            deleteBody: "Les tâches qui l'utilisent passeront au statut de votre choix.",
+            noReplacement: "Activez d'abord un autre statut de cette catégorie.",
+            deleteInUse:
+                "{count, plural, one {# tâche utilise ce statut. La déplacer vers :} other {# tâches utilisent ce statut. Les déplacer vers :}}",
+            replacementLabel: "Déplacer vers",
+            deleteAndMove: "Déplacer et supprimer",
+        },
         customFields: {
             heading: "Champs personnalisés",
             manageTooltip: "Gérer les champs personnalisés",
@@ -7165,6 +7249,25 @@ export const fr: DeepPartial<Messages> = {
                 milestoneAssigneeAdded: "ajouté",
                 milestoneAssigneeRemoved: "supprimé",
                 prUnlinked: "a retiré le lien vers",
+            },
+            automation: {
+                moved: "Déplacée par la règle « {rule} »",
+                changed: "Modifiée par la règle « {rule} »",
+                notApplied: "Règle « {rule} » non appliquée : {reason}",
+                notAppliedPlain: "Règle « {rule} » non appliquée",
+                reasons: {
+                    destination:
+                        "la tâche ne peut pas être déplacée vers le projet de destination de la règle",
+                    owner: "le propriétaire de la règle ne peut plus l’exécuter",
+                    plan: "l’offre du propriétaire de la règle n’inclut pas les règles d’automatisation",
+                    nested: "une sous-tâche ne se déplace qu’avec sa tâche parente",
+                    rate_limited:
+                        "les règles ont agi trop souvent sur cette tâche en peu de temps",
+                    error: "une erreur s’est produite",
+                    bad_status: "le statut défini par la règle n’est plus disponible",
+                    assignee_not_allowed:
+                        "la personne que la règle assigne ne peut pas être assignée là-bas",
+                },
             },
             via: {
                 mcp: "via MCP",
@@ -7511,16 +7614,16 @@ export const fr: DeepPartial<Messages> = {
                 subtitle: "Tâches créées, démarrées, fermées et mises à jour au fil du temps",
                 day: "Jour",
                 week: "Semaine",
-                created: "Créé",
-                started: "Démarré",
-                closed: "Fermé",
-                updated: "Mis à jour",
-                weekPrefix: "O de",
+                created: "Créées",
+                started: "Démarrées",
+                closed: "Fermées",
+                updated: "Mises à jour",
+                weekPrefix: "Sem.",
                 memberLabel: "Membre",
                 allMembers: "Tous les membres",
-                empty: "Aucune activité de tâche pour le moment dans cette fenêtre.",
+                empty: "Aucune activité sur les tâches pour cette période.",
                 barTooltip: "{count} {series} · {date}",
-                totals: "En vue — {created} créé, {started} démarré, {closed} fermé, {updated} mis à jour",
+                totals: "Sur la période — Créées : {created} · Démarrées : {started} · Fermées : {closed} · Mises à jour : {updated}",
             },
             member: "Membre",
             open: "Ouvert",
@@ -8228,7 +8331,7 @@ export const fr: DeepPartial<Messages> = {
             placeholder: "Demandez n'importe quoi sur ce fil…",
             send: "Envoyer",
             cancel: "Annuler",
-            clear: "Conversation claire",
+            clear: "Effacer la conversation",
         },
         mentions: {
             ariaLabel: "Mentionner les suggestions",

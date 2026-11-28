@@ -1864,6 +1864,7 @@ const MilestonePreviewInner = ({
                           ...t,
                           title: updated.title ?? t.title,
                           status: updated.status ?? t.status,
+                          customStatusId: updated.customStatusId ?? null,
                           priority: updated.priority ?? t.priority,
                           effortLevel: updated.effortLevel ?? t.effortLevel,
                           dueDate: updated.dueDate ?? t.dueDate,
@@ -2010,6 +2011,13 @@ const MilestonePreviewInner = ({
                 next.effortLevel?.code != null && next.effortLevel.code >= 0
                     ? next.effortLevel.code
                     : null;
+        }
+        // One of the project's statuses picked in the picker (MIP-2493).
+        if (
+            next.customStatusPick != null &&
+            next.customStatusPick !== (milestone.customStatusId ?? null)
+        ) {
+            patch.customStatusId = next.customStatusPick;
         }
         // Status update from ACTaskStatus picker.
         if ((next.status?.status ?? null) !== (milestone.status ?? null)) {
@@ -2162,6 +2170,14 @@ const MilestonePreviewInner = ({
             if (Object.keys(patch).length <= 1) break;
         }
         if (updated) {
+            // The pick is stored: it must not be sent again.
+            if (next.customStatusPick != null) {
+                setTaskContentLike((prev) =>
+                    prev.customStatusPick === next.customStatusPick
+                        ? { ...prev, customStatusPick: undefined }
+                        : prev
+                );
+            }
             syncMilestoneToAllTasks(updated);
             syncMilestoneCard(updated);
             // `patch.projectId` is gone when the move was refused and the rest
@@ -2495,6 +2511,8 @@ const MilestonePreviewInner = ({
                         {/* The same icon + word as the task table (MIP-1157). */}
                         <StatusLabel
                             key={`milestone-status-${milestone.status}`}
+                            customStatusId={milestone.customStatusId}
+                            projectId={milestone.projectId}
                             status={milestone.status as string}
                         />
                         <Box sx={{ flex: 1 }} />
