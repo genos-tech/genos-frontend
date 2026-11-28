@@ -5992,6 +5992,8 @@ export const zh: DeepPartial<Messages> = {
             archived: "已归档",
             untitled: "（未命名）",
             noAnswer: "（无回答）",
+            cancelledBeforeAnswer: "此提问在回答前已取消。",
+            notDecided: "此提问未被批准，也未被拒绝。",
         },
         dropped: {
             message: "Genos 无法使用你指定的消息，因此未参考该消息作答。",

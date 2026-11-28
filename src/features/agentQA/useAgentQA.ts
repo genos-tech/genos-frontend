@@ -108,6 +108,12 @@ const snapshotTurn = (ask: AskState): CompletedTurn => {
     };
 };
 
+// A turn whose card was never answered: the same snapshot, and with no answer text it says so.
+export const waitingSnapshot = (ask: AskState): CompletedTurn => ({
+    ...snapshotTurn(ask),
+    ...(ask.pendingApproval && !ask.answer ? { unanswered: "notDecided" as const } : {}),
+});
+
 export const useAgentQA = ({
     accessToken,
     teamId,
@@ -852,9 +858,12 @@ export const useAgentQA = ({
                 const hasContent =
                     Boolean(prev.answer) ||
                     prev.toolEvents.length > 0 ||
-                    prev.answerSources.length > 0;
+                    prev.answerSources.length > 0 ||
+                    // A card cancelled before anything else arrived (a restored one has no
+                    // tool events, MIP-2604): the question must not vanish with it.
+                    prev.pendingApproval !== null;
                 if (hasContent) {
-                    const snapshot = snapshotTurn(prev);
+                    const snapshot = waitingSnapshot(prev);
                     setTurns((prevTurns) => appendTurn(prevTurns, snapshot));
                 }
             }
@@ -896,7 +905,7 @@ export const useAgentQA = ({
     // The promoted-turns ref is rebuilt to match the new turn list so
     // a stale handler can't double-promote a turn that was restored
     // from a server snapshot.
-    const reset = useCallback((args: { sessionId?: string | null; turns?: CompletedTurn[] }) => {
+    const reset = useCallback((args: Parameters<UseAgentQAReturn["reset"]>[0]) => {
         askAbortRef.current?.abort();
         askAbortRef.current = null;
         // Same reasoning as `onCancel`: the context this run belonged to
@@ -910,6 +919,25 @@ export const useAgentQA = ({
         liveSourcesRef.current = null;
         completedTurnIdsRef.current.clear();
         pendingNewConversationRef.current = false;
+        // A card restored below may carry a token this session already sent, from a request that
+        // was just aborted and may never have arrived: the server is the judge of a second try.
+        decidedApprovalTokenRef.current = null;
+        // A restored ask still awaiting approval (MIP-2604) is a live turn again: its resumed
+        // stream adds to these sources and announces itself like any other.
+        const pending = args.turns !== undefined ? args.pending : null;
+        if (pending) {
+            const { id, askedQuery, answer, answerSources } = pending.turn;
+            liveSourcesRef.current = { turnId: id, sources: answerSources };
+            liveRunRef.current = {
+                turnId: id,
+                askedQuery,
+                answer,
+                runId: null,
+                error: null,
+                elapsedMs: null,
+                sourceCount: answerSources.length,
+            };
+        }
         if (args.turns !== undefined) {
             setTurns(args.turns);
             promotedTurnIdsRef.current = new Set(args.turns.map((t) => t.id));
@@ -924,6 +952,18 @@ export const useAgentQA = ({
                     : args.turns !== undefined
                       ? 0
                       : prev.turnId;
+            if (pending) {
+                return {
+                    ...EMPTY_ASK_STATE,
+                    sessionId: nextSessionId,
+                    turnId: pending.turn.id,
+                    askedQuery: pending.turn.askedQuery,
+                    answer: pending.turn.answer,
+                    answerSources: pending.turn.answerSources,
+                    askedMentions: pending.turn.mentions,
+                    pendingApproval: pending.card,
+                };
+            }
             return {
                 ...EMPTY_ASK_STATE,
                 sessionId: nextSessionId,

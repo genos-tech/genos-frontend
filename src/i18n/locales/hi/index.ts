@@ -6390,6 +6390,8 @@ export const hi: DeepPartial<Messages> = {
             archived: "संग्रहीत",
             untitled: "(बिना शीर्षक)",
             noAnswer: "(कोई जवाब नहीं)",
+            cancelledBeforeAnswer: "यह सवाल जवाब से पहले ही रद्द कर दिया गया था।",
+            notDecided: "इस सवाल को न मंज़ूरी दी गई, न अस्वीकार किया गया।",
         },
         dropped: {
             message:

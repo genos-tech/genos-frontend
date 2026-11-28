@@ -31,11 +31,10 @@ import {
 import { useNotificationsContext } from "../../services/notifications/notificationsContextState";
 import {
     deletionCoversSession,
-    sessionTurnToCompleted,
+    restoreSessionTurns,
     useAgentQA,
     useAgentSessionsDeleted,
     type AgentRunResult,
-    type CompletedTurn,
     type ToolEvent,
     type UseAgentQAReturn,
 } from "../agentQA";
@@ -204,13 +203,11 @@ export const useThreadAsk = ({ accessToken, teamId }: UseThreadAskArgs): UseThre
                     // `turns.length > 0` or `agent_session_id` truthy.
                     // Open() handles the genuine "clear everything"
                     // case for thread switches; here we only restore.
-                    const restored: CompletedTurn[] = (data.turns || []).map(
-                        sessionTurnToCompleted
-                    );
-                    if (restored.length > 0 || data.agent_session_id) {
+                    const restored = restoreSessionTurns(data.turns || []);
+                    if (data.turns?.length || data.agent_session_id) {
                         agentQA.reset({
                             sessionId: data.agent_session_id,
-                            turns: restored,
+                            ...restored,
                         });
                     }
                 } catch (err) {

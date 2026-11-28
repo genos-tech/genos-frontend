@@ -6232,6 +6232,8 @@ export const ja: DeepPartial<Messages> = {
             archived: "アーカイブ済み",
             untitled: "（無題）",
             noAnswer: "（回答なし）",
+            cancelledBeforeAnswer: "この質問は回答の前にキャンセルされました。",
+            notDecided: "この質問は承認も却下もされていません。",
         },
         dropped: {
             message:

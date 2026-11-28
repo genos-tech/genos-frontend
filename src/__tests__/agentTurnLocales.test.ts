@@ -128,6 +128,8 @@ describe("where each host's labels come from", () => {
             awaitingApproval: sp.states.awaitingApproval,
             answeredIn: sp.conversation.answeredIn,
             noAnswer: sp.states.noAnswer,
+            cancelledBeforeAnswer: sp.states.cancelledBeforeAnswer,
+            notDecided: sp.states.notDecided,
         });
         expect(l.actions).toEqual({
             approve: sp.actions.approve,

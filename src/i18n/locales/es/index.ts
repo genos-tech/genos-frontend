@@ -6182,6 +6182,8 @@ export const es: DeepPartial<Messages> = {
             archived: "Archivado",
             untitled: "(sin título)",
             noAnswer: "(sin respuesta)",
+            cancelledBeforeAnswer: "Esta pregunta se canceló antes de recibir respuesta.",
+            notDecided: "Esta pregunta no se aprobó ni se rechazó.",
         },
         dropped: {
             message: "Genos no pudo usar el mensaje que indicaste, así que respondió sin él.",
