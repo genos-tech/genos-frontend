@@ -69,11 +69,11 @@ const Caps = ({ combo, ltr }: { combo: string[]; ltr: boolean }) => (
         dir={ltr ? "ltr" : undefined}
         direction="row"
         spacing={0.5}
+        // A long combination ("hold … then press …") takes a second line on a phone (MIP-2599).
+        flexWrap="wrap"
         // `gap`, not margins: the right-to-left style flip would put an LTR row's margins on the
         // wrong side, and the first "+" would stick to its key cap (MIP-2479).
         useFlexGap
-        // A long combination ("hold … then press …") takes a second line on a phone (MIP-2599).
-        flexWrap="wrap"
     >
         {combo.map((key, i) => (
             <Fragment key={`${key}-${i}`}>
