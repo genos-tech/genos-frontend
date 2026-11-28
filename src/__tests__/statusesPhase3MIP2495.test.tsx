@@ -71,7 +71,7 @@ const row = (
 
 const ROWS: ProjectStatusDef[] = [
     row(1, "Open", "Open", { builtinKey: "Open", isDefault: true }),
-    row(2, "In Review", "Open", { builtinKey: "In Review" }),
+    row(2, "Ready", "Open", { builtinKey: "In Review" }),
     row(3, "WIP", "WIP", { builtinKey: "WIP", isDefault: true }),
     row(4, "Code review", "WIP", { color: "#8b5cf6" }),
     row(5, "Old step", "WIP", { isArchived: true }),

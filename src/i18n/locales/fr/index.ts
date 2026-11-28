@@ -7144,7 +7144,7 @@ export const fr: DeepPartial<Messages> = {
             menuItem: "Statuts et automatisation",
             title: "Statuts",
             description: "Les statuts de ce projet. Les changements sont enregistrés aussitôt.",
-            inReview: "En revue",
+            ready: "Prêt",
             introTitle: "Utilisez vos propres statuts",
             introBody:
                 "Renommez, recolorez ou ajoutez des statuts. Rien ne change tant que vous ne les avez pas configurés.",
@@ -7185,7 +7185,7 @@ export const fr: DeepPartial<Messages> = {
             deleteAndMove: "Déplacer et supprimer",
             boardColumnsTitle: "Afficher une colonne par statut",
             boardColumnsHint:
-                "Utile si votre équipe fait avancer le travail par étapes comme En revue ou QA. Désactivé : une colonne par catégorie (Ouvert, En cours…). S’applique à tout le projet.",
+                "Utile si votre équipe fait avancer le travail par étapes comme Prêt ou QA. Désactivé : une colonne par catégorie (Ouvert, En cours…). S’applique à tout le projet.",
             boardColumnsOn: "Le tableau affiche une colonne par statut.",
             boardColumnsOff: "Le tableau affiche une colonne par catégorie.",
             countsAs: "Compte comme : {category}",

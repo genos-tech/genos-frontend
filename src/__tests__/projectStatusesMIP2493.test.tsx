@@ -7,20 +7,24 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { StatusLabel } from "../features/tasks/components/meta/StatusLabel";
+import { ActivityStatusChip } from "../features/tasks/components/statuses/ActivityStatusChip";
 import { CardStatusMark } from "../features/tasks/components/statuses/CardStatusMark";
 import { ModalProjectStatuses } from "../features/tasks/components/statuses/ModalProjectStatuses";
 import { ProjectStatusPicker } from "../features/tasks/components/statuses/ProjectStatusPicker";
 import {
     BUILTIN_STATUSES,
+    builtinName,
     keptCustomStatusId,
     pickableStatuses,
     resolveStatusRow,
+    statusRowName,
 } from "../features/tasks/utils/projectStatus";
 import {
     __resetProjectStatusesStore,
     setProjectStatuses,
 } from "../hooks/tasks/useProjectStatuses";
 import { en } from "../i18n/locales/en";
+import { ja } from "../i18n/locales/ja";
 import { ProjectStatusDef } from "../types/tasks";
 
 vi.mock("../context/authState", () => ({ useAuth: () => ({ accessToken: "t" }) }));
@@ -57,7 +61,7 @@ const row = (
 
 const ROWS: ProjectStatusDef[] = [
     row(1, "Open", "Open", { builtinKey: "Open", isDefault: true, canDelete: false }),
-    row(2, "In Review", "Open", { builtinKey: "In Review", canDelete: false }),
+    row(2, "Ready", "Open", { builtinKey: "In Review", canDelete: false }),
     row(3, "WIP", "WIP", { builtinKey: "WIP", isDefault: true, canDelete: false }),
     row(4, "Code review", "WIP", { color: "#8b5cf6" }),
     row(5, "Old step", "WIP", { isArchived: true }),
@@ -95,7 +99,7 @@ describe("which status a task reads as", () => {
         expect(keptCustomStatusId("WIP", "WIP", 4)).toBe(4);
     });
 
-    it("sets up each category's built-in and In Review, before WIP", () => {
+    it("sets up each category's built-in and Ready, before WIP", () => {
         expect(BUILTIN_STATUSES.map((s) => s.key)).toEqual([
             "Open",
             "In Review",
@@ -105,6 +109,26 @@ describe("which status a task reads as", () => {
             "Closed",
             "Rejected",
         ]);
+    });
+});
+
+describe("the built-in that was In Review (MIP-2602)", () => {
+    const builtin = (name: string) => row(2, name, "Open", { builtinKey: "In Review" });
+
+    it("is Ready, and translated while nobody renamed it", () => {
+        expect(builtinName("In Review")).toBe("Ready");
+        expect(statusRowName(builtin("Ready"), ja.tasks)).toBe("着手可");
+        expect(statusRowName(builtin("Ready"), en.tasks)).toBe("Ready");
+    });
+
+    it("shows any other name as stored: a team's own, or a project the migration skipped", () => {
+        expect(statusRowName(builtin("QA"), ja.tasks)).toBe("QA");
+        expect(statusRowName(builtin("In Review"), ja.tasks)).toBe("In Review");
+    });
+
+    it("keeps an old history entry's recorded name and the built-in's colour", () => {
+        wrap(<ActivityStatusChip category="Open" label="In Review" />);
+        expect(screen.getByText("In Review")).toBeTruthy();
     });
 });
 
@@ -160,7 +184,7 @@ describe("the status picker", () => {
                 .map((o) => o.textContent)
         ).toEqual([
             en.tasks.filters.open,
-            en.tasks.projectStatuses.inReview,
+            en.tasks.projectStatuses.ready,
             en.tasks.filters.wip,
             "Code review",
             "Done",
