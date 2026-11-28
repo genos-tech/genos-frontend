@@ -12,6 +12,7 @@ import { SubChatPaneHeader } from "./components/headers/SubChatPaneHeader";
 import { ChatEditorSection } from "./components/shared/ChatEditorSection";
 import { ErrorSnackbar } from "./components/shared/ErrorSnackbar";
 import { MessageListRenderer } from "./components/shared/MessageListRenderer";
+import { PinnedMessagesFrame } from "./components/shared/PinnedMessagesFrame";
 import { RetentionBanner } from "./components/shared/RetentionBanner";
 import { useFirstUnreadIndex } from "./hooks/useFirstUnreadIndex";
 import { useMessageManagement } from "./hooks/useMessageManagement";
@@ -205,57 +206,67 @@ export const MessagesSubPane = (props: MessagesPaneProps) => {
                 ) &&
                     useCM.currentSubChat &&
                     messageManagement.messages && (
-                        <>
-                            <MessageListRenderer
-                                chat={useCM.currentSubChat}
-                                currentChatId={currentSubChatId}
-                                firstUnreadIndex={firstUnreadIndex}
-                                height={0}
-                                indexMap={messageManagement.indexMap}
-                                isThread={false}
-                                messages={messageManagement.messages}
-                                myself={myself}
-                                setEditTargetMessage={messageManagement.setEditTargetMessage}
-                                setIsInEdit={messageManagement.setIsInEdit}
-                                setMyself={setMyself}
-                                setTodoFromMessageBubble={setTodoFromMessageBubble}
-                                socket={socket}
-                                useCM={useCM}
-                                usePM={usePM}
-                                useTEM={useTEM}
-                                useTM={useTM}
-                                useUISM={useUISM}
-                                visibleRangeRef={scrollManagement.visibleRangeRef}
-                                virtuosoRef={
-                                    scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
-                                }
-                                fillContainer
-                                onMessageSeenIndex={readStatusManagement.handleSeenIndex}
-                                onRangeChanged={scrollManagement.handleRangeChanged}
-                            />
-                            <ChatEditorSection
-                                chat={useCM.currentSubChat as ChatProps | ThreadProps}
-                                clearPendingFiles={clearPendingFiles}
-                                editTargetMessage={messageManagement.editTargetMessage}
-                                isInEdit={messageManagement.isInEdit}
-                                isThread={false}
-                                myself={myself}
-                                numEditorLines={messageManagement.numEditorLines}
-                                pendingFiles={pendingFiles}
-                                setIsInEdit={messageManagement.setIsInEdit}
-                                setMyself={setMyself}
-                                setNumEditorLines={messageManagement.setNumEditorLines}
-                                socket={socket}
-                                useCM={useCM}
-                                useTEM={useTEM}
-                                useUISM={useUISM}
-                                setCurrentChat={
-                                    useCM.setCurrentSubChat as (
-                                        chat: ChatProps | ThreadProps
-                                    ) => void
-                                }
-                            />
-                        </>
+                        <PinnedMessagesFrame
+                            chat={useCM.currentSubChat as ChatProps}
+                            setCurrentChat={useCM.setCurrentSubChat}
+                            onMessageSeenIndex={readStatusManagement.handleSeenIndex}
+                        >
+                            {(onMessageSeenIndex) => (
+                                <>
+                                    <MessageListRenderer
+                                        chat={useCM.currentSubChat as ChatProps}
+                                        currentChatId={currentSubChatId}
+                                        firstUnreadIndex={firstUnreadIndex}
+                                        height={0}
+                                        indexMap={messageManagement.indexMap}
+                                        isThread={false}
+                                        messages={messageManagement.messages}
+                                        myself={myself}
+                                        setIsInEdit={messageManagement.setIsInEdit}
+                                        setMyself={setMyself}
+                                        setTodoFromMessageBubble={setTodoFromMessageBubble}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        usePM={usePM}
+                                        useTEM={useTEM}
+                                        useTM={useTM}
+                                        useUISM={useUISM}
+                                        visibleRangeRef={scrollManagement.visibleRangeRef}
+                                        setEditTargetMessage={
+                                            messageManagement.setEditTargetMessage
+                                        }
+                                        virtuosoRef={
+                                            scrollManagement.virtuosoRef as React.RefObject<VirtuosoHandle>
+                                        }
+                                        fillContainer
+                                        onMessageSeenIndex={onMessageSeenIndex}
+                                        onRangeChanged={scrollManagement.handleRangeChanged}
+                                    />
+                                    <ChatEditorSection
+                                        chat={useCM.currentSubChat as ChatProps | ThreadProps}
+                                        clearPendingFiles={clearPendingFiles}
+                                        editTargetMessage={messageManagement.editTargetMessage}
+                                        isInEdit={messageManagement.isInEdit}
+                                        isThread={false}
+                                        myself={myself}
+                                        numEditorLines={messageManagement.numEditorLines}
+                                        pendingFiles={pendingFiles}
+                                        setIsInEdit={messageManagement.setIsInEdit}
+                                        setMyself={setMyself}
+                                        setNumEditorLines={messageManagement.setNumEditorLines}
+                                        socket={socket}
+                                        useCM={useCM}
+                                        useTEM={useTEM}
+                                        useUISM={useUISM}
+                                        setCurrentChat={
+                                            useCM.setCurrentSubChat as (
+                                                chat: ChatProps | ThreadProps
+                                            ) => void
+                                        }
+                                    />
+                                </>
+                            )}
+                        </PinnedMessagesFrame>
                     )}
             </Sheet>
         </div>

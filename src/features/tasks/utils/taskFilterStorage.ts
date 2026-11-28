@@ -25,6 +25,8 @@ import { FilterProps } from "../types/TaskTableTypes";
 export type StoredTaskFilters = {
     /** Labels, resolved back to `FilterProps` via `rehydrateFilters`. */
     status: string[];
+    /** The project's own statuses picked in the status filter (MIP-2495); absent when none. */
+    statusIds?: number[];
     tags: string[];
     priorities: string[];
     effortLevels: string[];
@@ -77,6 +79,7 @@ export const readStoredFilters = (key: string): Partial<StoredTaskFilters> | nul
         // fields it does have rather than dropping the whole selection.
         return {
             ...(isStringArray(o.status) ? { status: o.status } : {}),
+            ...(isKeyArray(o.statusIds) ? { statusIds: o.statusIds.map(Number) } : {}),
             ...(isStringArray(o.tags) ? { tags: o.tags } : {}),
             ...(isStringArray(o.priorities) ? { priorities: o.priorities } : {}),
             ...(isStringArray(o.effortLevels) ? { effortLevels: o.effortLevels } : {}),

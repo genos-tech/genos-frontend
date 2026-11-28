@@ -68,6 +68,8 @@ export type ChatProps = {
     project?: ProjectProps;
     taskExist?: boolean;
     moveToSpecificIndex?: string;
+    /** Bumped to jump to `moveToSpecificIndex` again (a pinned message clicked twice). */
+    jumpNonce?: number;
     notMove?: boolean;
     isPrivate?: boolean;
     /** The group chat's one-line topic (MIP-1694). */

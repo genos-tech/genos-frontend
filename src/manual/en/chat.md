@@ -23,6 +23,7 @@ The owner of a group can archive it. An archived group keeps everything but is r
 - **Reactions:** hover a message to pick one of the three quick reactions, or open the emoji picker. Change the quick three in Settings → Chat → Quick reactions.
 - **Custom emoji and GIFs:** any team member can upload custom emoji in Settings → Custom emoji (PNG, JPG, GIF, WebP or SVG, up to 512 KB). Only the person who uploaded an emoji can delete it. Type /gif in the message editor to search GIPHY, when your Genos has it turned on.
 - **Flags:** use **Flag for later** to keep a message as a personal follow-up. Flagged messages are listed under Flagged Messages. **Mark done** when you have handled one, and use **View completed flags** to see past ones.
+- **Pinned messages:** use **Pin for everyone** in a message's … menu to keep it at hand for the whole chat. The chat then shows a **Pinned** tab beside **Messages**; click a message there to go to it. Anyone in the chat can pin and unpin, up to 50 per chat. Thread replies cannot be pinned.
 - **Reminders:** use **Remind me…** on a message to pick a time, such as in 1 hour or tomorrow morning. When it comes due, you get a notification and an item in your Inbox. Task comments have the same option.
 - **To-Do:** **Add to To-Do** puts a message on your personal to-do list. Double-clicking a message does the same, unless you turn it off in Settings → Chat → Double-click action.
 - **Ask Genos about this message** asks Genos with that message attached. You can also select text inside a message and ask about just that text.

@@ -12,6 +12,7 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import FlagRoundedIcon from "@mui/icons-material/FlagRounded";
 import NotificationsActiveRoundedIcon from "@mui/icons-material/NotificationsActiveRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+import PushPinRoundedIcon from "@mui/icons-material/PushPinRounded";
 import ReplyRoundedIcon from "@mui/icons-material/ReplyRounded";
 import WrapTextIcon from "@mui/icons-material/WrapText";
 import { Box } from "@mui/joy";
@@ -31,9 +32,12 @@ import { channelService } from "../../../../services/channel/channelService";
 import { forceDeleteMessage } from "../../../../services/forceDelete";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, FlaggedMessageProps, MessageProps } from "../../../../types/chat";
+import { useIsChatArchived } from "../../../archive/archiveState";
 import { useAskGenosMessageItem } from "../../hooks/useAskGenosMessageItem";
+import { useHeldMessagePins } from "../../hooks/useMessagePins";
 import { useMessageReminder } from "../../hooks/useMessageReminder";
 import { deleteMessage } from "../../services/deleteMessage";
+import { changeMessagePin } from "../../utils/messagePins";
 import { formatReminderTime } from "../../utils/reminderPresets";
 import { reportFlagFailure } from "../../utils/reportFlagFailure";
 import { ModalDeleteMessage } from "../modals/ModalDeleteMessage";
@@ -124,6 +128,12 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
     const [openRemindMe, setOpenRemindMe] = useState(false);
     const [isFlagged, setIsFlagged] = useState(message.isFlagged || false);
     const reminder = useMessageReminder(message.messageIdWithChatId);
+    // "Pin for everyone" (MIP-2487). Held only once the chat's list was read, so a server
+    // without the feature offers nothing.
+    const messagePins = useHeldMessagePins(chat.chatId);
+    const archived = useIsChatArchived(chat);
+    const isPinnedForEveryone =
+        messagePins?.pins.some((pin) => pin.messageId === message.messageIdWithChatId) ?? false;
     const { pinned } = useBubbleActionsPreference();
     // "Ask Genos about this message" (MIP-1058), by the v3 id; about the selected text when some is
     // selected in this message as the menu opens.
@@ -294,6 +304,27 @@ export const BubbleMoreMenu = (props: BubbleMoreMenuProps) => {
             label: t.chat.messageActions.addToTodo,
             onClick: () => onAddToTodo?.(),
             visible: onAddToTodo !== undefined,
+        },
+        {
+            active: isPinnedForEveryone,
+            icon: <PushPinRoundedIcon sx={{ fontSize: 18 }} />,
+            id: "pinForEveryone",
+            kind: "pinForEveryone",
+            label: isPinnedForEveryone
+                ? t.chat.pinnedMessages.unpinForEveryone
+                : t.chat.pinnedMessages.pinForEveryone,
+            onClick: () =>
+                void changeMessagePin(
+                    chat.chatId,
+                    message.messageIdWithChatId!,
+                    !isPinnedForEveryone
+                ),
+            // A reply also sent to the chat is still a thread reply, which cannot be pinned.
+            visible:
+                !archived &&
+                !message.alsoSentFrom &&
+                messagePins != null &&
+                Boolean(message.messageIdWithChatId),
         },
         {
             icon: <ContentCopyRoundedIcon sx={{ fontSize: 18 }} />,

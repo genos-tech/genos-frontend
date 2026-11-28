@@ -191,6 +191,8 @@ type TaskCardProps = {
     status?: string | null;
     /** Draw the status in the header. The board leaves it off: its column says it. */
     showStatus?: boolean;
+    /** Leave out the project's own status mark: the column names it (MIP-2495). */
+    hideStatusMark?: boolean;
     /** Draw the assignee (avatar and name) in the footer. Default on. */
     showAssignee?: boolean;
     /** Draw the tags. Default on. */
@@ -227,6 +229,7 @@ export const TaskCard = ({
     task,
     status,
     showStatus = false,
+    hideStatusMark = false,
     showAssignee = true,
     showTags = true,
     showDue = true,
@@ -269,7 +272,7 @@ export const TaskCard = ({
 
             <TaskTitle lines={2}>{task.title || untitled || t.tasks.mobile.untitled}</TaskTitle>
 
-            {!showStatus && (
+            {!showStatus && !hideStatusMark && (
                 <CardStatusMark
                     customStatusId={task.customStatusId}
                     projectId={task.projectId}

@@ -3060,6 +3060,25 @@ export const es: DeepPartial<Messages> = {
                 "La conexión Google Calendar expiró: vuelva a conectarse para usar Quick Meet.",
             quickMeetReconnect: "Reconectar",
         },
+        // Messages pinned in a chat for everyone (MIP-2487).
+        pinnedMessages: {
+            tabsAria: "Vistas del chat",
+            messagesTab: "Mensajes",
+            pinnedTab: "Fijados",
+            listAria: "Mensajes fijados",
+            pinnedBy: "Fijado por {name}",
+            pinnedByDeleted: "Fijado por una cuenta eliminada",
+            unpin: "Desfijar para todos",
+            pinForEveryone: "Fijar para todos",
+            unpinForEveryone: "Desfijar para todos",
+            hiddenOne: "{count} mensaje fijado anterior queda fuera del historial de tu plan.",
+            hiddenMany:
+                "{count} mensajes fijados anteriores quedan fuera del historial de tu plan.",
+            pinFailed: "No se pudo fijar el mensaje. Inténtalo de nuevo.",
+            unpinFailed: "No se pudo desfijar el mensaje. Inténtalo de nuevo.",
+            limitReached: "Este chat ya tiene {count} mensajes fijados. Desfija uno primero.",
+            jumpFailed: "No se pudo abrir ese mensaje.",
+        },
         threadTabs: {
             ariaLabel: "Secciones del hilo",
             comments: "Comentarios",
@@ -3960,6 +3979,9 @@ export const es: DeepPartial<Messages> = {
             quickAddHiddenByFilters: "Se creó {id}, pero tus filtros actuales lo ocultan.",
             quickAddOpen: "Abrir",
             quickAddDismiss: "Descartar",
+            statusColumnLabel:
+                "{name} · {category} · {count, plural, one {# tarea} other {# tareas}}",
+            statusOffTooltip: "Desactivado. Mueve estas tareas a otro estado.",
         },
         subTasks: {
             loadFailed: "No se pudieron cargar las subtareas",
@@ -3993,6 +4015,7 @@ export const es: DeepPartial<Messages> = {
             folder: "Carpeta",
         },
         filters: {
+            statusInCategory: "{name}, en {category}",
             all: "Todas",
             open: "Abiertas",
             wip: "En curso",
@@ -4754,6 +4777,11 @@ export const es: DeepPartial<Messages> = {
                 "{count, plural, one {# tarea usa este estado. Moverla a:} other {# tareas usan este estado. Moverlas a:}}",
             replacementLabel: "Mover a",
             deleteAndMove: "Mover y eliminar",
+            boardColumnsTitle: "Una columna del tablero por estado",
+            boardColumnsHint:
+                "Una columna por estado en lugar de por categoría, para todo el proyecto.",
+            boardColumnsOn: "El tablero muestra una columna por estado.",
+            boardColumnsOff: "El tablero muestra una columna por categoría.",
         },
         automation: {
             tabsLabel: "Secciones de ajustes del proyecto",

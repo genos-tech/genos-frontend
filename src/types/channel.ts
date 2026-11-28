@@ -278,3 +278,22 @@ export type Ack<TData = unknown> =
 // "../types/channel"`. Definition lives next to the queue
 // implementation in `channelService.ts`.
 export type { PendingMessage } from "../services/channel/channelService";
+
+/** A message pinned in a chat for everyone (MIP-2487). Not `Pin`, one person's sidebar chat pin. */
+export interface MessagePin {
+    id: string;
+    messageId: string;
+    channelId: string;
+    /** Null once that account is gone. */
+    pinnedBy: { userId: string; username: string } | null;
+    tsCreated: string;
+    message: Message;
+}
+
+/** `GET /api/v3/channels/{id}/message_pins/`. */
+export interface ChannelMessagePins {
+    /** Newest pin first. Pins older than the viewer's history window are left out. */
+    pins: MessagePin[];
+    hiddenCount: number;
+    limit: number;
+}
