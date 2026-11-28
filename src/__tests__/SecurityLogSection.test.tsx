@@ -166,4 +166,12 @@ describe("SecurityLogSection", () => {
         render(<SecurityLogSection teamId="t1" />);
         expect(await screen.findByText(/^Someone ·/)).toBeInTheDocument();
     });
+
+    // MIP-2612: the wrapping itself needs a real browser; this pins that the address stays
+    // its own left-to-right piece, so an Arabic row cannot reorder it.
+    it("keeps the address a left-to-right piece of its own", async () => {
+        listTeamSecurityEvents.mockResolvedValue({ events: [EVENT], nextBefore: null });
+        render(<SecurityLogSection teamId="t1" />);
+        expect(await screen.findByText("203.0.113.7")).toHaveAttribute("dir", "ltr");
+    });
 });

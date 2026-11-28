@@ -11,6 +11,17 @@ type Props = {
     teamId: string;
 };
 
+// On a phone the line wraps: the address is what the reader is asked to check
+// (MIP-2612). From `md` up it stays one line.
+const DETAIL_LINE_SX = {
+    opacity: 0.7,
+    whiteSpace: { xs: "normal", md: "nowrap" },
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    overflowWrap: "anywhere",
+} as const;
+const IP_SX = { display: "inline-block", maxWidth: "100%", fontFamily: "monospace" } as const;
+
 /**
  * One row of a security log: what happened, to whom, by whom, when, from
  * where, and through which surface. Shared by the team log (Developer) and a
@@ -44,16 +55,22 @@ export const SecurityEventRow = ({ event: e }: { event: SecurityEvent }) => {
                             </Typography>
                         )}
                     </Typography>
-                    <Typography level="body-xs" sx={{ opacity: 0.7 }} noWrap>
+                    <Typography level="body-xs" sx={DETAIL_LINE_SX}>
                         {fmt(s.byWhen, {
                             actor: e.actorLabel || s.unknownActor,
                             when: new Date(e.createdAt).toLocaleString(locale),
                         })}
                         {e.ip && (
-                            <Box component="span" sx={{ fontFamily: "monospace" }}>
+                            <>
                                 {" "}
-                                · {e.ip}
-                            </Box>
+                                ·{" "}
+                                {/* Left to right in every language, and one piece: it
+                                    moves to the next line whole and breaks only when it
+                                    is longer than a line (IPv6). */}
+                                <Box component="span" dir="ltr" sx={IP_SX}>
+                                    {e.ip}
+                                </Box>
+                            </>
                         )}
                     </Typography>
                 </Box>
