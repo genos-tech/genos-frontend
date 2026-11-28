@@ -236,6 +236,8 @@ export const ModalNoteView = (props: ModalNoteViewProps) => {
                     p: 2,
                     position: "relative",
                     width: "100%",
+                    // Opaque, so Chrome can scroll it on the compositor on a 1x screen (MIP-2556).
+                    backgroundColor: "inherit",
                 }}
             >
                 {children}
