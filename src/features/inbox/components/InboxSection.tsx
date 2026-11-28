@@ -71,6 +71,8 @@ export const InboxSection = ({
         });
     }, [selectedItemId, items, virtuosoRef]);
 
+    const selectedIndex = items.findIndex((item) => item.itemId === selectedItemId);
+
     const handleItemClick = (itemId: number) => {
         navigate(`${basePath}/${itemId}`);
     };
@@ -94,7 +96,11 @@ export const InboxSection = ({
                     computeItemKey={(_, item) => item.itemId}
                     data={items}
                     firstItemIndex={firstItemIndex}
-                    initialTopMostItemIndex={0}
+                    // Mount-only: a list that opens on a linked card starts there. A
+                    // `scrollToIndex` before Virtuoso has measured its rows is lost.
+                    initialTopMostItemIndex={
+                        selectedIndex > 0 ? { index: selectedIndex, align: "center" } : 0
+                    }
                     style={{ height: "100%" }}
                     itemContent={(virtualIndex, item) => {
                         const index = virtualIndex - firstItemIndex;

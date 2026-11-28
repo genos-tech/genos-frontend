@@ -20,9 +20,11 @@ import type { InboxItemProps } from "../types/common";
 import type { TaskCommentProps } from "../types/tasks";
 
 const scrollToIndex = vi.fn();
+const listProps = vi.fn();
 
 vi.mock("react-virtuoso", () => ({
-    Virtuoso: forwardRef((_props, ref) => {
+    Virtuoso: forwardRef((props, ref) => {
+        listProps(props);
         useImperativeHandle(ref, () => ({ scrollToIndex }));
         return <div />;
     }),
@@ -109,6 +111,15 @@ describe("InboxSection selected item", () => {
         expect(scrollToIndex).toHaveBeenCalledTimes(1);
         rerender(section(inbox([3, 2, 1], true), 1));
         expect(scrollToIndex).toHaveBeenCalledTimes(2);
+    });
+
+    it("opens the list on a linked item, which a scroll call before layout would miss", () => {
+        listProps.mockClear();
+        render(section(inbox([3, 2, 1]), 1), { wrapper });
+        expect(listProps.mock.calls[0][0].initialTopMostItemIndex).toEqual({
+            index: 2,
+            align: "center",
+        });
     });
 
     it("waits for a selected item that is not loaded yet", () => {
