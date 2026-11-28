@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
-import { Box, List, ListDivider, ListSubheader } from "@mui/joy";
+import { Box, ListDivider } from "@mui/joy";
 import Autocomplete from "@mui/joy/Autocomplete";
 import AutocompleteOption from "@mui/joy/AutocompleteOption";
 
@@ -11,7 +11,6 @@ import { STATUS_DELETED } from "../../meta/taskStatuses";
 import { pickableStatuses, resolveStatusRow, statusRowName } from "../../utils/projectStatus";
 import { taskMetaLabel } from "../../utils/taskMeta";
 import { StatusLabel } from "../meta/StatusLabel";
-import { CategoryHeading } from "./statusChoices";
 
 /** One of the project's statuses, or a bare system value (Deleted, or a category whose
  *  statuses are all off, which a task can still be in). */
@@ -25,10 +24,11 @@ const rowChoice = (row: ProjectStatusDef): Choice => ({
 });
 
 /**
- * The status field of a project that set up its statuses (MIP-2493): its own statuses,
- * grouped by category, with Deleted apart at the end where it is offered.
+ * The status field of a project that set up its statuses (MIP-2493): its own statuses in one
+ * flat list (MIP-2590: the category each counts as stays under the hood), with Deleted apart
+ * at the end where it is offered.
  */
-export const GroupedStatusPicker = ({
+export const ProjectStatusPicker = ({
     rows,
     status,
     customStatusId,
@@ -57,53 +57,43 @@ export const GroupedStatusPicker = ({
     return (
         <Autocomplete
             getOptionLabel={name}
-            groupBy={(choice) => (choice.category === STATUS_DELETED ? "" : choice.category)}
             isOptionEqualToValue={(option, selected) => option.key === selected.key}
             options={options}
             placeholder={t.tasks.autocomplete.statusPlaceholder}
             size="sm"
             sx={{ width: "100%" }}
             value={value ? [value] : []}
-            renderGroup={(params) => (
-                <Fragment key={params.key}>
-                    {params.group ? (
-                        <ListSubheader sticky>
-                            <CategoryHeading category={params.group} />
-                        </ListSubheader>
-                    ) : (
-                        <ListDivider />
-                    )}
-                    <List sx={{ "--List-padding": 0 }}>{params.children}</List>
-                </Fragment>
-            )}
             renderOption={(props, option) => (
-                <AutocompleteOption {...props} key={option.key} sx={{ minHeight: 32 }}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 1,
-                            width: "100%",
-                            minWidth: 0,
-                        }}
-                    >
-                        <StatusLabel row={option.row} status={option.category} />
-                        {option.row?.isArchived && (
-                            <Box
-                                component="span"
-                                sx={{ ...type("caption"), color: g.text.tertiary }}
-                            >
-                                {t.tasks.projectStatuses.off}
-                            </Box>
-                        )}
-                        {props["aria-selected"] === true && (
-                            <CheckRoundedIcon
-                                aria-hidden="true"
-                                sx={{ fontSize: 16, marginInlineStart: "auto" }}
-                            />
-                        )}
-                    </Box>
-                </AutocompleteOption>
+                <Fragment key={option.key}>
+                    {option.key === STATUS_DELETED && <ListDivider />}
+                    <AutocompleteOption {...props} sx={{ minHeight: 32 }}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                                width: "100%",
+                                minWidth: 0,
+                            }}
+                        >
+                            <StatusLabel row={option.row} status={option.category} />
+                            {option.row?.isArchived && (
+                                <Box
+                                    component="span"
+                                    sx={{ ...type("caption"), color: g.text.tertiary }}
+                                >
+                                    {t.tasks.projectStatuses.off}
+                                </Box>
+                            )}
+                            {props["aria-selected"] === true && (
+                                <CheckRoundedIcon
+                                    aria-hidden="true"
+                                    sx={{ fontSize: 16, marginInlineStart: "auto" }}
+                                />
+                            )}
+                        </Box>
+                    </AutocompleteOption>
+                </Fragment>
             )}
             renderTags={(tags, getTagProps) =>
                 tags.slice(-1).map((item, index) => {
