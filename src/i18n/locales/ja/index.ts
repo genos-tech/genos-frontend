@@ -6943,6 +6943,9 @@ export const ja: DeepPartial<Messages> = {
             quickAddHiddenByFilters: "{id} を作成しましたが、現在のフィルターでは表示されません。",
             quickAddOpen: "開く",
             quickAddDismiss: "閉じる",
+            statusColumnLabel: "{name} · {category} · タスク{count}件",
+            statusOffTooltip:
+                "オフになっています。これらのタスクは別のステータスに移動してください。",
         },
         subTasks: {
             loadFailed: "サブタスクを読み込めませんでした",
@@ -7020,6 +7023,11 @@ export const ja: DeepPartial<Messages> = {
             deleteInUse: "{count}件のタスクがこのステータスを使っています。移動先：",
             replacementLabel: "移動先",
             deleteAndMove: "移動して削除",
+            boardColumnsTitle: "ステータスごとにボードの列を分ける",
+            boardColumnsHint:
+                "列を分類ごとではなくステータスごとにします。プロジェクトの全員に適用されます。",
+            boardColumnsOn: "ボードはステータスごとの列で表示されます。",
+            boardColumnsOff: "ボードはカテゴリーごとの列で表示されます。",
         },
         automation: {
             tabsLabel: "プロジェクト設定のセクション",
@@ -7247,6 +7255,7 @@ export const ja: DeepPartial<Messages> = {
                 "特定のマイルストーンでフィルターすると、マイルストーンが自動的に開き、そのタスクを確認できます。他のフィルターでは、行は折りたたまれたままになります。",
         },
         filters: {
+            statusInCategory: "{category}の{name}",
             all: "All",
             open: "Open",
             wip: "WIP",

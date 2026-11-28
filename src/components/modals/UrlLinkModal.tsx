@@ -19,6 +19,7 @@ import { ModalTarget } from "../../utils/parseInternalUrl";
 import { AppTooltip } from "../ui/AppTooltip";
 import { Spinner } from "../ui/feedback/Skeleton";
 import { MODAL_CHROME_EDGE, MODAL_CHROME_GAP, modalChromeVarsSx } from "../ui/modal/modalChrome";
+import { useCoveredOverlay } from "../ui/modal/overlayStack";
 import { NoteModalHostZIndexProvider } from "./noteModalHostZIndex";
 
 // Lazy on purpose: these views transitively import the chat panes,
@@ -112,6 +113,10 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
     // The other views (chat, notes, to-do) keep the card.
     const isMobile = useIsMobile();
     const fullScreen = isMobile && (target?.kind === "task" || target?.kind === "milestone");
+    const covered = useCoveredOverlay(target !== null, effectiveZIndex);
+    // No blur where it cannot be seen (behind a full-screen preview) or where a layer above already
+    // blurs everything (MIP-2556).
+    const blurless = fullScreen || covered;
     // The ✕ (and the full-page button) sit in the dialog's top corner; a full-screen dialog starts
     // under the status bar, so they start below it (MIP-1665).
     const chromeTop = fullScreen
@@ -195,11 +200,12 @@ export const UrlLinkModal = (props: UrlLinkModalProps) => {
     // OS dialog.
     return (
         <Modal
+            data-covered={covered || undefined}
             open={target !== null}
             slotProps={{
                 backdrop: {
                     sx: {
-                        backdropFilter: "blur(2px)",
+                        backdropFilter: blurless ? "none" : "blur(2px)",
                         backgroundColor: g.scrim,
                     },
                 },

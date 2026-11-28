@@ -6,6 +6,7 @@ import { Box, IconButton, Modal, ModalDialog } from "@mui/joy";
 import { useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
 import { touchTargetSx } from "../touchTargets";
+import { useCoveredOverlay } from "./overlayStack";
 
 /**
  * The one dialog frame (MIP-1125, part of MIP-1106).
@@ -230,10 +231,23 @@ export const ModalFrame = ({
             ? hostZIndex + MODAL_FRAME_HOST_OFFSET
             : (zIndex ?? MODAL_FRAME_DEFAULT_Z_INDEX);
 
+    // Under another overlay this one's blur is wasted work on every frame the top one draws
+    // (MIP-2556).
+    const covered = useCoveredOverlay(open, layer);
+
     return (
         <Modal
+            data-covered={covered || undefined}
             open={open}
-            slotProps={{ backdrop: { sx: { backgroundColor: g.scrim } } }}
+            slotProps={{
+                backdrop: {
+                    sx: {
+                        backgroundColor: g.scrim,
+                        // Joy's backdrop blurs by default.
+                        ...(covered && { backdropFilter: "none" }),
+                    },
+                },
+            }}
             sx={{
                 zIndex: layer,
                 // Joy pins the pickers a dialog opens to calc(modal + 1);
@@ -249,7 +263,7 @@ export const ModalFrame = ({
                         '& ~ [role="listbox"]': { "--unstable_popup-zIndex": layer + 10 },
                     }),
                 // The blur lives on the root; Joy's Backdrop slot paints the dim.
-                backdropFilter: "blur(4px)",
+                backdropFilter: covered ? "none" : "blur(4px)",
                 backgroundColor: "transparent",
             }}
             {...FENCE}

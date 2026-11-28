@@ -3956,6 +3956,9 @@ export const es: DeepPartial<Messages> = {
             quickAddHiddenByFilters: "Se creó {id}, pero tus filtros actuales lo ocultan.",
             quickAddOpen: "Abrir",
             quickAddDismiss: "Descartar",
+            statusColumnLabel:
+                "{name} · {category} · {count, plural, one {# tarea} other {# tareas}}",
+            statusOffTooltip: "Desactivado. Mueve estas tareas a otro estado.",
         },
         subTasks: {
             loadFailed: "No se pudieron cargar las subtareas",
@@ -3989,6 +3992,7 @@ export const es: DeepPartial<Messages> = {
             folder: "Carpeta",
         },
         filters: {
+            statusInCategory: "{name}, en {category}",
             all: "Todas",
             open: "Abiertas",
             wip: "En curso",
@@ -4750,6 +4754,11 @@ export const es: DeepPartial<Messages> = {
                 "{count, plural, one {# tarea usa este estado. Moverla a:} other {# tareas usan este estado. Moverlas a:}}",
             replacementLabel: "Mover a",
             deleteAndMove: "Mover y eliminar",
+            boardColumnsTitle: "Una columna del tablero por estado",
+            boardColumnsHint:
+                "Una columna por estado en lugar de por categoría, para todo el proyecto.",
+            boardColumnsOn: "El tablero muestra una columna por estado.",
+            boardColumnsOff: "El tablero muestra una columna por categoría.",
         },
         automation: {
             tabsLabel: "Secciones de ajustes del proyecto",

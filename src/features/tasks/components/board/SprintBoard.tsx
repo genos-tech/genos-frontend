@@ -13,6 +13,7 @@ import { useAuth } from "../../../../context/authState";
 import { useTaskSortPreferences } from "../../../../hooks/common/taskSortPreferencesState";
 import { useLeadingDebouncedCallback } from "../../../../hooks/common/useLeadingDebouncedCallback";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
+import { useProjectStatuses } from "../../../../hooks/tasks/useProjectStatuses";
 import { SprintMilestoneManagementState } from "../../../../hooks/tasks/useSprintMilestoneManagement";
 import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { fmt, useTranslation } from "../../../../i18n";
@@ -27,9 +28,10 @@ import { isWidening, useProjectStatusScope } from "../../state/projectStatusScop
 import { FilterProps } from "../../types/TaskTableTypes";
 import { milestonesByTaskIdWithLiveProgress } from "../../utils/boardMilestoneProgress";
 import { pickScopedMilestoneId, quickAddParentFor } from "../../utils/boardQuickAdd";
+import { quickAddColumnId } from "../../utils/boardStatusColumns";
 import { buildOptimisticQuickTask } from "../../utils/optimisticQuickTask";
 import { PREVIEW_SWITCH_DEBOUNCE_MS } from "../../utils/previewSwitchDebounce";
-import { keptCustomStatusId } from "../../utils/projectStatus";
+import { keptCustomStatusId, statusRowName } from "../../utils/projectStatus";
 import { QuickAddDraft } from "../../utils/quickAddDraft";
 import { buildComparator } from "../../utils/sortTask";
 import { bucketBoardColumns, buildBoardDisplaySet } from "../../utils/sprintBoardDisplay";
@@ -38,7 +40,7 @@ import { taskFilterStorageKey } from "../../utils/taskFilterStorage";
 import { statuses } from "../../utils/taskMeta";
 import { TaskFilterMenu } from "../table/TaskFilterMenu";
 import { SprintBoardColumn } from "./SprintBoardColumn";
-import { COLUMNS, getBoardContainerStyles, visibleColumns } from "./sprintBoardHelpers";
+import { boardBuckets, boardColumns, getBoardContainerStyles } from "./sprintBoardHelpers";
 import { SprintBoardQuickAddCard } from "./SprintBoardQuickAddCard";
 import { SprintBoardSkeleton } from "./SprintBoardSkeleton";
 import { useBoardDragScrollLock } from "./useBoardDragScrollLock";
@@ -166,6 +168,26 @@ export const SprintBoard = (props: SprintBoardProps) => {
         setPredefinedTagsFilters([allTagFilter, ...tagBasedFilters]);
     }, [usePM.currentProject?.projectTags]);
 
+    // "One column per status" (MIP-2495): the project's setting, and only once its statuses
+    // are read. Null draws the category columns, as a project without the option always has.
+    // A card holding a status the list lacks (a teammate added it) reads the list again: in
+    // this view the cards draw no status mark of their own to do that.
+    const boardProjectId = usePM.currentProject?.projectId;
+    const [unknownStatusId, setUnknownStatusId] = useState<number | null>(null);
+    const projectStatusList = useProjectStatuses(boardProjectId, unknownStatusId);
+    useEffect(() => {
+        if (!projectStatusList.boardColumnsPerStatus) return;
+        const known = new Set(projectStatusList.statuses.map((s) => s.statusId));
+        const unknown = filteredTasks.find(
+            (task) => task.customStatusId != null && !known.has(task.customStatusId)
+        );
+        setUnknownStatusId(unknown?.customStatusId ?? null);
+    }, [filteredTasks, projectStatusList]);
+    const statusRows =
+        projectStatusList.boardColumnsPerStatus && projectStatusList.statuses.length > 0
+            ? projectStatusList.statuses
+            : null;
+
     // Local state for board tasks organized by column. One bucket per
     // entry in COLUMNS (incl. `blocked`) — a status without a bucket
     // here is silently dropped by `dispatchToColumn`, which is exactly
@@ -178,7 +200,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
         closed: [],
         rejected: [],
     });
-    const shownColumns = visibleColumns(boardTasks);
+    const shownColumns = boardColumns(statusRows, boardTasks);
 
     // Organize the board's cards into status columns. The card SET is chosen
     // by the depth model in `buildBoardDisplaySet` (pure + unit-tested — see
@@ -195,20 +217,17 @@ export const SprintBoard = (props: SprintBoardProps) => {
         });
         // By EFFECTIVE status: a card under a Closed ancestor sits in Closed, one under
         // a Deleted ancestor is not drawn (MIP-1389).
-        const organized: Record<string, TaskTableProps[]> = bucketBoardColumns(
-            display,
-            useTM.allTasks
+        const organized: Record<string, TaskTableProps[]> = boardBuckets(
+            statusRows,
+            bucketBoardColumns(display, useTM.allTasks)
         );
 
         // Sort each column independently. `sortColumn` is a no-op when
         // `sortBy === "default"`, so paying for an extra useMemo +
         // function call here is cheap.
-        organized.open = sortColumn(organized.open);
-        organized.wip = sortColumn(organized.wip);
-        organized.blocked = sortColumn(organized.blocked);
-        organized.pending = sortColumn(organized.pending);
-        organized.closed = sortColumn(organized.closed);
-        organized.rejected = sortColumn(organized.rejected);
+        for (const columnId of Object.keys(organized)) {
+            organized[columnId] = sortColumn(organized[columnId]);
+        }
 
         setBoardTasks(organized);
     }, [
@@ -219,6 +238,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
         scoped,
         isMemberFilterActive,
         expandExtraDepth,
+        statusRows,
     ]);
 
     // Sync the dragged task's new status onto the open preview pane so
@@ -227,17 +247,15 @@ export const SprintBoard = (props: SprintBoardProps) => {
     // status object by label since `currentPreviewTask.status` is a
     // structured object (not a string).
     const syncPreviewStatus = useCallback(
-        (taskId: string, newStatus: string) => {
+        (taskId: string, newStatus: string, statusId?: number) => {
             const preview = useTM.currentPreviewTask;
             if (!preview || String(preview.id) !== taskId) return;
             const statusObj = statuses.find((s) => s.status === newStatus) ?? preview.status;
             useTM.setCurrentPreviewTask({
                 ...preview,
-                customStatusId: keptCustomStatusId(
-                    preview.status?.status,
-                    newStatus,
-                    preview.customStatusId
-                ),
+                customStatusId:
+                    statusId ??
+                    keptCustomStatusId(preview.status?.status, newStatus, preview.customStatusId),
                 status: statusObj,
             });
         },
@@ -276,18 +294,22 @@ export const SprintBoard = (props: SprintBoardProps) => {
         // Cross-column move: snapshot the original layout so we can roll
         // back on error.
         const previousBoardTasks = boardTasks;
-        const sourceTasks = [...boardTasks[sourceColumn]];
-        const destTasks = [...boardTasks[destColumn]];
+        const sourceTasks = [...(boardTasks[sourceColumn] ?? [])];
+        const destTasks = [...(boardTasks[destColumn] ?? [])];
         const [movedTask] = sourceTasks.splice(source.index, 1);
-        const newStatus = COLUMNS.find((col) => col.id === destColumn)?.status || movedTask.status;
-        const updatedMovedTask = {
+        const destColumnConfig = shownColumns.find((col) => col.id === destColumn);
+        const newStatus = destColumnConfig?.status || movedTask.status;
+        // A status column names the status itself (MIP-2495), which is a write even when the
+        // category stays: Open to In Review.
+        const pickedStatusId = destColumnConfig?.row?.statusId;
+        const customStatusIdAfter = (previous: TaskTableProps) =>
+            pickedStatusId ??
+            keptCustomStatusId(previous.status, newStatus, previous.customStatusId);
+        const updatedMovedTask: TaskTableProps = {
             ...movedTask,
             status: newStatus,
-            customStatusId: keptCustomStatusId(
-                movedTask.status,
-                newStatus,
-                movedTask.customStatusId
-            ),
+            customStatusId: customStatusIdAfter(movedTask),
+            customStatusPick: pickedStatusId,
         };
         destTasks.splice(destination.index, 0, updatedMovedTask);
 
@@ -314,7 +336,11 @@ export const SprintBoard = (props: SprintBoardProps) => {
                 const projectId = Number(movedTask.projectId);
                 if (!Number.isFinite(projectId) || projectId <= 0) return;
                 const updated = await useSM.updateExistingMilestone(
-                    { milestoneId: movedTask.milestoneId, status: newStatus },
+                    {
+                        milestoneId: movedTask.milestoneId,
+                        status: newStatus,
+                        customStatusId: pickedStatusId,
+                    },
                     projectId
                 );
                 if (!updated) return;
@@ -331,6 +357,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                 const mirrored: TaskTableProps = {
                     ...updatedMovedTask,
                     customStatusId: updated.customStatusId ?? null,
+                    customStatusPick: undefined,
                     title: updated.title ?? updatedMovedTask.title,
                     status: (updated.status as string) ?? newStatus,
                     priority: updated.priority ?? updatedMovedTask.priority,
@@ -376,11 +403,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                         ? {
                               ...task,
                               status: newStatus,
-                              customStatusId: keptCustomStatusId(
-                                  task.status,
-                                  newStatus,
-                                  task.customStatusId
-                              ),
+                              customStatusId: customStatusIdAfter(task),
                           }
                         : task
                 )
@@ -389,7 +412,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
             // Task preview shows TaskProps — update its status if it's
             // the dragged task. Milestone preview path is covered by the
             // updateExistingMilestone return-and-refresh flow above.
-            syncPreviewStatus(idStr, newStatus);
+            syncPreviewStatus(idStr, newStatus, pickedStatusId);
         } catch (error) {
             console.error("[SprintBoard] Failed to update status:", error);
             setBoardTasks(previousBoardTasks);
@@ -505,6 +528,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
         () => new Map((projectSprintList ?? []).map((s) => [s.sprintId, s.name])),
         [projectSprintList]
     );
+    const quickAddColumn = statusRows ? quickAddColumnId(statusRows, "open") : "open";
     const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
     const toggleQuickAdd = useCallback(() => setIsQuickAddOpen((open) => !open), []);
     const closeQuickAdd = useCallback(() => setIsQuickAddOpen(false), []);
@@ -717,7 +741,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                     }}
                     hasData={
                         useTM.allTasks.length > 0 ||
-                        COLUMNS.some((column) => (boardTasks[column.id] ?? []).length > 0)
+                        Object.values(boardTasks).some((column) => column.length > 0)
                     }
                     loading={
                         (useTM.isLoadingTasks ||
@@ -732,7 +756,9 @@ export const SprintBoard = (props: SprintBoardProps) => {
                             label={t.tasks.table.loadingTasks}
                             columns={shownColumns.map((column) => ({
                                 id: column.id,
-                                title: t.tasks.board[column.titleKey],
+                                title: column.row
+                                    ? statusRowName(column.row, t.tasks)
+                                    : t.tasks.board[column.titleKey],
                             }))}
                         />
                     }
@@ -793,7 +819,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                                         tasks={boardTasks[column.id] || []}
                                         teamMemberProfiles={teamMemberProfiles}
                                         quickAddSlot={
-                                            column.id === "open" && isQuickAddOpen ? (
+                                            column.id === quickAddColumn && isQuickAddOpen ? (
                                                 <SprintBoardQuickAddCard
                                                     creatorUserId={myself.userId}
                                                     fieldRules={quickAddFieldRules}
@@ -812,7 +838,7 @@ export const SprintBoard = (props: SprintBoardProps) => {
                                         onOpenDiagram={handleOpenDiagram}
                                         onTaskClick={handleTaskClick}
                                         onQuickAddClick={
-                                            column.id === "open" && projectId != null
+                                            column.id === quickAddColumn && projectId != null
                                                 ? toggleQuickAdd
                                                 : undefined
                                         }

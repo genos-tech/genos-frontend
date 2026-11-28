@@ -36,7 +36,7 @@ import {
     selectSidebarLiveMilestones,
     selectSidebarPastMilestones,
 } from "../../../sprint-milestone/utils/sortMilestones";
-import { taskMetaLabel } from "../../../utils/taskMeta";
+import { ProjectStatusName } from "../../statuses/ProjectStatusName";
 import { openMilestoneFromSidebar } from "../openMilestone";
 import { useSidebarOpen } from "../useSidebarOpen";
 import type {
@@ -447,7 +447,11 @@ export const MilestonesListItem = memo(function MilestonesListItem({
                                             flexShrink: 0,
                                         }}
                                     >
-                                        {taskMetaLabel(m.status, t.tasks.filters)}
+                                        <ProjectStatusName
+                                            customStatusId={m.customStatusId}
+                                            projectId={m.projectId}
+                                            status={m.status}
+                                        />
                                     </Chip>
                                 );
                             })()}

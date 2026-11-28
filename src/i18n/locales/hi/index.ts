@@ -3933,6 +3933,9 @@ export const hi: DeepPartial<Messages> = {
             quickAddHiddenByFilters: "{id} बन गया, लेकिन आपके मौजूदा फ़िल्टर इसे छिपा रहे हैं।",
             quickAddOpen: "खोलें",
             quickAddDismiss: "बंद करें",
+            statusColumnLabel:
+                "{name} · {category} · {count, plural, one {# कार्य} other {# कार्य}}",
+            statusOffTooltip: "बंद है। इन कार्यों को किसी दूसरी स्थिति में ले जाएँ।",
         },
         subTasks: {
             loadFailed: "सब टास्क लोड नहीं हो सके",
@@ -4010,6 +4013,11 @@ export const hi: DeepPartial<Messages> = {
             deleteInUse: "{count} टास्क यह स्थिति इस्तेमाल करते हैं। इन्हें यहाँ ले जाएँ:",
             replacementLabel: "यहाँ ले जाएँ",
             deleteAndMove: "ले जाएँ और हटाएँ",
+            boardColumnsTitle: "हर स्थिति के लिए बोर्ड का अलग कॉलम",
+            boardColumnsHint:
+                "हर श्रेणी के बजाय हर स्थिति का एक कॉलम, प्रोजेक्ट के सभी लोगों के लिए।",
+            boardColumnsOn: "बोर्ड हर स्थिति के लिए एक कॉलम दिखाता है।",
+            boardColumnsOff: "बोर्ड हर श्रेणी के लिए एक कॉलम दिखाता है।",
         },
         automation: {
             tabsLabel: "प्रोजेक्ट सेटिंग के भाग",
@@ -4234,6 +4242,7 @@ export const hi: DeepPartial<Messages> = {
                 "एक विशिष्ट माइलस्टोन द्वारा फ़िल्टर करने से यह स्वचालित रूप से खुल जाता है ताकि आप इसके कार्यों को देख सकें। अन्य फ़िल्टर पंक्तियों को संक्षिप्त कर देते हैं।",
         },
         filters: {
+            statusInCategory: "{category} में {name}",
             all: "सभी",
             open: "ओपन",
             wip: "WIP",
