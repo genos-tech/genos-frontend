@@ -2619,6 +2619,11 @@ export const ar: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The accessible names of the avatars that open a profile (MIP-2587).
+        avatarButtons: {
+            groupProfile: "ملف المجموعة: {name}",
+            projectProfile: "ملف المشروع: {name}",
+        },
         // The thread chip under a message: task comments in a project chat, replies elsewhere.
         underBar: {
             comments:

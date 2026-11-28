@@ -1220,6 +1220,11 @@ export const ja: DeepPartial<Messages> = {
         },
     },
     chat: {
+        // The accessible names of the avatars that open a profile (MIP-2587).
+        avatarButtons: {
+            groupProfile: "グループのプロフィール：{name}",
+            projectProfile: "プロジェクトのプロフィール：{name}",
+        },
         // The thread chip under a message: task comments in a project chat, replies elsewhere.
         underBar: {
             comments: "{count, plural, one {# 件のコメント} other {# 件のコメント}}",

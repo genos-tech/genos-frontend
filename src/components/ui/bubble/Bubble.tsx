@@ -142,8 +142,6 @@ const TAIL_RADIUS = g.radius.xs;
 const hoverTransition = `background-color ${g.motion.fast} ${g.ease}, border-color ${g.motion.fast} ${g.ease}`;
 
 const toolbarBase = {
-    position: "absolute",
-    zIndex: 2,
     bgcolor: g.surface.raised,
     border: "1px solid",
     borderColor: g.border.default,
@@ -153,7 +151,7 @@ const toolbarBase = {
 } as const;
 
 /** Inside the row's top-right corner (compact), or straddling the balloon's top
- *  edge so it never covers a one-word message. */
+ *  edge so it never covers a one-word message. Always at the end side. */
 const toolbarPlace = {
     // Above the row. From `sm` up the 40% that dips inside stays within the
     // header line (author, time), whose right side is empty, never on the text.
@@ -165,18 +163,29 @@ const toolbarPlace = {
         transform: { xs: "translateY(-100%)", sm: "translateY(-60%)" },
     },
     compact: { insetInlineEnd: BUBBLE_TOOLBAR_OFFSET.right, top: BUBBLE_TOOLBAR_OFFSET.top },
-    // The toolbar is wider than a short balloon, so it opens into the empty
-    // side: a received balloon sits at the start edge of the list, a sent one at
-    // the end edge. Anchored the other way it spills past the list's edge.
-    bubbleReceived: {
-        insetInlineStart: BUBBLE_TOOLBAR_OFFSET.right,
-        top: 0,
-        transform: "translateY(-50%)",
-    },
+    // Both sides end at the balloon's top-right (the logical end). The toolbar is
+    // wider than a short balloon, so what differs is only where the overflow
+    // goes: a sent balloon sits at the end edge of the list and spills toward the
+    // start; a received one sits at the start edge, so it uses the row below.
     bubbleSent: {
         insetInlineEnd: BUBBLE_TOOLBAR_OFFSET.right,
         top: 0,
         transform: "translateY(-50%)",
+    },
+    // A box spanning the balloon. The toolbar's auto start margin pushes it to
+    // the end; when it is wider than the box the margin is 0 and it grows
+    // toward the end, never past the list's start edge.
+    bubbleReceived: {
+        position: "absolute",
+        zIndex: 2,
+        insetInlineStart: BUBBLE_TOOLBAR_OFFSET.right,
+        insetInlineEnd: BUBBLE_TOOLBAR_OFFSET.right,
+        top: 0,
+        transform: "translateY(-50%)",
+        display: "flex",
+        // The empty part of the box must not swallow clicks on the message.
+        pointerEvents: "none",
+        "& > *": { marginInlineStart: "auto", flexShrink: 0, pointerEvents: "auto" },
     },
 } as const;
 
@@ -200,17 +209,34 @@ const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 const BubbleToolbar = forwardRef<
     HTMLDivElement,
     { children: ReactNode; place: keyof typeof toolbarPlace }
->(({ children, place }, ref) => (
-    <Box
-        ref={ref}
-        className="bubble-toolbar"
-        sx={{ ...toolbarBase, ...toolbarPlace[place] }}
-        onClick={stop}
-        onDoubleClick={stop}
-    >
-        {children}
-    </Box>
-));
+>(({ children, place }, ref) => {
+    // A received balloon: `.bubble-toolbar` is the spanning box (what the CSS
+    // reveal shows), and the visible bar is its child. `ref` is always the bar,
+    // which is what the emoji picker aligns to.
+    const spanning = place === "bubbleReceived";
+    const bar = (
+        <Box
+            ref={ref}
+            className={spanning ? undefined : "bubble-toolbar"}
+            sx={
+                spanning
+                    ? toolbarBase
+                    : { position: "absolute", zIndex: 2, ...toolbarBase, ...toolbarPlace[place] }
+            }
+            onClick={stop}
+            onDoubleClick={stop}
+        >
+            {children}
+        </Box>
+    );
+    return spanning ? (
+        <Box className="bubble-toolbar" sx={toolbarPlace[place]}>
+            {bar}
+        </Box>
+    ) : (
+        bar
+    );
+});
 BubbleToolbar.displayName = "BubbleToolbar";
 
 /** The author's name: one style for every surface. */

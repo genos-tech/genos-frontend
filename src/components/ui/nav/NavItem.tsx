@@ -155,6 +155,21 @@ export const NavItem = ({
     ...buttonProps
 }: NavItemProps) => {
     const contentId = useId();
+    // What names the row button when the icon is a control of its own: the text, not the icon,
+    // or the row would be read as the control (MIP-2587).
+    const textId = `${contentId}-text`;
+    const countId = `${contentId}-count`;
+    const trailingId = `${contentId}-trailing`;
+    const labelledBy =
+        children !== undefined
+            ? contentId
+            : [
+                  textId,
+                  count !== undefined && count !== null && countId,
+                  trailing !== undefined && trailing !== null && trailingId,
+              ]
+                  .filter(Boolean)
+                  .join(" ");
     const expandable = expanded !== undefined;
     const showChevronColumn = expandable || reserveChevron;
     const hasActions = actions !== undefined && actions !== null && actions !== false;
@@ -263,6 +278,7 @@ export const NavItem = ({
 
                     <Box
                         className="NavItem-content"
+                        id={textId}
                         sx={{
                             flex: 1,
                             minWidth: 0,
@@ -309,6 +325,7 @@ export const NavItem = ({
                         <Box
                             className="NavItem-count"
                             component="span"
+                            id={countId}
                             sx={{
                                 ...type("caption"),
                                 flexShrink: 0,
@@ -324,6 +341,7 @@ export const NavItem = ({
                     {trailing !== undefined && trailing !== null && (
                         <Box
                             className="NavItem-trailing"
+                            id={trailingId}
                             sx={{
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -443,7 +461,7 @@ export const NavItem = ({
                 // a few selectors outside the row key on it. Its plate is off (below).
                 aria-current={selected ? current : undefined}
                 aria-expanded={expandable ? expanded : undefined}
-                aria-labelledby={interactiveContent ? contentId : undefined}
+                aria-labelledby={interactiveContent ? labelledBy : undefined}
                 color="neutral"
                 selected={selected}
                 variant="plain"
