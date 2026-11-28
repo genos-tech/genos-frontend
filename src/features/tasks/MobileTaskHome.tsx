@@ -236,6 +236,11 @@ export const MobileTaskHome = (props: MobileTaskHomeProps) => {
                 <ModalProjectStatuses
                     projectId={openProjectId}
                     open
+                    automation={{
+                        projects: usePM.teamProjects,
+                        members: useTEM.teamMembers,
+                        myUserId: myself.userId,
+                    }}
                     onClose={() => setOpenStatuses(false)}
                 />
             )}

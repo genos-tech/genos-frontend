@@ -1,0 +1,230 @@
+/**
+ * A rule in one sentence: "When …, if …, then …". The words come from whole templates so each
+ * language keeps its own order, and the values stand out from the words around them.
+ */
+import { Fragment, ReactNode } from "react";
+import { Box } from "@mui/joy";
+
+import { useProjectStatuses } from "../../../hooks/tasks/useProjectStatuses";
+import { useTranslation } from "../../../i18n";
+import { g, type } from "../../../theme/tokens";
+import { StatusLabel } from "../components/meta/StatusLabel";
+import { taskMetaLabel } from "../utils/taskMeta";
+import { needsValue, type DraftCondition, type RuleDraft, type StatusPick } from "./draft";
+import { Lookups, statusRowOf, useLookups } from "./lookups";
+import { useAutomationWords } from "./words";
+
+/** `fmt` for React nodes: every `{name}` of the template becomes that node. */
+export const fmtNodes = (template: string, vars: Record<string, ReactNode>): ReactNode =>
+    template
+        .split(/(\{\w+\})/)
+        .map((part, i) => (
+            <Fragment key={i}>{/^\{\w+\}$/.test(part) ? vars[part.slice(1, -1)] : part}</Fragment>
+        ));
+
+const Value = ({ children }: { children: ReactNode }) => (
+    <Box component="bdi" sx={{ color: g.text.primary, fontWeight: 500 }}>
+        {children}
+    </Box>
+);
+
+/** "a, b and c" in the reader's language. */
+const useList = () => {
+    const { locale } = useTranslation();
+    return (parts: ReactNode[]): ReactNode => {
+        if (parts.length < 2) return parts[0] ?? null;
+        const format = new Intl.ListFormat(locale, { type: "conjunction" });
+        return format
+            .formatToParts(parts.map((_, i) => String(i)))
+            .map((p, i) => (
+                <Fragment key={i}>
+                    {p.type === "element" ? parts[Number(p.value)] : p.value}
+                </Fragment>
+            ));
+    };
+};
+
+const StatusWord = ({ pick, projectId }: { pick: StatusPick; projectId: number }) => {
+    const words = useAutomationWords();
+    const { statuses } = useProjectStatuses(projectId, pick.customStatusId);
+    const row = statusRowOf(pick, statuses);
+    if (!row) return <Value>{words.unknown}</Value>;
+    return (
+        <Box
+            component="span"
+            sx={{
+                display: "inline-flex",
+                verticalAlign: "text-bottom",
+                "& [data-status-word]": { color: g.text.primary, fontWeight: 500 },
+            }}
+        >
+            <StatusLabel row={row} status={row.category} />
+        </Box>
+    );
+};
+
+export const memberName = (lookups: Lookups, id: string): string | undefined =>
+    lookups.members.find((m) => m.userId === id)?.userName;
+
+export const projectName = (lookups: Lookups, id: number): string | undefined =>
+    lookups.projects.find((p) => p.projectId === id)?.projectName;
+
+export const RuleSentence = ({
+    draft,
+    hiddenDestination = false,
+    destinationName,
+}: {
+    draft: RuleDraft;
+    /** The reader is not on the destination: it is not named. */
+    hiddenDestination?: boolean;
+    destinationName?: string | null;
+}) => {
+    const words = useAutomationWords();
+    const { t } = useTranslation();
+    const lookups = useLookups();
+    const list = useList();
+    const { locale } = useTranslation();
+    const person = (id: string) => <Value>{memberName(lookups, id) ?? words.unknown}</Value>;
+    const moves = draft.actions.includes("move") || hiddenDestination;
+    const target = moves && draft.destinationId != null ? draft.destinationId : lookups.projectId;
+
+    const trigger = (): ReactNode => {
+        switch (draft.triggerType) {
+            case "created":
+                return words.trCreated;
+            case "tag_added":
+                return fmtNodes(words.trTag, { tag: <Value>{draft.triggerTag || "…"}</Value> });
+            case "assignee_changed":
+                return draft.triggerAssignee
+                    ? fmtNodes(words.trAssigneeTo, { person: person(draft.triggerAssignee) })
+                    : words.trAssigneeAny;
+            default:
+                return fmtNodes(words.trStatus, {
+                    status: draft.triggerStatus ? (
+                        <StatusWord pick={draft.triggerStatus} projectId={lookups.projectId} />
+                    ) : (
+                        <Value>…</Value>
+                    ),
+                });
+        }
+    };
+
+    const conditionValue = (c: DraftCondition): ReactNode => {
+        if (!c.value) return "…";
+        switch (c.field) {
+            case "assignee":
+            case "reporter":
+                return memberName(lookups, c.value) ?? words.unknown;
+            case "priority":
+                return taskMetaLabel(c.value, t.tasks.filters);
+            case "milestone":
+                return (
+                    lookups.milestones.find((m) => String(m.milestoneId) === c.value)?.title ??
+                    words.unknown
+                );
+            case "custom_status":
+                return (
+                    <StatusWord
+                        pick={{ category: "", customStatusId: Number(c.value) }}
+                        projectId={lookups.projectId}
+                    />
+                );
+            case "custom_field": {
+                const field = lookups.fields.find((f) => f.fieldId === c.fieldId);
+                if (field?.fieldType === "tag") {
+                    return field.options.find((o) => o.id === c.value)?.label ?? words.unknown;
+                }
+                if (field?.fieldType === "member") {
+                    return memberName(lookups, c.value) ?? words.unknown;
+                }
+                return c.value;
+            }
+            default:
+                return c.value;
+        }
+    };
+
+    const condition = (c: DraftCondition): ReactNode => {
+        const field =
+            c.field === "custom_field"
+                ? (lookups.fields.find((f) => f.fieldId === c.fieldId)?.fieldName ?? words.unknown)
+                : // Mid-sentence, a built-in field is not a heading.
+                  fieldName(words, c.field).toLocaleLowerCase(locale);
+        const template = needsValue(c.op)
+            ? c.op === "is"
+                ? words.cIs
+                : words.cIsNot
+            : c.op === "is_set"
+              ? words.cSet
+              : words.cNotSet;
+        return fmtNodes(template, {
+            field: <bdi>{field}</bdi>,
+            value: <Value>{conditionValue(c)}</Value>,
+        });
+    };
+
+    const actions: ReactNode[] = [];
+    if (hiddenDestination) actions.push(words.aMoveHidden);
+    else if (draft.actions.includes("move")) {
+        const name =
+            destinationName ??
+            (draft.destinationId != null ? projectName(lookups, draft.destinationId) : "…");
+        actions.push(fmtNodes(words.aMove, { project: <Value>{name ?? words.unknown}</Value> }));
+    }
+    if (draft.actions.includes("status")) {
+        actions.push(
+            fmtNodes(words.aStatus, {
+                status: draft.setStatus ? (
+                    <StatusWord pick={draft.setStatus} projectId={target} />
+                ) : (
+                    <Value>…</Value>
+                ),
+            })
+        );
+    }
+    if (draft.actions.includes("assignee")) {
+        actions.push(
+            fmtNodes(words.aAssign, {
+                person: draft.assigneeId ? person(draft.assigneeId) : <Value>…</Value>,
+            })
+        );
+    }
+    if (draft.actions.includes("tag")) {
+        actions.push(fmtNodes(words.aTag, { tag: <Value>{draft.addTag || "…"}</Value> }));
+    }
+
+    const conditions = draft.conditions.map(condition);
+    return (
+        <Box
+            component="span"
+            data-testid="rule-sentence"
+            sx={{
+                ...type("body-sm"),
+                display: "block",
+                color: g.text.secondary,
+                overflowWrap: "anywhere",
+            }}
+        >
+            {fmtNodes(conditions.length ? words.sentenceIf : words.sentenceNoIf, {
+                trigger: <>{trigger()}</>,
+                conditions: (
+                    <>{list(conditions.map((n, i) => <Fragment key={i}>{n}</Fragment>))}</>
+                ),
+                actions: <>{list(actions.map((n, i) => <Fragment key={i}>{n}</Fragment>))}</>,
+            })}
+        </Box>
+    );
+};
+
+export const fieldName = (
+    words: ReturnType<typeof useAutomationWords>,
+    field: Exclude<DraftCondition["field"], "custom_field">
+): string =>
+    ({
+        tag: words.fieldTag,
+        assignee: words.fieldAssignee,
+        reporter: words.fieldReporter,
+        priority: words.fieldPriority,
+        milestone: words.fieldMilestone,
+        custom_status: words.fieldStatus,
+    })[field];
