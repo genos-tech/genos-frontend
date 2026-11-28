@@ -30,11 +30,6 @@ export const RepliedToThreadLine = ({ preview, onOpen }: RepliedToThreadLineProp
     return (
         <PlainButton
             title={preview ?? undefined}
-            onDoubleClick={(e) => e.stopPropagation()}
-            onClick={(e) => {
-                e.stopPropagation();
-                onOpen(e);
-            }}
             sx={{
                 ...type("caption"),
                 display: "block",
@@ -51,6 +46,11 @@ export const RepliedToThreadLine = ({ preview, onOpen }: RepliedToThreadLineProp
                 "&:hover": { textDecoration: "underline", color: g.accent.text },
                 // WCAG's smallest finger target, on a touch screen only.
                 "@media (pointer: coarse)": { minHeight: 28 },
+            }}
+            onDoubleClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+                e.stopPropagation();
+                onOpen(e);
             }}
         >
             {before}

@@ -38,6 +38,7 @@ const channel = (over: Partial<Channel> = {}): Channel => ({
     title: "Room",
     profileImageUrl: "",
     projectId: null,
+    legacyChatId: null,
     ownerId: null,
     isPrivate: false,
     latestMessage: null,
@@ -63,6 +64,9 @@ const message = (id: string, seq: number, over: Partial<Message> = {}): Message 
     mentions: [],
     attachments: [],
     metadata: {},
+    taskId: null,
+    displayId: null,
+    taskStatus: null,
     editedAt: null,
     deletedAt: null,
     tsSent: `2026-01-01T00:00:${String(seq).padStart(2, "0")}Z`,
@@ -224,7 +228,7 @@ describe("the store", () => {
     it("sends the flag and draws the row in the chat before the server answers", () => {
         const svc = service();
         const emit = vi.fn();
-        svc.socket = { connected: true, emit, timeout: () => ({ emit }) } as any;
+        svc.setSocket({ connected: true, emit, timeout: () => ({ emit }) } as any);
         void svc
             .send("ch-1", [{}], { parentId: "root", alsoInChannel: true, echo: { sender } })
             .catch(() => {});

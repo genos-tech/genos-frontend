@@ -351,9 +351,6 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                     <Checkbox
                         checked={alsoSendFor === threadKey}
                         label={fmt(t.chat.thread.alsoSendTo, { chatName: alsoSendName() })}
-                        size="sm"
-                        // The whole row is the target, padding included.
-                        overlay
                         sx={{
                             // `overlay` reaches to the nearest positioned box: without this it
                             // lies over the editor and takes its clicks.
@@ -366,6 +363,9 @@ export const BnThreadEditor = (props: BnThreadEditorProps) => {
                             // A finger needs a bigger row.
                             "@media (pointer: coarse)": { minHeight: TOUCH_TARGET },
                         }}
+                        size="sm"
+                        // The whole row is the target, padding included.
+                        overlay
                         onChange={(e) => chooseAlsoSend(e.target.checked ? threadKey : null)}
                     />
                 )}
