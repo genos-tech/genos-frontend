@@ -1,6 +1,6 @@
 import { compareText } from "../../../../i18n/collate";
 import { parseCalendarDate } from "../../../../utils/calendarDate";
-import { STATUS_NAMES, WORKFLOW_STATUS_NAMES } from "../../meta/taskStatuses";
+import { isFinishedStatus, STATUS_NAMES, WORKFLOW_STATUS_NAMES } from "../../meta/taskStatuses";
 import { statusSolid } from "../../meta/taskTone";
 import { Milestone, Sprint } from "../types";
 
@@ -99,9 +99,9 @@ export const compareMilestones = (
         const fav = Number(ctx.isFavorite(b.milestoneId)) - Number(ctx.isFavorite(a.milestoneId));
         if (fav !== 0) return fav;
     }
-    const closed = Number(a.status === "Closed") - Number(b.status === "Closed");
+    const closed = Number(isFinishedStatus(a.status)) - Number(isFinishedStatus(b.status));
     if (closed !== 0) return closed;
-    if (ctx.activeSprintIds && a.status !== "Closed") {
+    if (ctx.activeSprintIds && !isFinishedStatus(a.status)) {
         const active =
             Number(b.sprintId != null && ctx.activeSprintIds.has(b.sprintId)) -
             Number(a.sprintId != null && ctx.activeSprintIds.has(a.sprintId));

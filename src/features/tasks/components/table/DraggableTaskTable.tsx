@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import DoNotDisturbOnOutlinedIcon from "@mui/icons-material/DoNotDisturbOnOutlined";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 import PendingIcon from "@mui/icons-material/Pending";
 import { Box } from "@mui/joy";
@@ -123,7 +124,8 @@ export const defaultColumns: ColumnDef[] = [
         field: "status",
         headerName: "Status",
         headerLabelKey: "status",
-        width: 105,
+        // Wide enough for "Rejected" with its icon (it was cut at 105).
+        width: 118,
         minWidth: 80,
         align: "center",
         editable: true,
@@ -339,6 +341,13 @@ export const statusOptions = [
         value: "Closed",
         ...statusSolid("Closed"),
         icon: <CheckCircleOutlineIcon style={{ color: statusSolid("Closed").textColor }} />,
+    },
+    {
+        label: "Rejected",
+        labelKey: "rejected" as const,
+        value: "Rejected",
+        ...statusSolid("Rejected"),
+        icon: <DoNotDisturbOnOutlinedIcon style={{ color: statusSolid("Rejected").textColor }} />,
     },
     {
         label: "Deleted",

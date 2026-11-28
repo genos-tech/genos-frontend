@@ -25,6 +25,7 @@ import { UserProps } from "../../../../types/admin";
 import { TaskTableProps } from "../../../../types/tasks";
 import { buildAvatarSrc } from "../../../../utils/avatarSrc";
 import { startOfTodayMs } from "../../../../utils/calendarDate";
+import { isFinishedStatus } from "../../meta/taskStatuses";
 import { SavedFilterPayload } from "../../services/projectSavedFilters";
 import { Milestone, Sprint } from "../../sprint-milestone/types";
 import {
@@ -1390,7 +1391,7 @@ export const TaskFilterMenu = (props: TaskFilterMenuProps) => {
                 memberFilterActive &&
                 !milestoneScopeActive &&
                 task.isMilestone !== true &&
-                (effectiveStatus === "Closed" || effectiveStatus === "Deleted")
+                (isFinishedStatus(effectiveStatus) || effectiveStatus === "Deleted")
             ) {
                 continue;
             }

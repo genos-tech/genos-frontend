@@ -4,6 +4,8 @@ export const chat = {
         line: "Rule “{rule}” moved {task} to {project}.",
         aTask: "a task",
         anotherProject: "another project",
+        milestoneLine: "Rule “{rule}” moved the milestone {task} to {project}.",
+        aMilestone: "a milestone",
     },
     // Tier retention strip (RetentionBanner) — shown when the viewer's
     // plan hides part of this channel's history.
@@ -426,6 +428,22 @@ export const chat = {
         clickToOpenThread: "{modKey}+Click to open thread",
         updated: "Updated",
         edited: "Edited",
+    },
+    taskCard: {
+        openTaskLabel: "Open task {id}: {title}",
+        openMilestoneLabel: "Open milestone {id}: {title}",
+        milestone: "Milestone",
+        createdBy: "Created by {name}",
+        updated: "Updated {time}",
+        blockedBy: "Blocked by {task}",
+        subtaskOf: "Sub-task of {task}",
+        inMilestone: "In milestone {title}",
+        sprint: "Sprint {name}",
+        progress: "{closed} of {total} done",
+        progressAria: "{closed} of {total} tasks done: {breakdown}",
+        breakdownItem: "{count} {status}",
+        noTasksYet: "No tasks yet",
+        loading: "Loading task details",
     },
     messageActions: {
         openTask: "Open task",

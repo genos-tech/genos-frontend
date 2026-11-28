@@ -64,7 +64,10 @@ describe("the old project chat's line", () => {
         expect(adapt(message({ sender: { userId: "u2" } as never }))).toEqual([]);
     });
 
-    const renderRow = (projects: { projectId: number; isJoined: boolean }[]) =>
+    const renderRow = (
+        projects: { projectId: number; isJoined: boolean }[],
+        milestone?: boolean
+    ) =>
         render(
             <CssVarsProvider>
                 <HashMentionDataProvider
@@ -82,7 +85,12 @@ describe("the old project chat's line", () => {
                     }}
                 >
                     <RuleMoveNoticeRow
-                        notice={{ taskId: 41, projectId: 7, ruleName: "Handover {project}" }}
+                        notice={{
+                            taskId: 41,
+                            projectId: 7,
+                            ruleName: "Handover {project}",
+                            milestone,
+                        }}
                     />
                 </HashMentionDataProvider>
             </CssVarsProvider>
@@ -113,6 +121,26 @@ describe("the old project chat's line", () => {
         await waitFor(() => expect(loadSpecificTask).toHaveBeenCalled());
         expect(text()).toBe("Rule “Handover {project}” moved a task to another project.");
         expect(screen.queryByText(/Zanzibar/)).toBeNull();
+    });
+
+    it("says milestone when the stored line carries movedMilestone", async () => {
+        const [adapted] = adapt(message({ metadata: { ...META, movedMilestone: true } }));
+        expect(adapted.ruleMove?.milestone).toBe(true);
+
+        loadSpecificTask.mockResolvedValue([{ displayId: "ZZ-3", title: "Plan" }]);
+        renderRow([{ projectId: 7, isJoined: true }], true);
+        await waitFor(() =>
+            expect(text()).toBe(
+                "Rule “Handover {project}” moved the milestone #ZZ-3 · Plan to #Zanzibar."
+            )
+        );
+    });
+
+    it("names no milestone for a viewer who cannot open it", async () => {
+        loadSpecificTask.mockResolvedValue([]);
+        renderRow([{ projectId: 7, isJoined: false }], true);
+        await waitFor(() => expect(loadSpecificTask).toHaveBeenCalled());
+        expect(text()).toBe("Rule “Handover {project}” moved a milestone to another project.");
     });
 });
 
@@ -180,5 +208,19 @@ describe("history rows a rule writes", () => {
             expect(refused(reason)).not.toContain("_");
         }
         expect(refused("something_new")).toBe("Rule “R” not applied");
+    });
+
+    it("speaks of the milestone on a milestone's rows", () => {
+        const refused = (reason: string) =>
+            sentence(
+                row({
+                    actionType: "automation_refused",
+                    metadata: { ruleName: "R", reason, milestoneId: 3 },
+                })
+            );
+        expect(refused("too_many_tasks")).toContain("more than 200 tasks");
+        expect(refused("rate_limited")).toContain("this milestone");
+        expect(refused("destination")).toContain("the milestone cannot move");
+        expect(refused("owner")).toContain("the rule’s owner");
     });
 });

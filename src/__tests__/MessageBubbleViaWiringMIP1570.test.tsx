@@ -77,6 +77,8 @@ const thread = (viaApp?: string) => (
             message={{ ...base, messageIdWithChatIdAndThreadId: "ch#t#7", viaApp } as never}
             setTargetMessageIndex={vi.fn()}
             thread={{ chatId: "ch", threadId: "t", chatType: 3, taskId: 5, messages: [] } as never}
+            usePM={{} as never}
+            useTM={{} as never}
         />
     </CssVarsProvider>
 );

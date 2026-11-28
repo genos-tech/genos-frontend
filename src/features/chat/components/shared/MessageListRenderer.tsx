@@ -3,6 +3,7 @@ import { Box, Chip, Stack, useColorScheme } from "@mui/joy";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 import { Socket } from "socket.io-client";
 
+import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../hooks/common/bubbleStylePreferenceState";
 import { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
@@ -14,12 +15,14 @@ import { channelService } from "../../../../services/channel/channelService";
 import { UserProps } from "../../../../types/admin";
 import { ChatProps, MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { TaskCommentProps } from "../../../../types/tasks";
+import { isRealTaskId } from "../../../tasks/utils/taskPreviewPaneVisibility";
 import { useScrollToBottomOnChatChange } from "../../hooks/messageBubbleHooks";
 import { useFollowOwnOutput } from "../../hooks/useFollowOwnOutput";
 import { useReactionSeenClear } from "../../hooks/useReactionSeenClear";
 import { useScrollIndicator } from "../../hooks/useScrollIndicator";
 import { VisibleRange } from "../../hooks/useScrollManagement";
 import { handleAtTop } from "../../services/handleBubblePositionAction";
+import { prefetchTaskCards } from "../../taskCards/taskCardStore";
 import { computeMessageItemMetas } from "../../utils/messageItemMetas";
 import { MessageBubble } from "../bubbles/MessageBubble";
 import { RuleMoveNoticeRow } from "../bubbles/RuleMoveNoticeRow";
@@ -35,6 +38,8 @@ interface MessageListRendererProps {
     height: number;
     indexMap?: Record<string, number>;
     isThread: boolean;
+    /** The thread is shown inside the preview dialog (a card in it opens there). */
+    isModalHosted?: boolean;
     messages: MessageProps[] | ThreadMessageProps[];
     myself: UserProps;
     usePM: ProjectManagementState;
@@ -121,6 +126,10 @@ const OVERSCAN_PX = 600;
 // media-heavy chat's true median likely runs higher than the full value here.
 const ESTIMATED_ITEM_HEIGHT_COMPACT_PX = 48;
 const ESTIMATED_ITEM_HEIGHT_FULL_PX = 80;
+// A project chat is all task cards, in either style (MIP-2484).
+const ESTIMATED_TASK_CARD_HEIGHT_PX = 160;
+// How many of the newest cards are read as the chat opens.
+const PREFETCHED_TASK_CARDS = 30;
 
 // Upper bound on how long the cold-load skeleton may stay up. The normal
 // exit is messages arriving; this only catches a sync that fails, or one
@@ -134,6 +143,7 @@ export const MessageListRenderer = ({
     height,
     indexMap,
     isThread,
+    isModalHosted,
     messages,
     myself,
     usePM,
@@ -321,6 +331,17 @@ export const MessageListRenderer = ({
 
     // Every per-row datum, pre-computed in one O(N) pass — see the util
     // for why this must not happen inside `itemContent`.
+    // Read the newest cards together, so most are complete when their rows mount.
+    const { accessToken } = useAuth();
+    useEffect(() => {
+        if (isThread || chat.chatType !== 3) return;
+        const ids = (messages as MessageProps[])
+            .slice(-PREFETCHED_TASK_CARDS)
+            .map((m) => m.taskId)
+            .filter((id): id is number => isRealTaskId(id));
+        prefetchTaskCards(ids, { accessToken, userId: myself.userId });
+    }, [accessToken, chat.chatType, isThread, messages, myself.userId]);
+
     const itemMetas = useMemo(
         () => computeMessageItemMetas(messages, isThread, chat.chatType),
         [messages, isThread, chat.chatType]
@@ -452,6 +473,7 @@ export const MessageListRenderer = ({
                                 <ThreadMessageBubble
                                     currentMessageIndex={index}
                                     isFocused={isFocused}
+                                    isModalHosted={isModalHosted}
                                     isSimpleBubble={meta.isSimpleBubble}
                                     message={message as ThreadMessageProps}
                                     myself={myself}
@@ -463,7 +485,9 @@ export const MessageListRenderer = ({
                                     socket={socket}
                                     thread={chat as ThreadProps}
                                     useCM={useCM}
+                                    usePM={usePM}
                                     useTEM={useTEM}
+                                    useTM={useTM}
                                     useUISM={useUISM}
                                     variant={isYou ? "sent" : "received"}
                                 />
@@ -500,6 +524,7 @@ export const MessageListRenderer = ({
             myself,
             isCompact,
             isThread,
+            isModalHosted,
             socket,
             setEditTargetMessage,
             setIsInEdit,
@@ -604,7 +629,11 @@ export const MessageListRenderer = ({
                 style={virtuosoStyle}
                 totalCount={messages.length}
                 defaultItemHeight={
-                    isCompact ? ESTIMATED_ITEM_HEIGHT_COMPACT_PX : ESTIMATED_ITEM_HEIGHT_FULL_PX
+                    !isThread && chat.chatType === 3
+                        ? ESTIMATED_TASK_CARD_HEIGHT_PX
+                        : isCompact
+                          ? ESTIMATED_ITEM_HEIGHT_COMPACT_PX
+                          : ESTIMATED_ITEM_HEIGHT_FULL_PX
                 }
                 initialTopMostItemIndex={
                     firstUnreadIndex != null

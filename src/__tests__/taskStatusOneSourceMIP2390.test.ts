@@ -61,7 +61,7 @@ const ALLOWED: Record<string, string> = {
     // filters in TaskTableTypes.ts.
 };
 
-const NAMES = ["Open", "WIP", "Blocked", "Pending", "Closed", "Deleted"];
+const NAMES = ["Open", "WIP", "Blocked", "Pending", "Closed", "Rejected", "Deleted"];
 const LITERAL = new RegExp(`["'\`](${NAMES.join("|")})["'\`]`, "g");
 const WINDOW = 8;
 const THRESHOLD = 4;
@@ -133,6 +133,7 @@ describe("the copies read the module and hold the values they always held", () =
             "Blocked",
             "Pending",
             "Closed",
+            "Rejected",
             "Deleted",
         ]);
         expect([...ACTIVE_STATUS_NAMES]).toEqual(["Open", "WIP", "Blocked", "Pending"]);
@@ -142,11 +143,12 @@ describe("the copies read the module and hold the values they always held", () =
             "Blocked",
             "Pending",
             "Closed",
+            "Rejected",
         ]);
         expect([...SERVER_STATUS_LABELS]).toEqual([...STATUS_NAMES]);
         expect([...ACTIVE_STATUSES]).toEqual([...ACTIVE_STATUS_NAMES]);
         expect([...ACTIVE_CHILD_STATUSES]).toEqual([...ACTIVE_STATUS_NAMES]);
-        expect([...HIDDEN_CHILD_STATUSES]).toEqual(["Closed", "Deleted"]);
+        expect([...HIDDEN_CHILD_STATUSES]).toEqual(["Closed", "Rejected", "Deleted"]);
         expect([...MILESTONE_STATUS_ORDER]).toEqual([...WORKFLOW_STATUS_NAMES]);
         expect([...MILESTONE_LIST_STATUSES]).toEqual([...WORKFLOW_STATUS_NAMES]);
         expect([...MILESTONE_PROGRESS_ORDER]).toEqual([...WORKFLOW_STATUS_NAMES]);
@@ -160,7 +162,8 @@ describe("the copies read the module and hold the values they always held", () =
             Blocked: 3,
             Pending: 4,
             Closed: 5,
-            Deleted: 6,
+            Rejected: 6,
+            Deleted: 7,
         });
     });
 
@@ -181,6 +184,6 @@ describe("the copies read the module and hold the values they always held", () =
         });
         const a = buildTaskListGroups();
         a.all.statuses.push("X");
-        expect(buildTaskListGroups().all.statuses).toHaveLength(6);
+        expect(buildTaskListGroups().all.statuses).toHaveLength(7);
     });
 });

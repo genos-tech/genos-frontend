@@ -34,7 +34,8 @@ export const loadProjectStatuses = async (
     try {
         const api = authApi(accessToken);
         if (!api) return null;
-        const res = await api.get(url(projectId));
+        // A chip falls back to the system status, so a refused read says nothing.
+        const res = await api.get(url(projectId), QUIET);
         return toPayload(res.data);
     } catch (error: unknown) {
         console.error("Loading project statuses failed:", error);

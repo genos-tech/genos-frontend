@@ -21,7 +21,9 @@ export const RuleMoveNoticeRow = ({ notice }: { notice: RuleMoveNotice }) => {
     const taskLabel = task && [task.displayId, task.title].filter(Boolean).join(" · ");
 
     // The template is split BEFORE the rule's name goes in, so a name cannot add a placeholder.
-    const parts = copy.line.split(/(\{task\}|\{project\})/);
+    // A milestone's name needs the word before it; unnamed, "a milestone" says it already.
+    const line = notice.milestone && taskLabel ? copy.milestoneLine : copy.line;
+    const parts = line.split(/(\{task\}|\{project\})/);
 
     return (
         <Box data-rule-move-notice="" sx={{ width: "100%", textAlign: "center", px: 2, py: 1 }}>
@@ -41,7 +43,9 @@ export const RuleMoveNoticeRow = ({ notice }: { notice: RuleMoveNotice }) => {
                                 />
                             </bdi>
                         ) : (
-                            <Fragment key={index}>{copy.aTask}</Fragment>
+                            <Fragment key={index}>
+                                {notice.milestone ? copy.aMilestone : copy.aTask}
+                            </Fragment>
                         );
                     }
                     if (part === "{project}") {

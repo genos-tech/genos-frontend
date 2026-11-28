@@ -74,7 +74,7 @@ export const rowInScope = (scope: StatusScope, status: string | null | undefined
  * - "Expired" on its own means "every status whose due date has passed": all statuses.
  *   Next to other statuses it narrows them (status in selection AND past due), so it
  *   adds nothing to what is needed.
- * - Closed or Deleted selected: all statuses. A task whose own status is Open but sits
+ * - Closed, Rejected or Deleted selected: all statuses. A task whose own status is Open but sits
  *   under a Closed parent reads as Closed (closed-by-ancestor), and the Closed filter
  *   must list it, so the children of closed tasks, whatever their status, are needed too.
  * - Otherwise exactly the selected labels (Open, WIP, Blocked, Pending).
@@ -89,7 +89,7 @@ export const statusesNeeded = (input: {
     const labels = input.labels.filter((l) => l !== "Expired");
     if (input.labels.length === 0 || input.labels.includes("All")) return null;
     if (labels.length === 0) return null;
-    if (labels.some((l) => l === "Closed" || l === "Deleted")) return null;
+    if (labels.some((l) => l === "Closed" || l === "Rejected" || l === "Deleted")) return null;
     const known = labels.filter((l) => SERVER_STATUS_LABELS.includes(l));
     // A label the server does not know: do not guess, load everything.
     if (known.length !== labels.length) return null;

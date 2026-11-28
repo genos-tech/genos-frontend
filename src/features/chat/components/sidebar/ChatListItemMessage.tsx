@@ -7,6 +7,7 @@ import { useTranslation } from "../../../../i18n";
 import { g } from "../../../../theme/tokens";
 import { AllChatProps } from "../../../../types/chat";
 import { derivePreviewMediaKind, MEDIA_LABEL_KEYS } from "../../utils/common";
+import { ruleMovePreviewText } from "../../utils/ruleMovePreview";
 
 interface ChatListItemMessageProps {
     chat: AllChatProps;
@@ -22,14 +23,18 @@ export const ChatListItemMessage: React.FC<ChatListItemMessageProps> = ({ chat }
     const hasUnread =
         chat.latestMessage && Number(chat.lastReadMessageId || "0") < chat.latestMessage.messageId;
 
+    // A rule's "moved a task" line is stored in English; word it for the viewer.
+    const ruleMove = chat.latestMessage?.ruleMove;
+    const text = ruleMove
+        ? ruleMovePreviewText(ruleMove, t.chat.ruleMoveNotice)
+        : chat.latestMessageText;
+
     // A media-only message (GIF, image, table) stores no preview text,
     // so the row used to render blank. Label it from the body we
     // already have on `latestMessage`.
-    const mediaKind = chat.latestMessageText
-        ? null
-        : derivePreviewMediaKind(chat.latestMessage?.content);
+    const mediaKind = text ? null : derivePreviewMediaKind(chat.latestMessage?.content);
 
-    if (!chat.latestMessageText && !mediaKind) {
+    if (!text && !mediaKind) {
         return null;
     }
 
@@ -61,7 +66,7 @@ export const ChatListItemMessage: React.FC<ChatListItemMessageProps> = ({ chat }
                 t.chat.sidebar[MEDIA_LABEL_KEYS[mediaKind]]
             ) : (
                 <bdi className="g-bidi-island">
-                    <EmojiText text={chat.latestMessageText} />
+                    <EmojiText text={text} />
                 </bdi>
             )}
         </Box>

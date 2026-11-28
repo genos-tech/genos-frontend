@@ -304,10 +304,20 @@ export const ToDoPane = (props: ToDoPaneProps) => {
         return displayGroups.findIndex((g) => g.localDate === focusTarget.localDate);
     }, [displayGroups, focusTarget]);
 
+    // Once per target: a day group added or removed above it must not pull a reader back
+    // (MIP-2543). The key says whether the item's own group was found, so the tab flip below
+    // that reveals a completed item still scrolls to it.
+    const scrolledFocusRef = useRef<string | null>(null);
     useEffect(() => {
-        if (focusGroupIndex < 0) return;
+        if (!focusTarget || focusGroupIndex < 0) return;
+        const found = displayGroups[focusGroupIndex]?.items.some(
+            (i) => i.itemId === focusTarget.itemId
+        );
+        const key = `${focusTarget.localDate}:${focusTarget.itemId}:${found}`;
+        if (scrolledFocusRef.current === key) return;
+        scrolledFocusRef.current = key;
         virtuosoRef.current?.scrollToIndex({ align: "start", index: focusGroupIndex });
-    }, [focusGroupIndex]);
+    }, [focusGroupIndex, focusTarget, displayGroups]);
 
     // A completed target is invisible on the Incomplete tab — flip to
     // All so the highlight can actually be seen. Once per target (the

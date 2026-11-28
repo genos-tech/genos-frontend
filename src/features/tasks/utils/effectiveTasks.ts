@@ -1,5 +1,6 @@
 import { TaskTableProps } from "../../../types/tasks";
-import { selectAncestorVerdicts } from "./closedByAncestor";
+import { isUncountedStatus } from "../meta/taskStatuses";
+import { effectiveStatusOf, selectAncestorVerdicts } from "./closedByAncestor";
 
 // A task augmented with status/close-date rolled up from its ancestors.
 // `effectiveStatus`:
@@ -33,18 +34,18 @@ export const deriveEffectiveTasks = (
     const result: EffectiveTask[] = [];
     for (const t of rows) {
         if (!t.id) continue;
-        if (t.status === "Deleted") continue;
+        // Deleted is gone; Rejected (own or inherited) is not progress: neither is counted.
+        const reads = effectiveStatusOf(t, verdicts);
+        if (t.status === "Deleted" || isUncountedStatus(reads)) continue;
         const verdict = verdicts.get(String(t.id));
-        if (verdict?.status === "Deleted") continue;
 
-        const closedByAncestor = verdict?.status === "Closed";
-        const effectiveStatus =
-            t.status === "Closed" || closedByAncestor ? "Closed" : t.status || "Open";
+        const closedByAncestor = t.status !== "Closed" && verdict?.status === "Closed";
+        const effectiveStatus = reads || "Open";
         const effectiveCloseDate =
             t.status === "Closed"
                 ? t.updatedAt
                 : closedByAncestor
-                  ? (verdict.ancestor.updatedAt ?? null)
+                  ? (verdict?.ancestor.updatedAt ?? null)
                   : null;
 
         result.push({ ...t, effectiveStatus, effectiveCloseDate });

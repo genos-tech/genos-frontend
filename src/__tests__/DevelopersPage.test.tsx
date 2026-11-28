@@ -62,6 +62,7 @@ describe("DevelopersPage", () => {
             "task.created",
             "task.updated",
             "task.completed",
+            "task.rejected",
             "task.comment_created",
             "message.created",
         ]) {

@@ -1,3 +1,4 @@
+import { resetTaskCards } from "../../features/chat/taskCards/taskCardStore";
 import { channelService } from "./channelService";
 
 /** What genos-sockets sends to the removed person's own room (MIP-1371). */
@@ -33,5 +34,7 @@ export const handleMembershipRemoved = (notice: MembershipRemovedNotice): void =
     // is what ingests it and evicts the chats it no longer names; without it the removed chat
     // stayed in the sidebar until the next reload or reconnect.
     void channelService.refreshChannels();
+    // What the chat's task cards hold was read with the access just taken away (MIP-2484).
+    resetTaskCards();
     window.dispatchEvent(new CustomEvent("genos:membership-removed", { detail: notice }));
 };

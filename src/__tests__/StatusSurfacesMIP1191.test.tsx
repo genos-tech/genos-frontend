@@ -34,6 +34,7 @@ const WORDS: Record<string, string> = {
     Blocked: "Blocked",
     Pending: "Pending",
     Closed: "Closed",
+    Rejected: "Rejected",
     Deleted: "Deleted",
 };
 
@@ -117,9 +118,9 @@ const useSMWith = (sprints: Sprint[], milestones: Milestone[]) =>
     }) as never;
 
 describe("the sprint / milestone picker", () => {
-    // "Deleted" and "Closed" milestones are never offered (MIP-1751), so the picker has
+    // "Deleted", "Rejected" and "Closed" milestones are never offered (MIP-1751, MIP-2494), so the picker has
     // no option for them. Closed is covered by SprintMilestonePickerHidesClosed.test.tsx.
-    it.each(STATUS_NAMES.filter((n) => n !== "Deleted" && n !== "Closed"))(
+    it.each(STATUS_NAMES.filter((n) => !["Deleted", "Closed", "Rejected"].includes(n)))(
         "milestone option, status %s: StatusLabel (icon + word), no Chip",
         (s) => {
             wrap(

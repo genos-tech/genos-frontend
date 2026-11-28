@@ -12,16 +12,22 @@ import { useAuth } from "../../../../context/authState";
 import { ChatManagementState } from "../../../../hooks/chats/useChatManagement";
 import { useBubbleStylePreference } from "../../../../hooks/common/bubbleStylePreferenceState";
 import { useDoubleClickTodoPreference } from "../../../../hooks/common/doubleClickTodoPreferenceState";
+import { useUrlLinkModal } from "../../../../hooks/common/UrlLinkModalContext";
+import type { ProjectManagementState } from "../../../../hooks/common/useProjectManagement";
 import { TeamManagementState } from "../../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../../hooks/common/useUIStateManagement";
+import { TaskManagementState } from "../../../../hooks/tasks/useTaskManagement";
 import { channelService } from "../../../../services/channel/channelService";
 import { notifyActionError } from "../../../../services/requestErrorNotifier";
 import { UserProps } from "../../../../types/admin";
 import { ChannelKind } from "../../../../types/channel";
 import { MessageProps, ThreadMessageProps, ThreadProps } from "../../../../types/chat";
 import { ReactionProps } from "../../../../types/common";
-import { TaskCommentProps } from "../../../../types/tasks";
+import { TaskCommentProps, type ProjectProps } from "../../../../types/tasks";
 import { extractYYYYMMDDHHMM, getLocalCurrentTimestamp } from "../../../../utils/dateUtils";
+import { isRealTaskId } from "../../../tasks/utils/taskPreviewPaneVisibility";
+import type { LiveCard } from "../../taskCards/taskCardTypes";
+import { TaskMessageCard } from "../../taskCards/TaskMessageCard";
 import { askMessageProps } from "../../utils/messageSelection";
 import { BubbleAttachmentSheet } from "./BubbleAttachmentSheet";
 import { BubbleThreadMoreMenu } from "./BubbleThreadMoreMenu";
@@ -53,6 +59,11 @@ type threadMessageBubbleProps = {
     currentMessageIndex: number;
     setTargetMessageIndex: (value: number) => void;
     useCM: ChatManagementState;
+    /** Opens the task of a card in the thread (stable setters only). */
+    useTM: TaskManagementState;
+    usePM: ProjectManagementState;
+    /** The thread is shown inside the preview dialog. */
+    isModalHosted?: boolean;
     setTodoFromMessageBubble: (
         todoFromMessageBubble: MessageProps | ThreadMessageProps | TaskCommentProps
     ) => void;
@@ -75,8 +86,12 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
         currentMessageIndex,
         setTargetMessageIndex,
         useCM,
+        useTM,
+        usePM,
+        isModalHosted,
         setTodoFromMessageBubble,
     } = props;
+    const urlLinkModal = useUrlLinkModal();
 
     const { accessToken } = useAuth();
     const navigate = useNavigate();
@@ -351,7 +366,35 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
         />
     ) : null;
 
-    const body =
+    // The thread's task card, and the copy of it in the thread the task was made from
+    // (MIP-2484). The author line stays on the copy: there it is someone's message.
+    const isTaskCard = !attachment && message.isTaskCard === true && isRealTaskId(message.taskId);
+    const isCardRoot = isTaskCard && thread.chatType === 3;
+
+    // The same steps as the thread header's "open task": the task may belong to a project
+    // other than the loaded one, and inside the preview dialog it opens in that dialog.
+    const openCardTask = (_event: unknown, card?: LiveCard) => {
+        handleMessageClick();
+        const project = card?.project;
+        if (isModalHosted) {
+            if (project) {
+                urlLinkModal?.openModalByHref(
+                    `/workspace/tasks/project/${project.projectId}/task/${card.taskId}`
+                );
+            }
+            return;
+        }
+        if (project && usePM.currentProject?.projectId !== project.projectId) {
+            usePM.setCurrentProject({ ...project, projectTags: [] } as unknown as ProjectProps);
+        }
+        useCM.setIsMainChatVisible(false);
+        useCM.setIsThreadVisible(true);
+        useTM.setIsCreatingTask((prev) => ({ ...prev, flag: false }));
+        useTM.setCurrentPreviewTaskId(message.taskId as number);
+        useTM.setIsTaskPreviewVisible(true);
+    };
+
+    const storedBody =
         attachment ??
         (message.content.length > 0 ? (
             <Box
@@ -372,27 +415,54 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
             </Box>
         ) : null);
 
+    const body = isTaskCard ? (
+        <Box {...askMessageProps(message.messageIdWithChatIdAndThreadId)}>
+            <TaskMessageCard
+                framed={isCompact || !isCardRoot}
+                messageUpdatedAt={message.tsUpdated}
+                seedDisplayId={message.displayId}
+                seedTitle={message.contentText}
+                sentAt={dtSent}
+                taskId={message.taskId as number}
+                viaApp={isCardRoot ? message.viaApp : undefined}
+                viewerId={myself.userId}
+                fallback={
+                    <>
+                        {isCardRoot ? userName(false) : null}
+                        {storedBody}
+                    </>
+                }
+                onOpen={openCardTask}
+            />
+        </Box>
+    ) : (
+        storedBody
+    );
+
     // Compact: a grouped follow-up has no author line, only an empty avatar
     // column. Bubble: it shows the author line only while hovered.
-    const header = isCompact
-        ? isSimpleBubble
-            ? undefined
-            : userName(false)
-        : isSimpleBubble
-          ? showUnderBarOption
-              ? userName(true)
-              : undefined
-          : userName(false);
-    const avatar = isSystemUser ? undefined : isSimpleBubble ? (
-        isCompact ? (
-            "reserve"
-        ) : undefined
-    ) : (
-        <UserAvatar
-            fallbackName={isSent ? myself.userName : message.sender.userName}
-            userId={isSent ? myself.userId : message.sender.userId}
-        />
-    );
+    const header = isCardRoot
+        ? undefined
+        : isCompact
+          ? isSimpleBubble
+              ? undefined
+              : userName(false)
+          : isSimpleBubble
+            ? showUnderBarOption
+                ? userName(true)
+                : undefined
+            : userName(false);
+    const avatar =
+        isSystemUser || isCardRoot ? undefined : isSimpleBubble ? (
+            isCompact ? (
+                "reserve"
+            ) : undefined
+        ) : (
+            <UserAvatar
+                fallbackName={isSent ? myself.userName : message.sender.userName}
+                userId={isSent ? myself.userId : message.sender.userId}
+            />
+        );
 
     return (
         <Bubble
@@ -402,14 +472,14 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
             bodyOffset={isCompact ? 0.25 : 0.5}
             emphasis={isFocused}
             footerOffset={0}
-            grouped={isSimpleBubble}
+            grouped={isSimpleBubble && !isCardRoot}
             header={header}
             layout={isCompact ? "compact" : "bubble"}
             narrowBody="beside"
             rootRef={bubbleRef}
             side={isSent ? "sent" : "received"}
+            tail={!isTaskCard}
             toolbarRef={toolbarRef}
-            wrapperSx={balloonWrapperSx(isSimpleBubble, uniqueReactionEmojiCount)}
             footer={
                 <BubbleUnderBar
                     chatName={thread.chatName}
@@ -441,6 +511,11 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
                     />
                 )
             }
+            wrapperSx={
+                isTaskCard
+                    ? CARD_WRAPPER_SX
+                    : balloonWrapperSx(isSimpleBubble, uniqueReactionEmojiCount)
+            }
             interactive
             onClick={handleMessageClick}
             onMouseEnter={() => setIsHovered(true)}
@@ -457,6 +532,14 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
         </Bubble>
     );
 };
+
+const CARD_WRAPPER_SX = {
+    width: "100%",
+    maxWidth: 560,
+    minWidth: 0,
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+} as const;
 
 // The balloon's width limits. A module function so the object is built once per
 // distinct input, not on every render of a hot row.
@@ -491,6 +574,9 @@ const areEqual = (prev: threadMessageBubbleProps, next: threadMessageBubbleProps
     prev.isFocused === next.isFocused &&
     prev.isSimpleBubble === next.isSimpleBubble &&
     prev.currentMessageIndex === next.currentMessageIndex &&
+    prev.isModalHosted === next.isModalHosted &&
+    // The one field a handler reads (an opened card sets it when it differs).
+    prev.usePM.currentProject?.projectId === next.usePM.currentProject?.projectId &&
     prev.myself.userId === next.myself.userId;
 
 export const ThreadMessageBubble = memo(ThreadMessageBubbleImpl, areEqual);

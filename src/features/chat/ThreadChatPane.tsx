@@ -259,6 +259,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                         firstUnreadIndex={firstUnreadIndex}
                         height={0}
                         indexMap={messageManagement.indexMap}
+                        isModalHosted={hostZIndex != null}
                         isThread={true}
                         messages={messageManagement.messages}
                         myself={myself}
@@ -292,6 +293,7 @@ export const ThreadPane = (props: MessagesPaneProps) => {
                             firstUnreadIndex={firstUnreadIndex}
                             height={0}
                             indexMap={messageManagement.indexMap}
+                            isModalHosted={hostZIndex != null}
                             isThread={true}
                             messages={messageManagement.messages}
                             myself={myself}

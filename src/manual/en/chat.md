@@ -10,7 +10,7 @@ The chat list has these sections: Direct Messages, Group Messages, Project Updat
 
 - **Direct messages (DM)**: one-to-one. For a quick talk with several people, start a multi-user DM (at least 3 people) without creating a group.
 - **Group messages**: named group chats. When you create one, you choose whether it is public or private. A private group can also be hidden, so only its members can see that it exists. **Browse group chats** lists the public groups you can join. To join a private group, you send a request, and the group's members get it in their Inbox.
-- **Project chats** (under Project Updates): every project has one. Task updates appear there as cards. Click a card to open the task.
+- **Project chats** (under Project Updates): every project has one. Task updates appear there as cards that show the task or milestone as it is now: status, assignee, due date and, for a milestone, its progress. Click a card to open it.
 
 The owner of a group can archive it. An archived group keeps everything but is read-only until it is unarchived. The owner can also delete the group.
 

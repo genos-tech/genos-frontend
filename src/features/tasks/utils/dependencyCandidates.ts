@@ -1,4 +1,5 @@
 import { TaskTableProps } from "../../../types/tasks";
+import { isFinishedStatus } from "../meta/taskStatuses";
 import { effectiveStatusOf, selectAncestorVerdicts } from "./closedByAncestor";
 
 /**
@@ -17,6 +18,6 @@ export const selectDependencyCandidates = (
         if (Number.isNaN(id)) return false;
         if (excludeTaskIds.has(id)) return false;
         const status = (effectiveStatusOf(t, verdicts) ?? "").toLowerCase();
-        return status !== "deleted" && status !== "closed";
+        return status !== "deleted" && !isFinishedStatus(status);
     });
 };

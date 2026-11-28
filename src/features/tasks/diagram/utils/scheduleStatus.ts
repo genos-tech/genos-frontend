@@ -5,6 +5,7 @@
 
 import type { Locale } from "../../../../i18n";
 import { parseCalendarDate } from "../../../../utils/calendarDate";
+import { isFinishedStatus } from "../../meta/taskStatuses";
 
 export type ScheduleTone = "neutral" | "amber" | "red" | "success";
 
@@ -61,7 +62,7 @@ export const getScheduleStatus = (
     const start = parseIsoDate(startDate);
     const due = parseIsoDate(dueDate);
     const today = todayLocalMidnight();
-    const isClosed = (status ?? "").toLowerCase() === "closed";
+    const isClosed = isFinishedStatus(status);
 
     const daysUntilDue =
         due == null ? null : Math.round((due.getTime() - today.getTime()) / MS_PER_DAY);
