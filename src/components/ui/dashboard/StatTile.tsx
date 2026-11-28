@@ -96,7 +96,11 @@ export const StatTile = ({
         background: g.surface.default,
         border: `1px solid ${pressed ? g.accent.border : g.border.subtle}`,
         borderRadius: g.radius.md,
-        ...(edge && !zero ? { borderTop: `2px solid ${EDGE[edge]}` } : {}),
+        // Always 2 px with an edge, so a zero's number sits level with its neighbours'. A pressed
+        // tile keeps its own accent border all round.
+        ...(edge && !pressed
+            ? { borderTop: `2px solid ${zero ? g.border.subtle : EDGE[edge]}` }
+            : {}),
         minHeight: 72,
         minWidth: 0,
         p: 1.5,
