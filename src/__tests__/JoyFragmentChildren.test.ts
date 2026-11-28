@@ -150,6 +150,14 @@ describe("Joy cloning parents get element children, never fragments", () => {
         ).toEqual([]);
     });
 
+    it("MoreMenu hands the menu no Fragment per item (MIP-2545)", () => {
+        // `MenuSurface` is a Joy `Menu`. A `.map` that returns a Fragment puts the Fragment
+        // in the cloned position, which the scan above (open and close tags) cannot see.
+        const src = readFileSync(join(SRC, "components/ui/MoreMenu.tsx"), "utf8");
+        expect(src).toContain("<MenuSurface");
+        expect(src).not.toMatch(/<Fragment\b|<React\.Fragment\b|<>/);
+    });
+
     it("List really does inject the attribute (it was once thought not to)", () => {
         const provider = readFileSync(
             join(SRC, "..", "node_modules/@mui/joy/List/ListProvider.js"),

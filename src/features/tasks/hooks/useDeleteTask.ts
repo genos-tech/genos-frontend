@@ -5,14 +5,12 @@ import { runUndoable } from "../../../hooks/common/useUndoableAction";
 import type { SprintMilestoneManagementState } from "../../../hooks/tasks/useSprintMilestoneManagement";
 import type { TaskManagementState } from "../../../hooks/tasks/useTaskManagement";
 import { useTranslation } from "../../../i18n";
-import { UserProps } from "../../../types/admin";
 import { TaskTableProps } from "../../../types/tasks";
 import {
     afterTaskDeleted,
     deleteMilestoneOnExit,
     deleteTaskOnExit,
     putTaskDeleted,
-    syncDeletedTaskCard,
 } from "../services/deleteTaskCommit";
 import { isNoMainPanelVisible } from "../utils/mainPanelVisibility";
 import { taskDeleteKey } from "../utils/pendingTaskDelete";
@@ -22,7 +20,7 @@ import { taskDeleteKey } from "../utils/pendingTaskDelete";
  * sure?" (MIP-1303). Every door goes through this: the preview's menu and
  * status picker, the table's status cell, the graph card.
  *
- *     const deleteTask = useDeleteTask({ useTM, useSM, myself });
+ *     const deleteTask = useDeleteTask({ useTM, useSM });
  *     deleteTask({ id, projectId, title });
  *
  * The task reads as Deleted at once (the overlay on `useTM.allTasks`, keyed by
@@ -30,7 +28,7 @@ import { taskDeleteKey } from "../utils/pendingTaskDelete";
  * the one real write go out (`putTaskDeleted`: `{task_id, status, status_code}`
  * and nothing else). Undo sends nothing, because nothing was written: the real
  * write also adds activity rows, un-blocks the tasks that depended on it,
- * fires `task.completed` and rewrites the PM card, and no restore call takes
+ * fires `task.completed` and rewrites the project chat's card, and no restore call takes
  * those back. See `useUndoableAction`.
  *
  * What the CALLER must not do: write "Deleted" into a working copy. Every
@@ -60,7 +58,6 @@ type Deps = {
     useTM: TaskManagementState;
     /** Only needed to delete a milestone. */
     useSM?: SprintMilestoneManagementState;
-    myself: UserProps;
 };
 
 export const useDeleteTask = (deps: Deps) => {
@@ -85,7 +82,7 @@ export const useDeleteTask = (deps: Deps) => {
             releaseOnCommit: true,
             commit: async () => {
                 // Read now, not at the click: the token can be refreshed in the window.
-                const { useTM, useSM, myself, accessToken } = latest.current;
+                const { useTM, useSM, accessToken } = latest.current;
                 let updatedAt: string | undefined;
                 if (isMilestone) {
                     // A milestone's status lives on its own record, which then
@@ -115,8 +112,6 @@ export const useDeleteTask = (deps: Deps) => {
                 );
                 afterTaskDeleted(id, source ? { ...source, ...patch } : null);
                 options?.onCommitted?.();
-                if (!isMilestone)
-                    void syncDeletedTaskCard(myself, target.projectId, id, accessToken);
             },
             onExit: () => {
                 const { accessToken } = latest.current;

@@ -1528,7 +1528,7 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
     // "Deleted" in a row's status cell: hidden behind an Undo toast, written when
     // the toast is gone (MIP-1303). The returned callback is identity-stable and
     // reads the latest state itself, so rows that skip a render stay correct.
-    const deleteTask = useDeleteTask({ useTM, useSM, myself });
+    const deleteTask = useDeleteTask({ useTM, useSM });
     const handleDeleteRow = useCallback(
         (row: TaskTableProps) =>
             deleteTask({

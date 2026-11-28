@@ -48,7 +48,7 @@ A project holds tasks, milestones and sprints, and it has its own chat. Create o
 
 A project can have **automation rules**: when something happens to one of its tasks, Genos can move the task to another project, set its status, assign it or add a tag. Rules need the Core plan or higher. The project's owner and editors write them: open the project's "…" menu → **Statuses and automation** → **Automation** → **New rule**.
 
-- **Writing a rule:** name it, then fill the sentence. **When** (the status becomes, a task is created, a tag is added, the assignee changes), **If** (conditions that must all hold; with none, every task) and **Then** (move to another project, set a status, assign someone, add a tag). Rules cannot use **Rejected** yet.
+- **Writing a rule:** name it, then fill the sentence. **When** (the status becomes, a task is created, a tag is added, the assignee changes), **If** (conditions that must all hold; with none, every task) and **Then** (move to another project, set a status, assign someone, add a tag).
 - **Preview before it is on:** **Preview matches** lists the tasks that match right now and what the rule would do to each, with the reason where it would not. Nothing changes until the next change that fits. Then **Save and turn on** or **Save, keep off**.
 - **Order and on/off:** rules are listed in the order they are tried. Move one from its "…" menu or with Alt+↑ / Alt+↓. The switch turns a rule off at once; turning it on shows the preview first. **Recent runs** says what a rule did lately.
 

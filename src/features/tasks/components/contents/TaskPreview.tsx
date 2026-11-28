@@ -93,16 +93,11 @@ import {
     updateTeamMembersOptions,
 } from "../../services/updateTaskAutoCompleteOptions";
 import { uploadTaskAttachments } from "../../services/uploadTaskAttachments";
-import { sendMilestoneUpdatedMessage } from "../../sprint-milestone/services/sendMilestoneUpdatedMessage";
 import { Milestone } from "../../sprint-milestone/types";
 import { useProjectStatusScope } from "../../state/projectStatusScopeStore";
 import { customFieldValuesEqual } from "../../utils/customFields";
 import { shouldFallBackToTable } from "../../utils/mainPanelVisibility";
-import {
-    milestoneAssigneePatch,
-    milestoneAssigneesToUserProps,
-    milestoneFirstAssignee,
-} from "../../utils/milestoneAssignee";
+import { milestoneAssigneePatch, milestoneFirstAssignee } from "../../utils/milestoneAssignee";
 import {
     milestoneReporterPatch,
     milestoneReporterToUserProps,
@@ -476,7 +471,7 @@ const TaskPreviewBody = (props: TaskPreviewProps & { landing: OpenLanding }) => 
     //    copy;
     //  - the commit is never built from this copy (an edit made in the window
     //    would be overwritten): it is the minimal PUT.
-    const deleteTask = useDeleteTask({ useTM, useSM, myself });
+    const deleteTask = useDeleteTask({ useTM, useSM });
     // The task the pane shows NOW: the save below is awaited, and the person may have
     // opened another task (or closed the modal) by the time it has landed.
     const shownTaskIdRef = useRef<number | undefined>(undefined);
@@ -1888,32 +1883,6 @@ const MilestonePreviewInner = ({
         );
     };
 
-    // Live-sync the milestone's PM "card" bubble after a metadata edit —
-    // the milestone twin of the task-card sync in `sendUpdatedSpecificTask`.
-    // Resolve the display-only bits (sprint name, reporter/assignee
-    // UserProps) from the updated milestone, then hand off to
-    // `sendMilestoneUpdatedMessage`, which rebuilds the card via the same
-    // template the create path uses and pushes it through the by-task-id
-    // `channelService.updateTaskCard` endpoint. NOT called on body-only
-    // autosaves — the description isn't on the card.
-    const syncMilestoneCard = (updated: Milestone) => {
-        if (updated.taskId == null) return;
-        const sprintName =
-            updated.sprintId != null
-                ? (useSM.projectSprints[updated.projectId]?.find(
-                      (s) => s.sprintId === updated.sprintId
-                  )?.name ?? "")
-                : "";
-        void sendMilestoneUpdatedMessage({
-            myself,
-            milestone: updated,
-            sprintName,
-            reporter: milestoneReporterToUserProps(updated, useTEM.teamMembers),
-            assignees: milestoneAssigneesToUserProps(updated, useTEM.teamMembers),
-            systemUserId: usePM.currentProject?.systemUserId,
-        });
-    };
-
     // Persist non-body field changes (sprint, due date, tags, ...) by
     // diffing the synthetic taskContentLike against the server-side
     // milestone whenever we get a "taskUpdated" signal. We keep this
@@ -2179,7 +2148,6 @@ const MilestonePreviewInner = ({
                 );
             }
             syncMilestoneToAllTasks(updated);
-            syncMilestoneCard(updated);
             // `patch.projectId` is gone when the move was refused and the rest
             // of the patch was sent without it: nothing moved then.
             if (movedFromProjectId != null && patch.projectId !== undefined) {
@@ -2222,7 +2190,6 @@ const MilestonePreviewInner = ({
             // refresh discard the user's still-unpersisted text.
             markTitleSaved();
             syncMilestoneToAllTasks(updated);
-            syncMilestoneCard(updated);
         }
     };
 
@@ -2242,7 +2209,6 @@ const MilestonePreviewInner = ({
         );
         if (updated) {
             syncMilestoneToAllTasks(updated);
-            syncMilestoneCard(updated);
         }
     };
 
@@ -2284,7 +2250,7 @@ const MilestonePreviewInner = ({
     // behind an Undo toast and `{milestoneId, status}` is sent when the toast is
     // gone. The working copy never holds "Deleted": its autosave diffs the status
     // and would write it at once.
-    const deleteTask = useDeleteTask({ useTM, useSM, myself });
+    const deleteTask = useDeleteTask({ useTM, useSM });
     const handleDeleteMilestone = () => {
         if (!milestone || milestone.taskId == null) return;
         deleteTask(

@@ -557,7 +557,7 @@ const CanvasInner = ({
     // Deleted; Undo, or a refused write, brings it back through the same path. The write is
     // `{task_id, status, status_code}` (a soft delete, so the task, its comments and its
     // sub-tasks stay in the database and nothing is orphaned, MIP-1302).
-    const runDeleteTask = useDeleteTask({ useTM, useSM, myself });
+    const runDeleteTask = useDeleteTask({ useTM, useSM });
     const handleDelete = useCallback(
         (taskId: number) => {
             const row = graphRef.current?.tasks.find((t) => Number(t.id) === taskId);

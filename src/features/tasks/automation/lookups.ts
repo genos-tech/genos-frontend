@@ -104,9 +104,6 @@ const isCategoryOwn = (row: ProjectStatusDef) => row.builtinKey === row.category
 export const statusKey = (pick: StatusPick): string =>
     pick.customStatusId != null ? `s:${pick.customStatusId}` : `c:${pick.category}`;
 
-// The statuses the API's rules accept (SETTABLE_STATUSES). Rejected is not one of them yet.
-const RULE_CATEGORIES = STATUS_CATEGORIES.filter((category) => category !== "Rejected");
-
 /**
  * What a "status" slot offers. A category's own built-in stands for the category itself; every
  * other row of the project stands for that status alone.
@@ -114,9 +111,9 @@ const RULE_CATEGORIES = STATUS_CATEGORIES.filter((category) => category !== "Rej
 export const statusOptions = (rows: ProjectStatusDef[]): StatusOption[] => {
     const live = sortStatuses(rows).filter((r) => !r.isArchived);
     const list: { pick: StatusPick; row: Row }[] = [];
-    for (const category of RULE_CATEGORIES) {
+    for (const category of STATUS_CATEGORIES) {
         const group = live.filter((r) => r.category === category);
-        // A project that set nothing up lists the five categories.
+        // A project that set nothing up lists the categories.
         if (!rows.length) {
             list.push({ pick: { category, customStatusId: null }, row: builtinRow(category) });
         }

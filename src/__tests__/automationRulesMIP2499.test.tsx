@@ -196,10 +196,11 @@ describe("what a draft sends", () => {
         );
         expect(picks).toEqual([null, 2]);
         expect(statusOptions([]).map((o) => o.pick.category)).toContain("Closed");
-        // The API refuses a rule that names Rejected, so no slot offers it.
-        expect(statusOptions([]).map((o) => o.pick.category)).not.toContain("Rejected");
+        expect(statusOptions([]).map((o) => o.pick.category)).toContain("Rejected");
         const rejected = { ...row(3, "Won't do", null), category: "Rejected" };
-        expect(statusOptions([rejected])).toEqual([]);
+        expect(statusOptions([rejected]).map((o) => o.pick)).toEqual([
+            { category: "Rejected", customStatusId: 3 },
+        ]);
     });
 });
 

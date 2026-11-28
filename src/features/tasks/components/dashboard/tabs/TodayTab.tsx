@@ -18,7 +18,6 @@ export const TodayTab = ({ todayView, useTM, myself }: TodayTabProps) => {
     const { view } = useQuickActionView(todayView);
     const onAction = useTodayQuickActions({
         useTM,
-        myself,
         localDate: todayView.data?.window.localDate,
         data: todayView.data,
     });
