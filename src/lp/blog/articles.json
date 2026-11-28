@@ -1,5 +1,49 @@
 [
     {
+        "slug": "rules-that-route-your-tasks",
+        "source": "blog/rules-that-route-your-tasks.md",
+        "bodyHeading": "## Article body",
+        "title": "Let the project route its own requests",
+        "excerpt": "Stop being the person who moves every request to the right team.",
+        "language": "en",
+        "category": "Automation",
+        "publishedAt": "2026-11-29",
+        "cover": "/lp/guide/en/blog-rules.webp"
+    },
+    {
+        "slug": "statuses-that-match-how-you-work",
+        "source": "blog/statuses-that-match-how-you-work.md",
+        "bodyHeading": "## Article body",
+        "title": "A board that shows your real steps",
+        "excerpt": "See what is waiting for review without asking anyone.",
+        "language": "en",
+        "category": "Tasks",
+        "publishedAt": "2026-11-29",
+        "cover": "/lp/guide/en/blog-status-board.webp"
+    },
+    {
+        "slug": "keep-the-answer-where-people-look",
+        "source": "blog/keep-the-answer-where-people-look.md",
+        "bodyHeading": "## Article body",
+        "title": "Keep the answer where people can find it",
+        "excerpt": "A decision made in a thread should not stay hidden there.",
+        "language": "en",
+        "category": "Chat",
+        "publishedAt": "2026-11-29",
+        "cover": "/lp/guide/en/blog-pins.webp"
+    },
+    {
+        "slug": "start-with-a-skill-someone-wrote",
+        "source": "blog/start-with-a-skill-someone-wrote.md",
+        "bodyHeading": "## Article body",
+        "title": "Start with a skill someone already wrote",
+        "excerpt": "Install steps that exist instead of explaining the job again.",
+        "language": "en",
+        "category": "Skills",
+        "publishedAt": "2026-11-29",
+        "coverFlow": ["Genos Hub", "Install", "Type /"]
+    },
+    {
         "slug": "see-what-your-ai-wrote",
         "source": "blog/see-what-your-ai-wrote.md",
         "bodyHeading": "## Article body",

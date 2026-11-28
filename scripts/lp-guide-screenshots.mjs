@@ -227,6 +227,38 @@ const openProjectTable = async (page, lang, { expand = true } = {}) => {
     }
 };
 
+/** The blog's own scenes (MIP-2416): English only, as the blog is. */
+const BLOG_ONLY = new Set(["blog-rules", "blog-status-board", "blog-pins"]);
+
+/** The demo session's api, for what a blog scene needs staged first. */
+const apiFor = (session) => async (method, path, body) => {
+    const res = await fetch(`${path.startsWith("/api/") ? new URL(API).origin : API}${path}`, {
+        method,
+        headers: {
+            Authorization: `Bearer ${session.access}`,
+            "Content-Type": "application/json",
+        },
+        body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) throw new Error(`${method} ${path}: ${res.status} ${JSON.stringify(data)}`);
+    return data;
+};
+
+const projectNamed = async (session, name) => {
+    const list = await apiFor(session)("GET", `/project/projects/?team_id=${session.team_id}`);
+    return list.find((p) => p.projectName === name).projectId;
+};
+
+/** The open project's "..." menu (the page header's), then "Statuses and automation". */
+const openStatusesDialog = async (page, lang) => {
+    await openProjectTable(page, lang, { expand: false });
+    await page.mouse.click(1399, 32);
+    await page.getByRole("menuitem", { name: "Statuses and automation" }).click();
+    await wait(page, 3000);
+    return page.getByRole("dialog").filter({ visible: true }).last();
+};
+
 /** Where the table pane starts: just left of the project's name in its header. */
 const paneStart = async (page, lang) => {
     const title = page
@@ -281,6 +313,84 @@ const settingsShot = (tab, height) => async (page, lang) => {
 };
 
 const SCENES = {
+    "blog-rules": async (page, lang, session) => {
+        const call = apiFor(session);
+        const project = await projectNamed(session, UI[lang].project);
+        const design = await projectNamed(session, "Design system");
+        await call("POST", `/projects/${project}/automation-rules/`, {
+            name: "Design work goes to the design team",
+            trigger_type: "tag_added",
+            trigger_value: { tag: "Design" },
+            destination_project_id: design,
+            set_status: "Open",
+            enabled: false,
+        });
+        const dialog = await openStatusesDialog(page, lang);
+        await dialog.getByRole("tab", { name: "Automation" }).click();
+        await wait(page, 2000);
+        await dialog.getByRole("button", { name: /^More actions for/ }).click();
+        await page.getByRole("menuitem", { name: "Preview matches" }).click();
+        await wait(page, 3500);
+        const b = await page.getByRole("dialog").filter({ visible: true }).last().boundingBox();
+        return { clip: rect(b.x, b.y, b.width, b.height), pins: [] };
+    },
+    "blog-status-board": async (page, lang, session) => {
+        const call = apiFor(session);
+        const project = await projectNamed(session, UI[lang].project);
+        const base = `/projects/${project}/statuses/`;
+        await call("PUT", base, { order: [] });
+        await call("POST", base, { name: "In QA", category: "WIP", color: "#0ea5e9" });
+        await call("PATCH", base, { board_columns_per_status: true });
+        const { statuses } = await call("GET", base);
+        const id = (name) => statuses.find((s) => s.name === name).statusId;
+        const found = await call(
+            "GET",
+            `/task/getProjectTasks/?project_id=${project}&team_id=${session.team_id}`
+        );
+        const open = found.data.tasks.filter((t) => !t.isMilestone && t.status === "Open");
+        const wip = found.data.tasks.filter((t) => !t.isMilestone && t.status === "WIP");
+        const moves = [
+            ...open.slice(0, 2).map((t) => [t, id("Ready")]),
+            ...[...wip.slice(0, 1), ...open.slice(2, 3)].map((t) => [t, id("In QA")]),
+        ];
+        for (const [task, status] of moves) {
+            await call("PUT", "/task/", {
+                task_id: Number(task.id),
+                team_id: session.team_id,
+                project_id: project,
+                custom_status: status,
+            });
+        }
+        await openProjectTable(page, lang, { expand: false });
+        await seen(page, UI[lang].board, true).click();
+        await wait(page, 3000);
+        await seen(page, UI[lang].showTasks, true)
+            .click()
+            .catch(() => {});
+        await wait(page, 3000);
+        const x = await paneStart(page, lang);
+        return { clip: rect(x, 0, 1440 - x, 640), pins: [] };
+    },
+    "blog-pins": async (page, lang, session) => {
+        await openThread(page, lang);
+        // Pin two messages of the open room, through the same endpoint the menu calls.
+        const call = apiFor(session);
+        const found = await call("GET", `/api/v3/channels/?team_id=${session.team_id}`);
+        const room = found.channels.find((c) => c.title.startsWith("general · "));
+        const history = await call("GET", `/api/v3/channels/${room.id}/messages/`);
+        for (const message of history.data.messages.slice(-3, -1)) {
+            await call("POST", `/api/v3/messages/${message.id}/message_pin/`);
+        }
+        await openThread(page, lang);
+        await page.getByRole("checkbox", { name: /^Also send to/ }).check();
+        await page
+            .locator('[class*="bn-chat-editor-box"] [contenteditable="true"]')
+            .last()
+            .click();
+        await page.keyboard.type("Decided: we ship the new header on Thursday.");
+        await wait(page, 1500);
+        return { clip: rect(68, 0, 1372, 900), pins: [] };
+    },
     overview: async (page, lang) => {
         await go(page, "/workspace/genos");
         const ask = page.getByPlaceholder(UI[lang].ask).first();
@@ -579,8 +689,9 @@ try {
         await seed(session, lang);
         for (const [name, scene] of Object.entries(SCENES)) {
             if (ONLY && !ONLY.has(name)) continue;
+            if (lang !== "en" && BLOG_ONLY.has(name)) continue;
             try {
-                const { clip, pins } = await scene(page, lang);
+                const { clip, pins } = await scene(page, lang, session);
                 await page.mouse.move(WINDOW.width - 4, WINDOW.height - 4);
                 await page.addStyleTag({ content: HIDE });
                 await wait(page, 800);
