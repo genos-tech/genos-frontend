@@ -3,7 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useOptionalAccessToken } from "../../../context/authState";
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
 import { mentionKey, type AgentMentionCandidate } from "../../agentQA/mentions/types";
-import { fetchRunnableSkills, type RunnableSkill } from "./skillsApi";
+import {
+    fetchRunnableSkills,
+    SKILL_INSTALLS_CHANGED_EVENT,
+    type RunnableSkill,
+} from "./skillsApi";
 
 const toCandidate = (s: RunnableSkill): AgentMentionCandidate => {
     const ref = { kind: "skill", skillId: s.id, label: s.slug } as const;
@@ -12,7 +16,8 @@ const toCandidate = (s: RunnableSkill): AgentMentionCandidate => {
         trigger: "/",
         key: mentionKey(ref),
         description: s.description || undefined,
-        skillGroup: s.group,
+        // An installed official skill still reads as Genos's.
+        skillGroup: s.group === "installed" && s.isOfficial ? "official" : s.group,
         skillOwner: s.ownerName || undefined,
         skillTitle: s.title,
         skillTags: s.tagChips.length > 0 ? s.tagChips : undefined,
@@ -30,34 +35,50 @@ const toCandidate = (s: RunnableSkill): AgentMentionCandidate => {
  * A different team or account never sees the previous one's list: it is dropped before the new
  * one is asked for.
  */
-export const useRunnableSkills = (enabled = true): AgentMentionCandidate[] | undefined => {
-    const rows = useRunnableSkillRows(enabled);
-    return useMemo(() => (enabled ? rows?.map(toCandidate) : undefined), [enabled, rows]);
+export const useRunnableSkills = (
+    enabled = true
+): { skills: AgentMentionCandidate[] | undefined; hubEnabled: boolean } => {
+    const { rows, hubEnabled } = useRunnableSkillList(enabled);
+    const skills = useMemo(() => (enabled ? rows?.map(toCandidate) : undefined), [enabled, rows]);
+    return { skills, hubEnabled };
 };
 
 /** The same list as rows, for a surface that draws its own choice (the schedule form's skill
  *  picker, MIP-2045). Same rules: `undefined` while it loads, when Skills is off, or on a failure. */
-export const useRunnableSkillRows = (enabled = true): RunnableSkill[] | undefined => {
+export const useRunnableSkillRows = (enabled = true): RunnableSkill[] | undefined =>
+    useRunnableSkillList(enabled).rows;
+
+/** The rows and whether there is a Genos Hub to find more in (MIP-2589). */
+export const useRunnableSkillList = (
+    enabled = true
+): { rows: RunnableSkill[] | undefined; hubEnabled: boolean } => {
     const accessToken = useOptionalAccessToken();
     const teamId = useHashMentionData().myself?.teamId;
     const [rows, setRows] = useState<RunnableSkill[] | undefined>(undefined);
+    const [hubEnabled, setHubEnabled] = useState(false);
 
     useEffect(() => {
         setRows(undefined);
+        setHubEnabled(false);
         if (!enabled || !accessToken || !teamId) return;
         let live = true;
         const load = () => {
             void fetchRunnableSkills(accessToken, String(teamId)).then((res) => {
-                if (live) setRows(res.ok ? res.data : undefined);
+                if (!live) return;
+                setRows(res.ok ? res.data : undefined);
+                setHubEnabled(res.ok && res.hubEnabled === true);
             });
         };
         load();
         window.addEventListener("focus", load);
+        // A skill installed or uninstalled in the app shows in the pickers at once (MIP-2589).
+        window.addEventListener(SKILL_INSTALLS_CHANGED_EVENT, load);
         return () => {
             live = false;
             window.removeEventListener("focus", load);
+            window.removeEventListener(SKILL_INSTALLS_CHANGED_EVENT, load);
         };
     }, [enabled, accessToken, teamId]);
 
-    return enabled ? rows : undefined;
+    return enabled ? { rows, hubEnabled } : { rows: undefined, hubEnabled: false };
 };

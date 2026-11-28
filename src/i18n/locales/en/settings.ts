@@ -385,7 +385,7 @@ export const settings = {
             "Optional. The words you would type after the skill's name, such as a project or a week.",
         skillPlaceholder: "Choose a skill",
         skillLoading: "Loading skills…",
-        skillNone: "You have no skill to run yet. Write one in Skills first.",
+        skillNone: "You have no skill to run yet. Write one in Skills, or install one.",
         skillTagFilter: "Filter skills by tag",
         skillNoMatch: "No skill has all of these tags.",
         skillDashboardNone: "No skill has the dashboard tag yet.",
@@ -1292,7 +1292,7 @@ export const settings = {
         tabs: {
             label: "Skills",
             mine: "My skills",
-            team: "Team",
+            team: "Team skills",
             installed: "Installed",
             hub: "Genos Hub",
         },
@@ -1307,10 +1307,10 @@ export const settings = {
             emptyMineBody: "Start from the template, or write your own from a blank page.",
             emptyTeamTitle: "No team skills yet",
             emptyTeamBody:
-                "Skills that teammates share with the team appear here. Share one of yours from its details.",
+                "Skills that teammates share with the team appear here. Install one to use it. Share one of yours from its details.",
             emptyInstalledTitle: "No installed skills yet",
             emptyInstalledBody:
-                "Public skills you install appear here, and you are told when the author publishes an update.",
+                "Skills you install from Team skills or the Genos Hub appear here, and you are told when the author publishes an update.",
             installedUpToDate: "Version {n} · up to date",
             installedBehind: "Version {from} · latest {to}",
             limitReached:
@@ -1393,7 +1393,7 @@ export const settings = {
             visibilityPrivate: "Only me",
             visibilityTeam: "My team",
             visibilityTeamHelp:
-                "Teammates read and run the last published version. Choosing My team publishes the current text; after that, Save keeps your edits private until you press Publish changes.",
+                "Teammates can read and install the published version, and run it once installed. Choosing My team publishes the current text; after that, Save keeps your edits private until you press Publish changes.",
             visibilitySpecific: "Specific people",
             visibilitySpecificHelp: "Only the owner changes who this skill is shared with.",
             owner: "Owner",

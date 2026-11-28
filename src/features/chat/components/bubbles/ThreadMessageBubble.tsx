@@ -106,6 +106,8 @@ const ThreadMessageBubbleImpl = (props: threadMessageBubbleProps) => {
 
     // Handle thread message click to update URL and focus
     const handleMessageClick = () => {
+        // In the preview dialog there is no reply URL to go to: the page stays (MIP-2580).
+        if (isModalHosted) return;
         const typePath = CHAT_TYPE_PATH[thread.chatType];
         if (typePath) {
             // Update URL

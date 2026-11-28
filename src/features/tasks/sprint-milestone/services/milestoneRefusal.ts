@@ -27,7 +27,7 @@ export type MilestoneRefusalHooks = {
     onMoveRefused?: () => void;
     /** Called when the save stored nothing, whatever the reason. `retry` is false when sending
      *  it again cannot help. The description autosave needs this (MIP-2443). */
-    onNotSaved?: (retry: boolean) => void;
+    onNotSaved?: (retry: boolean, error?: unknown) => void;
 };
 
 /**

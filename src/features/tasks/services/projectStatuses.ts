@@ -108,7 +108,14 @@ export const setBoardColumnsPerStatus = (
 export const updateProjectStatus = (
     projectId: number,
     statusId: number,
-    patch: { name?: string; color?: string; is_default?: boolean; archived?: boolean },
+    patch: {
+        name?: string;
+        color?: string;
+        is_default?: boolean;
+        archived?: boolean;
+        /** Refused while tasks, milestones or rules use the status (MIP-2590). */
+        category?: string;
+    },
     accessToken: string | null
 ) => write(accessToken, (api) => api.patch(url(projectId, statusId), patch, QUIET));
 

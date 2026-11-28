@@ -96,7 +96,7 @@ export const sendUpdatedSpecificTask = async (
         // Called when the PUT stored NOTHING and no `TaskSaveRefusedError` is thrown: this
         // function swallows those failures, and a caller that cannot tell would count the words
         // in the body as saved (MIP-2443). `retry` is false when sending it again cannot help.
-        onNotSaved?: (retry: boolean) => void;
+        onNotSaved?: (retry: boolean, error?: unknown) => void;
         // The PUT stored the task in `projectId` (MIP-2524): the working copy's
         // `storedProjectId` is now that.
         onStoredProject?: (projectId: number) => void;
@@ -450,7 +450,7 @@ export const sendUpdatedSpecificTask = async (
         // own state back.
         if (error instanceof TaskSaveRefusedError) throw error;
         // A failure AFTER the PUT (an attachment upload) leaves the task itself stored.
-        if (!stored) options?.onNotSaved?.(isRetryableSaveError(error));
+        if (!stored) options?.onNotSaved?.(isRetryableSaveError(error), error);
         if (axios.isAxiosError(error)) {
             if (error.response?.status === 400) {
                 console.error("HTTP 400 error:", error.response?.data);

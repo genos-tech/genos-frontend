@@ -283,7 +283,12 @@ describe("the filter bar", () => {
         mountBar();
         fireEvent.click(statusChip());
         // The default bar has the whole WIP category: unticking WIP leaves the other status.
-        fireEvent.click(await screen.findByRole("menuitemcheckbox", { name: "WIP in WIP" }));
+        const wip = await screen.findByRole("menuitemcheckbox", { name: "WIP" });
+        // One flat list: each status once, no category row beside it (MIP-2590).
+        const names = screen.getAllByRole("menuitemcheckbox").map((i) => i.textContent);
+        expect(new Set(names).size).toBe(names.length);
+        expect(names).toContain("Code review");
+        fireEvent.click(wip);
         expect(shownIds()).toContain("review");
         expect(shownIds()).not.toContain("wip");
         const stored = JSON.parse(localStorage.getItem(KEY)!);

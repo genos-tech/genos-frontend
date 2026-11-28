@@ -1,16 +1,13 @@
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
-import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
 import { Box, ListDivider } from "@mui/joy";
 
-import { fmt, useTranslation } from "../../../../i18n";
+import { useTranslation } from "../../../../i18n";
 import { g, type } from "../../../../theme/tokens";
 import { ProjectStatusDef } from "../../../../types/tasks";
 import { predefinedStatusFilters, type FilterProps } from "../../types/TaskTableTypes";
-import { STATUS_CATEGORIES, statusRowName } from "../../utils/projectStatus";
-import { pickedStatusId, subStatuses } from "../../utils/statusFilter";
+import { STATUS_CATEGORIES } from "../../utils/projectStatus";
+import { listedStatuses, pickedStatusId } from "../../utils/statusFilter";
 import { StatusLabel } from "../meta/StatusLabel";
-import { CategoryHeading } from "../statuses/statusChoices";
-import { useCategoryName } from "../statuses/useCategoryName";
 import { FilterMenuItem } from "./filterBarParts";
 
 const dividerSx = { my: 0.5, "--Divider-lineColor": g.border.subtle } as const;
@@ -30,10 +27,26 @@ const Count = ({ label, count }: { label: string; count: number | null }) =>
         </Box>
     );
 
+/** A status as its row names and colours it, or the built-in where the category has none. */
+const StatusRowLabel = ({ category, row }: { category: string; row?: ProjectStatusDef }) => {
+    const { t } = useTranslation();
+    return (
+        <Box component="span" sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}>
+            <StatusLabel row={row} status={category} />
+            {row?.isArchived && (
+                <Box component="span" sx={{ ...type("caption"), color: g.text.tertiary }}>
+                    {t.tasks.projectStatuses.off}
+                </Box>
+            )}
+        </Box>
+    );
+};
+
 /**
- * The status filter of a project that set up its statuses (MIP-2495): each category, with the
- * project's statuses under it where there is more than one to choose between. A category with
- * only some of them picked shows a dash. A project without statuses keeps the flat list.
+ * The status filter of a project that set up its statuses (MIP-2495): one flat list of them
+ * (MIP-2590), never category rows beside them. The selection still holds whole categories where
+ * it can (see `statusFilter`), so a picked category ticks each of its statuses. A project
+ * without statuses keeps its own flat list.
  */
 export const StatusFilterGroupedMenu = ({
     rows,
@@ -53,7 +66,6 @@ export const StatusFilterGroupedMenu = ({
     onStatus: (row: ProjectStatusDef) => void;
 }) => {
     const { t } = useTranslation();
-    const categoryName = useCategoryName();
     const labelOf = (filter: FilterProps) =>
         filter.labelKey ? t.tasks.filters[filter.labelKey] : filter.label;
     const picked = new Set(selection.map(pickedStatusId));
@@ -96,88 +108,49 @@ export const StatusFilterGroupedMenu = ({
             <ListDivider sx={dividerSx} />
             {STATUS_CATEGORIES.flatMap((category) => {
                 const whole = has(category);
-                const subs = subStatuses(rows, category, selection);
-                const some = !whole && subs.some((r) => picked.has(r.statusId));
-                // A category with one status of the team's own naming says so.
-                const only = subs.length
-                    ? undefined
-                    : rows.find((r) => r.category === category && !r.isArchived);
-                const renamed = only && only.name !== (only.builtinKey ?? "") ? only : undefined;
-                const count = countOf(category);
-                return [
-                    <FilterMenuItem
-                        key={category}
-                        aria-checked={whole ? true : some ? "mixed" : false}
-                        data-status-category={category}
-                        role="menuitemcheckbox"
-                        trailing={
-                            <>
-                                <Count count={count} label={category} />
-                                {whole && <Check />}
-                                {some && (
-                                    <RemoveRoundedIcon
-                                        aria-hidden="true"
-                                        sx={{ fontSize: 16, color: g.accent.text }}
-                                    />
-                                )}
-                            </>
-                        }
-                        onClick={() => onCategory(category)}
-                    >
-                        <Box
-                            component="span"
-                            sx={{ display: "inline-flex", alignItems: "center", gap: 1 }}
+                const listed = listedStatuses(rows, category, selection);
+                // One status (or none that is on) IS its category: picking it picks all of
+                // it, and the server's count for the category is its count.
+                if (listed.length < 2) {
+                    const row = listed[0];
+                    const on = whole || (row != null && picked.has(row.statusId));
+                    return [
+                        <FilterMenuItem
+                            key={category}
+                            aria-checked={on}
+                            data-status-category={category}
+                            role="menuitemcheckbox"
+                            trailing={
+                                <>
+                                    <Count count={countOf(category)} label={category} />
+                                    {on && <Check />}
+                                </>
+                            }
+                            onClick={() =>
+                                row && picked.has(row.statusId)
+                                    ? onStatus(row)
+                                    : onCategory(category)
+                            }
                         >
-                            {/* With statuses under it, a category is their heading. */}
-                            {subs.length ? (
-                                <CategoryHeading category={category} />
-                            ) : (
-                                <StatusLabel status={category} />
-                            )}
-                            {renamed && (
-                                <Box
-                                    component="span"
-                                    sx={{ ...type("caption"), color: g.text.tertiary }}
-                                >
-                                    {statusRowName(renamed, t.tasks)}
-                                </Box>
-                            )}
-                        </Box>
-                    </FilterMenuItem>,
-                    ...subs.map((row) => {
-                        const on = whole || picked.has(row.statusId);
-                        const name = fmt(t.tasks.filters.statusInCategory, {
-                            name: statusRowName(row, t.tasks),
-                            category: categoryName(category),
-                        });
-                        return (
-                            <FilterMenuItem
-                                key={`st:${row.statusId}`}
-                                aria-checked={on}
-                                data-status-id={row.statusId}
-                                role="menuitemcheckbox"
-                                sx={{ paddingInlineStart: 3.5 }}
-                                trailing={on ? <Check /> : undefined}
-                                aria-label={
-                                    row.isArchived
-                                        ? `${name}, ${t.tasks.projectStatuses.off}`
-                                        : name
-                                }
-                                onClick={() => onStatus(row)}
-                            >
-                                <StatusLabel row={row} status={row.category} />
-                                {row.isArchived && (
-                                    <Box
-                                        component="span"
-                                        sx={{ ...type("caption"), color: g.text.tertiary }}
-                                    >
-                                        {t.tasks.projectStatuses.off}
-                                    </Box>
-                                )}
-                            </FilterMenuItem>
-                        );
-                    }),
-                ];
+                            <StatusRowLabel category={category} row={row} />
+                        </FilterMenuItem>,
+                    ];
+                }
+                return listed.map((row) => {
+                    const on = whole || picked.has(row.statusId);
+                    return (
+                        <FilterMenuItem
+                            key={`st:${row.statusId}`}
+                            aria-checked={on}
+                            data-status-id={row.statusId}
+                            role="menuitemcheckbox"
+                            trailing={on ? <Check /> : undefined}
+                            onClick={() => onStatus(row)}
+                        >
+                            <StatusRowLabel category={category} row={row} />
+                        </FilterMenuItem>
+                    );
+                });
             })}
             <ListDivider sx={dividerSx} />
             {plain("Expired")}

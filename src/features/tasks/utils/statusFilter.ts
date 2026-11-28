@@ -76,18 +76,16 @@ export const pruneStatusPicks = (
     return kept.length ? kept : fallback;
 };
 
-/** The statuses a category offers under it: those that are on, and any that is picked. */
-export const subStatuses = (
+/** The statuses of a category the menu lists: those that are on, and any that is picked. */
+export const listedStatuses = (
     rows: readonly ProjectStatusDef[],
     category: string,
     selection: readonly FilterProps[]
 ): ProjectStatusDef[] => {
     const picked = new Set(selection.map(pickedStatusId));
-    const own = sortStatuses(rows).filter(
+    return sortStatuses(rows).filter(
         (r) => r.category === category && (!r.isArchived || picked.has(r.statusId))
     );
-    // One status that is on IS the category; there is nothing to choose between.
-    return own.length > 1 || own.some((r) => picked.has(r.statusId)) ? own : [];
 };
 
 const settled = (next: FilterProps[]): FilterProps[] => (next.length ? next : [allFilter]);
@@ -100,7 +98,7 @@ const categoryOfPick = (rows: readonly ProjectStatusDef[], filter: FilterProps) 
     return id == null ? undefined : rows.find((r) => r.statusId === id)?.category;
 };
 
-/** A category row was clicked: the whole category on or off. */
+/** The whole category on or off (the one row of a category that lists no choice). */
 export const toggleCategory = (
     selection: readonly FilterProps[],
     rows: readonly ProjectStatusDef[],

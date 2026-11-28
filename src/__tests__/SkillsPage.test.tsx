@@ -195,7 +195,7 @@ describe("the list", () => {
         renderPage();
         expect(await screen.findByText("Weekly update")).toBeTruthy();
         expect(screen.getByText("/weekly-update")).toBeTruthy();
-        expect(screen.getAllByText("Team").length).toBeGreaterThan(1);
+        expect(screen.getByText("Team")).toBeTruthy(); // the row chip
         expect(screen.getByText("Version 2")).toBeTruthy();
         expect(screen.getByText("weekly")).toBeTruthy();
         expect(screen.getByText("/plan")).toBeTruthy();
@@ -208,7 +208,7 @@ describe("the list", () => {
         vi.mocked(api.fetchSkills).mockResolvedValue(
             list([skill({ id: "s9", title: "Release notes", mine: false, ownerName: "ayumi" })])
         );
-        await user.click(screen.getByRole("tab", { name: "Team" }));
+        await user.click(screen.getByRole("tab", { name: "Team skills" }));
         expect(await screen.findByText("Release notes")).toBeTruthy();
         expect(api.fetchSkills).toHaveBeenLastCalledWith("tok", "team-1", "team");
         expect(screen.getByText(/By ayumi/)).toBeTruthy();

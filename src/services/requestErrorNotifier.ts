@@ -26,6 +26,7 @@ export type RequestErrorKind =
     | "actionFailed" // v3 socket user-action emit failed (reaction / edit)
     | "messageSendFailed" // chat message send failed (the composer)
     | "noteNotSaved" // a note save the server refused: the text is not stored (MIP-2463)
+    | "changeNotSaved" // an inline task edit stored nothing and was put back (MIP-2582)
     | "serverMessage"; // the server's own sentence, carried as `text` (a refused task save)
 
 /**

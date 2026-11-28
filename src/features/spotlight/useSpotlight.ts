@@ -74,6 +74,7 @@ import {
     type UndoRequest,
 } from "../agentQA";
 import { useAgentQA } from "../agentQA/useAgentQA";
+import { OPEN_SKILLS_EVENT } from "../genos/skills/openSkillsList";
 import { lookupTaskByDisplayId } from "../tasks/services/lookupTaskByDisplayId";
 import { displayIdOnlyQuery } from "../tasks/utils/taskDisplayId";
 import {
@@ -766,6 +767,11 @@ export const useSpotlight = ({
 
     const open = useCallback(() => setIsOpen(true), []);
     const close = useCallback(() => setIsOpen(false), []);
+    // Opening the skill lists in Settings (MIP-2589) closes the overlay, which sits above it.
+    useEffect(() => {
+        window.addEventListener(OPEN_SKILLS_EVENT, close);
+        return () => window.removeEventListener(OPEN_SKILLS_EVENT, close);
+    }, [close]);
 
     // ---- Enter / Ask button handler: stream the agent's answer. ----
     // `overrideQuery` is supplied by the retry button on past turns and the

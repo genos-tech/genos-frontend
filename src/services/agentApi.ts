@@ -32,6 +32,7 @@
 // gives us token-by-token streaming.
 
 import { clipSelectionText } from "../features/agentQA/askSelection";
+import { asSkillsList, type SkillsList } from "../features/genos/skills/openSkillsList";
 import type { SpotlightResult } from "../features/spotlight/types";
 import { fmt, getMessages, resolveInitialLocale } from "../i18n";
 import { cleanRejectReason } from "./agentRejectReason";
@@ -246,7 +247,8 @@ interface BaseStreamHandlers {
         elapsedMs?: number,
         droppedReferences?: DroppedReference[]
     ) => void;
-    onError: (message: string) => void;
+    // `skillList`: the ask ran a skill that is not installed (MIP-2589); where to install it.
+    onError: (message: string, detail?: { skillList?: SkillsList }) => void;
     onToolStart?: (payload: ToolCallStartPayload) => void;
     onToolResult?: (payload: ToolCallResultPayload) => void;
     onToolError?: (payload: ToolCallErrorPayload) => void;
@@ -416,7 +418,7 @@ export interface AskAgentArgs extends BaseStreamHandlers {
     // The Genos skill the question runs (MIP-2042): `{ id }` is the picker's exact choice, `{ name }` a
     // typed `/name` the server resolves (mine > team > installed). The question is still what the
     // person typed, `/name` included; the skill's text goes to the agent from the server.
-    skill?: { id: string; version_no?: number } | { name: string };
+    skill?: { id: string; version_no?: number } | { name: string; optional?: boolean };
     // A passage of text the member selected (MIP-1058): `selected_text` on the wire, with
     // `selectedFrom` (`selected_from`) naming where it came from when that has an id. Both are
     // omitted unless the text has something in it; the text is cut at the server's 4,000 characters
@@ -1725,6 +1727,8 @@ async function runNdjsonStream(
         let platformError = false;
         let outOfCredits = false;
         let needsConfirmation: SkillNeedsConfirmation | null = null;
+        // A skill that is not installed (MIP-2589): our own sentence, with the way to install it.
+        let skillList: SkillsList | null = null;
         try {
             const data = await resp.json();
             if (data?.error) message = data.error;
@@ -1736,6 +1740,16 @@ async function runNdjsonStream(
                 message = getMessages().services.agent.monthlyLimit;
             }
             platformError = typeof data?.error === "string";
+            if (data?.code === "install_required" && typeof data.slug === "string") {
+                skillList = asSkillsList(data.where);
+                if (skillList) {
+                    const m = getMessages().services.agent;
+                    message = fmt(
+                        skillList === "hub" ? m.skillInstallFromHub : m.skillInstallFromTeam,
+                        { name: data.slug }
+                    );
+                }
+            }
             // /decide/ answers 422 `{error, field_errors}` when the person's
             // edits cannot be applied. Plain JSON, not an NDJSON stream, and
             // not a failed run: hand it to the caller, who restores the card.
@@ -1772,7 +1786,8 @@ async function runNdjsonStream(
             handlers.onError(getMessages().services.agent.outOfCredits);
             return;
         }
-        handlers.onError(message);
+        if (skillList) handlers.onError(message, { skillList });
+        else handlers.onError(message);
         return;
     }
 
