@@ -41,7 +41,7 @@ import { useDeleteTask } from "../../hooks/useDeleteTask";
 import { statusSolid } from "../../meta/taskTone";
 import { createQuickTask } from "../../services/createQuickTask";
 import { emitTasksBulkChanged, emitTaskTouched } from "../../services/taskEvents";
-import { TaskSaveRefusedError } from "../../services/taskSaveRefusedError";
+import { reportTaskNotSaved, TaskNotSavedError } from "../../services/taskNotSavedError";
 import { updateTaskFromTable } from "../../services/updateTaskFromTable";
 import { endMilestoneSwitch, getPendingMilestoneSwitch } from "../../state/milestoneSwitchStore";
 import { isWidening, useProjectStatusScope } from "../../state/projectStatusScopeStore";
@@ -1059,11 +1059,9 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             await updateTaskFromTable(updated, myself, socket || null, accessToken, teamMembers);
         } catch (error) {
             console.error("Error reparenting task:", error);
-            // The server refused the move (the reason is on screen). Nothing
-            // was stored, so the optimistic move above would otherwise stay on
-            // screen as if it had been. Any other failure keeps the old
-            // log-only behaviour.
-            if (error instanceof TaskSaveRefusedError) {
+            // Nothing was stored (the person has been told), so the optimistic
+            // move above would otherwise stay on screen as if it had been.
+            if (error instanceof TaskNotSavedError) {
                 setCurrentDisplayingTasks(revertDisplayed);
                 useTM.setAllTasks(revertAll);
                 if (priorPreview && String(priorPreview.id) === draggedId) {
@@ -1226,8 +1224,14 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
                     return updatedRow;
                 }
 
-                const updated = await useSM.updateExistingMilestone(patch, projectId);
-                if (!updated) return updatedRow;
+                const updated = await useSM.updateExistingMilestone(
+                    patch,
+                    projectId,
+                    undefined,
+                    undefined,
+                    { refusal: { onNotSaved: (_retry, error) => reportTaskNotSaved(error) } }
+                );
+                if (!updated) return prevRow ?? updatedRow;
 
                 // Mirror the milestone shape back onto the table-row
                 // shape so the table + sprint board (which read
@@ -1334,10 +1338,10 @@ export const DraggableTaskTable = (props: DraggableTaskTableProps) => {
             return result;
         } catch (error) {
             console.error("Error updating row:", error);
-            // A refused save stored nothing, and every state write above comes
+            // A failed save stored nothing, and every state write above comes
             // after the await, so nothing optimistic landed: hand back the row
             // as the table still holds it, not the edited copy.
-            if (error instanceof TaskSaveRefusedError) {
+            if (error instanceof TaskNotSavedError) {
                 return (
                     latestForRowUpdate.current.displaying.find((t) => t.id === updatedRow.id) ??
                     updatedRow

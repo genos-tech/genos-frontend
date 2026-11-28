@@ -53,6 +53,7 @@ export const app = {
         actionFailed: "Couldn't complete that action. Please try again.",
         messageSendFailed: "Couldn't send your message. Please try again.",
         noteNotSaved: "Your latest changes to this note couldn't be saved.",
+        changeNotSaved: "Your change wasn't saved. Please try again.",
         // Shown for ~2s before `useIdleAutoReload` reloads a page that sat
         // idle overnight. Phrased as a statement because the reload is
         // already happening — and it names inactivity as the cause so the

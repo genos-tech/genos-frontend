@@ -1092,6 +1092,7 @@ export const fr: DeepPartial<Messages> = {
             actionFailed: "Impossible d'effectuer cette action. Veuillez réessayer.",
             messageSendFailed: "Impossible d'envoyer votre message. Veuillez réessayer.",
             noteNotSaved: "Impossible d'enregistrer vos dernières modifications de cette note.",
+            changeNotSaved: "Votre modification n’a pas été enregistrée. Veuillez réessayer.",
             idleReload: "Actualisation après une période d'inactivité…",
         },
         serviceSwitch: {

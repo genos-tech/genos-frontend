@@ -182,9 +182,9 @@ const columnOf = (id: string) =>
         screen.getByTestId(`column-${col}`).contains(screen.queryByTestId(`card-${id}`))
     );
 
-const renderBoard = () => {
+const renderBoard = (boardRow: TaskTableProps = row, useSM: object = {}) => {
     const useTM = {
-        allTasks: [row],
+        allTasks: [boardRow],
         setAllTasks: vi.fn(),
         tableMilestoneFilterId: null,
         currentPreviewTask: undefined,
@@ -198,7 +198,7 @@ const renderBoard = () => {
                 teamMemberProfiles={{}}
                 teamMembers={[user]}
                 usePM={{ currentProject: { projectId: 1, projectTags: [] } } as never}
-                useSM={{ projectMilestones: {}, projectSprints: {} } as never}
+                useSM={{ projectMilestones: {}, projectSprints: {}, ...useSM } as never}
                 useTM={useTM as never}
             />
         </CssVarsProvider>
@@ -231,6 +231,36 @@ describe("dragging a card on the sprint board", () => {
         await waitFor(() => expect(columnOf("42")).toBe("open"));
         expect(useTM.setAllTasks).not.toHaveBeenCalled();
         expect(bus[bus.length - 1]).toEqual(["serverMessage", reason]);
+    });
+
+    it.each([
+        ["a 500", () => respondWith(500, { detail: "boom" })],
+        [
+            "no network",
+            () => adapter.mockRejectedValue(new AxiosError("Network Error", "ERR_NETWORK")),
+        ],
+    ])("puts the card back and says the change was not saved on %s", async (_name, fail) => {
+        fail();
+        const { useTM } = renderBoard();
+        await waitFor(() => expect(columnOf("42")).toBe("open"));
+
+        await dragOpenToWip();
+
+        expect(adapter).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(columnOf("42")).toBe("open"));
+        expect(useTM.setAllTasks).not.toHaveBeenCalled();
+        expect(bus[bus.length - 1]?.[0]).toBe("changeNotSaved");
+    });
+
+    it("puts a milestone card back when its save fails (MIP-2582)", async () => {
+        const updateExistingMilestone = vi.fn().mockResolvedValue(null);
+        renderBoard({ ...row, isMilestone: true, milestoneId: 7 }, { updateExistingMilestone });
+        await waitFor(() => expect(columnOf("42")).toBe("open"));
+
+        await dragOpenToWip();
+
+        expect(updateExistingMilestone).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(columnOf("42")).toBe("open"));
     });
 
     it("leaves the card in its new column when the save is accepted (the harness can show a stuck move)", async () => {

@@ -531,6 +531,7 @@ export const hi: DeepPartial<Messages> = {
             actionFailed: "कार्य पूरा नहीं हो सका। कृपया पुनः प्रयास करें।",
             messageSendFailed: "आपका संदेश नहीं भेजा जा सका। कृपया पुनः प्रयास करें।",
             noteNotSaved: "इस नोट में आपके नवीनतम बदलाव सहेजे नहीं जा सके।",
+            changeNotSaved: "आपका बदलाव सहेजा नहीं गया। कृपया फिर से कोशिश करें।",
             idleReload: "निष्क्रियता के बाद पेज रीफ़्रेश किया जा रहा है…",
         },
         serviceSwitch: {

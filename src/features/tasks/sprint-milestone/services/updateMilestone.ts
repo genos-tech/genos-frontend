@@ -126,7 +126,7 @@ export const updateMilestone = async (
         console.error("Unauthorized. Auth token is not found.");
         refusal?.onNotSaved?.(true);
     } catch (error: unknown) {
-        refusal?.onNotSaved?.(isRetryableSaveError(error));
+        refusal?.onNotSaved?.(isRetryableSaveError(error), error);
         if (axios.isAxiosError(error)) {
             console.error("API error:", error.response?.status, error.response?.data);
             reportMilestoneRefusal(error, refusal);
