@@ -952,6 +952,8 @@ export const fr: DeepPartial<Messages> = {
                     "Il est trop tard pour défaire cette modification : cette option n'est disponible que pendant une durée limitée.",
                 permission_lost:
                     "Vous ne pouvez plus modifier cet élément : impossible de défaire. Rien n'a été changé.",
+                archived:
+                    "Ceci est archivé et en lecture seule : rien n'a été défait. Désarchivez-le pour le modifier.",
                 throttled: "Trop de tentatives. Patientez un instant, puis réessayez.",
                 unauthorized:
                     "Vous avez été déconnecté : rien n'a été défait. Reconnectez-vous, puis réessayez.",

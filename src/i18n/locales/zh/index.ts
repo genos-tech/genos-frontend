@@ -883,6 +883,7 @@ export const zh: DeepPartial<Messages> = {
                     "没有撤销任何内容。以下内容在 Genos 更改之后又被修改过，因此保持原样：{fields}。",
                 expired: "已经来不及撤销这项更改：撤销只在有限的时间内可用。",
                 permission_lost: "你已无权修改这里，因此无法撤销。未做任何更改。",
+                archived: "此内容已归档，为只读状态，因此没有撤销任何内容。取消归档后才能修改。",
                 throttled: "撤销操作过于频繁。请稍等片刻再试。",
                 unauthorized: "你已退出登录，因此没有撤销任何内容。请重新登录后再试。",
                 network: "无法连接到 Genos，因此没有撤销任何内容。请检查网络后重试。",

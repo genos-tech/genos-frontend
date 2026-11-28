@@ -1472,7 +1472,7 @@ export interface UndoAnswer {
     live_editor?: string;
 }
 
-/** Why an undo was not done. The first six are the server's own `code`; the
+/** Why an undo was not done. The first seven are the server's own `code`; the
  * rest are decided here from the transport. */
 export type UndoRefusalCode =
     | "not_found"
@@ -1481,6 +1481,7 @@ export type UndoRefusalCode =
     | "changed_since"
     | "expired"
     | "permission_lost"
+    | "archived"
     | "throttled"
     | "unauthorized"
     | "network"
@@ -1512,6 +1513,7 @@ const SERVER_UNDO_CODES: ReadonlySet<string> = new Set([
     "changed_since",
     "expired",
     "permission_lost",
+    "archived",
 ]);
 
 const asSkipped = (raw: unknown): UndoSkippedField[] =>

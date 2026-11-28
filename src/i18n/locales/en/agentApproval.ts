@@ -349,6 +349,8 @@ export const agentApproval = {
                 "It's too late to undo this change: Undo is only available for a limited time.",
             permission_lost:
                 "You can no longer change this, so it can't be undone. Nothing was changed.",
+            archived:
+                "This is archived and read-only, so nothing was undone. Unarchive it to make changes.",
             throttled: "That was too many undo attempts. Wait a moment and try again.",
             unauthorized:
                 "You were signed out, so nothing was undone. Sign in again, then try again.",

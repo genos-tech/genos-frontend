@@ -86,6 +86,7 @@ export const undoRefusalText = (t: Messages, refusal: UndoRefusal): string => {
         case "already_undone":
         case "expired":
         case "permission_lost":
+        case "archived":
         case "throttled":
         case "unauthorized":
         case "network":

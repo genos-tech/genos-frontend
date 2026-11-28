@@ -114,6 +114,7 @@ describe("the catalog covers what the code can ask for", () => {
             "changed_since",
             "expired",
             "permission_lost",
+            "archived",
             "throttled",
             "unauthorized",
             "network",
@@ -280,6 +281,7 @@ describe.each(LOCALES)("in %s", (locale) => {
             "changed_since",
             "expired",
             "permission_lost",
+            "archived",
             "throttled",
             "unauthorized",
             "network",
@@ -296,7 +298,7 @@ describe.each(LOCALES)("in %s", (locale) => {
             expect(text).not.toContain("SERVER ENGLISH");
             seen.add(text);
         }
-        expect(seen.size).toBe(10);
+        expect(seen.size).toBe(11);
     });
 
     it("a delete names what it removed, in that language", async () => {

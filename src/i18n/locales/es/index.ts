@@ -7991,6 +7991,8 @@ export const es: DeepPartial<Messages> = {
                     "Ya es tarde para deshacer este cambio: Deshacer solo está disponible durante un tiempo limitado.",
                 permission_lost:
                     "Ya no puedes modificar esto, así que no se puede deshacer. No se cambió nada.",
+                archived:
+                    "Está archivado y es de solo lectura, así que no se deshizo nada. Desarchívalo para hacer cambios.",
                 throttled:
                     "Demasiados intentos de deshacer. Espera un momento e inténtalo de nuevo.",
                 unauthorized:
