@@ -128,6 +128,7 @@ const SprintBoardCardImpl = ({
                             <MilestoneCardBody
                                 milestone={milestone}
                                 sprintName={sprintName}
+                                topRight={diagramButton}
                                 statusMark={
                                     hideStatusMark ? undefined : (
                                         <CardStatusMark
@@ -137,7 +138,6 @@ const SprintBoardCardImpl = ({
                                         />
                                     )
                                 }
-                                topRight={diagramButton}
                             />
                         </TaskCardFrame>
                     ) : (

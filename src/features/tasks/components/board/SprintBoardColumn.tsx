@@ -142,9 +142,9 @@ const StatusColumnHeader = ({
                     aria-label={label}
                     aria-level={3}
                     role="heading"
+                    sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}
                     // Focusable only when off, so the keyboard reaches the explanation.
                     tabIndex={row.isArchived ? 0 : undefined}
-                    sx={{ display: "flex", alignItems: "center", gap: 0.75, minWidth: 0 }}
                 >
                     <span
                         aria-hidden="true"

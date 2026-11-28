@@ -154,15 +154,15 @@ export const StatusFilterGroupedMenu = ({
                             <FilterMenuItem
                                 key={`st:${row.statusId}`}
                                 aria-checked={on}
+                                data-status-id={row.statusId}
+                                role="menuitemcheckbox"
+                                sx={{ paddingInlineStart: 3.5 }}
+                                trailing={on ? <Check /> : undefined}
                                 aria-label={
                                     row.isArchived
                                         ? `${name}, ${t.tasks.projectStatuses.off}`
                                         : name
                                 }
-                                data-status-id={row.statusId}
-                                role="menuitemcheckbox"
-                                sx={{ paddingInlineStart: 3.5 }}
-                                trailing={on ? <Check /> : undefined}
                                 onClick={() => onStatus(row)}
                             >
                                 <StatusLabel row={row} status={row.category} />
