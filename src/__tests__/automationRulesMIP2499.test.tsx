@@ -324,6 +324,19 @@ describe("the Automation tab", () => {
         expect(screen.getByText(words.errSlot)).toBeTruthy();
     });
 
+    it("offers no preview from the menu while the destination is not named", async () => {
+        await openRules([
+            rule({
+                enabled: false,
+                disabledReason: "destination",
+                destination: { projectId: null, name: null, visible: false },
+            }),
+        ]);
+        fireEvent.click(screen.getByRole("button", { name: "More actions for Hand over" }));
+        expect(await screen.findByRole("menuitem", { name: words.edit })).toBeTruthy();
+        expect(screen.queryByRole("menuitem", { name: words.preview })).toBeNull();
+    });
+
     it("drops the destination's own values when the move is removed", async () => {
         dryRun([]);
         await openRules([rule({ addTag: "tag-a" })]);

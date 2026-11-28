@@ -40,6 +40,7 @@ import {
     StatusPick,
     withDestination,
 } from "./draft";
+import { coarsePointer, fieldName, projectName } from "./helpers";
 import {
     destinationProjects,
     refusedAsPublic,
@@ -48,7 +49,6 @@ import {
     statusRowOf,
     useLookups,
 } from "./lookups";
-import { fieldName, projectName } from "./RuleSentence";
 import { SlotAutocomplete, SlotOption, SlotSelect } from "./slots";
 import type { ConditionField, ConditionOp, TriggerType } from "./types";
 import { useLater } from "./useLater";
@@ -58,9 +58,6 @@ import { useAutomationWords } from "./words";
 export type EditorErrors = Record<string, string>;
 
 const ACTION_ORDER: readonly ActionKind[] = ["move", "status", "assignee", "tag"];
-
-export const coarsePointer = (): boolean =>
-    window.matchMedia?.("(pointer: coarse)").matches === true;
 
 const coarse44 = { "@media (pointer: coarse)": { minWidth: 44, minHeight: 44 } } as const;
 

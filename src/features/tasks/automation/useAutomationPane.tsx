@@ -17,10 +17,11 @@ import { useAuth } from "../../../context/authState";
 import { fmt, useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
 import { definitionOf, draftOf, emptyDraft, missingParts, RuleDraft } from "./draft";
+import { coarsePointer, ruleProblemOf, unnamedDestination } from "./helpers";
 import { AutomationContextData, LookupsContext, useRuleLookups } from "./lookups";
-import { coarsePointer, EditorErrors, RuleEditor } from "./RuleEditor";
-import { isHidden, RuleList, unnamedDestination } from "./RuleList";
-import { PreviewState, RulePreview, ruleProblemOf } from "./RulePreview";
+import { EditorErrors, RuleEditor } from "./RuleEditor";
+import { RuleList } from "./RuleList";
+import { PreviewState, RulePreview } from "./RulePreview";
 import { RuleRuns } from "./RuleRuns";
 import {
     createRule,
@@ -432,7 +433,7 @@ export const useAutomationPane = ({
                 onRuns={(rule) => setView({ kind: "runs", ruleId: rule.ruleId })}
                 onSwitch={(rule, on) => void switchRule(rule, on)}
                 onPreview={(rule) => {
-                    if (isHidden(rule)) return;
+                    if (unnamedDestination(rule)) return;
                     void runPreview(openRule(rule), rule.ruleId, "menu");
                 }}
             />

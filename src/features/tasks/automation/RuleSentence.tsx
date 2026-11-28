@@ -11,16 +11,10 @@ import { g, type } from "../../../theme/tokens";
 import { StatusLabel } from "../components/meta/StatusLabel";
 import { taskMetaLabel } from "../utils/taskMeta";
 import { needsValue, type DraftCondition, type RuleDraft, type StatusPick } from "./draft";
-import { Lookups, statusRowOf, useLookups } from "./lookups";
+import { fmtNodes } from "./fmtNodes";
+import { fieldName, memberName, projectName } from "./helpers";
+import { statusRowOf, useLookups } from "./lookups";
 import { useAutomationWords } from "./words";
-
-/** `fmt` for React nodes: every `{name}` of the template becomes that node. */
-export const fmtNodes = (template: string, vars: Record<string, ReactNode>): ReactNode =>
-    template
-        .split(/(\{\w+\})/)
-        .map((part, i) => (
-            <Fragment key={i}>{/^\{\w+\}$/.test(part) ? vars[part.slice(1, -1)] : part}</Fragment>
-        ));
 
 const Value = ({ children }: { children: ReactNode }) => (
     <Box component="bdi" sx={{ color: g.text.primary, fontWeight: 500 }}>
@@ -62,12 +56,6 @@ const StatusWord = ({ pick, projectId }: { pick: StatusPick; projectId: number }
         </Box>
     );
 };
-
-export const memberName = (lookups: Lookups, id: string): string | undefined =>
-    lookups.members.find((m) => m.userId === id)?.userName;
-
-export const projectName = (lookups: Lookups, id: number): string | undefined =>
-    lookups.projects.find((p) => p.projectId === id)?.projectName;
 
 export const RuleSentence = ({
     draft,
@@ -215,16 +203,3 @@ export const RuleSentence = ({
         </Box>
     );
 };
-
-export const fieldName = (
-    words: ReturnType<typeof useAutomationWords>,
-    field: Exclude<DraftCondition["field"], "custom_field">
-): string =>
-    ({
-        tag: words.fieldTag,
-        assignee: words.fieldAssignee,
-        reporter: words.fieldReporter,
-        priority: words.fieldPriority,
-        milestone: words.fieldMilestone,
-        custom_status: words.fieldStatus,
-    })[field];

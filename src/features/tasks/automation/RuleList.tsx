@@ -19,26 +19,14 @@ import { fmt, useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
 import { rowSx } from "../components/statuses/listStyles";
 import { draftOf, MAX_RULES } from "./draft";
+import { isHidden, unnamedDestination } from "./helpers";
 import { useLookups } from "./lookups";
 import { RuleSentence } from "./RuleSentence";
 import type { AutomationRule } from "./types";
 import { useLater } from "./useLater";
 import { reasonText, useAutomationWords } from "./words";
 
-/** The server does not name where this rule moves tasks to: the reader is not on it, or it
- *  is gone. */
-export const unnamedDestination = (rule: AutomationRule): boolean =>
-    rule.movesTask && rule.destination?.visible === false;
-
-/** The engine turned it off over the destination, so another one has to be chosen. */
-const DESTINATION_OFF = new Set(["destination", "destination_not_found"]);
-
-/** Nobody who is not on the destination may change a rule that works: that would be changing
- *  what they cannot see. One turned off over its destination can be given a new one. */
-export const isHidden = (rule: AutomationRule): boolean =>
-    unnamedDestination(rule) && !(!rule.enabled && DESTINATION_OFF.has(rule.disabledReason));
-
-export const PlanNote = ({ kept, onLeave }: { kept: boolean; onLeave: () => void }) => {
+const PlanNote = ({ kept, onLeave }: { kept: boolean; onLeave: () => void }) => {
     const words = useAutomationWords();
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -143,7 +131,8 @@ export const RuleList = (props: Props) => {
                 id: "preview",
                 label: words.preview,
                 icon: <VisibilityOutlinedIcon />,
-                visible: planAllows,
+                // Without a destination there is nothing true to preview: it is edited first.
+                visible: planAllows && !(unnamed && !hidden),
                 disabled: hidden,
                 hint: hidden ? words.hiddenHint : undefined,
                 onClick: () => later(() => props.onPreview(rule), 0),

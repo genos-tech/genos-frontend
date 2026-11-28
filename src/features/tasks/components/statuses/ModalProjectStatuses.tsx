@@ -203,6 +203,15 @@ export const ModalProjectStatuses = ({
         onLeave: onClose,
     });
     const onRules = automation != null && tab === "automation";
+    const panelA11y =
+        automation && !(onRules && rules.subView)
+            ? {
+                  role: "tabpanel",
+                  "aria-label": onRules
+                      ? t.tasks.automation.tabAutomation
+                      : t.tasks.automation.tabStatuses,
+              }
+            : {};
 
     // A teammate may have changed the list since it was first read.
     useEffect(() => {
@@ -700,6 +709,7 @@ export const ModalProjectStatuses = ({
                             <TabStrip
                                 ariaLabel={t.tasks.automation.tabsLabel}
                                 size="sm"
+                                value={tab}
                                 tabs={[
                                     {
                                         id: "statuses",
@@ -730,25 +740,17 @@ export const ModalProjectStatuses = ({
                                             : undefined,
                                     },
                                 ]}
-                                value={tab}
                                 onChange={(id) => setTab(id as ProjectSettingsTab)}
                             />
                         )}
                     </Box>
                 )}
+                {/* The dialog must not jump in height between the tabs, and past the list
+                    the tabs are gone, and with them the panel. */}
                 <Box
                     id={automation ? "project-settings-panel" : undefined}
-                    // Past the list the tabs are gone, and with them the panel.
-                    role={automation && !(onRules && rules.subView) ? "tabpanel" : undefined}
-                    aria-label={
-                        automation && !(onRules && rules.subView)
-                            ? onRules
-                                ? t.tasks.automation.tabAutomation
-                                : t.tasks.automation.tabStatuses
-                            : undefined
-                    }
-                    // The dialog must not jump in height between the tabs.
                     sx={automation ? { minHeight: { sm: 420 } } : undefined}
+                    {...panelA11y}
                 >
                     {onRules ? (
                         rules.body

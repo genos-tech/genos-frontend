@@ -12,6 +12,7 @@ import { fmt } from "../../../i18n";
 import { g, type } from "../../../theme/tokens";
 import { StatusLabel } from "../components/meta/StatusLabel";
 import type { RuleDraft } from "./draft";
+import { listSx, ruleProblemOf } from "./helpers";
 import { useLookups } from "./lookups";
 import { RuleSentence } from "./RuleSentence";
 import type { DryRunItem, DryRunResult } from "./types";
@@ -22,49 +23,13 @@ export type PreviewState =
     | { status: "failed"; limited: boolean }
     | { status: "ok"; result: DryRunResult };
 
-/** Reasons about the rule itself: every match has it, and turning the rule on is pointless. */
-const RULE_LEVEL = new Set([
-    "plan",
-    "destination_not_found",
-    "destination_archived",
-    "same_project",
-    "private_to_public",
-    "readers_outside_source",
-    "bad_status",
-    "assignee_not_allowed",
-    "owner",
-    "owner_gone",
-    "owner_not_member",
-    "owner_not_on_source",
-    "owner_not_manager",
-    "owner_not_on_destination",
-]);
-
-export const ruleProblemOf = (result: DryRunResult): string | null => {
-    const reason = result.items[0]?.reason;
-    return reason &&
-        RULE_LEVEL.has(reason) &&
-        result.items.every((i) => i.outcome === "refused" && i.reason === reason)
-        ? reason
-        : null;
-};
-
 const OUTCOMES = {
     would_apply: { Icon: CheckCircleOutlineRoundedIcon, color: g.success.text },
     refused: { Icon: BlockRoundedIcon, color: g.danger.text },
     skipped: { Icon: RemoveCircleOutlineRoundedIcon, color: g.text.tertiary },
 } as const;
 
-export const listSx = {
-    listStyle: "none",
-    m: 0,
-    p: 0,
-    border: `1px solid ${g.border.subtle}`,
-    borderRadius: g.radius.md,
-    "& > li:not(:first-of-type)": { borderTop: `1px solid ${g.border.subtle}` },
-} as const;
-
-export const SentenceBox = ({
+const SentenceBox = ({
     draft,
     destinationName,
 }: {
