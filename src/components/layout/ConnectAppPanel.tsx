@@ -220,13 +220,13 @@ const Steps = ({
 
 type AppTab = "claudeCode" | "claudeDesktop" | "chatgpt";
 
-// Tab rail: three short labels that must stay on ONE line at a phone's width, so the
-// list scrolls sideways before a label ever wraps.
+// Tab rail: three short labels, none of which breaks. Settings never scrolls sideways
+// (MIP-2599), so a phone gets tighter tabs and, in a longer language, a second line.
 const TAB_SX = {
     flex: "none",
     whiteSpace: "nowrap",
     minHeight: g.control.md,
-    px: 1.25,
+    px: { xs: 0.75, sm: 1.25 },
     fontSize: "0.8125rem",
 } as const;
 
@@ -459,7 +459,7 @@ export const ConnectAppPanel = ({
                         >
                             <TabList
                                 aria-label={ai.tabsAria}
-                                sx={{ gap: 0.5, mb: 1.5, overflowX: "auto", flexWrap: "nowrap" }}
+                                sx={{ gap: { xs: 0, sm: 0.5 }, mb: 1.5, flexWrap: "wrap" }}
                             >
                                 <Tab sx={TAB_SX} value="claudeCode">
                                     {ai.tabClaudeCode}
