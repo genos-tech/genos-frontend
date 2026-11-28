@@ -7934,6 +7934,7 @@ export const ja: DeepPartial<Messages> = {
                     customField: "{by} さんが {name} を変更しました",
                     customFieldGeneric: "{by} さんがカスタムフィールドを変更しました",
                     fieldChanged: "{by} さんが{field}を変更しました: {old} → {new}",
+                    fieldEdited: "{by} さんが{field}を変更しました",
                     noteEdited: "{by} さんがノートを編集しました",
                     noteRestored: "{by} さんが以前のバージョンに戻しました",
                     fields: {

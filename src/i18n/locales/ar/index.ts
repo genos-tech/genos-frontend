@@ -4348,6 +4348,7 @@ export const ar: DeepPartial<Messages> = {
                     customField: "غيّر {by} {name}",
                     customFieldGeneric: "غيّر {by} حقلًا مخصصًا",
                     fieldChanged: "غيّر {by} {field}: {old} ← {new}",
+                    fieldEdited: "غيّر {by} {field}",
                     noteEdited: "عدّل {by} الملاحظة",
                     noteRestored: "استعاد {by} إصدارًا سابقًا",
                     fields: {

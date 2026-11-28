@@ -75,6 +75,11 @@ const changeSentence = (c: BriefingChange, a: TodayCopy): string | null => {
                 old: data.old || "—",
                 new: data.new || "—",
             });
+        case "field_edited":
+            return fmt(t.fieldEdited, {
+                by,
+                field: fieldWord(a, String(data.field ?? "")),
+            });
         case "note_edited":
             return fmt(t.noteEdited, { by });
         case "note_restored":

@@ -4430,6 +4430,7 @@ export const es: DeepPartial<Messages> = {
                     customField: "{by} cambió {name}",
                     customFieldGeneric: "{by} cambió un campo personalizado",
                     fieldChanged: "{by} cambió {field}: {old} → {new}",
+                    fieldEdited: "{by} cambió {field}",
                     noteEdited: "{by} editó la nota",
                     noteRestored: "{by} restauró una versión anterior",
                     fields: {

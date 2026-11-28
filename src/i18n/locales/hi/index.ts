@@ -4912,6 +4912,7 @@ export const hi: DeepPartial<Messages> = {
                     customField: "{by} ने {name} बदला",
                     customFieldGeneric: "{by} ने एक कस्टम फ़ील्ड बदला",
                     fieldChanged: "{by} ने {field} बदला: {old} → {new}",
+                    fieldEdited: "{by} ने {field} बदला",
                     noteEdited: "{by} ने नोट संपादित किया",
                     noteRestored: "{by} ने पिछला संस्करण बहाल किया",
                     fields: {
