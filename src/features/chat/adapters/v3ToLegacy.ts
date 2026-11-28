@@ -279,6 +279,8 @@ function v3MessageToLegacyPreview(m: Message): MessageProps {
         taskId: null,
         taskStatus: null,
         ...viaAppField(m),
+        // The list row words a rule's move itself (MIP-2535).
+        ...ruleMoveField(m),
     };
 }
 
