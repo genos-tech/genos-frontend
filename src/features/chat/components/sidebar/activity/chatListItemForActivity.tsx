@@ -56,6 +56,7 @@ import { resolveV3ThreadRootUuid } from "../../../utils/channelIdResolvers";
 import { noteModalHref, viaActivityModalHref } from "../../../utils/viaActivityModalHref";
 import { ActivityContent } from "./ActivityContent";
 import { ActivityHeader } from "./ActivityHeader";
+import { hasButtonAvatar } from "./hasButtonAvatar";
 
 // chatType = {1: DM, 2: GM, 3: PM, 4: Task-comment OR MDM}
 //   chat_type=4 is dual-purpose: task-comment activities carry a `taskId`
@@ -791,6 +792,8 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 NavItem; the card content below is the feed's own. */}
             <NavItem
                 as="div"
+                // The group / multi-person DM avatars are buttons of their own (`ActivityAvatar`).
+                interactiveContent={hasButtonAvatar(activity)}
                 data-chat-list-key={`activity-${activity.activityId}`}
                 lines={2}
                 selected={isSelected}

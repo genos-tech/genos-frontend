@@ -21,7 +21,6 @@ import { fmtNodes } from "./fmtNodes";
 import {
     destinationGone,
     fieldName,
-    forMilestones,
     memberName,
     projectName,
     unnamedDestination,
@@ -84,7 +83,7 @@ export const RuleSentence = ({
     goneDestination?: boolean;
     destinationName?: string | null;
 }) => {
-    const words = useAutomationWords();
+    const words = useAutomationWords(draft.appliesTo);
     const { t } = useTranslation();
     const lookups = useLookups();
     const list = useList();
@@ -222,25 +221,12 @@ export const RuleSentence = ({
     );
 };
 
-/** A saved rule's line: its sentence, or why this screen cannot say it. */
-export const RuleSummary = ({ rule }: { rule: AutomationRule }) => {
-    const words = useAutomationWords();
-    if (forMilestones(rule)) {
-        return (
-            <Box
-                component="span"
-                sx={{ ...type("body-sm"), display: "block", color: g.text.secondary }}
-            >
-                {words.milestoneRule}
-            </Box>
-        );
-    }
-    return (
-        <RuleSentence
-            destinationName={rule.destination?.name}
-            draft={draftOf(rule)}
-            goneDestination={destinationGone(rule)}
-            hiddenDestination={unnamedDestination(rule)}
-        />
-    );
-};
+/** A saved rule's line: its sentence. */
+export const RuleSummary = ({ rule }: { rule: AutomationRule }) => (
+    <RuleSentence
+        destinationName={rule.destination?.name}
+        draft={draftOf(rule)}
+        goneDestination={destinationGone(rule)}
+        hiddenDestination={unnamedDestination(rule)}
+    />
+);

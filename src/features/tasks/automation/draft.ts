@@ -8,6 +8,7 @@ import type {
     ConditionOp,
     RuleCondition,
     RuleDefinition,
+    RuleTarget,
     TriggerType,
 } from "./types";
 
@@ -31,6 +32,7 @@ export type ActionKind = "move" | "status" | "assignee" | "tag";
 
 export type RuleDraft = {
     name: string;
+    appliesTo: RuleTarget;
     triggerType: TriggerType;
     triggerStatus: StatusPick | null;
     triggerTag: string;
@@ -60,6 +62,7 @@ export const conditionRow = (
 
 export const emptyDraft = (): RuleDraft => ({
     name: "",
+    appliesTo: "task",
     triggerType: "status_changed",
     triggerStatus: null,
     triggerTag: "",
@@ -84,6 +87,7 @@ export const draftOf = (rule: AutomationRule): RuleDraft => {
     return {
         ...emptyDraft(),
         name: rule.name,
+        appliesTo: rule.appliesTo ?? "task",
         triggerType: rule.triggerType,
         triggerStatus:
             rule.triggerType !== "status_changed"
@@ -151,6 +155,7 @@ export const definitionOf = (draft: RuleDraft, name: string): RuleDefinition => 
     const status = has(draft, "status") ? draft.setStatus : null;
     return {
         name: name.trim().slice(0, MAX_RULE_NAME),
+        applies_to: draft.appliesTo,
         trigger_type: draft.triggerType,
         trigger_value:
             draft.triggerType === "status_changed" && draft.triggerStatus
@@ -170,6 +175,16 @@ export const definitionOf = (draft: RuleDraft, name: string): RuleDefinition => 
         add_tag: has(draft, "tag") ? draft.addTag : "",
     };
 };
+
+/** A milestone is in no milestone: a milestone rule drops those conditions. */
+export const withTarget = (draft: RuleDraft, appliesTo: RuleTarget): RuleDraft => ({
+    ...draft,
+    appliesTo,
+    conditions:
+        appliesTo === "milestone"
+            ? draft.conditions.filter((c) => c.field !== "milestone")
+            : draft.conditions,
+});
 
 /** A new destination does not inherit the values that belong to the old one. */
 export const withDestination = (draft: RuleDraft, destinationId: number | null): RuleDraft =>

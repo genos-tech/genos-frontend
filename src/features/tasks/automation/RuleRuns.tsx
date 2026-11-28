@@ -34,7 +34,7 @@ const fullTime = (value: string | null, locale: string): string | undefined => {
 };
 
 export const RuleRuns = ({ rule }: { rule: AutomationRule }) => {
-    const words = useAutomationWords();
+    const words = useAutomationWords(rule.appliesTo);
     const { locale } = useTranslation();
     const { accessToken } = useAuth();
     const { projectId } = useLookups();

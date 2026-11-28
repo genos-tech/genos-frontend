@@ -756,6 +756,10 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
     };
 
     const isSelected = selectedFlaggedMessageId === flaggedMessage.flaggedMessageId;
+    // A group's or multi-person DM's avatar is a button of its own.
+    const buttonAvatar =
+        !chatRemoved &&
+        (flaggedMessage.chatType === CHAT_TYPES.GM || flaggedMessage.chatType === CHAT_TYPES.MDM);
 
     return (
         <React.Fragment>
@@ -764,6 +768,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
             <NavItem
                 as="div"
                 data-chat-list-key={`flagged-${flaggedMessage.flaggedMessageId}`}
+                interactiveContent={buttonAvatar}
                 lines={2}
                 selected={isSelected}
                 // Active-flag indicator bar: not shown in the past view (those
@@ -850,7 +855,7 @@ export const ChatListItemForFlagMessages = (props: ChatListItemForFlagMessagesPr
                     py: 0.75,
                     opacity: navigationDisabled ? 0.65 : 1,
                     ...(navigationDisabled && {
-                        "& .MuiListItemButton-root": { cursor: "default" },
+                        "& .MuiListItemButton-root, & .NavItem-body": { cursor: "default" },
                     }),
                     // The three actions stack beside the card: a row of them would take
                     // the card's width, and the card is two lines tall anyway.

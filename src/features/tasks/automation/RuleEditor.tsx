@@ -2,7 +2,7 @@
  * The rule as one sentence block: When / If / Then, each value a picker. The rail's dot says
  * whether its clause is complete.
  */
-import { ReactNode, useEffect, useId } from "react";
+import { ReactNode, useEffect, useId, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -39,6 +39,7 @@ import {
     RuleDraft,
     StatusPick,
     withDestination,
+    withTarget,
 } from "./draft";
 import { coarsePointer, fieldName, projectName } from "./helpers";
 import {
@@ -50,7 +51,7 @@ import {
     useLookups,
 } from "./lookups";
 import { SlotAutocomplete, SlotOption, SlotSelect } from "./slots";
-import type { ConditionField, ConditionOp, TriggerType } from "./types";
+import type { ConditionField, ConditionOp, RuleTarget, TriggerType } from "./types";
 import { useLater } from "./useLater";
 import { useAutomationWords } from "./words";
 
@@ -251,7 +252,8 @@ export const RuleEditor = ({
     formError: string | null;
     onAnnounce: (text: string) => void;
 }) => {
-    const words = useAutomationWords();
+    const words = useAutomationWords(draft.appliesTo);
+    const milestone = draft.appliesTo === "milestone";
     const { t } = useTranslation();
     const lookups = useLookups();
     const { accessToken } = useAuth();
@@ -353,6 +355,7 @@ export const RuleEditor = ({
     const fieldOptions: SlotOption[] = [
         ...(["tag", "assignee", "reporter", "priority", "milestone", "custom_status"] as const)
             .filter((field) => field !== "custom_status" || lookups.statuses.length > 0)
+            .filter((field) => field !== "milestone" || !milestone)
             .map((field) => ({ value: field as string, label: fieldName(words, field) })),
         ...lookups.fields.map((f) => ({ value: `f:${f.fieldId}`, label: f.fieldName })),
     ];
@@ -481,6 +484,16 @@ export const RuleEditor = ({
                 {needsValue(c.op) && conditionValue(c)}
             </Line>
         );
+    };
+
+    // Said on screen too: a row that just vanishes looks like lost work.
+    const [droppedCondition, setDroppedCondition] = useState(false);
+    const changeTarget = (target: RuleTarget) => {
+        const next = withTarget(draft, target);
+        const dropped = next.conditions.length < draft.conditions.length;
+        onChange(next);
+        setDroppedCondition(dropped);
+        if (dropped) onAnnounce(words.milestoneConditionRemoved);
     };
 
     const addCondition = () => {
@@ -663,6 +676,16 @@ export const RuleEditor = ({
                 >
                     <Line error={errors.trigger} errorId={errorId("trigger")}>
                         <SlotSelect
+                            label={words.targetLabel}
+                            slotId="applies-to"
+                            value={draft.appliesTo}
+                            options={[
+                                { value: "task", label: words.targetTasks },
+                                { value: "milestone", label: words.targetMilestones },
+                            ]}
+                            onChange={(value) => changeTarget(value as RuleTarget)}
+                        />
+                        <SlotSelect
                             label={words.triggerLabel}
                             slotId="trigger-type"
                             value={draft.triggerType}
@@ -702,6 +725,11 @@ export const RuleEditor = ({
                     {errors.conditions && (
                         <Box role="alert" sx={{ ...type("body-xs"), color: g.danger.text }}>
                             {errors.conditions}
+                        </Box>
+                    )}
+                    {milestone && droppedCondition && (
+                        <Box sx={{ ...type("body-xs"), color: g.text.tertiary }}>
+                            {words.milestoneConditionRemoved}
                         </Box>
                     )}
                     <Button
@@ -765,6 +793,11 @@ export const RuleEditor = ({
                                 ))}
                             </MenuSurface>
                         </Dropdown>
+                    )}
+                    {milestone && draft.actions.includes("assignee") && (
+                        <Box sx={{ ...type("body-xs"), color: g.text.tertiary }}>
+                            {words.milestoneAssignNotice}
+                        </Box>
                     )}
                     {moving && draft.destinationId != null && (
                         <Box sx={{ ...type("body-xs"), color: g.text.tertiary }}>
