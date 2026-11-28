@@ -6,6 +6,7 @@ import { UserProfile } from "../../../features/admin/components/modals/ModalUser
 import { ChatManagementState } from "../../../hooks/chats/useChatManagement";
 import { TeamManagementState } from "../../../hooks/common/useTeamManagement";
 import { UIStateManagementState } from "../../../hooks/common/useUIStateManagement";
+import { fmt, useTranslation } from "../../../i18n";
 import { UserProps } from "../../../types/admin";
 import { AllChatProps } from "../../../types/chat";
 import { buildAvatarSrc } from "../../../utils/avatarSrc";
@@ -29,6 +30,7 @@ type ProjectAvatarProps = {
 };
 export const ProjectAvatar = (props: ProjectAvatarProps) => {
     const { useTEM, socket, myself, setMyself, avatarSize, pmChat, useCM, useUISM } = props;
+    const { t } = useTranslation();
     const clickable = props.clickable !== false;
     const [openModalProjectProfile, setOpenModalProjectProfile] = useState<boolean>(false);
     const [openUserProfile, setOpenUserProfile] = useState<boolean>(false);
@@ -40,11 +42,15 @@ export const ProjectAvatar = (props: ProjectAvatarProps) => {
         );
     }
     return (
-        <div>
+        // A press stays here, as with `GMAvatar`: the row the avatar sits in does not open too.
+        <div onClick={(event) => event.stopPropagation()}>
             <Clickable
                 height={_avatarSize}
                 position="relative"
                 width={_avatarSize}
+                label={fmt(t.chat.avatarButtons.projectProfile, {
+                    name: pmChat.chatName || pmChat.project?.projectName || "",
+                })}
                 onActivate={() => setOpenModalProjectProfile(true)}
             >
                 <ProjectChatAvatar

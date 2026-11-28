@@ -364,32 +364,52 @@ describe("Bubble: a reserved avatar column", () => {
     });
 });
 
-describe("Bubble toolbar side (bubble look)", () => {
-    const toolbarCss = (side: "sent" | "received") => {
-        const { unmount } = render(
-            <Bubble actions={<button>act</button>} layout="bubble" side={side} actionsOpen>
-                body
-            </Bubble>
-        );
-        const tb = screen.getByText("act").closest(".bubble-toolbar") as HTMLElement;
-        const cls = Array.from(tb.classList).find((c) => c.startsWith("css-"));
-        const css = Array.from(document.querySelectorAll("style"))
+describe("Bubble toolbar side (bubble look, MIP-2598)", () => {
+    const cssOfClass = (el: Element) => {
+        const cls = Array.from(el.classList).find((c) => c.startsWith("css-"));
+        return Array.from(document.querySelectorAll("style"))
             .map((s) => s.textContent ?? "")
             .join("")
             .split("}")
             .filter((r) => r.includes(`.${cls}`))
             .join("}");
-        unmount();
-        return css;
     };
+    const renderSide = (side: "sent" | "received", toolbarRef?: { current: null }) =>
+        render(
+            <Bubble
+                actions={<button>act</button>}
+                layout="bubble"
+                side={side}
+                toolbarRef={toolbarRef}
+                actionsOpen
+            >
+                body
+            </Bubble>
+        );
 
-    // The toolbar is wider than a short balloon: it must open into the empty
-    // side or it spills past the list's edge (seen in a real chat).
-    it("a received balloon opens it toward the end, a sent one toward the start", () => {
-        expect(toolbarCss("received")).toContain("inset-inline-start");
-        expect(toolbarCss("received")).not.toContain("inset-inline-end");
-        expect(toolbarCss("sent")).toContain("inset-inline-end");
-        expect(toolbarCss("sent")).not.toContain("inset-inline-start");
+    // jsdom has no layout, so this pins the rules; the look was checked in a
+    // real browser.
+    it("a sent balloon anchors the bar at its end edge", () => {
+        renderSide("sent");
+        const css = cssOfClass(screen.getByText("act").closest(".bubble-toolbar") as Element);
+        expect(css).toContain("inset-inline-end");
+        expect(css).not.toContain("inset-inline-start");
+    });
+
+    // The bar is wider than a short balloon: it must still end at the end edge,
+    // and spill toward the end, not past the list's start edge.
+    it("a received balloon pushes the bar to its end too, growing toward the end when short", () => {
+        const ref = { current: null as HTMLElement | null };
+        renderSide("received", ref as never);
+        const box = screen.getByText("act").closest(".bubble-toolbar") as HTMLElement;
+        const css = cssOfClass(box);
+        expect(css).toContain("display:flex");
+        expect(css).toContain("margin-inline-start:auto");
+        expect(css).toContain("pointer-events:none");
+        expect(css).toContain("pointer-events:auto");
+        // The ref (the emoji picker's anchor) is the visible bar, not the box.
+        expect(ref.current).toBe(box.firstElementChild);
+        expect(ref.current?.contains(screen.getByText("act"))).toBe(true);
     });
 });
 

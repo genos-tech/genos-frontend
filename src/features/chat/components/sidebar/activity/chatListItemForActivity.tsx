@@ -796,7 +796,7 @@ export const ChatListItemForActivity = (props: ChatListItemForActivityProps) => 
                 NavItem; the card content below is the feed's own. */}
             <NavItem
                 as="div"
-                // The group / multi-person DM avatars are buttons of their own (`ActivityAvatar`).
+                // The avatars are buttons of their own (`ActivityAvatar`).
                 interactiveContent={hasButtonAvatar(activity)}
                 data-chat-list-key={`activity-${activity.activityId}`}
                 lines={2}

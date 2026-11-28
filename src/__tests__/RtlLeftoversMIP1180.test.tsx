@@ -38,7 +38,7 @@ describe("names in input values keep their reading order", () => {
 
     it("the preview's assignee / reporter picker input is dir=auto", () => {
         expect(source("features/tasks/components/autocompletes/ACTeamUsers.tsx")).toContain(
-            'slotProps={{ input: { dir: "auto" } }}'
+            'slotProps={{ input: { dir: "auto", ...pickerInputProps(field) } }}'
         );
     });
 });

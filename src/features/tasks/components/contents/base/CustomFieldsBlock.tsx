@@ -25,6 +25,7 @@ import {
     resolveTagOptions,
     setCustomFieldValue,
 } from "../../../utils/customFields";
+import { PickerField, pickerInputProps } from "../../autocompletes/pickerField";
 import { ModalManageCustomFields } from "../../modals/ModalManageCustomFields";
 import { ProjectTagChip } from "../../ProjectTagChip";
 
@@ -162,28 +163,33 @@ const DateFieldEditor = ({
     </Stack>
 );
 
-const TagFieldEditor = ({
+export const TagFieldEditor = ({
     def,
     values,
     isDark,
     placeholder,
     writeValue,
+    field,
 }: {
     def: ProjectCustomFieldDef;
     values: CustomFieldValues | undefined;
     isDark: boolean;
     placeholder: string;
     writeValue: ValueWriter;
+    field?: PickerField;
 }) => {
     const selected = resolveTagOptions(def, values?.[String(def.fieldId)]);
     return (
         <Autocomplete
+            error={field?.invalid}
+            noOptionsText={field?.noOptions}
             getOptionLabel={(option) => option.label}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             limitTags={3}
             options={def.options}
             placeholder={selected.length === 0 ? placeholder : ""}
             size="sm"
+            slotProps={{ input: pickerInputProps(field) }}
             sx={{ width: "100%" }}
             value={selected}
             renderOption={(props, option) => (
@@ -223,19 +229,21 @@ const TagFieldEditor = ({
     );
 };
 
-const MemberFieldEditor = ({
+export const MemberFieldEditor = ({
     def,
     stored,
     teamMembers,
     placeholder,
     writeValue,
+    field,
 }: {
     def: ProjectCustomFieldDef;
     stored: string;
     teamMembers: UserProps[];
     placeholder: string;
-    isDark: boolean;
+    isDark?: boolean;
     writeValue: ValueWriter;
+    field?: PickerField;
 }) => {
     const selected = teamMembers.find((m) => String(m.userId) === stored) ?? null;
     return (
@@ -244,10 +252,13 @@ const MemberFieldEditor = ({
                 <UserAvatar clickable={false} showPulseDot={false} userId={stored} />
             )}
             <Autocomplete
+                error={field?.invalid}
+                noOptionsText={field?.noOptions}
                 getOptionLabel={(option) => option.userName || option.userEmail || ""}
                 options={teamMembers}
                 placeholder={stored === "" ? placeholder : ""}
                 size="sm"
+                slotProps={{ input: pickerInputProps(field) }}
                 sx={{ flex: 1, minWidth: 0 }}
                 value={selected}
                 isOptionEqualToValue={(option, value) =>
