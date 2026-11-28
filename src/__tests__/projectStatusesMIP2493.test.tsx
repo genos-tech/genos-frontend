@@ -113,17 +113,20 @@ describe("which status a task reads as", () => {
 });
 
 describe("the built-in that was In Review (MIP-2602)", () => {
+    type Words = Parameters<typeof statusRowName>[1];
+    const jaWords = ja.tasks as Words;
+    const enWords = en.tasks as Words;
     const builtin = (name: string) => row(2, name, "Open", { builtinKey: "In Review" });
 
     it("is Ready, and translated while nobody renamed it", () => {
         expect(builtinName("In Review")).toBe("Ready");
-        expect(statusRowName(builtin("Ready"), ja.tasks)).toBe("着手可");
-        expect(statusRowName(builtin("Ready"), en.tasks)).toBe("Ready");
+        expect(statusRowName(builtin("Ready"), jaWords)).toBe("着手可");
+        expect(statusRowName(builtin("Ready"), enWords)).toBe("Ready");
     });
 
     it("shows any other name as stored: a team's own, or a project the migration skipped", () => {
-        expect(statusRowName(builtin("QA"), ja.tasks)).toBe("QA");
-        expect(statusRowName(builtin("In Review"), ja.tasks)).toBe("In Review");
+        expect(statusRowName(builtin("QA"), jaWords)).toBe("QA");
+        expect(statusRowName(builtin("In Review"), jaWords)).toBe("In Review");
     });
 
     it("keeps an old history entry's recorded name and the built-in's colour", () => {
