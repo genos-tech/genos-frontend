@@ -7330,7 +7330,7 @@ export const fr: DeepPartial<Messages> = {
             targetTasks: "Tâches",
             targetMilestones: "Jalons",
             milestoneAssignNotice:
-                "« Attribuer » remplace tous les responsables du jalon par cette seule personne.",
+                "« Attribuer à » remplace tous les responsables du jalon par cette seule personne.",
             milestoneConditionRemoved:
                 "Condition de jalon retirée : elle ne vaut que pour les règles de tâches.",
             forMilestone: {
@@ -7342,6 +7342,7 @@ export const fr: DeepPartial<Messages> = {
                 aMove: "le déplacer avec ses tâches vers {project}",
                 aAssign: "faire de {person} son seul responsable",
                 everyTask: "Tous les jalons",
+                optAssignee: "Les responsables changent",
                 optCreated: "Un jalon est créé",
                 privateOnly:
                     "Ce projet est privé : ses jalons ne peuvent aller que vers des projets privés.",

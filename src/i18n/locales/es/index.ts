@@ -4930,7 +4930,7 @@ export const es: DeepPartial<Messages> = {
             targetTasks: "Tareas",
             targetMilestones: "Hitos",
             milestoneAssignNotice:
-                "«Asignar» sustituye a todas las personas asignadas al hito por esta.",
+                "«Asignar a» sustituye a todas las personas asignadas al hito por esta.",
             milestoneConditionRemoved:
                 "Se quitó la condición de hito: solo vale en reglas de tareas.",
             forMilestone: {
@@ -4942,6 +4942,7 @@ export const es: DeepPartial<Messages> = {
                 aMove: "moverlo con sus tareas a {project}",
                 aAssign: "dejar a {person} como única persona asignada",
                 everyTask: "Todos los hitos",
+                optAssignee: "Cambian las personas asignadas",
                 optCreated: "Se crea un hito",
                 privateOnly:
                     "Este proyecto es privado, así que sus hitos solo pueden ir a proyectos privados.",

@@ -920,6 +920,7 @@ export const tasks = {
             aMove: "move it and its tasks to {project}",
             aAssign: "make {person} its only assignee",
             everyTask: "Every milestone",
+            optAssignee: "Assignees change",
             optCreated: "A milestone is created",
             privateOnly:
                 "This project is private, so its milestones can only move to private projects.",

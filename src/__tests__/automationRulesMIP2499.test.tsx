@@ -478,7 +478,9 @@ describe("milestone rules (MIP-2547)", () => {
         await waitFor(() =>
             expect(screen.getByTestId("rule-clauses").textContent).toContain("Every milestone")
         );
-        expect(await screen.findByText(words.milestoneConditionRemoved)).toBeTruthy();
+        expect(screen.getByTestId("rule-clauses").textContent).toContain(
+            words.milestoneConditionRemoved
+        );
         fireEvent.click(screen.getByRole("button", { name: words.preview }));
         expect(await screen.findByText("1 milestone matches right now")).toBeTruthy();
         expect(screen.getByTestId("preview-rows").textContent).toContain(

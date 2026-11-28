@@ -4848,7 +4848,8 @@ export const ar: DeepPartial<Messages> = {
             targetLabel: "تنطبق على",
             targetTasks: "المهام",
             targetMilestones: "المعالم",
-            milestoneAssignNotice: "«الإسناد» يستبدل بجميع المكلَّفين بالمعلم هذا الشخص وحده.",
+            milestoneAssignNotice:
+                "«أسند إلى» يجعل هذا الشخص المكلَّف الوحيد بالمعلم بدلًا من كل المكلَّفين الحاليين.",
             milestoneConditionRemoved: "أُزيل شرط المعلم: لا يصلح إلا لقواعد المهام.",
             forMilestone: {
                 trStatus: "تصبح حالة معلم {status}",
@@ -4859,6 +4860,7 @@ export const ar: DeepPartial<Messages> = {
                 aMove: "انقله مع مهامه إلى {project}",
                 aAssign: "اجعل {person} المكلَّف الوحيد به",
                 everyTask: "كل المعالم",
+                optAssignee: "يتغيّر المكلَّفون",
                 optCreated: "يُنشأ معلم",
                 privateOnly: "هذا المشروع خاص، لذا لا تنتقل معالمه إلا إلى مشاريع خاصة.",
                 moveNotice:

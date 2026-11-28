@@ -7210,6 +7210,7 @@ export const ja: DeepPartial<Messages> = {
                 aMove: "配下のタスクごと {project} に移動する",
                 aAssign: "担当者を {person} だけにする",
                 everyTask: "すべてのマイルストーン",
+                optAssignee: "担当者が変わる",
                 optCreated: "マイルストーンが作成される",
                 privateOnly:
                     "このプロジェクトは非公開のため、マイルストーンは非公開プロジェクトにのみ移動できます。",

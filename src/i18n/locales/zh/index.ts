@@ -6926,7 +6926,7 @@ export const zh: DeepPartial<Messages> = {
             targetLabel: "作用对象",
             targetTasks: "任务",
             targetMilestones: "里程碑",
-            milestoneAssignNotice: "“分配”会将里程碑的所有负责人替换为这一个人。",
+            milestoneAssignNotice: "“分配给”会将里程碑的所有负责人替换为这一个人。",
             milestoneConditionRemoved: "已移除里程碑条件:它只适用于任务规则。",
             forMilestone: {
                 trStatus: "里程碑的状态变为 {status}",
@@ -6937,6 +6937,7 @@ export const zh: DeepPartial<Messages> = {
                 aMove: "将它连同其任务移动到 {project}",
                 aAssign: "将 {person} 设为唯一负责人",
                 everyTask: "所有里程碑",
+                optAssignee: "负责人变化",
                 optCreated: "里程碑被创建",
                 privateOnly: "此项目是私有的,其里程碑只能移动到私有项目。",
                 moveNotice:

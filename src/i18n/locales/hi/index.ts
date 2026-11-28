@@ -4187,7 +4187,7 @@ export const hi: DeepPartial<Messages> = {
             targetTasks: "टास्क",
             targetMilestones: "माइलस्टोन",
             milestoneAssignNotice:
-                "“सौंपें” माइलस्टोन के सभी जिम्मेदार लोगों की जगह सिर्फ़ इस एक व्यक्ति को रखता है।",
+                "“इन्हें सौंपें” माइलस्टोन के सभी जिम्मेदार लोगों की जगह सिर्फ़ इस एक व्यक्ति को रखता है।",
             milestoneConditionRemoved:
                 "माइलस्टोन वाली शर्त हटाई गई: वह केवल टास्क नियमों में चलती है।",
             forMilestone: {
@@ -4199,6 +4199,7 @@ export const hi: DeepPartial<Messages> = {
                 aMove: "उसे उसके टास्क समेत {project} में ले जाएँ",
                 aAssign: "{person} को उसका एकमात्र जिम्मेदार बनाएँ",
                 everyTask: "हर माइलस्टोन",
+                optAssignee: "जिम्मेदार लोग बदलें",
                 optCreated: "कोई माइलस्टोन बने",
                 privateOnly:
                     "यह प्रोजेक्ट निजी है, इसलिए इसके माइलस्टोन केवल निजी प्रोजेक्ट में जा सकते हैं।",

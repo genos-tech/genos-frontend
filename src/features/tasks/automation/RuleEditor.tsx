@@ -2,7 +2,7 @@
  * The rule as one sentence block: When / If / Then, each value a picker. The rail's dot says
  * whether its clause is complete.
  */
-import { ReactNode, useEffect, useId } from "react";
+import { ReactNode, useEffect, useId, useState } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -486,12 +486,14 @@ export const RuleEditor = ({
         );
     };
 
+    // Said on screen too: a row that just vanishes looks like lost work.
+    const [droppedCondition, setDroppedCondition] = useState(false);
     const changeTarget = (target: RuleTarget) => {
         const next = withTarget(draft, target);
+        const dropped = next.conditions.length < draft.conditions.length;
         onChange(next);
-        if (next.conditions.length < draft.conditions.length) {
-            onAnnounce(words.milestoneConditionRemoved);
-        }
+        setDroppedCondition(dropped);
+        if (dropped) onAnnounce(words.milestoneConditionRemoved);
     };
 
     const addCondition = () => {
@@ -723,6 +725,11 @@ export const RuleEditor = ({
                     {errors.conditions && (
                         <Box role="alert" sx={{ ...type("body-xs"), color: g.danger.text }}>
                             {errors.conditions}
+                        </Box>
+                    )}
+                    {milestone && droppedCondition && (
+                        <Box sx={{ ...type("body-xs"), color: g.text.tertiary }}>
+                            {words.milestoneConditionRemoved}
                         </Box>
                     )}
                     <Button
