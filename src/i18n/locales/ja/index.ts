@@ -3888,6 +3888,10 @@ export const ja: DeepPartial<Messages> = {
             unknownError: "不明なエラー",
             networkError: "ネットワークエラー：{message}",
             serverReturned: "サーバーが {status} を返しました",
+            skillInstallFromHub:
+                "/{name} はインストールされていません。先に Genos Hub からインストールしてから、もう一度質問してください。",
+            skillInstallFromTeam:
+                "/{name} はインストールされていません。先にチームスキルからインストールしてから、もう一度質問してください。",
             streamInterrupted: "ストリームが中断されました：{message}",
             malformedNdjsonLine: "不正な NDJSON 行：{line}",
             taskNotFound:
@@ -5204,7 +5208,8 @@ export const ja: DeepPartial<Messages> = {
             paramSkillInputHint: "任意。スキル名の後に入力する言葉です（プロジェクトや週など）。",
             skillPlaceholder: "スキルを選択",
             skillLoading: "スキルを読み込み中…",
-            skillNone: "実行できるスキルがまだありません。先にスキルを作成してください。",
+            skillNone:
+                "実行できるスキルがまだありません。スキルを作成するか、インストールしてください。",
             skillTagFilter: "タグでスキルを絞り込む",
             skillNoMatch: "これらのタグをすべて持つスキルはありません。",
             skillDashboardNone: "dashboard タグの付いたスキルはまだありません。",
@@ -5259,7 +5264,7 @@ export const ja: DeepPartial<Messages> = {
             tabs: {
                 label: "スキル",
                 mine: "自分のスキル",
-                team: "チーム",
+                team: "チームスキル",
                 installed: "インストール済み",
                 hub: "Genos Hub",
             },
@@ -5274,10 +5279,10 @@ export const ja: DeepPartial<Messages> = {
                 emptyMineBody: "テンプレートから始めるか、白紙から自分で書いてください。",
                 emptyTeamTitle: "チームのスキルはまだありません",
                 emptyTeamBody:
-                    "チームメンバーが共有したスキルがここに表示されます。自分のスキルは詳細から共有できます。",
+                    "チームメンバーが共有したスキルがここに表示されます。使うにはインストールしてください。自分のスキルは詳細から共有できます。",
                 emptyInstalledTitle: "インストール済みのスキルはまだありません",
                 emptyInstalledBody:
-                    "インストールした公開スキルがここに表示され、作者が更新を公開するとお知らせします。",
+                    "チームスキルや Genos Hub からインストールしたスキルがここに表示され、作者が更新を公開するとお知らせします。",
                 installedUpToDate: "バージョン {n} · 最新です",
                 installedBehind: "バージョン {from} · 最新 {to}",
                 limitReached:
@@ -5360,7 +5365,7 @@ export const ja: DeepPartial<Messages> = {
                 visibilityPrivate: "自分のみ",
                 visibilityTeam: "自分のチーム",
                 visibilityTeamHelp:
-                    "チームメンバーは最後に公開したバージョンを読み、実行できます。「自分のチーム」を選ぶと現在のテキストが公開され、その後は「変更を公開」を押すまで、保存した編集は自分だけに表示されます。",
+                    "チームメンバーは公開したバージョンを読んでインストールでき、インストールすると実行できます。「自分のチーム」を選ぶと現在のテキストが公開され、その後は「変更を公開」を押すまで、保存した編集は自分だけに表示されます。",
                 visibilitySpecific: "特定の人",
                 visibilitySpecificHelp: "共有先を変更できるのはオーナーだけです。",
                 owner: "オーナー",
@@ -6283,6 +6288,9 @@ export const ja: DeepPartial<Messages> = {
             fromTeammate: "{name} さんのチームスキル",
             installed: "インストール済み",
             official: "Genos",
+            findMore: "Genos Hubでほかのスキルを探す",
+            openHub: "Genos Hubを開く",
+            openTeam: "チームスキルを開く",
         },
         errors: {
             noTeam: "チームが選択されていません。",

@@ -1,7 +1,9 @@
+import { useEffect } from "react";
 import EventRepeatRoundedIcon from "@mui/icons-material/EventRepeatRounded";
 import { Typography } from "@mui/joy";
 import { useTheme } from "@mui/joy/styles";
 
+import { OPEN_SKILLS_EVENT } from "../../../features/genos/skills/openSkillsList";
 import type { SkillsHost } from "../../../features/genos/skills/skillsHost";
 import { useTranslation } from "../../../i18n";
 import { g } from "../../../theme/tokens";
@@ -29,6 +31,12 @@ type Props = {
 export const SchedulesModal = ({ open, onClose, teamId, editorHost }: Props) => {
     const { t } = useTranslation();
     const theme = useTheme();
+    // "Find more skills in the Genos Hub" opens Settings (MIP-2589): this dialog steps aside.
+    useEffect(() => {
+        if (!open) return;
+        window.addEventListener(OPEN_SKILLS_EVENT, onClose);
+        return () => window.removeEventListener(OPEN_SKILLS_EVENT, onClose);
+    }, [open, onClose]);
     return (
         <ModalFrame
             icon={<EventRepeatRoundedIcon sx={{ color: g.accent.text }} />}

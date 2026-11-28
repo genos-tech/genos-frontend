@@ -12,6 +12,11 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import { requestOpenSettings } from "../components/layout/settingsEvents";
+import {
+    asSkillsList,
+    openSkillsList,
+    SKILLS_LIST_PARAM,
+} from "../features/genos/skills/openSkillsList";
 import { SETTINGS_MAP, type SettingsTabKey } from "../manual/settingsMap";
 
 export const SETTINGS_PARAM = "settings";
@@ -30,6 +35,7 @@ export const readSettingsParam = (search: string): string | null =>
 export const stripSettingsParam = (search: string): string => {
     const params = new URLSearchParams(search);
     params.delete(SETTINGS_PARAM);
+    params.delete(SKILLS_LIST_PARAM);
     const rest = params.toString();
     return rest ? `?${rest}` : "";
 };
@@ -42,7 +48,11 @@ export const useSettingsDeepLink = (): void => {
     useEffect(() => {
         const raw = readSettingsParam(search);
         if (raw === null) return;
-        requestOpenSettings(resolveSettingsTab(raw));
+        const tab = resolveSettingsTab(raw);
+        // `?settings=spotlight&skills=hub|team` (MIP-2589): the list a skill is installed from.
+        const list = asSkillsList(new URLSearchParams(search).get(SKILLS_LIST_PARAM));
+        if (list && tab === "spotlight") openSkillsList(list);
+        else requestOpenSettings(tab);
         navigate({ pathname, search: stripSettingsParam(search), hash }, { replace: true });
     }, [pathname, search, hash, navigate]);
 };

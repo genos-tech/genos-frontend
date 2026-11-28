@@ -3948,6 +3948,10 @@ export const fr: DeepPartial<Messages> = {
             unknownError: "Erreur inconnue",
             networkError: "Erreur réseau : {message}",
             serverReturned: "Le serveur a renvoyé {status}",
+            skillInstallFromHub:
+                "/{name} n'est pas installée. Installez-la d'abord depuis le Genos Hub, puis reposez la question.",
+            skillInstallFromTeam:
+                "/{name} n'est pas installée. Installez-la d'abord depuis les compétences d'équipe, puis reposez la question.",
             streamInterrupted: "Flux interrompu : {message}",
             malformedNdjsonLine: "Ligne NDJSON mal formée : {line}",
             taskNotFound:
@@ -5299,7 +5303,7 @@ export const fr: DeepPartial<Messages> = {
             skillPlaceholder: "Choisir une compétence",
             skillLoading: "Chargement des compétences…",
             skillNone:
-                "Vous n'avez pas encore de compétence à exécuter. Écrivez-en une d'abord dans Compétences.",
+                "Vous n'avez pas encore de compétence à exécuter. Écrivez-en une dans Compétences ou installez-en une.",
             skillTagFilter: "Filtrer les compétences par balise",
             skillNoMatch: "Aucune compétence n'a toutes ces balises.",
             skillDashboardNone: "Aucune compétence n'a encore la balise dashboard.",
@@ -5357,7 +5361,7 @@ export const fr: DeepPartial<Messages> = {
             tabs: {
                 label: "Compétences",
                 mine: "Mes compétences",
-                team: "Équipe",
+                team: "Compétences d'équipe",
                 installed: "Installées",
                 hub: "Genos Hub",
             },
@@ -5372,10 +5376,10 @@ export const fr: DeepPartial<Messages> = {
                 emptyMineBody: "Partez du modèle ou écrivez la vôtre sur une page blanche.",
                 emptyTeamTitle: "Aucune compétence d'équipe pour l'instant",
                 emptyTeamBody:
-                    "Les compétences que vos collègues partagent avec l'équipe apparaissent ici. Partagez l'une des vôtres depuis ses détails.",
+                    "Les compétences que vos collègues partagent avec l'équipe apparaissent ici. Installez-en une pour l'utiliser. Partagez l'une des vôtres depuis ses détails.",
                 emptyInstalledTitle: "Aucune compétence installée pour l'instant",
                 emptyInstalledBody:
-                    "Les compétences publiques que vous installez apparaissent ici, et vous êtes prévenu quand l'auteur publie une mise à jour.",
+                    "Les compétences que vous installez depuis les compétences d'équipe ou le Genos Hub apparaissent ici, et vous êtes prévenu quand l'auteur publie une mise à jour.",
                 installedUpToDate: "Version {n} · à jour",
                 installedBehind: "Version {from} · dernière {to}",
                 limitReached:
@@ -5459,7 +5463,7 @@ export const fr: DeepPartial<Messages> = {
                 visibilityPrivate: "Moi seul",
                 visibilityTeam: "Mon équipe",
                 visibilityTeamHelp:
-                    "Vos collègues lisent et lancent la dernière version publiée. Choisir Mon équipe publie le texte actuel ; ensuite, Enregistrer garde vos modifications privées jusqu'à ce que vous appuyiez sur Publier les modifications.",
+                    "Vos collègues peuvent lire et installer la version publiée, puis la lancer une fois installée. Choisir Mon équipe publie le texte actuel ; ensuite, Enregistrer garde vos modifications privées jusqu'à ce que vous appuyiez sur Publier les modifications.",
                 visibilitySpecific: "Personnes précises",
                 visibilitySpecificHelp:
                     "Seul le propriétaire change avec qui cette compétence est partagée.",
@@ -6404,6 +6408,9 @@ export const fr: DeepPartial<Messages> = {
             fromTeammate: "Compétence d'équipe de {name}",
             installed: "Installée",
             official: "Genos",
+            findMore: "Trouver d'autres compétences dans le Genos Hub",
+            openHub: "Ouvrir le Genos Hub",
+            openTeam: "Ouvrir les compétences d'équipe",
         },
         errors: {
             noTeam: "Aucune équipe sélectionnée.",

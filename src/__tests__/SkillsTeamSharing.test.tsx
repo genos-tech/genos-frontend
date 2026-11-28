@@ -53,6 +53,7 @@ vi.mock("../features/genos/skills/skillsApi", async (importOriginal) => {
         addSkillEditor: vi.fn(),
         removeSkillEditor: vi.fn(),
         setSkillHidden: vi.fn(),
+        installSkill: vi.fn(),
     };
 });
 
@@ -163,13 +164,48 @@ const serve = (row: SkillRow, body = "## Steps\n1. Read") => {
 };
 
 const openTeamSkill = async (user: ReturnType<typeof userEvent.setup>, name = "Weekly update") => {
-    await user.click(await screen.findByRole("tab", { name: "Team" }));
+    await user.click(await screen.findByRole("tab", { name: "Team skills" }));
     await user.click(await screen.findByRole("button", { name }));
 };
 
 beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(api.fetchSkillVersions).mockResolvedValue({ ok: true, data: [] });
+});
+
+describe("installing from Team skills (MIP-2589)", () => {
+    it("installs a teammate's skill from its row", async () => {
+        serve(base());
+        vi.mocked(api.installSkill).mockResolvedValue({
+            ok: true,
+            data: { installedVersionNo: 1 },
+        });
+        const user = userEvent.setup();
+        renderPage();
+        await user.click(await screen.findByRole("tab", { name: "Team skills" }));
+        await user.click(
+            await screen.findByRole("button", { name: /^Install\s*·\s*Weekly update/ })
+        );
+        expect(api.installSkill).toHaveBeenCalledWith("tok", "s1");
+    });
+
+    it("says an installed row is installed and offers no second Install", async () => {
+        serve(base({ installedVersionNo: 1 }));
+        const user = userEvent.setup();
+        renderPage();
+        await user.click(await screen.findByRole("tab", { name: "Team skills" }));
+        expect(await screen.findByText("Installed", { selector: "span, div" })).toBeTruthy();
+        expect(screen.queryByRole("button", { name: /^Install\s*·/ })).toBeNull();
+    });
+
+    it("offers no Install for a skill of my own or one that is not shared", async () => {
+        serve(asOwner());
+        const user = userEvent.setup();
+        renderPage();
+        await user.click(await screen.findByRole("tab", { name: "Team skills" }));
+        await screen.findByRole("button", { name: "Weekly update" });
+        expect(screen.queryByRole("button", { name: /^Install\s*·/ })).toBeNull();
+    });
 });
 
 describe("reading the server's roles", () => {
@@ -263,7 +299,7 @@ describe("the Team tab", () => {
         });
         const user = userEvent.setup();
         renderPage();
-        await user.click(await screen.findByRole("tab", { name: "Team" }));
+        await user.click(await screen.findByRole("tab", { name: "Team skills" }));
         const edited = (await screen.findByRole("button", { name: "Edited by me" })).closest(
             "li"
         )!;
@@ -277,7 +313,7 @@ describe("the Team tab", () => {
         vi.mocked(api.copySkill).mockResolvedValue({ ok: true, data: asOwner({ id: "c1" }) });
         const user = userEvent.setup();
         renderPage();
-        await user.click(await screen.findByRole("tab", { name: "Team" }));
+        await user.click(await screen.findByRole("tab", { name: "Team skills" }));
         await user.click(await screen.findByRole("button", { name: "Actions for Weekly update" }));
         expect(screen.queryByRole("menuitem", { name: "Hide from team" })).toBeNull();
         expect(screen.queryByRole("menuitem", { name: "Delete" })).toBeNull();
@@ -300,7 +336,7 @@ describe("the Team tab", () => {
         });
         const user = userEvent.setup();
         renderPage();
-        await user.click(await screen.findByRole("tab", { name: "Team" }));
+        await user.click(await screen.findByRole("tab", { name: "Team skills" }));
         await user.click(await screen.findByRole("button", { name: "Actions for Invited only" }));
         expect(screen.queryByRole("menuitem", { name: "Copy to my skills" })).toBeNull();
         await user.keyboard("{Escape}");
@@ -318,7 +354,7 @@ describe("the Team tab", () => {
         const success = vi.spyOn(toast, "success");
         const user = userEvent.setup();
         renderPage();
-        await user.click(await screen.findByRole("tab", { name: "Team" }));
+        await user.click(await screen.findByRole("tab", { name: "Team skills" }));
         await user.click(await screen.findByRole("button", { name: "Actions for Weekly update" }));
         await user.click(await screen.findByRole("menuitem", { name: "Hide from team" }));
         await waitFor(() => expect(api.setSkillHidden).toHaveBeenCalledWith("tok", "s1", true));
@@ -338,7 +374,7 @@ describe("the Team tab", () => {
         const error = vi.spyOn(toast, "error");
         const user = userEvent.setup();
         renderPage();
-        await user.click(await screen.findByRole("tab", { name: "Team" }));
+        await user.click(await screen.findByRole("tab", { name: "Team skills" }));
         await user.click(await screen.findByRole("button", { name: "Actions for Weekly update" }));
         await user.click(await screen.findByRole("menuitem", { name: "Hide from team" }));
         await waitFor(() =>

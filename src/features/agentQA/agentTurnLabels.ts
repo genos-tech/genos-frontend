@@ -83,6 +83,8 @@ export interface AgentTurnLabels {
     selectedText: string;
     // Next to the "out of credits" sentence (MIP-1969): where to get more.
     outOfCredits: { buy: string; upgrade: string };
+    // Next to "that skill is not installed" (MIP-2589): where to install it.
+    skillInstall: { hub: string; team: string };
 }
 
 export type AgentTurnHost = "spotlight" | "threadAsk" | "noteAsk" | "taskAsk";
@@ -135,5 +137,6 @@ export const buildAgentTurnLabels = (t: Messages, host: AgentTurnHost): AgentTur
             buy: t.services.agent.outOfCreditsBuy,
             upgrade: t.services.agent.outOfCreditsUpgrade,
         },
+        skillInstall: { hub: sp.skills.openHub, team: sp.skills.openTeam },
     };
 };

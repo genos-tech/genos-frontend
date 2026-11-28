@@ -1695,7 +1695,8 @@ export const hi: DeepPartial<Messages> = {
                 "वैकल्पिक। स्किल के नाम के बाद आप जो शब्द लिखते, जैसे कोई प्रोजेक्ट या कोई सप्ताह।",
             skillPlaceholder: "एक स्किल चुनें",
             skillLoading: "स्किल लोड हो रही हैं…",
-            skillNone: "अभी चलाने के लिए आपके पास कोई स्किल नहीं है। पहले स्किल में एक लिखें।",
+            skillNone:
+                "अभी चलाने के लिए आपके पास कोई स्किल नहीं है। स्किल में एक लिखें या कोई इंस्टॉल करें।",
             skillTagFilter: "टैग से स्किल फ़िल्टर करें",
             skillNoMatch: "किसी स्किल में ये सभी टैग नहीं हैं।",
             skillDashboardNone: "अभी किसी स्किल पर dashboard टैग नहीं है।",
@@ -1750,7 +1751,7 @@ export const hi: DeepPartial<Messages> = {
             tabs: {
                 label: "स्किल",
                 mine: "मेरी स्किल",
-                team: "टीम",
+                team: "टीम स्किल",
                 installed: "इंस्टॉल की हुई",
                 hub: "Genos Hub",
             },
@@ -1765,10 +1766,10 @@ export const hi: DeepPartial<Messages> = {
                 emptyMineBody: "टेम्पलेट से शुरू करें, या खाली पन्ने से अपनी खुद लिखें।",
                 emptyTeamTitle: "अभी कोई टीम स्किल नहीं",
                 emptyTeamBody:
-                    "साथी जो स्किल टीम के साथ साझा करते हैं, वे यहाँ दिखती हैं। अपनी स्किल उसके विवरण से साझा करें।",
+                    "साथी जो स्किल टीम के साथ साझा करते हैं, वे यहाँ दिखती हैं। इस्तेमाल करने के लिए इंस्टॉल करें। अपनी स्किल उसके विवरण से साझा करें।",
                 emptyInstalledTitle: "अभी कोई इंस्टॉल की हुई स्किल नहीं",
                 emptyInstalledBody:
-                    "आपकी इंस्टॉल की हुई सार्वजनिक स्किल यहाँ दिखती हैं, और लेखक अपडेट प्रकाशित करे तो आपको बताया जाता है।",
+                    "टीम स्किल या Genos Hub से आपकी इंस्टॉल की हुई स्किल यहाँ दिखती हैं, और लेखक अपडेट प्रकाशित करे तो आपको बताया जाता है।",
                 installedUpToDate: "संस्करण {n} · अद्यतन",
                 installedBehind: "संस्करण {from} · नवीनतम {to}",
                 limitReached:
@@ -1851,7 +1852,7 @@ export const hi: DeepPartial<Messages> = {
                 visibilityPrivate: "केवल मैं",
                 visibilityTeam: "मेरी टीम",
                 visibilityTeamHelp:
-                    "साथी आख़िरी प्रकाशित संस्करण पढ़ते और चलाते हैं। «मेरी टीम» चुनने पर मौजूदा पाठ प्रकाशित हो जाता है; उसके बाद सहेजने से आपके बदलाव तब तक निजी रहते हैं जब तक आप «बदलाव प्रकाशित करें» नहीं दबाते।",
+                    "साथी प्रकाशित संस्करण पढ़ और इंस्टॉल कर सकते हैं, और इंस्टॉल करने के बाद उसे चला सकते हैं। «मेरी टीम» चुनने पर मौजूदा पाठ प्रकाशित हो जाता है; उसके बाद सहेजने से आपके बदलाव तब तक निजी रहते हैं जब तक आप «बदलाव प्रकाशित करें» नहीं दबाते।",
                 visibilitySpecific: "चुने हुए लोग",
                 visibilitySpecificHelp: "यह स्किल किसके साथ साझा है, यह केवल स्वामी बदल सकता है।",
                 owner: "स्वामी",
@@ -6438,6 +6439,9 @@ export const hi: DeepPartial<Messages> = {
             fromTeammate: "{name} की टीम स्किल",
             installed: "इंस्टॉल की गई",
             official: "Genos",
+            findMore: "Genos Hub में और स्किल खोजें",
+            openHub: "Genos Hub खोलें",
+            openTeam: "टीम स्किल खोलें",
         },
         errors: {
             noTeam: "कोई टीम नहीं चुनी गई।",
@@ -6734,6 +6738,10 @@ export const hi: DeepPartial<Messages> = {
             unknownError: "अज्ञात त्रुटि",
             networkError: "नेटवर्क त्रुटि: {message}",
             serverReturned: "सर्वर ने {status} लौटाया",
+            skillInstallFromHub:
+                "/{name} इंस्टॉल नहीं है। पहले इसे Genos Hub से इंस्टॉल करें, फिर दोबारा पूछें।",
+            skillInstallFromTeam:
+                "/{name} इंस्टॉल नहीं है। पहले इसे टीम स्किल से इंस्टॉल करें, फिर दोबारा पूछें।",
             streamInterrupted: "स्ट्रीम बाधित: {message}",
             malformedNdjsonLine: "गलत NDJSON लाइन: {line}",
             taskNotFound:
