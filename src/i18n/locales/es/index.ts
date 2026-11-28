@@ -1332,7 +1332,7 @@ export const es: DeepPartial<Messages> = {
             skillPlaceholder: "Elige una habilidad",
             skillLoading: "Cargando habilidades…",
             skillNone:
-                "Todavía no tienes ninguna habilidad para ejecutar. Escribe una primero en Habilidades.",
+                "Todavía no tienes ninguna habilidad para ejecutar. Escribe una en Habilidades o instala una.",
             skillTagFilter: "Filtrar habilidades por etiqueta",
             skillNoMatch: "Ninguna habilidad tiene todas estas etiquetas.",
             skillDashboardNone: "Todavía ninguna habilidad tiene la etiqueta dashboard.",
@@ -1388,7 +1388,7 @@ export const es: DeepPartial<Messages> = {
             tabs: {
                 label: "Habilidades",
                 mine: "Mis habilidades",
-                team: "Equipo",
+                team: "Habilidades del equipo",
                 installed: "Instaladas",
                 hub: "Genos Hub",
             },
@@ -1404,10 +1404,10 @@ export const es: DeepPartial<Messages> = {
                     "Empieza con la plantilla o escribe la tuya desde una página en blanco.",
                 emptyTeamTitle: "Aún no hay habilidades del equipo",
                 emptyTeamBody:
-                    "Aquí aparecen las habilidades que tus compañeros comparten con el equipo. Comparte una tuya desde sus detalles.",
+                    "Aquí aparecen las habilidades que tus compañeros comparten con el equipo. Instala una para usarla. Comparte una tuya desde sus detalles.",
                 emptyInstalledTitle: "Aún no hay habilidades instaladas",
                 emptyInstalledBody:
-                    "Aquí aparecen las habilidades públicas que instalas, y te avisamos cuando el autor publica una actualización.",
+                    "Aquí aparecen las habilidades que instalas desde Habilidades del equipo o Genos Hub, y te avisamos cuando el autor publica una actualización.",
                 installedUpToDate: "Versión {n} · al día",
                 installedBehind: "Versión {from} · última {to}",
                 limitReached:
@@ -1490,7 +1490,7 @@ export const es: DeepPartial<Messages> = {
                 visibilityPrivate: "Solo yo",
                 visibilityTeam: "Mi equipo",
                 visibilityTeamHelp:
-                    "Tus compañeros leen y ejecutan la última versión publicada. Al elegir Mi equipo se publica el texto actual; después, Guardar mantiene tus cambios privados hasta que pulses Publicar cambios.",
+                    "Tus compañeros pueden leer e instalar la versión publicada y ejecutarla una vez instalada. Al elegir Mi equipo se publica el texto actual; después, Guardar mantiene tus cambios privados hasta que pulses Publicar cambios.",
                 visibilitySpecific: "Personas concretas",
                 visibilitySpecificHelp:
                     "Solo la persona propietaria cambia con quién se comparte esta habilidad.",
@@ -6250,6 +6250,9 @@ export const es: DeepPartial<Messages> = {
             fromTeammate: "Habilidad del equipo de {name}",
             installed: "Instalada",
             official: "Genos",
+            findMore: "Buscar más habilidades en Genos Hub",
+            openHub: "Abrir Genos Hub",
+            openTeam: "Abrir habilidades del equipo",
         },
         history: {
             header: "Historial",
@@ -6280,6 +6283,10 @@ export const es: DeepPartial<Messages> = {
             unknownError: "Error desconocido",
             networkError: "Error de red: {message}",
             serverReturned: "El servidor devolvió {status}",
+            skillInstallFromHub:
+                "/{name} no está instalada. Instálala primero desde Genos Hub y vuelve a preguntar.",
+            skillInstallFromTeam:
+                "/{name} no está instalada. Instálala primero desde Habilidades del equipo y vuelve a preguntar.",
             streamInterrupted: "Transmisión interrumpida: {message}",
             malformedNdjsonLine: "Línea NDJSON malformada: {line}",
             taskNotFound:

@@ -6,6 +6,10 @@ export const services = {
         unknownError: "Unknown error",
         networkError: "Network error: {message}",
         serverReturned: "Server returned {status}",
+        skillInstallFromHub:
+            "/{name} is not installed. Install it from the Genos Hub first, then ask again.",
+        skillInstallFromTeam:
+            "/{name} is not installed. Install it from Team skills first, then ask again.",
         streamInterrupted: "Stream interrupted: {message}",
         malformedNdjsonLine: "Malformed NDJSON line: {line}",
         taskNotFound:

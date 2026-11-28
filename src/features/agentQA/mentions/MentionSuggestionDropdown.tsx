@@ -33,6 +33,7 @@
 // focused through the pick — same trick as the ThreadPanelV3 picker.
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
+import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import { Box, Sheet } from "@mui/joy";
 import { createPortal } from "react-dom";
 
@@ -261,6 +262,9 @@ interface Props {
     // English "Mention suggestions", which every host that forgot it showed
     // in every language.
     ariaLabel: string;
+    // A last line that is not a mention but a way out of the list (the `/` menu's "Find more
+    // skills in the Genos Hub", MIP-2589). Pinned to the bottom, so a long list never hides it.
+    footer?: { label: string; highlighted: boolean; onSelect: () => void };
 }
 
 export const MentionSuggestionDropdown = ({
@@ -270,6 +274,7 @@ export const MentionSuggestionDropdown = ({
     anchorRef,
     placement,
     ariaLabel,
+    footer,
 }: Props) => {
     const { t } = useTranslation();
     const [pos, setPos] = useState<MenuPos | null>(null);
@@ -325,7 +330,7 @@ export const MentionSuggestionDropdown = ({
         return () => window.removeEventListener("resize", measure);
     }, [measure]);
 
-    if (suggestions.length === 0 || !pos) {
+    if ((suggestions.length === 0 && !footer) || !pos) {
         // First open: render nothing this commit; the layout effect
         // above sets `pos` and the menu appears on the next paint.
         return null;
@@ -359,7 +364,9 @@ export const MentionSuggestionDropdown = ({
                 borderColor: g.border.default,
                 background: g.surface.raised,
                 boxShadow: g.shadow.lg,
-                py: 0.5,
+                // The pinned footer sits flush with the bottom edge.
+                pt: 0.5,
+                pb: footer ? 0 : 0.5,
             }}
         >
             {suggestions.map((c, i) => {
@@ -417,6 +424,53 @@ export const MentionSuggestionDropdown = ({
                     </Box>
                 );
             })}
+            {footer && (
+                <Box
+                    aria-selected={footer.highlighted}
+                    data-testid="agent-mention-footer"
+                    role="option"
+                    sx={{
+                        position: "sticky",
+                        bottom: 0,
+                        // Opaque over the rows scrolling under it.
+                        backgroundColor: g.surface.raised,
+                        borderTop: suggestions.length > 0 ? "1px solid" : "none",
+                        borderColor: g.border.default,
+                        mt: suggestions.length > 0 ? 0.5 : 0,
+                        px: 0.5,
+                        py: 0.5,
+                        cursor: "pointer",
+                    }}
+                    onMouseDown={(e) => {
+                        e.preventDefault();
+                        footer.onSelect();
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 1,
+                            minWidth: 0,
+                            minHeight: 32,
+                            px: 1,
+                            borderRadius: "6px",
+                            color: g.accent.text,
+                            fontSize: 13,
+                            fontWeight: 500,
+                            backgroundColor: footer.highlighted ? selectedBg : "transparent",
+                            "&:hover": {
+                                backgroundColor: footer.highlighted ? selectedBg : hoverBg,
+                            },
+                        }}
+                    >
+                        <AddCircleOutlineRoundedIcon sx={{ fontSize: 18, flexShrink: 0 }} />
+                        <Box component="span" sx={{ minWidth: 0, overflowWrap: "anywhere" }}>
+                            {footer.label}
+                        </Box>
+                    </Box>
+                </Box>
+            )}
         </Sheet>,
         document.body
     );

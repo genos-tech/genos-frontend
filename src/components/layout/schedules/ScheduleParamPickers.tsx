@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import AddCircleOutlineRoundedIcon from "@mui/icons-material/AddCircleOutlineRounded";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
 import {
@@ -7,6 +8,7 @@ import {
     Box,
     createFilterOptions,
     FormHelperText,
+    Link,
     List,
     ListItem,
     ListSubheader,
@@ -17,6 +19,7 @@ import {
 import { useTheme } from "@mui/joy/styles";
 
 import { useHashMentionData } from "../../../context/HashMentionDataContext";
+import { openSkillsList } from "../../../features/genos/skills/openSkillsList";
 import { skillSummary } from "../../../features/genos/skills/skillSummary";
 import {
     carriesTag,
@@ -26,7 +29,7 @@ import {
     tagChoices,
     toggleTag,
 } from "../../../features/genos/skills/skillTagFilter";
-import { useRunnableSkillRows } from "../../../features/genos/skills/useRunnableSkills";
+import { useRunnableSkillList } from "../../../features/genos/skills/useRunnableSkills";
 import {
     buildFolderChoices,
     findChoice,
@@ -483,7 +486,7 @@ export const SkillParamSelect = ({
 }: Props & { forDashboard?: boolean }) => {
     const { t } = useTranslation();
     const s = t.settings.schedules;
-    const rows = useRunnableSkillRows();
+    const { rows, hubEnabled } = useRunnableSkillList();
     const popupZIndex = useDialogPopupZIndex();
 
     // The tags the member ticked to narrow the list (MIP-2398): a skill must carry all of them.
@@ -653,6 +656,26 @@ export const SkillParamSelect = ({
                 >
                     {s.skillDashboardHint}
                 </Typography>
+            )}
+            {/* Only installed skills are listed (MIP-2589): where to find the rest. */}
+            {hubEnabled && (
+                <Link
+                    component="button"
+                    data-testid="skill-find-more"
+                    level="body-xs"
+                    startDecorator={<AddCircleOutlineRoundedIcon sx={{ fontSize: 16 }} />}
+                    sx={{
+                        alignSelf: "flex-start",
+                        textAlign: "start",
+                        minHeight: 32,
+                        // A finger gets a full target.
+                        "@media (pointer: coarse)": { minHeight: 44 },
+                    }}
+                    type="button"
+                    onClick={() => openSkillsList("hub")}
+                >
+                    {t.spotlight.skills.findMore}
+                </Link>
             )}
         </>
     );

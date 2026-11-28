@@ -3726,6 +3726,8 @@ export const zh: DeepPartial<Messages> = {
             unknownError: "未知错误",
             networkError: "网络错误：{message}",
             serverReturned: "服务器返回 {status}",
+            skillInstallFromHub: "/{name} 尚未安装。请先从 Genos Hub 安装，然后重新提问。",
+            skillInstallFromTeam: "/{name} 尚未安装。请先从团队技能中安装，然后重新提问。",
             streamInterrupted: "数据流中断：{message}",
             malformedNdjsonLine: "NDJSON 数据格式错误：{line}",
             taskNotFound: "此任务或里程碑已无法打开，因此 Genos 无法作答。",
@@ -4998,7 +5000,7 @@ export const zh: DeepPartial<Messages> = {
             paramSkillInputHint: "可选。你会在技能名称后输入的文字，例如某个项目或某一周。",
             skillPlaceholder: "选择技能",
             skillLoading: "正在加载技能…",
-            skillNone: "你还没有可运行的技能。请先在“技能”中创建一个。",
+            skillNone: "你还没有可运行的技能。请在“技能”中创建一个，或安装一个。",
             skillTagFilter: "按标签筛选技能",
             skillNoMatch: "没有同时带有这些标签的技能。",
             skillDashboardNone: "还没有带 dashboard 标签的技能。",
@@ -5051,7 +5053,7 @@ export const zh: DeepPartial<Messages> = {
             tabs: {
                 label: "技能",
                 mine: "我的技能",
-                team: "团队",
+                team: "团队技能",
                 installed: "已安装",
                 hub: "Genos Hub",
             },
@@ -5066,9 +5068,10 @@ export const zh: DeepPartial<Messages> = {
                 emptyMineBody: "从模板开始,或从空白页自己编写。",
                 emptyTeamTitle: "还没有团队技能",
                 emptyTeamBody:
-                    "队友与团队共享的技能会显示在这里。你可以在技能详情中共享自己的技能。",
+                    "队友与团队共享的技能会显示在这里。安装后即可使用。你可以在技能详情中共享自己的技能。",
                 emptyInstalledTitle: "还没有已安装的技能",
-                emptyInstalledBody: "你安装的公开技能会显示在这里,作者发布更新时你会收到提示。",
+                emptyInstalledBody:
+                    "你从团队技能或 Genos Hub 安装的技能会显示在这里,作者发布更新时你会收到提示。",
                 installedUpToDate: "版本 {n} · 已是最新",
                 installedBehind: "版本 {from} · 最新 {to}",
                 limitReached:
@@ -5151,7 +5154,7 @@ export const zh: DeepPartial<Messages> = {
                 visibilityPrivate: "仅自己",
                 visibilityTeam: "我的团队",
                 visibilityTeamHelp:
-                    "队友会读取并运行最近发布的版本。选择“我的团队”会发布当前文本;之后保存只会让你的更改保持私有,直到你点击“发布更改”。",
+                    "队友可以查看并安装已发布的版本,安装后即可运行。选择“我的团队”会发布当前文本;之后保存只会让你的更改保持私有,直到你点击“发布更改”。",
                 visibilitySpecific: "指定的人",
                 visibilitySpecificHelp: "只有所有者可以更改此技能的共享对象。",
                 owner: "所有者",
@@ -6039,6 +6042,9 @@ export const zh: DeepPartial<Messages> = {
             fromTeammate: "来自 {name} 的团队技能",
             installed: "已安装",
             official: "Genos",
+            findMore: "在 Genos Hub 查找更多技能",
+            openHub: "打开 Genos Hub",
+            openTeam: "打开团队技能",
         },
         errors: {
             noTeam: "未选择团队。",

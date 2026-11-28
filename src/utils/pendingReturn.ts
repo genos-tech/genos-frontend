@@ -18,8 +18,11 @@ export const isAllowedReturn = (value: unknown): value is string => {
     // No backslash (some browsers read it as a slash) and no control characters.
     if (value.includes("\\") || [...value].some((ch) => ch.charCodeAt(0) < 32)) return false;
     const path = value.split("?")[0].split("#")[0];
-    // A Settings link (MIP-2323): `/workspace?settings=<key>`, nothing else in the query.
-    if (path === "/workspace") return /^\/workspace\?settings=[A-Za-z]{1,40}$/.test(value);
+    // A Settings link (MIP-2323): `/workspace?settings=<key>`, nothing else in the query but the
+    // skills list of the Genos tab (MIP-2589).
+    if (path === "/workspace") {
+        return /^\/workspace\?settings=[A-Za-z]{1,40}(&skills=(hub|team))?$/.test(value);
+    }
     return ALLOWED.includes(path);
 };
 

@@ -175,7 +175,7 @@ describe("the Installed filter", () => {
         const tabs = screen.getAllByRole("tab");
         expect(tabs.map((t) => t.textContent)).toEqual([
             "My skills",
-            "Team",
+            "Team skills",
             "Installed",
             "Genos Hub",
         ]);

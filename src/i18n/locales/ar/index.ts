@@ -1303,7 +1303,7 @@ export const ar: DeepPartial<Messages> = {
                 "اختياري. الكلمات التي كنت ستكتبها بعد اسم المهارة، مثل مشروع أو أسبوع.",
             skillPlaceholder: "اختر مهارة",
             skillLoading: "جارٍ تحميل المهارات…",
-            skillNone: "ليس لديك مهارة لتشغيلها بعد. اكتب واحدة أولاً في المهارات.",
+            skillNone: "ليس لديك مهارة لتشغيلها بعد. اكتب واحدة في المهارات أو ثبّت واحدة.",
             skillTagFilter: "تصفية المهارات حسب العلامة",
             skillNoMatch: "لا توجد مهارة تحمل كل هذه العلامات.",
             skillDashboardNone: "لا توجد بعد مهارة تحمل العلامة dashboard.",
@@ -1357,7 +1357,7 @@ export const ar: DeepPartial<Messages> = {
             tabs: {
                 label: "المهارات",
                 mine: "مهاراتي",
-                team: "الفريق",
+                team: "مهارات الفريق",
                 installed: "المثبّتة",
                 hub: "مركز Genos",
             },
@@ -1372,10 +1372,10 @@ export const ar: DeepPartial<Messages> = {
                 emptyMineBody: "ابدأ من القالب، أو اكتب مهارتك الخاصة من صفحة فارغة.",
                 emptyTeamTitle: "لا توجد مهارات للفريق بعد",
                 emptyTeamBody:
-                    "تظهر هنا المهارات التي يشاركها زملاؤك مع الفريق. شارك إحدى مهاراتك من تفاصيلها.",
+                    "تظهر هنا المهارات التي يشاركها زملاؤك مع الفريق. ثبّت إحداها لاستخدامها. شارك إحدى مهاراتك من تفاصيلها.",
                 emptyInstalledTitle: "لا توجد مهارات مثبّتة بعد",
                 emptyInstalledBody:
-                    "تظهر هنا المهارات العامة التي تثبّتها، وسنُعلمك عندما ينشر المؤلف تحديثًا.",
+                    "تظهر هنا المهارات التي تثبّتها من مهارات الفريق أو مركز Genos، وسنُعلمك عندما ينشر المؤلف تحديثًا.",
                 installedUpToDate: "الإصدار {n} · محدَّث",
                 installedBehind: "الإصدار {from} · الأحدث {to}",
                 limitReached:
@@ -1458,7 +1458,7 @@ export const ar: DeepPartial<Messages> = {
                 visibilityPrivate: "أنا فقط",
                 visibilityTeam: "فريقي",
                 visibilityTeamHelp:
-                    "يقرأ زملاؤك آخر إصدار منشور ويشغّلونه. عند اختيار «فريقي» يُنشر النص الحالي؛ وبعد ذلك يُبقي الحفظ تعديلاتك خاصة إلى أن تضغط «نشر التغييرات».",
+                    "يمكن لزملائك قراءة الإصدار المنشور وتثبيته، ثم تشغيله بعد التثبيت. عند اختيار «فريقي» يُنشر النص الحالي؛ وبعد ذلك يُبقي الحفظ تعديلاتك خاصة إلى أن تضغط «نشر التغييرات».",
                 visibilitySpecific: "أشخاص محددون",
                 visibilitySpecificHelp: "المالك وحده يغيّر من تُشارَك معه هذه المهارة.",
                 owner: "المالك",
@@ -6140,6 +6140,9 @@ export const ar: DeepPartial<Messages> = {
             fromTeammate: "مهارة الفريق من {name}",
             installed: "مثبّتة",
             official: "Genos",
+            findMore: "ابحث عن المزيد من المهارات في مركز Genos",
+            openHub: "فتح مركز Genos",
+            openTeam: "فتح مهارات الفريق",
         },
         history: {
             header: "تاريخ",
@@ -6172,6 +6175,10 @@ export const ar: DeepPartial<Messages> = {
             unknownError: "خطأ غير معروف",
             networkError: "خطأ في الشبكة: {message}",
             serverReturned: "أعاد الخادم الحالة {status}",
+            skillInstallFromHub:
+                "المهارة /{name} غير مثبّتة. ثبّتها أولاً من مركز Genos ثم اسأل مرة أخرى.",
+            skillInstallFromTeam:
+                "المهارة /{name} غير مثبّتة. ثبّتها أولاً من مهارات الفريق ثم اسأل مرة أخرى.",
             streamInterrupted: "تم قطع البث: {message}",
             malformedNdjsonLine: "سطر NDJSON غير صالح: {line}",
             taskNotFound:

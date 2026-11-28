@@ -105,6 +105,10 @@ export interface UseAgentMentionDraftArgs {
      *  it always was. `[]` = skills are on and there are none yet: the menu lists nothing and a
      *  `/word` is an ordinary question. A typed `/name` is sent as a skill only when it is one of these. */
     skills?: AgentMentionCandidate[];
+    /** The `/` menu ends with a "Find more skills in the Genos Hub" line (MIP-2589), reached with
+     *  the arrows after the last skill. It is never highlighted by itself when no skill matches, so
+     *  Enter still sends a `/word` that is just a question. */
+    findSkills?: boolean;
 }
 
 // The name a skill call starts with: one word at the very start, the server's slug rule.
@@ -178,6 +182,12 @@ export function matchMentionTokens(
 export interface UseAgentMentionDraftReturn {
     /** True when the caller should render the dropdown. */
     pickerOpen: boolean;
+    /** The open menu is the `/` skill menu (it may hold no skill at all, only the Hub line). */
+    skillMenu: boolean;
+    /** The `/` menu shows its "Find more skills" line. */
+    findSkillsRow: boolean;
+    /** The highlight is on that line: Enter opens the Hub. */
+    findSkillsHighlighted: boolean;
     suggestions: AgentMentionCandidate[];
     highlightIndex: number;
     moveHighlight: (delta: number) => void;
@@ -215,6 +225,7 @@ export function useAgentMentionDraft({
     lookupTask,
     searchTasks,
     skills,
+    findSkills = false,
 }: UseAgentMentionDraftArgs): UseAgentMentionDraftReturn {
     const [caret, setCaretPos] = useState(0);
     // Trigger start the user dismissed with Escape — the picker stays
@@ -356,11 +367,19 @@ export function useAgentMentionDraft({
         );
     }, [trigger, dismissedStart, members, entities, lookedUp, searched, skills]);
 
+    const skillMenu = trigger?.char === "/" && dismissedStart !== trigger.start;
+    const findSkillsRow = skillMenu && findSkills;
+    // The Hub line sits after the skills, at index `suggestions.length`.
+    const lastIndex = suggestions.length - (findSkillsRow ? 0 : 1);
+
     // Keep the highlight inside the list as it refilters, and reset it
     // whenever the trigger query changes so the top match is primed.
     useEffect(() => {
         setHighlightIndex(0);
     }, [trigger?.start, trigger?.query]);
+    // With no skill to match, nothing is highlighted until an arrow moves onto the Hub line.
+    const effectiveIndex =
+        suggestions.length === 0 && findSkillsRow ? highlightIndex - 1 : highlightIndex;
 
     // A dismissal only applies to the trigger it happened in; leaving
     // the trigger (or clearing the input) re-arms the picker.
@@ -375,11 +394,13 @@ export function useAgentMentionDraft({
     const moveHighlight = useCallback(
         (delta: number) => {
             setHighlightIndex((prev) => {
-                if (suggestions.length === 0) return 0;
-                return Math.min(Math.max(prev + delta, 0), suggestions.length - 1);
+                // With no skill the stored index is one ahead of the shown one (0 = nothing).
+                const empty = suggestions.length === 0 && findSkillsRow;
+                const max = empty ? 1 : Math.max(lastIndex, 0);
+                return Math.min(Math.max(prev + delta, 0), max);
             });
         },
-        [suggestions.length]
+        [suggestions.length, findSkillsRow, lastIndex]
     );
 
     const selectSuggestion = useCallback(
@@ -413,10 +434,10 @@ export function useAgentMentionDraft({
     );
 
     const selectHighlighted = useCallback((): number | null => {
-        const c = suggestions[highlightIndex];
+        const c = suggestions[effectiveIndex];
         if (!c) return null;
         return selectSuggestion(c);
-    }, [suggestions, highlightIndex, selectSuggestion]);
+    }, [suggestions, effectiveIndex, selectSuggestion]);
 
     const closePicker = useCallback(() => {
         if (trigger) setDismissedStart(trigger.start);
@@ -512,9 +533,12 @@ export function useAgentMentionDraft({
     }, []);
 
     return {
-        pickerOpen: suggestions.length > 0,
+        pickerOpen: suggestions.length > 0 || findSkillsRow,
+        skillMenu,
+        findSkillsRow,
+        findSkillsHighlighted: findSkillsRow && effectiveIndex === suggestions.length,
         suggestions,
-        highlightIndex,
+        highlightIndex: effectiveIndex,
         moveHighlight,
         selectSuggestion,
         selectHighlighted,
