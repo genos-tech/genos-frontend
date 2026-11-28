@@ -8,6 +8,6 @@ import { hi } from "../i18n/locales/hi";
 
 describe("the Hindi Unread filter chip", () => {
     it("reads the whole word", () => {
-        expect(hi.chat.sidebar.unreadFilter).toBe("अपठित");
+        expect(hi.chat?.sidebar?.unreadFilter).toBe("अपठित");
     });
 });
