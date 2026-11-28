@@ -51,6 +51,7 @@ export interface AgentTurnLabels {
         cancelledBeforeAnswer: string;
         notDecided: string;
         approvalExpired: string;
+        notAnswered: string;
     };
     actions: {
         approve: string;
@@ -111,6 +112,7 @@ export const buildAgentTurnLabels = (t: Messages, host: AgentTurnHost): AgentTur
             cancelledBeforeAnswer: sp.states.cancelledBeforeAnswer,
             notDecided: sp.states.notDecided,
             approvalExpired: sp.states.approvalExpired,
+            notAnswered: sp.states.notAnswered,
         },
         actions: {
             approve: own ? own.actions.approve : sp.actions.approve,

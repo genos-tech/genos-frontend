@@ -6393,6 +6393,7 @@ export const hi: DeepPartial<Messages> = {
             cancelledBeforeAnswer: "यह सवाल जवाब से पहले ही रद्द कर दिया गया था।",
             notDecided: "इस सवाल को न मंज़ूरी दी गई, न अस्वीकार किया गया।",
             approvalExpired: "मंज़ूरी या अस्वीकृति से पहले ही इस सवाल की समय-सीमा खत्म हो गई।",
+            notAnswered: "इस सवाल का जवाब नहीं दिया जा सका।",
         },
         dropped: {
             message:
