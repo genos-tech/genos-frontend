@@ -136,7 +136,8 @@ describe("TaskMessageCard", () => {
     });
 
     it("names the status as the task's project does", () => {
-        const row = { color: "", builtinKey: null, isArchived: false, sortOrder: 0 };
+        const flags = { isArchived: false, canTurnOff: true, canDelete: true };
+        const row = { color: "", builtinKey: null, sortOrder: 0, ...flags };
         setProjectStatuses(1, {
             canManage: false,
             statuses: [
