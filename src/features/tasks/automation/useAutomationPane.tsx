@@ -18,8 +18,8 @@ import { fmt, useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
 import { definitionOf, draftOf, emptyDraft, missingParts, RuleDraft } from "./draft";
 import { AutomationContextData, LookupsContext, useRuleLookups } from "./lookups";
-import { EditorErrors, RuleEditor } from "./RuleEditor";
-import { isHidden, RuleList } from "./RuleList";
+import { coarsePointer, EditorErrors, RuleEditor } from "./RuleEditor";
+import { isHidden, RuleList, unnamedDestination } from "./RuleList";
 import { PreviewState, RulePreview, ruleProblemOf } from "./RulePreview";
 import { RuleRuns } from "./RuleRuns";
 import {
@@ -32,12 +32,16 @@ import {
     updateRule,
 } from "./service";
 import type { AutomationRule, RuleList as RuleListData } from "./types";
+import { useLater } from "./useLater";
 import { reasonText, sentenceCase, useAutomationWords } from "./words";
+
+/** Where the preview was asked for. A switch turns the saved rule on; the others save. */
+type PreviewFrom = "editor" | "menu" | "switch";
 
 type View =
     | { kind: "list" }
     | { kind: "editor"; ruleId: number | null }
-    | { kind: "preview"; ruleId: number | null; from: "editor" | "list" }
+    | { kind: "preview"; ruleId: number | null; from: PreviewFrom }
     | { kind: "runs"; ruleId: number };
 
 /** The server's `field` → the part of the editor its message belongs to. */
@@ -84,6 +88,7 @@ export const useAutomationPane = ({
 }) => {
     const words = useAutomationWords();
     const { t } = useTranslation();
+    const later = useLater();
     const { accessToken } = useAuth();
     const enabled = active && data != null;
     const lookups = useRuleLookups(
@@ -104,6 +109,16 @@ export const useAutomationPane = ({
     const [deleting, setDeleting] = useState<AutomationRule | null>(null);
     const [leaving, setLeaving] = useState<(() => void) | null>(null);
     const [announcement, setAnnouncement] = useState("");
+    const announceTimer = useRef(0);
+    /** Emptied first, or the same words twice in a row are read once. */
+    const announce = useCallback(
+        (text: string) => {
+            window.clearTimeout(announceTimer.current);
+            setAnnouncement("");
+            announceTimer.current = later(() => setAnnouncement(text), 50);
+        },
+        [later]
+    );
     const opened = useRef("");
     const asked = useRef(0);
 
@@ -130,7 +145,7 @@ export const useAutomationPane = ({
 
     /** Give the focus somewhere to be once the view or the row has changed. */
     const focusLater = (slot: string, fallback = "new-rule") =>
-        window.setTimeout(() => {
+        later(() => {
             const find = (s: string) => document.querySelector<HTMLElement>(`[data-slot="${s}"]`);
             (find(slot) ?? find(fallback))?.focus();
         }, 100);
@@ -140,14 +155,20 @@ export const useAutomationPane = ({
         focusLater(slot);
     };
 
-    const openEditor = (rule: AutomationRule | null) => {
+    const openRule = (rule: AutomationRule | null) => {
         const next = rule ? draftOf(rule) : emptyDraft();
         opened.current = snapshot(next);
         setDraft(next);
         setErrors({});
         setFormError(null);
+        return next;
+    };
+
+    const openEditor = (rule: AutomationRule | null) => {
+        openRule(rule);
         setView({ kind: "editor", ruleId: rule?.ruleId ?? null });
-        focusLater("name");
+        // A touch screen would put the keyboard over the sentence.
+        focusLater(coarsePointer() ? "back" : "name", "back");
     };
 
     /** Put a refusal where it belongs in the editor. */
@@ -161,7 +182,7 @@ export const useAutomationPane = ({
         setView({ kind: "editor", ruleId });
     };
 
-    const runPreview = async (next: RuleDraft, ruleId: number | null, from: "editor" | "list") => {
+    const runPreview = async (next: RuleDraft, ruleId: number | null, from: PreviewFrom) => {
         const mine = ++asked.current;
         setView({ kind: "preview", ruleId, from });
         setPreview({ status: "loading" });
@@ -190,7 +211,7 @@ export const useAutomationPane = ({
             void runPreview(draft, view.ruleId, "editor");
             return;
         }
-        window.setTimeout(
+        later(
             () =>
                 document
                     .querySelector<HTMLElement>(
@@ -206,7 +227,7 @@ export const useAutomationPane = ({
         const { ruleId, from } = view;
         setSaving(turnOn ? "on" : "off");
         const res =
-            from === "list" && ruleId != null
+            from === "switch" && ruleId != null
                 ? await updateRule(projectId, ruleId, { enabled: true }, accessToken)
                 : ruleId != null
                   ? await updateRule(
@@ -230,29 +251,27 @@ export const useAutomationPane = ({
         }
         await load();
         setSaving(null);
-        setAnnouncement(
-            from === "list" ? words.turnedOnMsg : turnOn ? words.savedOn : words.saved
-        );
+        announce(from === "switch" ? words.turnedOnMsg : turnOn ? words.savedOn : words.saved);
         opened.current = snapshot(draft);
         toList(`rule-${res.data.ruleId}`);
     };
 
     const switchRule = async (rule: AutomationRule, on: boolean) => {
         if (on) {
+            // Its destination has to be chosen again first.
+            if (unnamedDestination(rule)) {
+                openEditor(rule);
+                return;
+            }
             // Never at once: what it would do is shown first.
-            const next = draftOf(rule);
-            opened.current = snapshot(next);
-            setDraft(next);
-            setErrors({});
-            setFormError(null);
-            void runPreview(next, rule.ruleId, "list");
+            void runPreview(openRule(rule), rule.ruleId, "switch");
             return;
         }
         setBusyId(rule.ruleId);
         const res = await updateRule(projectId, rule.ruleId, { enabled: false }, accessToken);
         await load();
         setBusyId(null);
-        setAnnouncement(res.ok ? words.turnedOffMsg : words.saveFailed);
+        announce(res.ok ? words.turnedOffMsg : words.saveFailed);
         focusLater(`switch-${rule.ruleId}`);
     };
 
@@ -266,15 +285,13 @@ export const useAutomationPane = ({
         const res = await orderRules(projectId, order, accessToken);
         if (res.ok) {
             setList(res.data);
-            setAnnouncement(
-                fmt(words.moved, { name: rule.name, position: to + 1, total: rules.length })
-            );
+            announce(fmt(words.moved, { name: rule.name, position: to + 1, total: rules.length }));
         } else {
-            setAnnouncement(words.saveFailed);
+            announce(words.saveFailed);
             await load();
         }
         setBusyId(null);
-        window.setTimeout(
+        later(
             () =>
                 document
                     .querySelector<HTMLElement>(`[data-rule-menu="${rule.ruleId}"] button`)
@@ -291,6 +308,7 @@ export const useAutomationPane = ({
         if (!res.ok) throw new Error(words.saveFailed);
         setList(res.data);
         setDeleting(null);
+        announce(words.deleted);
         focusLater(neighbour ? `rule-${neighbour.ruleId}` : "new-rule");
     };
 
@@ -314,7 +332,7 @@ export const useAutomationPane = ({
         const slot =
             ruleId == null
                 ? "new-rule"
-                : view.kind === "preview"
+                : view.kind === "preview" && view.from === "switch"
                   ? `switch-${ruleId}`
                   : `rule-${ruleId}`;
         if (view.kind === "editor") guard(() => toList(slot));
@@ -334,19 +352,20 @@ export const useAutomationPane = ({
         view.kind === "list" ? null : (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, minHeight: 44 }}>
                 <IconButton
+                    color="neutral"
+                    data-slot="back"
+                    size="sm"
+                    variant="plain"
                     aria-label={
                         view.kind === "preview" && view.from === "editor"
                             ? words.backToEditor
                             : words.back
                     }
-                    color="neutral"
-                    size="sm"
                     sx={{
                         "@media (pointer: coarse)": { minWidth: 44, minHeight: 44 },
                         "&:focus-visible": focusRing,
                         '[dir="rtl"] & svg': { transform: "scaleX(-1)" },
                     }}
-                    variant="plain"
                     onClick={back}
                 >
                     <ArrowBackRoundedIcon />
@@ -377,7 +396,7 @@ export const useAutomationPane = ({
                     draft={draft}
                     errors={errors}
                     formError={formError}
-                    onAnnounce={setAnnouncement}
+                    onAnnounce={announce}
                     onChange={(next) => {
                         setDraft(next);
                         // What was wrong is judged again at the next press.
@@ -391,7 +410,7 @@ export const useAutomationPane = ({
                 <RulePreview
                     draft={draft}
                     state={preview}
-                    onAnnounce={setAnnouncement}
+                    onAnnounce={announce}
                     onRetry={() => void runPreview(draft, view.ruleId, view.from)}
                 />
             );
@@ -410,13 +429,12 @@ export const useAutomationPane = ({
                 onLeave={onLeave}
                 onMove={(rule, step) => void move(rule, step)}
                 onNew={() => openEditor(null)}
-                onPreview={(rule) => {
-                    if (isHidden(rule)) return;
-                    openEditor(rule);
-                    void runPreview(draftOf(rule), rule.ruleId, "editor");
-                }}
                 onRuns={(rule) => setView({ kind: "runs", ruleId: rule.ruleId })}
                 onSwitch={(rule, on) => void switchRule(rule, on)}
+                onPreview={(rule) => {
+                    if (isHidden(rule)) return;
+                    void runPreview(openRule(rule), rule.ruleId, "menu");
+                }}
             />
         );
     };
@@ -447,7 +465,7 @@ export const useAutomationPane = ({
                 {moves ? words.runsAsYouMove : words.runsAsYou}
             </Box>
         );
-        if (view.from === "list") {
+        if (view.from === "switch") {
             return (
                 <Box sx={footerSx}>
                     {note}

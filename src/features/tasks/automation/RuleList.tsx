@@ -22,14 +22,21 @@ import { draftOf, MAX_RULES } from "./draft";
 import { useLookups } from "./lookups";
 import { RuleSentence } from "./RuleSentence";
 import type { AutomationRule } from "./types";
+import { useLater } from "./useLater";
 import { reasonText, useAutomationWords } from "./words";
 
-/** The reader is not on where it moves tasks to, so the server takes no edit from them. */
+/** The server does not name where this rule moves tasks to: the reader is not on it, or it
+ *  is gone. */
+export const unnamedDestination = (rule: AutomationRule): boolean =>
+    rule.movesTask && rule.destination?.visible === false;
+
+/** The engine turned it off over the destination, so another one has to be chosen. */
+const DESTINATION_OFF = new Set(["destination", "destination_not_found"]);
+
+/** Nobody who is not on the destination may change a rule that works: that would be changing
+ *  what they cannot see. One turned off over its destination can be given a new one. */
 export const isHidden = (rule: AutomationRule): boolean =>
-    rule.movesTask &&
-    rule.destination?.visible === false &&
-    // A destination that no longer exists can be replaced.
-    rule.disabledReason !== "destination_not_found";
+    unnamedDestination(rule) && !(!rule.enabled && DESTINATION_OFF.has(rule.disabledReason));
 
 export const PlanNote = ({ kept, onLeave }: { kept: boolean; onLeave: () => void }) => {
     const words = useAutomationWords();
@@ -100,6 +107,7 @@ export const RuleList = (props: Props) => {
     const words = useAutomationWords();
     const lookups = useLookups();
     const ids = useId();
+    const later = useLater();
     const full = rules.length >= MAX_RULES;
 
     const newButton = (
@@ -119,6 +127,7 @@ export const RuleList = (props: Props) => {
 
     const menuFor = (rule: AutomationRule, index: number): MoreMenuItem[] => {
         const hidden = isHidden(rule);
+        const unnamed = unnamedDestination(rule);
         return [
             {
                 id: "edit",
@@ -128,7 +137,7 @@ export const RuleList = (props: Props) => {
                 disabled: hidden,
                 hint: hidden ? words.hiddenHint : undefined,
                 // After the menu has handed focus back to its trigger.
-                onClick: () => window.setTimeout(() => props.onEdit(rule), 0),
+                onClick: () => later(() => props.onEdit(rule), 0),
             },
             {
                 id: "preview",
@@ -137,13 +146,13 @@ export const RuleList = (props: Props) => {
                 visible: planAllows,
                 disabled: hidden,
                 hint: hidden ? words.hiddenHint : undefined,
-                onClick: () => window.setTimeout(() => props.onPreview(rule), 0),
+                onClick: () => later(() => props.onPreview(rule), 0),
             },
             {
                 id: "runs",
                 label: words.recentRuns,
                 icon: <HistoryRoundedIcon />,
-                onClick: () => window.setTimeout(() => props.onRuns(rule), 0),
+                onClick: () => later(() => props.onRuns(rule), 0),
             },
             {
                 id: "up",
@@ -202,6 +211,7 @@ export const RuleList = (props: Props) => {
                     {index + 1}
                 </Box>
                 <Box
+                    title={locked ? lockedWhy : undefined}
                     sx={{
                         display: "flex",
                         alignItems: "center",
@@ -213,7 +223,6 @@ export const RuleList = (props: Props) => {
                             mt: "-10px",
                         },
                     }}
-                    title={locked ? lockedWhy : undefined}
                 >
                     <Switch
                         checked={rule.enabled}
@@ -230,7 +239,7 @@ export const RuleList = (props: Props) => {
                         onChange={(e) => props.onSwitch(rule, e.target.checked)}
                     />
                     {locked && (
-                        <Box component="span" hidden id={`${nameId}-why`}>
+                        <Box component="span" id={`${nameId}-why`} hidden>
                             {lockedWhy}
                         </Box>
                     )}

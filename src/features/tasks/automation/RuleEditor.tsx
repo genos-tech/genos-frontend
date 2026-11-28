@@ -2,7 +2,7 @@
  * The rule as one sentence block: When / If / Then, each value a picker. The rail's dot says
  * whether its clause is complete.
  */
-import { ReactNode, useId } from "react";
+import { ReactNode, useEffect, useId } from "react";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -20,6 +20,8 @@ import {
 } from "@mui/joy";
 
 import { MenuRow, MenuSurface } from "../../../components/ui/MoreMenu";
+import { useAuth } from "../../../context/authState";
+import { useProjectMemberIds } from "../../../hooks/tasks/useProjectMemberIds";
 import { useProjectStatuses } from "../../../hooks/tasks/useProjectStatuses";
 import { fmt, useTranslation } from "../../../i18n";
 import { focusRing, g, type } from "../../../theme/tokens";
@@ -49,12 +51,16 @@ import {
 import { fieldName, projectName } from "./RuleSentence";
 import { SlotAutocomplete, SlotOption, SlotSelect } from "./slots";
 import type { ConditionField, ConditionOp, TriggerType } from "./types";
+import { useLater } from "./useLater";
 import { useAutomationWords } from "./words";
 
 /** The parts that need attention, by id (`missingParts`, or the server's field). */
 export type EditorErrors = Record<string, string>;
 
 const ACTION_ORDER: readonly ActionKind[] = ["move", "status", "assignee", "tag"];
+
+export const coarsePointer = (): boolean =>
+    window.matchMedia?.("(pointer: coarse)").matches === true;
 
 const coarse44 = { "@media (pointer: coarse)": { minWidth: 44, minHeight: 44 } } as const;
 
@@ -116,7 +122,7 @@ const Clause = ({
                             ? g.danger.solid
                             : state === "done"
                               ? g.accent.solid
-                              : g.border.strong,
+                              : g.text.tertiary,
                     background:
                         state === "error"
                             ? g.danger.solid
@@ -168,7 +174,7 @@ const Line = ({
     error?: string;
     errorId?: string;
 }) => (
-    <Box data-line sx={{ minWidth: 0 }}>
+    <Box sx={{ minWidth: 0 }} data-line>
         <Box sx={{ display: "flex", alignItems: "flex-start", gap: 0.5, minWidth: 0 }}>
             <Box
                 sx={{
@@ -251,6 +257,8 @@ export const RuleEditor = ({
     const words = useAutomationWords();
     const { t } = useTranslation();
     const lookups = useLookups();
+    const { accessToken } = useAuth();
+    const later = useLater();
     const ids = useId();
     const patch = (change: Partial<RuleDraft>) => onChange({ ...draft, ...change });
     const errorId = (part: string) => `${ids}-${part.replace(":", "-")}`;
@@ -266,6 +274,15 @@ export const RuleEditor = ({
         value: m.userId,
         label: m.userName,
     }));
+    // A private project's tasks can only be given to its own people.
+    const memberIds = useProjectMemberIds(target?.isPrivate ? targetId : null, accessToken, {
+        userId: lookups.myUserId,
+    });
+    const refreshMembers = memberIds.refresh;
+    useEffect(() => refreshMembers(), [refreshMembers]);
+    const assignable = memberIds.ids
+        ? members.filter((m) => memberIds.ids!.includes(m.value))
+        : members;
     const tagsOf = (tags: { tagName: string }[] | undefined): SlotOption[] =>
         (tags ?? []).map((tag) => ({ value: tag.tagName, label: tag.tagName }));
     const statusSlots = (rows: typeof lookups.statuses, picked: StatusPick | null) => {
@@ -414,6 +431,9 @@ export const RuleEditor = ({
             <Input
                 error={common.invalid}
                 size="sm"
+                sx={textSx(common.invalid)}
+                type={field?.fieldType === "date" ? "date" : "text"}
+                value={c.value}
                 slotProps={{
                     input: {
                         "aria-label": words.valueLabel,
@@ -421,9 +441,6 @@ export const RuleEditor = ({
                         maxLength: 200,
                     },
                 }}
-                sx={textSx(common.invalid)}
-                type={field?.fieldType === "date" ? "date" : "text"}
-                value={c.value}
                 onChange={(e) => setCondition(c.key, { value: e.target.value })}
             />
         );
@@ -472,7 +489,7 @@ export const RuleEditor = ({
     const addCondition = () => {
         const row = conditionRow();
         patch({ conditions: [...draft.conditions, row] });
-        window.setTimeout(
+        later(
             () =>
                 document
                     .querySelector<HTMLElement>(`[data-slot="condition-field-${row.key}"]`)
@@ -545,7 +562,7 @@ export const RuleEditor = ({
             return (
                 <SlotAutocomplete
                     {...common}
-                    options={members}
+                    options={assignable}
                     value={draft.assigneeId}
                     people
                     onChange={(assigneeId) => patch({ assigneeId })}
@@ -562,15 +579,21 @@ export const RuleEditor = ({
         );
     };
 
+    // Without the move the task stays here: what belonged to the destination goes with it.
+    const removeAction = (kind: ActionKind) => {
+        const base = kind === "move" ? withDestination(draft, null) : draft;
+        const cleared =
+            base !== draft && (Boolean(draft.addTag) || draft.setStatus?.customStatusId != null);
+        onChange({ ...base, actions: base.actions.filter((a) => a !== kind) });
+        if (cleared) onAnnounce(words.cleared);
+    };
+
     const actions = ACTION_ORDER.filter((a) => draft.actions.includes(a));
     const unused = ACTION_ORDER.filter((a) => !draft.actions.includes(a));
     const addAction = (kind: ActionKind) => {
         patch({ actions: [...draft.actions, kind] });
         // After the menu has handed focus back to its button.
-        window.setTimeout(
-            () => document.querySelector<HTMLElement>(`[data-slot="${kind}"]`)?.focus(),
-            80
-        );
+        later(() => document.querySelector<HTMLElement>(`[data-slot="${kind}"]`)?.focus(), 80);
     };
 
     const clauseState = (has: boolean, parts: (p: string) => boolean): NodeState =>
@@ -605,7 +628,12 @@ export const RuleEditor = ({
             <FormControl error={Boolean(errors.name)}>
                 <FormLabel>{words.nameLabel}</FormLabel>
                 <Input
-                    autoFocus={!draft.name}
+                    // Not on a touch screen: the keyboard would cover the sentence.
+                    autoFocus={!draft.name && !coarsePointer()}
+                    placeholder={words.namePlaceholder}
+                    size="sm"
+                    sx={{ "@media (pointer: coarse)": { minHeight: 44 } }}
+                    value={draft.name}
                     endDecorator={
                         draft.name.length >= MAX_RULE_NAME - 4 ? (
                             <Box
@@ -616,13 +644,9 @@ export const RuleEditor = ({
                             </Box>
                         ) : null
                     }
-                    placeholder={words.namePlaceholder}
-                    size="sm"
                     slotProps={{
                         input: { maxLength: MAX_RULE_NAME, "data-slot": "name" },
                     }}
-                    sx={{ "@media (pointer: coarse)": { minHeight: 44 } }}
-                    value={draft.name}
                     onChange={(e) => patch({ name: e.target.value })}
                 />
                 {errors.name && <FormHelperText>{errors.name}</FormHelperText>}
@@ -643,14 +667,14 @@ export const RuleEditor = ({
                     <Line error={errors.trigger} errorId={errorId("trigger")}>
                         <SlotSelect
                             label={words.triggerLabel}
+                            slotId="trigger-type"
+                            value={draft.triggerType}
                             options={[
                                 { value: "status_changed", label: words.optStatus },
                                 { value: "created", label: words.optCreated },
                                 { value: "tag_added", label: words.optTag },
                                 { value: "assignee_changed", label: words.optAssignee },
                             ]}
-                            slotId="trigger-type"
-                            value={draft.triggerType}
                             onChange={(value) => patch({ triggerType: value as TriggerType })}
                         />
                         {triggerSlot()}
@@ -714,9 +738,7 @@ export const RuleEditor = ({
                             lead={actionLabel[kind]}
                             leadWidth={96}
                             removeLabel={fmt(words.removeAction, { action: actionLabel[kind] })}
-                            onRemove={() =>
-                                patch({ actions: draft.actions.filter((a) => a !== kind) })
-                            }
+                            onRemove={() => removeAction(kind)}
                         >
                             {actionSlot(kind)}
                         </Line>

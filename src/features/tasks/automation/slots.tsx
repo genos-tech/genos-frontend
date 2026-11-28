@@ -45,7 +45,8 @@ const slotSx = (invalid: boolean) => ({
     borderRadius: g.radius.sm,
     boxShadow: "none",
     "&:hover": { borderColor: invalid ? g.danger.border : g.border.strong },
-    "@media (pointer: coarse)": { minHeight: 44 },
+    // The size of the text fields beside them (16px, so a phone does not zoom in).
+    "@media (pointer: coarse)": { minHeight: 44, fontSize: "1rem" },
 });
 
 const popup = (zIndex: number) => ({
@@ -155,6 +156,7 @@ export const SlotAutocomplete = ({
     return (
         <Autocomplete
             disableClearable={false}
+            disableCloseOnSelect={false}
             getOptionDisabled={(o) => Boolean(o.disabledReason)}
             getOptionLabel={(o) => o.label}
             isOptionEqualToValue={(a, b) => a.value === b.value}
@@ -163,11 +165,6 @@ export const SlotAutocomplete = ({
             placeholder={words.choose}
             popupIcon={<ExpandMoreRoundedIcon sx={{ fontSize: 16 }} />}
             size="sm"
-            startDecorator={
-                people && picked?.value && picked.value !== "anyone"
-                    ? avatar(picked.value, picked.label)
-                    : undefined
-            }
             value={picked}
             variant="plain"
             renderOption={(props, option) => (
@@ -186,12 +183,18 @@ export const SlotAutocomplete = ({
                 },
                 listbox: popup(popupZ),
             }}
+            startDecorator={
+                people && picked?.value && picked.value !== "anyone"
+                    ? avatar(picked.value, picked.label)
+                    : undefined
+            }
             sx={{
                 ...slotSx(invalid),
                 width: { xs: "100%", sm: 220 },
+                // One ring, the same as the Select slots'.
+                "--Input-focusedThickness": "0px",
                 "&:focus-within": focusRing,
             }}
-            disableCloseOnSelect={false}
             openOnFocus
             onChange={(_e, next) => onChange(next?.value ?? "")}
         />

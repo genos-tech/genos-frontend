@@ -4099,6 +4099,7 @@ export const hi: DeepPartial<Messages> = {
             saved: "नियम सहेजा गया।",
             savedOn: "नियम सहेजा और चालू किया गया।",
             turnedOnMsg: "नियम चालू किया गया।",
+            deleted: "नियम हटाया गया।",
             turnedOffMsg: "नियम बंद किया गया।",
             runsEmpty: "अभी कोई रन नहीं।",
             runsFailed: "रन लोड नहीं हो सके",

@@ -6844,6 +6844,7 @@ export const zh: DeepPartial<Messages> = {
             saved: "规则已保存。",
             savedOn: "规则已保存并开启。",
             turnedOnMsg: "规则已开启。",
+            deleted: "规则已删除。",
             turnedOffMsg: "规则已关闭。",
             runsEmpty: "还没有运行记录。",
             runsFailed: "无法加载运行记录",

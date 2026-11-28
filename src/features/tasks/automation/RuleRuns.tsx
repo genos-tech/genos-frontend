@@ -27,6 +27,13 @@ const STATES = {
     skipped: { Icon: RemoveCircleOutlineRoundedIcon, color: g.text.tertiary },
 } as const;
 
+const fullTime = (value: string | null, locale: string): string | undefined => {
+    const at = parseServerTime(value);
+    return at == null
+        ? undefined
+        : new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(at);
+};
+
 export const RuleRuns = ({ rule }: { rule: AutomationRule }) => {
     const words = useAutomationWords();
     const { locale } = useTranslation();
@@ -92,6 +99,7 @@ export const RuleRuns = ({ rule }: { rule: AutomationRule }) => {
                                     <Box
                                         component="span"
                                         sx={{ ...type("body-xs"), color: g.text.tertiary }}
+                                        title={fullTime(run.tsDoneAt, locale)}
                                     >
                                         {formatRelativeTime(parseServerTime(run.tsDoneAt), locale)}
                                     </Box>

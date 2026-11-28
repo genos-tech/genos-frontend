@@ -7109,6 +7109,7 @@ export const ja: DeepPartial<Messages> = {
             saved: "ルールを保存しました。",
             savedOn: "ルールを保存してオンにしました。",
             turnedOnMsg: "ルールをオンにしました。",
+            deleted: "ルールを削除しました。",
             turnedOffMsg: "ルールをオフにしました。",
             runsEmpty: "実行はまだありません。",
             runsFailed: "実行履歴を読み込めませんでした",

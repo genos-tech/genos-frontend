@@ -4837,6 +4837,7 @@ export const es: DeepPartial<Messages> = {
             saved: "Regla guardada.",
             savedOn: "Regla guardada y activada.",
             turnedOnMsg: "Regla activada.",
+            deleted: "Regla eliminada.",
             turnedOffMsg: "Regla desactivada.",
             runsEmpty: "Aún no hay ejecuciones.",
             runsFailed: "No se pudieron cargar las ejecuciones",

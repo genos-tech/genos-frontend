@@ -7238,6 +7238,7 @@ export const fr: DeepPartial<Messages> = {
             saved: "Règle enregistrée.",
             savedOn: "Règle enregistrée et activée.",
             turnedOnMsg: "Règle activée.",
+            deleted: "Règle supprimée.",
             turnedOffMsg: "Règle désactivée.",
             runsEmpty: "Aucune exécution pour l’instant.",
             runsFailed: "Impossible de charger les exécutions",

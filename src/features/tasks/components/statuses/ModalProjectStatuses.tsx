@@ -708,7 +708,18 @@ export const ModalProjectStatuses = ({
                                     },
                                     {
                                         id: "automation",
-                                        label: t.tasks.automation.tabAutomation,
+                                        label: (
+                                            <>
+                                                {t.tasks.automation.tabAutomation}
+                                                {rules.needsFix > 0 && (
+                                                    <Box component="span" sx={srOnly}>
+                                                        {fmt(t.tasks.automation.needsFixTitle, {
+                                                            n: rules.needsFix,
+                                                        })}
+                                                    </Box>
+                                                )}
+                                            </>
+                                        ),
                                         panelId: "project-settings-panel",
                                         count: rules.needsFix,
                                         attention: true,
@@ -727,7 +738,15 @@ export const ModalProjectStatuses = ({
                 )}
                 <Box
                     id={automation ? "project-settings-panel" : undefined}
-                    role={automation ? "tabpanel" : undefined}
+                    // Past the list the tabs are gone, and with them the panel.
+                    role={automation && !(onRules && rules.subView) ? "tabpanel" : undefined}
+                    aria-label={
+                        automation && !(onRules && rules.subView)
+                            ? onRules
+                                ? t.tasks.automation.tabAutomation
+                                : t.tasks.automation.tabStatuses
+                            : undefined
+                    }
                     // The dialog must not jump in height between the tabs.
                     sx={automation ? { minHeight: { sm: 420 } } : undefined}
                 >

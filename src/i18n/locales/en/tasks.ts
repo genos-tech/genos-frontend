@@ -886,6 +886,7 @@ export const tasks = {
         saved: "Rule saved.",
         savedOn: "Rule saved and turned on.",
         turnedOnMsg: "Rule turned on.",
+        deleted: "Rule deleted.",
         turnedOffMsg: "Rule turned off.",
         runsEmpty: "No runs yet.",
         runsFailed: "Couldn't load runs",

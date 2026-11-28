@@ -133,8 +133,8 @@ export const RulePreview = ({
             <>
                 <Box>
                     <Box
-                        component="h3"
                         ref={heading}
+                        component="h3"
                         sx={{ ...type("title-sm"), m: 0, "&:focus": { outline: "none" } }}
                         tabIndex={-1}
                     >
